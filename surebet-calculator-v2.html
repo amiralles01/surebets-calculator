@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora Surebets</title>
+<style>
+:root{
+  --bg:#0d1117;--surface:#161b22;--raised:#1c2330;--inp:#1a2233;
+  --border:#2a3548;--focus:#3d8bff;
+  --green:#00d97e;--gdim:rgba(0,217,126,.12);--gglow:rgba(0,217,126,.22);
+  --red:#ff5f5f;--rdim:rgba(255,95,95,.1);
+  --yellow:#f0b429;--ydim:rgba(240,180,41,.12);
+  --blue:#58a6ff;--bdim:rgba(88,166,255,.1);
+  --purple:#9467bd;--pdim:rgba(148,103,189,.12);
+  --text:#e6edf3;--muted:#7d8fa8;--faint:#4a5a72;
+  --r:10px;--sw:218px;--mono:'JetBrains Mono','Fira Code',monospace;--t:.16s ease;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;overflow-x:hidden}
+input,button,select,textarea{font-family:inherit}
+button{cursor:pointer;border:none;background:none}
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+
+/* ── LAYOUT ── */
+.app{display:flex;height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sw);background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;z-index:100;
+  transition:transform var(--t)}
+.sb-head{padding:16px 14px 12px;border-bottom:1px solid var(--border)}
+.sb-title{font-size:15px;font-weight:700;letter-spacing:-.3px}
+.sb-sub{font-size:11px;color:var(--faint);margin-top:1px}
+.nav{padding:8px 6px;flex:1}
+.ni{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:7px;
+  color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;user-select:none;
+  transition:background var(--t),color var(--t);position:relative}
+.ni:hover{background:var(--raised);color:var(--text)}
+.ni.active{background:var(--gdim);color:var(--green)}
+.ni.active::before{content:'';position:absolute;left:0;top:20%;bottom:20%;
+  width:3px;border-radius:0 3px 3px 0;background:var(--green)}
+.ni svg{width:15px;height:15px;flex-shrink:0}
+.nb{margin-left:auto;background:var(--raised);border:1px solid var(--border);
+  color:var(--faint);font-size:10px;font-weight:600;padding:1px 6px;
+  border-radius:99px;min-width:20px;text-align:center}
+.ni.active .nb{background:var(--gdim);border-color:rgba(0,217,126,.3);color:var(--green)}
+.sb-toggle{display:none;position:fixed;top:13px;left:13px;z-index:200;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:7px;color:var(--text)}
+.sb-toggle svg{width:17px;height:17px;display:block}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.ph{padding:16px 24px 12px;border-bottom:1px solid var(--border);background:var(--bg);flex-shrink:0}
+.ph-title{font-size:18px;font-weight:700;letter-spacing:-.4px}
+.ph-sub{font-size:11.5px;color:var(--faint);margin-top:1px}
+.pb{flex:1;overflow-y:auto;padding:20px 24px;display:grid;
+  grid-template-columns:1fr 345px;gap:16px;align-content:start}
+
+/* ── CARD ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.ch{padding:13px 17px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between}
+.ct{font-size:14px;font-weight:600}
+.cb{padding:17px}
+
+/* ── INPUTS ── */
+.fl{display:block;font-size:10.5px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.8px;color:var(--faint);margin-bottom:5px}
+input[type=number],input[type=text],select,input[type=date]{
+  width:100%;background:var(--inp);border:1px solid var(--border);
+  border-radius:7px;padding:8px 11px;color:var(--text);font-size:14px;
+  outline:none;transition:border-color var(--t),box-shadow var(--t)}
+input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,139,255,.13)}
+select option{background:var(--raised);color:var(--text)}
+.iw{position:relative;display:flex;align-items:center}
+.isuf{position:absolute;right:10px;color:var(--faint);font-size:12px;pointer-events:none}
+.ii{font-size:16px;font-weight:600;text-align:right;padding-right:26px!important}
+
+/* ── OUTCOMES ── */
+.oh{display:grid;grid-template-columns:1fr 1fr 96px 96px 32px;gap:6px;margin-bottom:6px}
+.cl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--faint);padding:0 3px}
+.or{display:grid;grid-template-columns:1fr 1fr 96px 96px 32px;gap:6px;
+  margin-bottom:6px;align-items:center;animation:fi .18s ease}
+@keyframes fi{from{opacity:0;transform:translateY(-4px)}to{opacity:1}}
+.oi{text-align:right;font-family:var(--mono);font-size:15px;font-weight:600}
+.oi.lit{border-color:var(--green);box-shadow:0 0 0 3px var(--gglow)}
+/* favor toggle pill */
+.fav-toggle{display:flex;align-items:center;justify-content:center;
+  width:96px;height:34px;border-radius:7px;border:1px solid var(--border);
+  background:var(--inp);color:var(--faint);font-size:11px;font-weight:600;
+  cursor:pointer;gap:5px;transition:all var(--t);white-space:nowrap;flex-shrink:0}
+.fav-toggle:hover{border-color:var(--yellow);color:var(--yellow);background:var(--ydim)}
+.fav-toggle.active{border-color:var(--yellow);background:var(--ydim);color:var(--yellow)}
+.fav-toggle svg{width:11px;height:11px;flex-shrink:0}
+.bd{width:32px;height:32px;display:grid;place-items:center;border-radius:7px;
+  color:var(--faint);border:1px solid transparent;transition:all var(--t);flex-shrink:0}
+.bd:hover{background:var(--rdim);color:var(--red);border-color:rgba(255,95,95,.3)}
+.bd svg{width:13px;height:13px}
+.ba{display:flex;align-items:center;gap:5px;margin-top:7px;padding:6px 10px;
+  border-radius:7px;border:1px dashed var(--border);color:var(--muted);
+  font-size:13px;font-weight:500;transition:all var(--t);width:100%}
+.ba:hover{border-color:var(--green);color:var(--green);background:var(--gdim)}
+.ba svg{width:13px;height:13px}
+
+/* ── FAVOR MODE BANNER ── */
+.fav-banner{margin-top:10px;padding:8px 12px;border-radius:7px;
+  background:var(--ydim);border:1px solid rgba(240,180,41,.3);
+  font-size:12px;color:var(--yellow);display:flex;align-items:center;gap:7px;display:none}
+.fav-banner svg{width:13px;height:13px;flex-shrink:0}
+
+/* ── ROUNDING ── */
+.rs{margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+.rh{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:9px;
+  display:flex;align-items:center;gap:5px}
+.rh svg{width:12px;height:12px;color:var(--green)}
+.rp{display:flex;gap:5px;flex-wrap:wrap}
+.rpb{padding:4px 11px;border-radius:6px;border:1px solid var(--border);
+  background:var(--inp);color:var(--muted);font-size:12px;font-weight:500;
+  font-family:var(--mono);transition:all var(--t)}
+.rpb:hover{border-color:var(--focus);color:var(--text)}
+.rpb.active{border-color:var(--green);background:var(--gdim);color:var(--green)}
+.cr{display:flex;align-items:center;gap:7px;margin-top:8px;
+  font-size:12px;color:var(--muted)}
+.cr input{width:75px;padding:5px 8px!important;font-size:12px!important;font-family:var(--mono)!important}
+
+/* ── RESULT PANEL ── */
+.rp2{display:flex;flex-direction:column;gap:12px}
+.ph2{background:var(--raised);border:1px solid var(--border);border-radius:var(--r);
+  padding:22px 16px;text-align:center;position:relative;overflow:hidden}
+.ph2::after{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,var(--gglow) 0%,transparent 65%);
+  pointer-events:none;opacity:0;transition:opacity .4s ease}
+.ph2.sb::after{opacity:1}
+.ph2.fav-mode::after{background:radial-gradient(ellipse at 50% 0%,rgba(240,180,41,.2) 0%,transparent 65%);opacity:1}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;
+  border-radius:20px;font-size:10.5px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+.bg{background:var(--gdim);border:1px solid rgba(0,217,126,.3);color:var(--green)}
+.br{background:var(--rdim);border:1px solid rgba(255,95,95,.3);color:var(--red)}
+.by{background:var(--ydim);border:1px solid rgba(240,180,41,.3);color:var(--yellow)}
+.badge svg{width:11px;height:11px}
+.pp{font-size:40px;font-weight:800;letter-spacing:-2px;line-height:1;
+  font-family:var(--mono);margin-bottom:4px}
+.pp.pos{color:var(--green)}.pp.neg{color:var(--red)}.pp.yel{color:var(--yellow)}
+.ps{font-size:12.5px;color:var(--muted)}
+.ps .hi{font-weight:600}
+.ps .hi.pos{color:var(--green)}.ps .hi.neg{color:var(--red)}.ps .hi.yel{color:var(--yellow)}
+.bkr{display:flex;justify-content:space-between;align-items:flex-start;
+  padding:10px 17px;border-bottom:1px solid var(--border);gap:9px}
+.bkr:last-child{border-bottom:none}
+.bkr.favored{background:rgba(240,180,41,.06);border-left:3px solid var(--yellow)}
+.bkr.be-leg{background:rgba(88,166,255,.04);border-left:3px solid rgba(88,166,255,.4)}
+.bkn{font-size:13px;font-weight:600}
+.bks{font-size:11px;color:var(--faint);margin-top:1px}
+.bkv{text-align:right;flex-shrink:0}
+.bkst{font-size:14px;font-weight:700;font-family:var(--mono)}
+.bkr2{font-size:11px;color:var(--muted);margin-top:1px}
+.bkm{font-size:10.5px;margin-top:2px;color:var(--yellow);font-family:var(--mono);font-weight:600}
+.bk-be-tag{font-size:10px;font-weight:600;color:var(--blue);margin-top:2px;font-family:var(--mono)}
+.sr{display:flex;justify-content:space-between;align-items:center;
+  padding:8px 17px;border-bottom:1px solid var(--border)}
+.sr:last-child{border-bottom:none}
+.sl{font-size:12px;color:var(--muted)}
+.sv{font-size:13px;font-weight:600;font-family:var(--mono)}
+.sv.pos{color:var(--green)}.sv.neg{color:var(--red)}.sv.yel{color:var(--yellow)}
+.pw{padding:11px 17px 12px;border-top:1px solid var(--border)}
+.pl{display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-bottom:4px}
+.pt{height:4px;background:var(--inp);border-radius:99px;overflow:hidden}
+.pf{height:100%;border-radius:99px;background:var(--green);transition:width .4s,background .3s}
+.pf.over{background:var(--red)}
+.btn-reg{display:flex;align-items:center;justify-content:center;gap:6px;
+  width:100%;padding:10px;border-radius:8px;
+  background:var(--gdim);border:1px solid rgba(0,217,126,.35);
+  color:var(--green);font-size:13px;font-weight:600;transition:all var(--t)}
+.btn-reg:hover{background:rgba(0,217,126,.2);box-shadow:0 0 0 3px var(--gglow)}
+.btn-reg:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
+.btn-reg svg{width:14px;height:14px}
+.empty{padding:34px 16px;text-align:center;color:var(--faint)}
+.empty svg{width:32px;height:32px;margin-bottom:9px;opacity:.35}
+.empty p{font-size:13px}
+
+/* ═══════════════ FULL-WIDTH PAGES ═══════════════ */
+.fw{grid-column:1/-1;display:flex;flex-direction:column;gap:14px}
+
+/* stats row */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.sc{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:12px 15px}
+.sl2{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px}
+.sv2{font-size:22px;font-weight:800;letter-spacing:-1px;font-family:var(--mono)}
+.sv2.pos{color:var(--green)}.sv2.neg{color:var(--red)}.sv2.yel{color:var(--yellow)}
+
+/* toolbar */
+.tb{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.tb input[type=text]{max-width:220px;flex:1}
+.btn-s{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:7px;
+  border:1px solid var(--border);background:var(--inp);
+  color:var(--muted);font-size:12.5px;font-weight:500;transition:all var(--t)}
+.btn-s:hover{border-color:var(--focus);color:var(--text)}
+.btn-s svg{width:13px;height:13px}
+.btn-d{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:7px;
+  border:1px solid rgba(255,95,95,.3);background:var(--rdim);
+  color:var(--red);font-size:12.5px;font-weight:500;transition:all var(--t)}
+.btn-d:hover{background:rgba(255,95,95,.18)}
+.btn-d svg{width:13px;height:13px}
+
+/* ── SUREBET HISTORY ITEMS ── */
+.bi{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;animation:fi .2s ease}
+.bih{padding:11px 15px;display:flex;align-items:flex-start;
+  justify-content:space-between;border-bottom:1px solid var(--border);gap:9px}
+.bie{font-size:13.5px;font-weight:600}
+.bid{font-size:11px;color:var(--faint);margin-top:1px}
+.bim{display:flex;align-items:center;gap:7px;flex-shrink:0;flex-wrap:wrap}
+.pp2{padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700;font-family:var(--mono)}
+.pp2.pos{background:var(--gdim);color:var(--green);border:1px solid rgba(0,217,126,.25)}
+.pp2.neg{background:var(--rdim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
+.pp2.yel{background:var(--ydim);color:var(--yellow);border:1px solid rgba(240,180,41,.25)}
+.ss{background:var(--inp);border:1px solid var(--border);border-radius:5px;
+  color:var(--text);font-size:12px;padding:3px 7px;outline:none;cursor:pointer}
+.ss option{background:var(--raised);color:var(--text)}
+.bd2{width:26px;height:26px;display:grid;place-items:center;border-radius:5px;
+  color:var(--faint);border:1px solid transparent;transition:all var(--t);flex-shrink:0}
+.bd2:hover{background:var(--rdim);color:var(--red);border-color:rgba(255,95,95,.3)}
+.bd2 svg{width:12px;height:12px}
+.bl{padding:0}
+/* editable legs */
+.leg-edit{display:grid;grid-template-columns:1fr 1fr auto auto;
+  gap:5px 10px;padding:8px 15px;border-bottom:1px solid var(--border);align-items:center}
+.leg-edit:last-child{border-bottom:none}
+.leg-label{font-size:11px;color:var(--faint);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.leg-input{background:var(--inp);border:1px solid var(--border);border-radius:5px;
+  color:var(--text);font-size:12px;padding:4px 8px;outline:none;width:100%;
+  transition:border-color var(--t)}
+.leg-input:focus{border-color:var(--focus)}
+.leg-input.mono{font-family:var(--mono);text-align:right}
+.leg{display:grid;grid-template-columns:1fr 1fr auto auto auto;
+  gap:5px 10px;padding:8px 15px;border-bottom:1px solid var(--border);
+  align-items:center;font-size:12.5px}
+.leg:last-child{border-bottom:none}
+.lh{font-weight:600}.lr{color:var(--muted)}.lo{font-family:var(--mono);font-weight:600;text-align:right}
+.lk{font-family:var(--mono);font-weight:700;text-align:right}
+.lm{font-family:var(--mono);font-size:11px;color:var(--yellow);font-weight:600;text-align:right;white-space:nowrap}
+.bf{display:flex;justify-content:space-between;align-items:center;
+  padding:8px 15px;background:var(--raised);font-size:12.5px}
+.bfl{color:var(--muted)}
+.bfr{font-family:var(--mono);font-weight:700}
+.bfr.pos{color:var(--green)}.bfr.neg{color:var(--red)}.bfr.yel{color:var(--yellow)}
+
+/* status badge */
+.sb2{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;letter-spacing:.3px}
+.sp{background:var(--ydim);color:var(--yellow);border:1px solid rgba(240,180,41,.3)}
+.sw{background:var(--gdim);color:var(--green);border:1px solid rgba(0,217,126,.3)}
+.sl3{background:var(--rdim);color:var(--red);border:1px solid rgba(255,95,95,.3)}
+.sbz{background:rgba(88,166,255,.1);color:var(--blue);border:1px solid rgba(88,166,255,.3)}
+
+/* profit badge on history items */
+.profit-tag{font-size:11px;font-weight:700;font-family:var(--mono);
+  padding:2px 9px;border-radius:99px;}
+.profit-tag.pos{background:var(--gdim);color:var(--green);border:1px solid rgba(0,217,126,.25)}
+.profit-tag.neg{background:var(--rdim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
+.profit-tag.zer{background:rgba(88,166,255,.1);color:var(--blue);border:1px solid rgba(88,166,255,.3)}
+
+/* inline edit event/notes */
+.bi-ev-input{background:transparent;border:none;border-bottom:1px dashed var(--border);
+  color:var(--text);font-size:13.5px;font-weight:600;outline:none;width:100%;
+  padding:0 0 2px;transition:border-color var(--t)}
+.bi-ev-input:focus{border-color:var(--focus)}
+.bi-notes-input{background:transparent;border:none;border-bottom:1px dashed var(--border);
+  color:var(--muted);font-size:11.5px;outline:none;width:100%;margin-top:3px;
+  padding:0 0 2px;transition:border-color var(--t);font-style:italic}
+.bi-notes-input:focus{border-color:var(--focus);color:var(--text)}
+.bi-profit-input{background:var(--inp);border:1px solid var(--border);border-radius:5px;
+  color:var(--text);font-size:12px;padding:3px 7px;outline:none;
+  font-family:var(--mono);font-weight:700;width:80px;text-align:right;
+  transition:border-color var(--t)}
+.bi-profit-input:focus{border-color:var(--green)}
+
+/* ── NORMAL / FREEBET ITEMS ── */
+.ni2{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:12px 15px;
+  display:grid;grid-template-columns:1fr auto auto;gap:8px 12px;
+  align-items:start;animation:fi .2s ease}
+.ni2-left{min-width:0}
+.ni2-ev{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ni2-meta{font-size:11px;color:var(--faint);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap}
+.ni2-note{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4;
+  font-style:italic;padding:5px 8px;background:var(--raised);border-radius:5px;
+  border-left:2px solid var(--border)}
+.ni2-right{text-align:right;flex-shrink:0}
+.ni2-pnl{font-size:16px;font-weight:700;font-family:var(--mono)}
+.ni2-pnl.pos{color:var(--green)}.ni2-pnl.neg{color:var(--red)}.ni2-pnl.zer{color:var(--muted)}
+.type-pill{display:inline-block;padding:2px 8px;border-radius:99px;
+  font-size:10px;font-weight:600;letter-spacing:.3px;flex-shrink:0}
+.tp-normal{background:var(--bdim);color:var(--blue);border:1px solid rgba(88,166,255,.25)}
+.tp-freebet{background:var(--ydim);color:var(--yellow);border:1px solid rgba(240,180,41,.3)}
+.tp-combi{background:var(--pdim);color:var(--purple);border:1px solid rgba(148,103,189,.3)}
+
+/* ── PROFIT PAGE ── */
+.month-card{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden}
+.mc-head{padding:13px 17px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between}
+.mc-month{font-size:15px;font-weight:700}
+.mc-total{font-size:16px;font-weight:800;font-family:var(--mono)}
+.mc-total.pos{color:var(--green)}.mc-total.neg{color:var(--red)}
+.mc-row{display:flex;justify-content:space-between;align-items:center;
+  padding:8px 17px;border-bottom:1px solid var(--border);font-size:12.5px}
+.mc-row:last-child{border-bottom:none}
+.mc-cat{color:var(--muted)}
+.mc-val{font-family:var(--mono);font-weight:600}
+.mc-val.pos{color:var(--green)}.mc-val.neg{color:var(--red)}.mc-val.neu{color:var(--muted)}
+.total-hero{background:var(--raised);border:1px solid var(--border);
+  border-radius:var(--r);padding:28px 24px;text-align:center}
+.th-label{font-size:12px;color:var(--faint);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.th-val{font-size:48px;font-weight:900;letter-spacing:-3px;font-family:var(--mono)}
+.th-val.pos{color:var(--green)}.th-val.neg{color:var(--red)}
+.th-sub{display:flex;justify-content:center;gap:20px;margin-top:14px;flex-wrap:wrap}
+.th-sub-item{text-align:center}
+.th-sub-label{font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px}
+.th-sub-val{font-size:16px;font-weight:700;font-family:var(--mono)}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center}
+.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:420px;margin:16px}
+.modal-title{font-size:15px;font-weight:700;margin-bottom:16px}
+.modal-fields{display:flex;flex-direction:column;gap:11px}
+.modal-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-actions{display:flex;gap:9px;margin-top:18px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .pb{grid-template-columns:1fr;padding:13px}
+  .rp2{order:-1}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .oh,.or{grid-template-columns:1fr 1fr 86px 80px 32px}
+}
+@media(max-width:600px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .sb-toggle{display:flex;align-items:center;justify-content:center}
+  .sb-overlay.open{display:block}
+  .ph{padding:12px 13px 10px 50px}
+  .pb{padding:11px 9px;gap:11px}
+  .oh,.or{grid-template-columns:1fr 1fr 76px 32px}
+  .fav-toggle{display:none}
+  .stats{grid-template-columns:1fr 1fr;gap:7px}
+  .leg{grid-template-columns:1fr 1fr}
+  .lm{display:none}
+  .tb{gap:6px}
+  .ni2{grid-template-columns:1fr auto}
+}
+</style>
+</head>
+<body>
+
+<button class="sb-toggle" id="sbToggle">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+</button>
+<div class="sb-overlay" id="sbOverlay"></div>
+
+<div class="app">
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-head">
+    <div class="sb-title">Surebets</div>
+    <div class="sb-sub">Calculadora &amp; registro</div>
+  </div>
+  <nav class="nav">
+    <div class="ni active" data-page="calc">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
+      Calculadora
+    </div>
+    <div class="ni" data-page="surebets">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      Mis surebets
+      <span class="nb" id="sbCount">0</span>
+    </div>
+    <div class="ni" data-page="normales">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Normales &amp; freebets
+      <span class="nb" id="nbCount">0</span>
+    </div>
+    <div class="ni" data-page="profit">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Profit
+    </div>
+  </nav>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <div class="ph">
+    <div class="ph-title" id="pgTitle">Calculadora</div>
+    <div class="ph-sub" id="pgSub">Calcula stakes y surebets al instante</div>
+  </div>
+
+  <div class="pb" id="pgBody">
+
+    <!-- ═══ CALC PAGE ═══ -->
+    <div id="page-calc" style="display:contents">
+      <div style="display:flex;flex-direction:column;gap:13px">
+        <div class="card">
+          <div class="ch"><span class="ct">Cuotas y reparto</span></div>
+          <div class="cb">
+            <div style="margin-bottom:16px">
+              <label class="fl">Inversión total</label>
+              <div class="iw"><input type="number" class="ii" id="totalInv" value="100" min="0" step="1"><span class="isuf">€</span></div>
+            </div>
+            <div class="oh">
+              <div class="cl">Casa</div>
+              <div class="cl">Resultado</div>
+              <div class="cl" style="text-align:right">Cuota</div>
+              <div class="cl" style="text-align:center">Favorecer</div>
+              <div></div>
+            </div>
+            <div id="outcomesList"></div>
+            <button class="ba" id="addBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Añadir resultado
+            </button>
+            <div id="favBanner" class="fav-banner">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span id="favBannerText">Modo favor activo: la pata favorecida maximiza retorno; la otra hace break-even.</span>
+            </div>
+            <div class="rs">
+              <div class="rh">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Redondeo de stakes
+              </div>
+              <div class="rp" id="roundPills">
+                <button class="rpb active" data-mode="exact">Exacto</button>
+                <button class="rpb" data-mode="1">×1</button>
+                <button class="rpb" data-mode="0.5">×0,50</button>
+                <button class="rpb" data-mode="0.25">×0,25</button>
+                <button class="rpb" data-mode="custom">Otro…</button>
+              </div>
+              <div class="cr" id="customRow" style="display:none">
+                <span>Múltiplos de</span>
+                <input type="number" id="customStep" value="0.1" min="0.01" step="0.01">
+                <span>€</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="rp2" id="resultPanel"></div>
+    </div>
+
+    <!-- ═══ SUREBETS PAGE ═══ -->
+    <div id="page-surebets" class="fw" style="display:none">
+      <div class="stats" id="sbStats"></div>
+      <div class="tb">
+        <input type="text" id="sbSearch" placeholder="Buscar evento o casa…">
+        <button class="btn-s" id="sbExport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Exportar</button>
+        <button class="btn-s" id="sbImport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Importar</button>
+        <input type="file" id="sbFile" accept=".json" style="display:none">
+        <button class="btn-d" id="sbClear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Borrar todo</button>
+      </div>
+      <div id="sbList"></div>
+    </div>
+
+    <!-- ═══ NORMALES PAGE ═══ -->
+    <div id="page-normales" class="fw" style="display:none">
+      <div class="stats" id="nbStats"></div>
+      <div class="tb">
+        <input type="text" id="nbSearch" placeholder="Buscar evento…">
+        <button class="btn-s" id="nbAddBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Añadir
+        </button>
+      </div>
+      <div id="nbList"></div>
+    </div>
+
+    <!-- ═══ PROFIT PAGE ═══ -->
+    <div id="page-profit" class="fw" style="display:none">
+      <div id="totalHero"></div>
+      <div id="monthList"></div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- ══ ADD NORMAL/FREEBET MODAL ══ -->
+<div id="addModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title">Añadir apuesta normal / freebet</div>
+    <div class="modal-fields">
+      <div><label class="fl">Evento</label><input type="text" id="m-event" placeholder="España vs Portugal"></div>
+      <div class="modal-row">
+        <div><label class="fl">Tipo</label>
+          <select id="m-type">
+            <option value="Normal">Normal</option>
+            <option value="Freebet">Freebet</option>
+            <option value="Combi">Combi</option>
+          </select>
+        </div>
+        <div><label class="fl">Profit (€)</label><input type="number" id="m-profit" placeholder="2.50" step="0.01"></div>
+      </div>
+      <div><label class="fl">Fecha</label><input type="date" id="m-date"></div>
+      <div><label class="fl">Notas (opcional)</label><input type="text" id="m-notes" placeholder="Cuota boosted…"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-s" id="m-cancel" style="flex:1">Cancelar</button>
+      <button class="btn-reg" id="m-save" style="flex:2">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ REGISTER SUREBET MODAL ══ -->
+<div id="regModal" class="modal-overlay">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-title">Registrar surebet</div>
+    <div class="modal-fields">
+      <div><label class="fl">Evento</label><input type="text" id="reg-event" placeholder="España vs Portugal"></div>
+      <div class="modal-row">
+        <div><label class="fl">Fecha</label><input type="date" id="reg-date"></div>
+        <div><label class="fl">Profit real (€)</label>
+          <div class="iw"><input type="number" id="reg-profit" placeholder="0.00" step="0.01"><span class="isuf">€</span></div>
+        </div>
+      </div>
+      <div><label class="fl">Notas (opcional)</label><input type="text" id="reg-notes" placeholder="Descripción de las patas…"></div>
+    </div>
+    <div style="margin-top:10px;padding:9px 12px;background:var(--raised);border-radius:7px;font-size:12px;color:var(--muted)">
+      Profit calculado: <span id="reg-calc-profit" style="font-family:var(--mono);font-weight:700;color:var(--green)"></span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-s" id="reg-cancel" style="flex:1">Cancelar</button>
+      <button class="btn-reg" id="reg-save" style="flex:2">Guardar surebet</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  STORE
+// ══════════════════════════════════════════
+const STORE='sb_v4';
+function loadData(){try{const r=localStorage.getItem(STORE);if(r)return JSON.parse(r)}catch(e){}return{bets:[],normals:[]}}
+function save(){localStorage.setItem(STORE,JSON.stringify(D))}
+
+let D=loadData();
+
+// ── Preload data if first visit ──
+const EXCEL_SUREBETS=[
+  {id:9001,event:"Canada vs Bosnia",date:"2026-06-12",profit:2.5,notes:"",legs:[{house:"Bet365",result:"",odd:0,stake:0,minReturn:0}],status:"won"},
+  {id:9002,event:"Spain & Uruguay",date:"2026-06-13",profit:6.0,notes:"",legs:[],status:"won"},
+  {id:9003,event:"Qatar vs Switzerland",date:"2026-06-14",profit:5.0,notes:"",legs:[],status:"won"},
+  {id:9004,event:"Brazil vs Morocco",date:"2026-06-15",profit:1.25,notes:"Brazil scores first: +1.10 / None score: +1.50 / Morocco wins: +1.25",legs:[],status:"won"},
+  {id:9005,event:"Scotland vs Haiti",date:"2026-06-16",profit:2.17,notes:"No goal: +2.12 / Scotland scores: +2.17 / Haiti scores: +2.32",legs:[],status:"won"},
+  {id:9006,event:"Ilia vs Gaethje (UFC)",date:"2026-06-01",profit:4.1,notes:"+1.5 rounds: +4.10 / Ilia wins Rd 1: +4.80 / Gaethje wins Rd 1: +5.10",legs:[],status:"won"},
+  {id:9007,event:"Ilia Topuria (Bet365 + WH)",date:"2026-06-01",profit:1.1,notes:"",legs:[],status:"won"},
+  {id:9008,event:"Belgium vs Egypt",date:"2026-06-17",profit:1.4,notes:"No goals: +0.50 / Egypt scores first: +1.40 / Belgium scores first: +2.50",legs:[],status:"won"},
+  {id:9009,event:"Spain vs Cape Verde",date:"2026-06-18",profit:4.3,notes:"Spain wins by <2: +4.30 / Spain wins by 2+: +4.50",legs:[],status:"won"},
+  {id:9010,event:"Spain vs Cape Verde",date:"2026-06-18",profit:1.01,notes:"Cape Verde wins: +0.46 / Draw: +1.01 / Both score+Spain wins: +0.85",legs:[],status:"won"},
+  {id:9011,event:"Senegal vs France",date:"2026-06-19",profit:2.5,notes:"France doesn't score 1st half: +2.50 / France scores: +0.00",legs:[],status:"won"},
+  {id:9012,event:"Senegal vs France",date:"2026-06-19",profit:2.0,notes:"Olise no shot on target: +2.40 / Olise shoots: +2.00",legs:[],status:"won"},
+  {id:9013,event:"Bosnia vs Switzerland",date:"2026-06-20",profit:2.0,notes:"Tie or Switzerland first goal: +2",legs:[],status:"won"},
+  {id:9014,event:"Bosnia vs Switzerland",date:"2026-06-20",profit:1.66,notes:"3-0 Switzerland",legs:[],status:"won"},
+  {id:9015,event:"USA vs Australia",date:"2026-06-21",profit:1.0,notes:"USA scores first → +1€. No goals → +5€",legs:[],status:"won"},
+  {id:9016,event:"Brazil vs Haití",date:"2026-06-22",profit:2.4,notes:"Brazil to score in both halves +2€",legs:[],status:"won"},
+  {id:9017,event:"Netherlands vs Sweden",date:"2026-06-23",profit:0.5,notes:"Both score +2.5 goals",legs:[],status:"won"},
+  {id:9018,event:"Germany vs Ivory Coast",date:"2026-06-24",profit:2.33,notes:"Germany first goal +€2.20 / No goal +€2.60 / Ivory Coast first +€2.33",legs:[],status:"won"},
+  {id:9019,event:"Spain vs Saudi Arabia",date:"2026-06-25",profit:4.5,notes:"Spain no goal 1st half +3.75€ / if goal +4.5€",legs:[],status:"won"},
+  {id:9020,event:"Spain vs Saudi Arabia",date:"2026-06-25",profit:4.0,notes:"Spain wins with over 1.5 goals +4€",legs:[],status:"won"},
+  {id:9021,event:"Norway vs Senegal",date:"2026-06-26",profit:4.0,notes:"No goals first half +2.3€ / +0.5 goals +4€",legs:[],status:"won"},
+  {id:9022,event:"Argentina vs Australia",date:"2026-06-27",profit:2.5,notes:"Messi +1.5 shots on goal +2.5€ / -1.5 shots on goal +2.5€",legs:[],status:"won"},
+  {id:9023,event:"Croatia vs Panama",date:"2026-06-28",profit:3.8,notes:"3.8 no goals first half / +4 goal on first half",legs:[],status:"won"},
+  {id:9024,event:"Brazil vs Scotland",date:"2026-06-29",profit:0.9,notes:"",legs:[],status:"won"},
+  {id:9025,event:"Germany vs Ecuador",date:"2026-06-30",profit:2.8,notes:"No goal whole match +0.8 / germany first +2.8",legs:[],status:"won"},
+  {id:9026,event:"USA vs Turkey",date:"2026-07-01",profit:4.0,notes:"3.5 if no goals on first half / 4 if at least one goal",legs:[],status:"won"},
+  {id:9027,event:"Uruguay vs Spain",date:"2026-07-02",profit:3.0,notes:"Spain first goal +3 / Uruguay first goal +0.5 + penalties",legs:[],status:"won"},
+  {id:9028,event:"New Zealand vs Belgium",date:"2026-07-03",profit:2.0,notes:"De Bruyne -0.5 shots on net +2",legs:[],status:"won"},
+  {id:9029,event:"Colombia vs Portugal",date:"2026-07-03",profit:2.6,notes:"No goal 1st half +4 / if goal +2.6",legs:[],status:"won"},
+  {id:9030,event:"Inglaterra vs Panama",date:"2026-07-04",profit:0.8,notes:"No goal in both parts 0.8 / if goal 1",legs:[],status:"won"},
+  {id:9031,event:"Canada vs Sudáfrica",date:"2026-07-05",profit:2.98,notes:"",legs:[],status:"won"},
+  {id:9032,event:"Japan vs Brazil",date:"2026-07-05",profit:1.3,notes:"",legs:[],status:"won"},
+  {id:9033,event:"Netherlands vs Marruecos",date:"2026-07-06",profit:2.3,notes:"",legs:[],status:"won"},
+  {id:9034,event:"Côte d'Ivoire vs Norway",date:"2026-07-06",profit:0.0,notes:"",legs:[],status:"won"},
+  {id:9035,event:"France vs Sweden",date:"2026-07-07",profit:3.0,notes:"",legs:[],status:"won"},
+  {id:9036,event:"USA vs Bosnia",date:"2026-07-07",profit:4.0,notes:"",legs:[],status:"won"},
+  {id:9037,event:"Spain vs Austria",date:"2026-07-08",profit:4.75,notes:"0.75, 0.48, 4.75, 4.56",legs:[],status:"won"},
+  {id:9038,event:"Spain vs Austria",date:"2026-07-08",profit:0.22,notes:"",legs:[],status:"won"},
+  {id:9039,event:"Switzerland vs Argelia",date:"2026-07-09",profit:2.0,notes:"",legs:[],status:"won"},
+  {id:9040,event:"Colombia vs Ghana",date:"2026-07-09",profit:3.0,notes:"",legs:[],status:"won"},
+  {id:9041,event:"???",date:"2026-07-09",profit:1.0,notes:"",legs:[],status:"won"},
+  {id:9042,event:"Canada vs Morocco",date:"2026-07-10",profit:0.45,notes:"",legs:[],status:"won"},
+  {id:9043,event:"Spain vs Portugal (QF)",date:"2026-07-10",profit:3.0,notes:"Portugal to score first +0.25 / Spain first +3",legs:[],status:"won"},
+  {id:9044,event:"Spain vs Portugal (QF)",date:"2026-07-10",profit:3.5,notes:"Oyarzabal -0.5 shots in net +0.08 / +0.5 +3.5",legs:[],status:"won"},
+  {id:9045,event:"Argentina vs Egypt",date:"2026-07-10",profit:1.6,notes:"Argentina goal first half +2 / if no +1.6",legs:[],status:"won"},
+  {id:9046,event:"Switzerland vs Colombia",date:"2026-07-11",profit:1.5,notes:"Switzerland first kickoff +1.56 / if Colombia +1.5",legs:[],status:"pending"},
+  {id:9047,event:"Morocco vs France (SF)",date:"2026-07-11",profit:2.0,notes:"",legs:[],status:"pending"},
+  {id:9048,event:"Spain vs Belgium (SF)",date:"2026-07-11",profit:3.0,notes:"",legs:[],status:"pending"},
+  {id:9049,event:"Spain vs Belgium (SF)",date:"2026-07-11",profit:5.0,notes:"",legs:[],status:"pending"},
+  {id:9050,event:"Argentina vs Switzerland (SF)",date:"2026-07-11",profit:0.2,notes:"",legs:[],status:"pending"},
+];
+const EXCEL_NORMALS=[
+  {id:8001,event:"Combined Bet",type:"Combi",profit:-0.1,date:"2026-06-12",notes:""},
+  {id:8002,event:"Mexico vs South Africa",type:"Normal",profit:2.75,date:"2026-06-14",notes:""},
+  {id:8003,event:"Mexico vs South Africa",type:"Freebet",profit:1.6,date:"2026-06-14",notes:"2€ freebet, odds boosted 1.8 — real net profit 1.6€"},
+  {id:8004,event:"Canada vs Bosnia",type:"Normal",profit:-1.1,date:"2026-06-12",notes:""},
+  {id:8005,event:"USA vs Paraguay",type:"Normal",profit:-0.2,date:"2026-06-15",notes:""},
+  {id:8006,event:"Brazil vs Morocco",type:"Normal",profit:-0.1,date:"2026-06-15",notes:""},
+  {id:8007,event:"Brazil vs Morocco",type:"Normal",profit:-0.2,date:"2026-06-15",notes:""},
+  {id:8008,event:"Spain vs Cape Verde",type:"Normal",profit:-2.5,date:"2026-06-18",notes:""},
+  {id:8009,event:"Germany vs Curaçao",type:"Normal",profit:5.0,date:"2026-06-16",notes:"Boosted odds 1.44 → 2.00"},
+  {id:8010,event:"Japan vs Netherlands",type:"Normal",profit:-5.0,date:"2026-06-17",notes:"Boosted odds 1.54 → 2.00 — disguise at Winamax"},
+  {id:8011,event:"Ilia Topuria (Method: Win)",type:"Normal",profit:-5.0,date:"2026-06-01",notes:""},
+  {id:8012,event:"Promo Cape Verde",type:"Normal",profit:-5.0,date:"2026-06-18",notes:"Loss returned as +5€ freebet"},
+  {id:8013,event:"France vs Senegal",type:"Freebet",profit:10.0,date:"2026-06-19",notes:"10€ freebet, odds boosted 1.44→2"},
+  {id:8014,event:"Combined Bet",type:"Combi",profit:0.18,date:"2026-06-19",notes:""},
+  {id:8015,event:"Combined Bet (Argentina vs Argelia)",type:"Combi",profit:-0.2,date:"2026-06-20",notes:""},
+  {id:8016,event:"Sweden vs Netherlands",type:"Freebet",profit:5.0,date:"2026-06-23",notes:"5€ freebet, odds boosted 1.44→2"},
+  {id:8017,event:"Spain vs Saudi Arabia",type:"Freebet",profit:10.0,date:"2026-06-25",notes:"10€ freebet, odds boosted 1.33→2"},
+  {id:8018,event:"Norway vs Senegal",type:"Normal",profit:0.5,date:"2026-06-26",notes:""},
+  {id:8019,event:"Portugal vs Uzbekistan",type:"Freebet",profit:8.0,date:"2026-06-27",notes:"15€ freebet, odds boosted 1.53"},
+  {id:8020,event:"Combined Bet",type:"Freebet",profit:7.01,date:"2026-06-28",notes:"5€ freebet 2.40 odds"},
+  {id:8021,event:"Mexico vs Czechia",type:"Normal",profit:-1.0,date:"2026-06-28",notes:""},
+  {id:8022,event:"Combined Bet",type:"Freebet",profit:0.0,date:"2026-06-29",notes:"5€ freebet 3.07 odds"},
+  {id:8023,event:"Combined Bet",type:"Freebet",profit:13.6,date:"2026-06-30",notes:"20€ freebet 1.68"},
+  {id:8024,event:"Austria vs Argelia",type:"Freebet",profit:0,date:"2026-07-01",notes:"Pending"},
+  {id:8025,event:"Brazil vs Japan",type:"Freebet",profit:4.6,date:"2026-07-05",notes:"5€ freebet 1.92 odds"},
+  {id:8026,event:"Paraguay vs Germany",type:"Freebet",profit:0,date:"2026-07-06",notes:"5€ freebet 2.0 odds"},
+  {id:8027,event:"France & Mexico",type:"Freebet",profit:4.95,date:"2026-07-07",notes:"5€ freebet 1.99 odds"},
+  {id:8028,event:"Congo vs England",type:"Normal",profit:5.0,date:"2026-07-04",notes:"Boosted odds 1.75 → 2.00"},
+  {id:8029,event:"Cape Verde vs Argentina",type:"Freebet",profit:10.0,date:"2026-07-08",notes:"Boosted odds → 2.00"},
+  {id:8030,event:"France — Mbappé to score",type:"Freebet",profit:10.0,date:"2026-07-08",notes:"Boosted odds → 2.00"},
+  {id:8031,event:"Haaland or Vini to score",type:"Freebet",profit:10.0,date:"2026-07-09",notes:"Boosted odds → 2.00"},
+  {id:8032,event:"Lamine or Cristiano to score",type:"Normal",profit:-13.0,date:"2026-07-10",notes:"Boosted odd 1.5 to 3"},
+  {id:8033,event:"Spain vs Portugal",type:"Freebet",profit:10.0,date:"2026-07-10",notes:"Boosted odds → 2.00"},
+  {id:8034,event:"Argentina vs Egypt",type:"Freebet",profit:10.0,date:"2026-07-10",notes:"Boosted odds → 2.00"},
+  {id:8035,event:"France vs Morocco",type:"Normal",profit:10.0,date:"2026-07-11",notes:"Boosted odds 1.54 → 2.00"},
+  {id:8036,event:"Spain vs Belgium",type:"Normal",profit:10.0,date:"2026-07-11",notes:"Boosted odds 1.54 → 2.00"},
+];
+if(D.bets.length===0) D.bets=EXCEL_SUREBETS.map(b=>({...b}));
+if(D.normals.length===0) D.normals=EXCEL_NORMALS.map(n=>({...n}));
+save();
+
+// ══════════════════════════════════════════
+//  CALC STATE
+// ══════════════════════════════════════════
+let outcomes=[{id:1,house:'Casa 1',result:'',odd:2.30,favored:false},{id:2,house:'Casa 2',result:'',odd:1.90,favored:false}];
+let nextId=3,totalInv=100,roundMode='exact',customStep=0.1;
+
+function roundStep(v,s){if(!s||!isFinite(s)||s<=0)return v;const f=1/s;return parseFloat((Math.round(v*f)/f).toPrecision(12))}
+function applyRound(v){if(roundMode==='exact')return v;const s=roundMode==='custom'?customStep:parseFloat(roundMode);return roundStep(v,s)}
+function fmt(n,d=2){return Number(n).toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d})}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function fmtDate(d){if(!d)return'';const p=d.split('-');return`${p[2]}/${p[1]}/${p[0]}`}
+
+// ── Calculate: standard or favor mode ──
+function calculate(){
+  const valid=outcomes.filter(o=>o.odd>1);
+  if(valid.length<2) return null;
+
+  const favIdx=valid.findIndex(o=>o.favored);
+  const hasFavor=favIdx>=0;
+
+  if(hasFavor){
+    // Favor mode: favored leg gets stake to win profit; others break-even (stake = totalInv/odd)
+    // We set the break-even legs first, then the favored absorbs remaining budget
+    // Break-even: bet amount B on a leg with odd O → B*O = B (always true only if O=1, not useful)
+    // Real interpretation: split so that:
+    //   - NON-FAVORED leg: its return exactly covers its own stake (break-even) → stake = totalInv * weight
+    //   - FAVORED leg: gets remaining money → higher return
+    // Practical: for a 2-leg surebet favor, we just skew the distribution.
+    // Standard surebet: stake_i = totalInv / (odd_i * sumP)
+    // Favor: set non-favored stakes so return = their own stake → stake_i * odd_i = totalInv → stake_i = totalInv / odd_i
+    // Then favored gets leftover = totalInv - sum(non-fav stakes)
+
+    const nonFav=valid.filter((o,i)=>i!==favIdx);
+    const favLeg=valid[favIdx];
+
+    // BE stakes for non-favored: stake such that return = totalInv (the whole inv comes back)
+    // This doesn't scale well with many legs; instead we do:
+    // Non-fav stake_i = totalInv / (odd_i * sumAllInvOdds_nonFav)
+    // We use a simpler, cleaner approach:
+    // Non-favored: stake_i so return_i = totalInv (break-even on total)
+    // sum of non-fav stakes = sum(totalInv / odd_i)
+    // favored stake = totalInv - sum of non-fav stakes
+
+    const nonFavStakesRaw=nonFav.map(o=>totalInv/o.odd);
+    const nonFavTotal=nonFavStakesRaw.reduce((a,b)=>a+b,0);
+    const favStakeRaw=totalInv-nonFavTotal;
+
+    if(favStakeRaw<=0){
+      // Not enough budget to favor — fall back to standard
+      return calculateStandard(valid,false);
+    }
+
+    const rawStakes=valid.map((o,i)=>{
+      if(i===favIdx) return favStakeRaw;
+      const nfIdx=nonFav.findIndex(x=>x===o);
+      return nonFavStakesRaw[nfIdx];
+    });
+    const rounded=rawStakes.map(s=>applyRound(s));
+    const actual=rounded.reduce((a,b)=>a+b,0);
+    const returns=valid.map((o,i)=>rounded[i]*o.odd);
+    const favReturn=returns[favIdx];
+    const minNonFavReturn=Math.min(...returns.filter((_,i)=>i!==favIdx));
+    // profit if favored wins
+    const profitIfFav=favReturn-actual;
+    // profit if non-fav wins (should be ~0 = break-even)
+    const profitIfBE=minNonFavReturn-actual;
+    const minRet=Math.min(...returns);
+    const profit=minRet-actual;
+    const probs=valid.map(o=>1/o.odd);
+    const sumP=probs.reduce((a,b)=>a+b,0);
+
+    return{valid,sumPct:sumP*100,isSurebet:profitIfBE>=-0.5,isFavorMode:true,
+      stakes:rounded,returns,minReturn:minRet,actualTotal:actual,
+      profit,profitPct:actual>0?(profit/actual)*100:0,
+      profitIfFav,profitIfBE,favIdx};
+  }
+  return calculateStandard(valid,false);
+}
+
+function calculateStandard(valid){
+  const probs=valid.map(o=>1/o.odd),sumP=probs.reduce((a,b)=>a+b,0);
+  const raw=valid.map(o=>(totalInv/o.odd)/sumP);
+  const rounded=raw.map(s=>applyRound(s));
+  const actual=rounded.reduce((a,b)=>a+b,0);
+  const returns=valid.map((o,i)=>rounded[i]*o.odd);
+  const minRet=Math.min(...returns);
+  const profit=minRet-actual;
+  return{valid,sumPct:sumP*100,isSurebet:sumP<1,isFavorMode:false,
+    stakes:rounded,returns,minReturn:minRet,actualTotal:actual,
+    profit,profitPct:actual>0?(profit/actual)*100:0,favIdx:-1};
+}
+
+// ── Render outcomes list ──
+function renderOutcomes(){
+  const list=document.getElementById('outcomesList');
+  list.innerHTML='';
+  const res=calculate();
+  const lit=!!(res&&res.isSurebet);
+  outcomes.forEach((o,idx)=>{
+    const row=document.createElement('div');
+    row.className='or';
+    const isFav=o.favored;
+    row.innerHTML=`
+      <input type="text" placeholder="Casa ${idx+1}" value="${esc(o.house)}" data-field="house" data-id="${o.id}">
+      <input type="text" placeholder="Resultado" value="${esc(o.result)}" data-field="result" data-id="${o.id}">
+      <input type="number" class="oi${lit?' lit':''}" placeholder="1,00" value="${o.odd>0?o.odd:''}" data-field="odd" data-id="${o.id}" min="1.01" step="0.01">
+      <button class="fav-toggle${isFav?' active':''}" data-fav="${o.id}" title="Favorecer esta pata (la otra hace break-even)">
+        <svg viewBox="0 0 24 24" fill="${isFav?'currentColor':'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        ${isFav?'Favorita':'Favorecer'}
+      </button>
+      <button class="bd" data-id="${o.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`;
+    list.appendChild(row);
+  });
+
+  // Update favor banner
+  const favOutcome=outcomes.find(o=>o.favored);
+  const banner=document.getElementById('favBanner');
+  if(favOutcome){
+    banner.style.display='flex';
+    document.getElementById('favBannerText').textContent=`Favoreciendo "${favOutcome.house||favOutcome.result||'pata seleccionada'}": si gana, obtienes el máximo profit. Las demás patas hacen break-even.`;
+  } else {
+    banner.style.display='none';
+  }
+}
+
+function renderResult(){
+  const panel=document.getElementById('resultPanel');
+  const res=calculate();
+  if(!res){
+    panel.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>Añade al menos 2 cuotas &gt; 1,00.</p></div></div>`;
+    return;
+  }
+  const{isSurebet,isFavorMode,stakes,returns,minReturn,actualTotal,profit,profitPct,sumPct,valid,favIdx,profitIfFav,profitIfBE}=res;
+  const s=profit>=0?'+':'';
+
+  let badgeHtml,ppClass,mainProfit,mainPct,subText;
+
+  if(isFavorMode){
+    badgeHtml=`<div class="badge by"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Modo Favor</div>`;
+    ppClass='yel';
+    mainProfit=profitIfFav;
+    mainPct=actualTotal>0?(profitIfFav/actualTotal)*100:0;
+    subText=`Si gana favorita: <span class="hi yel">+${fmt(profitIfFav)} €</span> · Si otra: <span class="hi" style="color:var(--blue)">${fmt(profitIfBE)>=0?'+':''}${fmt(profitIfBE)} €</span>`;
+  } else {
+    badgeHtml=isSurebet?
+      `<div class="badge bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Surebet</div>`:
+      `<div class="badge br"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Sin surebet</div>`;
+    ppClass=profit>=0?'pos':'neg';
+    mainProfit=profit;
+    mainPct=profitPct;
+    subText=`Beneficio garantizado: <span class="hi ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span>`;
+  }
+
+  const bkHtml=valid.map((o,i)=>{
+    const isFav=isFavorMode&&i===favIdx;
+    const isBE=isFavorMode&&i!==favIdx;
+    return`<div class="bkr${isFav?' favored':isBE?' be-leg':''}">
+      <div>
+        <div class="bkn">${esc(o.house||`Casa ${i+1}`)}</div>
+        <div class="bks">${esc(o.result||`Resultado ${i+1}`)} · Cuota ${fmt(o.odd)}</div>
+        ${isFav?'<div class="bkm" style="color:var(--yellow)">★ Favorita</div>':''}
+        ${isBE?'<div class="bk-be-tag">≈ Break-even</div>':''}
+      </div>
+      <div class="bkv">
+        <div class="bkst">${fmt(stakes[i])} €</div>
+        <div class="bkr2">retorno ${fmt(returns[i])} €</div>
+        <div class="bkm">mín. ${fmt(returns[i])} €</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const bW=Math.min(sumPct/1.3,100);
+  const canRegister=isSurebet||isFavorMode;
+
+  panel.innerHTML=`
+    <div class="card ph2 ${isSurebet?'sb':''} ${isFavorMode?'fav-mode':''}">
+      ${badgeHtml}
+      <div class="pp ${ppClass}">${mainProfit>=0?'+':''}${fmt(mainPct)} %</div>
+      <div class="ps">${subText}</div>
+    </div>
+    <div class="card">${bkHtml}
+      <div class="sr"><span class="sl">Inversión total</span><span class="sv">${fmt(actualTotal)} €</span></div>
+      <div class="sr"><span class="sl">Retorno mínimo</span><span class="sv ${profit>=0?'pos':'neg'}">${fmt(minReturn)} €</span></div>
+      ${isFavorMode?`
+        <div class="sr"><span class="sl">Profit si favorita gana</span><span class="sv yel">+${fmt(profitIfFav)} €</span></div>
+        <div class="sr"><span class="sl">Resultado si otra gana</span><span class="sv" style="color:var(--blue)">${profitIfBE>=0?'+':''}${fmt(profitIfBE)} € (BE)</span></div>
+      `:`<div class="sr"><span class="sl">Beneficio garantizado</span><span class="sv ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span></div>`}
+      <div class="pw"><div class="pl"><span>Suma prob. implícitas</span><span>${fmt(sumPct)} %</span></div><div class="pt"><div class="pf ${sumPct>100?'over':''}" style="width:${bW}%"></div></div></div>
+    </div>
+    <button class="btn-reg" id="regBtn" ${!canRegister?'disabled':''}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+      ${canRegister?'Registrar esta surebet':'Sin surebet — no disponible'}
+    </button>`;
+  document.getElementById('regBtn').addEventListener('click',openRegModal);
+}
+
+function render(){renderOutcomes();renderResult();}
+
+// ── Register modal ──
+let _pendingRes=null;
+function openRegModal(){
+  const res=calculate();
+  if(!res||(res.profit<-0.5&&!res.isFavorMode)) return;
+  _pendingRes=res;
+  document.getElementById('reg-event').value='';
+  document.getElementById('reg-date').value=new Date().toISOString().slice(0,10);
+  // Pre-fill profit with the expected value
+  const expectedProfit=res.isFavorMode?res.profitIfFav:res.profit;
+  document.getElementById('reg-profit').value=parseFloat(expectedProfit.toFixed(2));
+  document.getElementById('reg-notes').value='';
+  document.getElementById('reg-calc-profit').textContent=(expectedProfit>=0?'+':'')+fmt(expectedProfit)+' €';
+  document.getElementById('regModal').style.display='flex';
+  setTimeout(()=>document.getElementById('reg-event').focus(),50);
+}
+
+document.getElementById('reg-cancel').addEventListener('click',()=>{document.getElementById('regModal').style.display='none';});
+document.getElementById('regModal').addEventListener('click',e=>{if(e.target===document.getElementById('regModal'))document.getElementById('regModal').style.display='none';});
+
+document.getElementById('reg-save').addEventListener('click',()=>{
+  const ev=document.getElementById('reg-event').value.trim();
+  if(!ev){alert('Introduce el nombre del evento.');return;}
+  const res=_pendingRes;if(!res)return;
+  const realProfit=parseFloat(document.getElementById('reg-profit').value)||0;
+  const notes=document.getElementById('reg-notes').value.trim();
+  const dateVal=document.getElementById('reg-date').value||new Date().toISOString().slice(0,10);
+  const bet={
+    id:Date.now(),event:ev,date:dateVal,
+    profit:realProfit,
+    profitPct:res.actualTotal>0?(realProfit/res.actualTotal)*100:0,
+    totalStake:res.actualTotal,minReturn:res.minReturn,
+    status:'pending',notes,
+    isFavorMode:res.isFavorMode||false,
+    profitIfFav:res.isFavorMode?res.profitIfFav:null,
+    profitIfBE:res.isFavorMode?res.profitIfBE:null,
+    legs:res.valid.map((o,i)=>({
+      house:o.house||`Casa ${i+1}`,
+      result:o.result||`Resultado ${i+1}`,
+      odd:o.odd,stake:res.stakes[i],
+      minReturn:res.returns[i],
+      favored:res.isFavorMode&&i===res.favIdx
+    }))
+  };
+  D.bets.unshift(bet);save();updateBadges();
+  document.getElementById('regModal').style.display='none';
+  // Reset favor toggles
+  outcomes.forEach(o=>o.favored=false);
+  render();
+});
+
+// ══════════════════════════════════════════
+//  SUREBETS PAGE — with inline editing
+// ══════════════════════════════════════════
+function profitTagHtml(profit){
+  if(profit>0.005) return`<span class="profit-tag pos">+${fmt(profit)} €</span>`;
+  if(profit<-0.005) return`<span class="profit-tag neg">${fmt(profit)} €</span>`;
+  return`<span class="profit-tag zer">±0 €</span>`;
+}
+
+function statusSelectHtml(bet){
+  const opts=[
+    {v:'pending',l:'Pendiente'},
+    {v:'won',l:`Ganada (+${fmt(bet.profit)} €)`},
+    {v:'lost',l:'Perdida (−)'},
+    {v:'breakeven',l:'Break-even (0 €)'}
+  ];
+  return`<select class="ss" data-sid="${bet.id}">`+
+    opts.map(o=>`<option value="${o.v}"${bet.status===o.v?' selected':''}>${o.l}</option>`).join('')+
+    `</select>`;
+}
+
+function renderSurebets(filter=''){
+  const bets=D.bets.filter(b=>!filter||
+    b.event.toLowerCase().includes(filter.toLowerCase())||
+    (b.legs||[]).some(l=>l.house&&l.house.toLowerCase().includes(filter.toLowerCase())));
+
+  const won=D.bets.filter(b=>b.status==='won');
+  const be=D.bets.filter(b=>b.status==='breakeven');
+  const pending=D.bets.filter(b=>b.status==='pending');
+  const wonProfit=won.reduce((a,b)=>a+(b.profit||0),0);
+  const beProfit=be.reduce((a,b)=>a+0,0); // always 0
+
+  document.getElementById('sbStats').innerHTML=`
+    <div class="sc"><div class="sl2">Total surebets</div><div class="sv2">${D.bets.length}</div></div>
+    <div class="sc"><div class="sl2">Ganadas</div><div class="sv2 pos">${won.length}</div></div>
+    <div class="sc"><div class="sl2">Pendientes</div><div class="sv2 yel">${pending.length}</div></div>
+    <div class="sc"><div class="sl2">Profit surebets</div><div class="sv2 ${wonProfit>=0?'pos':'neg'}">${wonProfit>=0?'+':''}${fmt(wonProfit)} €</div></div>`;
+
+  const list=document.getElementById('sbList');
+  if(!bets.length){
+    list.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>No hay surebets registradas.</p></div></div>`;
+    return;
+  }
+
+  list.innerHTML=bets.map(b=>{
+    const signP=b.profit>0?'+':b.profit<0?'':b.status==='breakeven'?'±':'';
+    const pTagClass=b.status==='breakeven'?'zer':b.profit>0?'pos':b.profit<0?'neg':'zer';
+    const sLabel={pending:'Pendiente',won:'Ganada',lost:'Perdida',breakeven:'Break-even'}[b.status]||b.status;
+    const sCls={pending:'sp',won:'sw',lost:'sl3',breakeven:'sbz'}[b.status]||'';
+    const displayProfit=b.status==='breakeven'?0:b.profit;
+    const displayPct=b.status==='breakeven'?0:b.profitPct;
+
+    const legsHtml=(b.legs&&b.legs.length)?
+      `<div style="background:var(--raised);display:grid;grid-template-columns:1fr 1fr auto auto auto;gap:5px 10px;padding:5px 15px;font-size:10px;color:var(--faint)">
+        <span>CASA</span><span>RESULTADO</span><span style="text-align:right">CUOTA</span><span style="text-align:right">STAKE</span><span style="text-align:right">RETORNO</span>
+      </div>`+
+      b.legs.map(l=>`<div class="leg${l.favored?' favored':''}">
+        <span class="lh">${esc(l.house)}${l.favored?' ★':''}</span>
+        <span class="lr">${esc(l.result)}</span>
+        <span class="lo">${fmt(l.odd||0)}</span>
+        <span class="lk">${fmt(l.stake||0)} €</span>
+        <span class="lm">${fmt(l.minReturn||0)} €</span>
+      </div>`).join('')
+    : `<div style="padding:8px 15px;font-size:12px;color:var(--faint)">Sin desglose de patas</div>`;
+
+    // Favor mode extra info
+    const favorInfo=b.isFavorMode&&b.profitIfFav!=null?
+      `<span style="font-size:10px;color:var(--yellow);font-family:var(--mono);font-weight:600">★ Favor: +${fmt(b.profitIfFav)}€ / BE: ${fmt(b.profitIfBE||0)}€</span>`:'';
+
+    return`<div class="bi">
+      <div class="bih">
+        <div style="min-width:0;flex:1">
+          <input class="bi-ev-input" type="text" value="${esc(b.event)}" data-evid="${b.id}" title="Editar evento">
+          <div style="display:flex;align-items:center;gap:8px;margin-top:3px;flex-wrap:wrap">
+            <input type="date" value="${b.date||''}" data-dateid="${b.id}" style="background:transparent;border:none;border-bottom:1px dashed var(--border);color:var(--faint);font-size:11px;padding:0 0 1px;outline:none;width:105px">
+            ${favorInfo}
+            ${b.notes?`<span style="font-size:11px;color:var(--muted);font-style:italic">${esc(b.notes)}</span>`:''}
+          </div>
+        </div>
+        <div class="bim">
+          <span class="profit-tag ${pTagClass}">${signP}${fmt(displayProfit)} €</span>
+          <span class="sb2 ${sCls}">${sLabel}</span>
+          ${statusSelectHtml(b)}
+          <button class="bd2" data-bid="${b.id}" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+        </div>
+      </div>
+      <div class="bl">${legsHtml}</div>
+      <div class="bf">
+        <span class="bfl">Invertido: ${fmt(b.totalStake||0)} € · Ret. mín.: ${fmt(b.minReturn||0)} €</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--faint)">Profit real:</span>
+          <input class="bi-profit-input" type="number" value="${b.profit||0}" step="0.01" data-profitid="${b.id}" title="Editar profit real">
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  NORMALES/FREEBETS PAGE
+// ══════════════════════════════════════════
+function typePill(t){
+  if(t==='Freebet') return`<span class="type-pill tp-freebet">Freebet</span>`;
+  if(t==='Combi') return`<span class="type-pill tp-combi">Combi</span>`;
+  return`<span class="type-pill tp-normal">Normal</span>`;
+}
+function renderNormals(filter=''){
+  const items=D.normals.filter(n=>!filter||n.event.toLowerCase().includes(filter.toLowerCase()));
+  const totProfit=D.normals.reduce((a,n)=>a+(n.profit||0),0);
+  const freebets=D.normals.filter(n=>n.type==='Freebet');
+  const fbProfit=freebets.reduce((a,n)=>a+(n.profit||0),0);
+  const normProfit=D.normals.filter(n=>n.type==='Normal').reduce((a,n)=>a+(n.profit||0),0);
+  document.getElementById('nbStats').innerHTML=`
+    <div class="sc"><div class="sl2">Total entradas</div><div class="sv2">${D.normals.length}</div></div>
+    <div class="sc"><div class="sl2">Freebets</div><div class="sv2 yel">${freebets.length}</div></div>
+    <div class="sc"><div class="sl2">Profit normales</div><div class="sv2 ${normProfit>=0?'pos':'neg'}">${normProfit>=0?'+':''}${fmt(normProfit)} €</div></div>
+    <div class="sc"><div class="sl2">Profit freebets</div><div class="sv2 ${fbProfit>=0?'pos':'neg'}">${fbProfit>=0?'+':''}${fmt(fbProfit)} €</div></div>`;
+  const list=document.getElementById('nbList');
+  if(!items.length){list.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>No hay apuestas registradas.</p></div></div>`;return;}
+  list.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">`+items.map(n=>{
+    const s=n.profit>0?'+':n.profit<0?'':n.profit===0?'±':'';
+    const pCls=n.profit>0?'pos':n.profit<0?'neg':'zer';
+    return`<div class="ni2">
+      <div class="ni2-left">
+        <div class="ni2-ev">${esc(n.event)}</div>
+        <div class="ni2-meta"><span>${fmtDate(n.date)}</span>${typePill(n.type)}</div>
+        ${n.notes?`<div class="ni2-note">${esc(n.notes)}</div>`:''}
+      </div>
+      <div class="ni2-right"><div class="ni2-pnl ${pCls}">${s}${fmt(n.profit)} €</div></div>
+      <button class="bd2" data-nid="${n.id}" style="margin-top:2px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+    </div>`;
+  }).join('')+`</div>`;
+}
+
+// ══════════════════════════════════════════
+//  PROFIT PAGE
+// ══════════════════════════════════════════
+function renderProfit(){
+  // Only count resolved bets for profit (not pending)
+  const all=[];
+  D.bets.forEach(b=>{
+    if(!b.date) return;
+    // Status breakeven → profit = 0
+    const p=b.status==='breakeven'?0:(b.profit||0);
+    // Only include resolved bets in profit
+    if(b.status==='pending') return;
+    all.push({date:b.date,profit:p,cat:'surebet'});
+  });
+  D.normals.forEach(n=>{
+    if(n.date&&n.profit!==undefined)
+      all.push({date:n.date,profit:n.profit,cat:n.type==='Freebet'?'freebet':'normal'});
+  });
+
+  const months={};
+  all.forEach(e=>{
+    const m=e.date.slice(0,7);
+    if(!months[m])months[m]={surebet:0,normal:0,freebet:0};
+    months[m][e.cat]+=e.profit;
+  });
+
+  const keys=Object.keys(months).sort();
+  const totalAll=Object.values(months).reduce((a,m)=>a+m.surebet+m.normal+m.freebet,0);
+  // For totals, also exclude pending
+  const totalSB=D.bets.filter(b=>b.status!=='pending').reduce((a,b)=>a+(b.status==='breakeven'?0:(b.profit||0)),0);
+  const totalNorm=D.normals.filter(n=>n.type==='Normal').reduce((a,n)=>a+(n.profit||0),0);
+  const totalFB=D.normals.filter(n=>n.type==='Freebet').reduce((a,n)=>a+(n.profit||0),0);
+
+  const pendingProfit=D.bets.filter(b=>b.status==='pending').reduce((a,b)=>a+(b.profit||0),0);
+
+  const monthNames={
+    '2026-06':'Junio 2026','2026-07':'Julio 2026','2026-05':'Mayo 2026',
+    '2025-12':'Diciembre 2025','2026-08':'Agosto 2026','2026-09':'Septiembre 2026',
+    '2026-10':'Octubre 2026','2026-11':'Noviembre 2026','2026-04':'Abril 2026',
+    '2026-03':'Marzo 2026','2026-02':'Febrero 2026','2026-01':'Enero 2026'
+  };
+  function mName(k){return monthNames[k]||k}
+
+  document.getElementById('totalHero').innerHTML=`
+    <div class="total-hero">
+      <div class="th-label">Profit Total (resueltas)</div>
+      <div class="th-val ${totalAll>=0?'pos':'neg'}">${totalAll>=0?'+':''}${fmt(totalAll)} €</div>
+      <div class="th-sub">
+        <div class="th-sub-item"><div class="th-sub-label">Surebets</div><div class="th-sub-val" style="color:var(--green)">${totalSB>=0?'+':''}${fmt(totalSB)} €</div></div>
+        <div class="th-sub-item"><div class="th-sub-label">Normales</div><div class="th-sub-val" style="color:${totalNorm>=0?'var(--blue)':'var(--red)'}">${totalNorm>=0?'+':''}${fmt(totalNorm)} €</div></div>
+        <div class="th-sub-item"><div class="th-sub-label">Freebets</div><div class="th-sub-val" style="color:var(--yellow)">${totalFB>=0?'+':''}${fmt(totalFB)} €</div></div>
+        <div class="th-sub-item"><div class="th-sub-label">Pendiente</div><div class="th-sub-val" style="color:var(--yellow)">+${fmt(pendingProfit)} €</div></div>
+      </div>
+    </div>`;
+
+  document.getElementById('monthList').innerHTML=keys.reverse().map(k=>{
+    const m=months[k];const tot=m.surebet+m.normal+m.freebet;
+    return`<div class="month-card">
+      <div class="mc-head"><span class="mc-month">${mName(k)}</span><span class="mc-total ${tot>=0?'pos':'neg'}">${tot>=0?'+':''}${fmt(tot)} €</span></div>
+      ${m.surebet!==0?`<div class="mc-row"><span class="mc-cat">Surebets</span><span class="mc-val ${m.surebet>=0?'pos':'neg'}">${m.surebet>=0?'+':''}${fmt(m.surebet)} €</span></div>`:''}
+      ${m.normal!==0?`<div class="mc-row"><span class="mc-cat">Normales</span><span class="mc-val ${m.normal>=0?'pos':'neg'}">${m.normal>=0?'+':''}${fmt(m.normal)} €</span></div>`:''}
+      ${m.freebet!==0?`<div class="mc-row"><span class="mc-cat">Freebets</span><span class="mc-val ${m.freebet>=0?'pos':'neg'}">${m.freebet>=0?'+':''}${fmt(m.freebet)} €</span></div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  EVENTS — CALCULATOR
+// ══════════════════════════════════════════
+document.getElementById('outcomesList').addEventListener('input',e=>{
+  const el=e.target,id=+el.dataset.id,field=el.dataset.field;
+  if(!id||!field)return;
+  const o=outcomes.find(x=>x.id===id);if(!o)return;
+  if(field==='odd') o.odd=parseFloat(el.value)||0;
+  else o[field]=el.value;
+  renderResult();
+  const res=calculate();
+  document.querySelectorAll('.oi').forEach(i=>i.classList.toggle('lit',!!(res&&res.isSurebet)));
+});
+
+document.getElementById('outcomesList').addEventListener('click',e=>{
+  // Delete button
+  const delBtn=e.target.closest('.bd');
+  if(delBtn&&outcomes.length>2){
+    outcomes=outcomes.filter(o=>o.id!==+delBtn.dataset.id);
+    render();return;
+  }
+  // Favor toggle
+  const favBtn=e.target.closest('.fav-toggle');
+  if(favBtn){
+    const fid=+favBtn.dataset.fav;
+    // Toggle: if clicking active → deactivate; else → activate only this one
+    const o=outcomes.find(x=>x.id===fid);
+    if(!o)return;
+    const wasActive=o.favored;
+    outcomes.forEach(x=>x.favored=false);
+    if(!wasActive) o.favored=true;
+    render();
+    return;
+  }
+});
+
+document.getElementById('addBtn').addEventListener('click',()=>{
+  outcomes.push({id:nextId++,house:'',result:'',odd:0,favored:false});
+  render();
+  setTimeout(()=>{const ins=document.querySelectorAll('.oi');if(ins.length)ins[ins.length-1].focus();},40);
+});
+document.getElementById('totalInv').addEventListener('input',e=>{totalInv=parseFloat(e.target.value)||0;renderResult();});
+document.getElementById('roundPills').addEventListener('click',e=>{
+  const btn=e.target.closest('.rpb');if(!btn)return;
+  roundMode=btn.dataset.mode;
+  document.querySelectorAll('.rpb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  document.getElementById('customRow').style.display=roundMode==='custom'?'flex':'none';
+  renderResult();
+});
+document.getElementById('customStep').addEventListener('input',e=>{customStep=parseFloat(e.target.value)||0.1;if(roundMode==='custom')renderResult();});
+
+// ══════════════════════════════════════════
+//  EVENTS — SUREBETS PAGE (inline editing)
+// ══════════════════════════════════════════
+document.getElementById('sbSearch').addEventListener('input',e=>renderSurebets(e.target.value));
+
+document.getElementById('sbList').addEventListener('change',e=>{
+  // Status select
+  const sel=e.target.closest('[data-sid]');
+  if(sel&&sel.tagName==='SELECT'){
+    const b=D.bets.find(x=>x.id===+sel.dataset.sid);if(!b)return;
+    b.status=sel.value;
+    // If break-even, record profit as 0
+    if(b.status==='breakeven') b.profit=0;
+    save();
+    renderSurebets(document.getElementById('sbSearch').value);
+    renderProfit();
+    return;
+  }
+});
+
+// Inline editing: event name, date, profit
+document.getElementById('sbList').addEventListener('input',e=>{
+  // Event name
+  const evInput=e.target.closest('[data-evid]');
+  if(evInput){
+    const b=D.bets.find(x=>x.id===+evInput.dataset.evid);if(!b)return;
+    b.event=evInput.value;save();
+    updateBadges();
+    return;
+  }
+  // Date
+  const dateInput=e.target.closest('[data-dateid]');
+  if(dateInput){
+    const b=D.bets.find(x=>x.id===+dateInput.dataset.dateid);if(!b)return;
+    b.date=dateInput.value;save();
+    renderProfit();
+    return;
+  }
+  // Profit
+  const profitInput=e.target.closest('[data-profitid]');
+  if(profitInput){
+    const b=D.bets.find(x=>x.id===+profitInput.dataset.profitid);if(!b)return;
+    b.profit=parseFloat(profitInput.value)||0;
+    b.profitPct=b.totalStake>0?(b.profit/b.totalStake)*100:0;
+    save();
+    // Re-render the profit tag for this specific item (avoid full re-render while typing)
+    const profitTag=profitInput.closest('.bi')?.querySelector('.profit-tag');
+    if(profitTag){
+      const p=b.profit;
+      const cls=p>0.005?'pos':p<-0.005?'neg':'zer';
+      const sign=p>0.005?'+':p<-0.005?'':b.status==='breakeven'?'±':'';
+      profitTag.className=`profit-tag ${cls}`;
+      profitTag.textContent=`${sign}${fmt(p)} €`;
+    }
+    renderProfit();
+    return;
+  }
+});
+
+document.getElementById('sbList').addEventListener('click',e=>{
+  const btn=e.target.closest('[data-bid]');if(!btn)return;
+  if(!confirm('¿Eliminar esta surebet?'))return;
+  D.bets=D.bets.filter(b=>b.id!==+btn.dataset.bid);
+  save();updateBadges();
+  renderSurebets(document.getElementById('sbSearch').value);
+  renderProfit();
+});
+
+document.getElementById('sbExport').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify({bets:D.bets,normals:D.normals},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`surebets_${new Date().toISOString().slice(0,10)}.json`;a.click();
+});
+document.getElementById('sbImport').addEventListener('click',()=>document.getElementById('sbFile').click());
+document.getElementById('sbFile').addEventListener('change',e=>{
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();r.onload=ev=>{
+    try{
+      const p=JSON.parse(ev.target.result);
+      if(!confirm(`Importar ${(p.bets||[]).length} surebets y ${(p.normals||[]).length} normales?`))return;
+      const existS=new Set(D.bets.map(b=>b.id));
+      const existN=new Set(D.normals.map(n=>n.id));
+      D.bets=[...(p.bets||[]).filter(b=>!existS.has(b.id)),...D.bets];
+      D.normals=[...(p.normals||[]).filter(n=>!existN.has(n.id)),...D.normals];
+      save();updateBadges();renderSurebets();renderNormals();renderProfit();
+      alert('Importado correctamente.');
+    }catch(err){alert('Error: '+err.message);}
+  };r.readAsText(file);e.target.value='';
+});
+document.getElementById('sbClear').addEventListener('click',()=>{
+  if(!confirm('¿Borrar TODAS las surebets? Esto no se puede deshacer.'))return;
+  D.bets=[];save();updateBadges();renderSurebets();renderProfit();
+});
+
+// ══════════════════════════════════════════
+//  EVENTS — NORMALES PAGE
+// ══════════════════════════════════════════
+document.getElementById('nbSearch').addEventListener('input',e=>renderNormals(e.target.value));
+document.getElementById('nbList').addEventListener('click',e=>{
+  const btn=e.target.closest('[data-nid]');if(!btn)return;
+  if(!confirm('¿Eliminar esta entrada?'))return;
+  D.normals=D.normals.filter(n=>n.id!==+btn.dataset.nid);
+  save();updateBadges();
+  renderNormals(document.getElementById('nbSearch').value);
+  renderProfit();
+});
+
+// Add normal modal
+const modal=document.getElementById('addModal');
+document.getElementById('nbAddBtn').addEventListener('click',()=>{
+  document.getElementById('m-date').value=new Date().toISOString().slice(0,10);
+  modal.style.display='flex';
+  setTimeout(()=>document.getElementById('m-event').focus(),50);
+});
+document.getElementById('m-cancel').addEventListener('click',()=>{modal.style.display='none';});
+modal.addEventListener('click',e=>{if(e.target===modal)modal.style.display='none';});
+document.getElementById('m-save').addEventListener('click',()=>{
+  const ev=document.getElementById('m-event').value.trim();
+  if(!ev){alert('Introduce el evento.');return;}
+  const n={id:Date.now(),event:ev,type:document.getElementById('m-type').value,
+    profit:parseFloat(document.getElementById('m-profit').value)||0,
+    date:document.getElementById('m-date').value,
+    notes:document.getElementById('m-notes').value.trim()};
+  D.normals.unshift(n);save();updateBadges();
+  renderNormals(document.getElementById('nbSearch').value);
+  renderProfit();
+  modal.style.display='none';
+  ['m-event','m-profit','m-notes'].forEach(id=>document.getElementById(id).value='');
+});
+
+// ══════════════════════════════════════════
+//  NAV
+// ══════════════════════════════════════════
+const pgMeta={
+  calc:{title:'Calculadora',sub:'Calcula stakes y surebets al instante'},
+  surebets:{title:'Mis surebets',sub:'Historial editable con profit por surebet'},
+  normales:{title:'Normales & Freebets',sub:'Apuestas estándar y freebets por tipo y fecha'},
+  profit:{title:'Profit',sub:'Rendimiento por mes y total acumulado (resueltas)'},
+};
+document.querySelectorAll('.ni[data-page]').forEach(item=>{
+  item.addEventListener('click',()=>{
+    const page=item.dataset.page;
+    document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));item.classList.add('active');
+    ['calc','surebets','normales','profit'].forEach(p=>{
+      const el=document.getElementById('page-'+p);if(el)el.style.display='none';
+    });
+    const target=document.getElementById('page-'+page);
+    if(target)target.style.display=page==='calc'?'contents':'flex';
+    document.getElementById('pgTitle').textContent=pgMeta[page].title;
+    document.getElementById('pgSub').textContent=pgMeta[page].sub;
+    if(page==='calc')render();
+    else if(page==='surebets')renderSurebets();
+    else if(page==='normales')renderNormals();
+    else if(page==='profit')renderProfit();
+    if(window.innerWidth<600)closeSB();
+  });
+});
+
+function updateBadges(){
+  document.getElementById('sbCount').textContent=D.bets.length;
+  document.getElementById('nbCount').textContent=D.normals.length;
+}
+
+// ── Mobile sidebar ──
+const sidebar=document.getElementById('sidebar');
+const overlay=document.getElementById('sbOverlay');
+function openSB(){sidebar.classList.add('open');overlay.classList.add('open')}
+function closeSB(){sidebar.classList.remove('open');overlay.classList.remove('open')}
+document.getElementById('sbToggle').addEventListener('click',()=>sidebar.classList.contains('open')?closeSB():openSB());
+overlay.addEventListener('click',closeSB);
+
+// ══ INIT ══
+updateBadges();
+render();
+</script>
+</body>
+</html>
