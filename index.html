@@ -12,9 +12,8 @@
   --red:#ff5f5f;--rdim:rgba(255,95,95,.1);
   --yellow:#f0b429;--ydim:rgba(240,180,41,.12);
   --blue:#58a6ff;--bdim:rgba(88,166,255,.1);
-  --purple:#9467bd;--pdim:rgba(148,103,189,.12);
   --text:#e6edf3;--muted:#7d8fa8;--faint:#4a5a72;
-  --r:10px;--sw:218px;--mono:'JetBrains Mono','Fira Code',monospace;--t:.16s ease;
+  --r:10px;--sw:210px;--mono:'JetBrains Mono','Fira Code',monospace;--t:.16s ease;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -72,32 +71,23 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 /* ── INPUTS ── */
 .fl{display:block;font-size:10.5px;font-weight:600;text-transform:uppercase;
   letter-spacing:.8px;color:var(--faint);margin-bottom:5px}
-input[type=number],input[type=text],select,input[type=date]{
+input[type=number],input[type=text],select{
   width:100%;background:var(--inp);border:1px solid var(--border);
   border-radius:7px;padding:8px 11px;color:var(--text);font-size:14px;
   outline:none;transition:border-color var(--t),box-shadow var(--t)}
 input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,139,255,.13)}
-select option{background:var(--raised);color:var(--text)}
 .iw{position:relative;display:flex;align-items:center}
 .isuf{position:absolute;right:10px;color:var(--faint);font-size:12px;pointer-events:none}
 .ii{font-size:16px;font-weight:600;text-align:right;padding-right:26px!important}
 
 /* ── OUTCOMES ── */
-.oh{display:grid;grid-template-columns:1fr 1fr 96px 96px 32px;gap:6px;margin-bottom:6px}
+.oh{display:grid;grid-template-columns:1fr 1fr 100px 32px;gap:6px;margin-bottom:6px}
 .cl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--faint);padding:0 3px}
-.or{display:grid;grid-template-columns:1fr 1fr 96px 96px 32px;gap:6px;
+.or{display:grid;grid-template-columns:1fr 1fr 100px 32px;gap:6px;
   margin-bottom:6px;align-items:center;animation:fi .18s ease}
 @keyframes fi{from{opacity:0;transform:translateY(-4px)}to{opacity:1}}
 .oi{text-align:right;font-family:var(--mono);font-size:15px;font-weight:600}
 .oi.lit{border-color:var(--green);box-shadow:0 0 0 3px var(--gglow)}
-/* favor toggle pill */
-.fav-toggle{display:flex;align-items:center;justify-content:center;
-  width:96px;height:34px;border-radius:7px;border:1px solid var(--border);
-  background:var(--inp);color:var(--faint);font-size:11px;font-weight:600;
-  cursor:pointer;gap:5px;transition:all var(--t);white-space:nowrap;flex-shrink:0}
-.fav-toggle:hover{border-color:var(--yellow);color:var(--yellow);background:var(--ydim)}
-.fav-toggle.active{border-color:var(--yellow);background:var(--ydim);color:var(--yellow)}
-.fav-toggle svg{width:11px;height:11px;flex-shrink:0}
 .bd{width:32px;height:32px;display:grid;place-items:center;border-radius:7px;
   color:var(--faint);border:1px solid transparent;transition:all var(--t);flex-shrink:0}
 .bd:hover{background:var(--rdim);color:var(--red);border-color:rgba(255,95,95,.3)}
@@ -107,12 +97,6 @@ select option{background:var(--raised);color:var(--text)}
   font-size:13px;font-weight:500;transition:all var(--t);width:100%}
 .ba:hover{border-color:var(--green);color:var(--green);background:var(--gdim)}
 .ba svg{width:13px;height:13px}
-
-/* ── FAVOR MODE BANNER ── */
-.fav-banner{margin-top:10px;padding:8px 12px;border-radius:7px;
-  background:var(--ydim);border:1px solid rgba(240,180,41,.3);
-  font-size:12px;color:var(--yellow);display:flex;align-items:center;gap:7px;display:none}
-.fav-banner svg{width:13px;height:13px;flex-shrink:0}
 
 /* ── ROUNDING ── */
 .rs{margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
@@ -137,38 +121,33 @@ select option{background:var(--raised);color:var(--text)}
   background:radial-gradient(ellipse at 50% 0%,var(--gglow) 0%,transparent 65%);
   pointer-events:none;opacity:0;transition:opacity .4s ease}
 .ph2.sb::after{opacity:1}
-.ph2.fav-mode::after{background:radial-gradient(ellipse at 50% 0%,rgba(240,180,41,.2) 0%,transparent 65%);opacity:1}
 .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;
   border-radius:20px;font-size:10.5px;font-weight:600;
   text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
 .bg{background:var(--gdim);border:1px solid rgba(0,217,126,.3);color:var(--green)}
 .br{background:var(--rdim);border:1px solid rgba(255,95,95,.3);color:var(--red)}
-.by{background:var(--ydim);border:1px solid rgba(240,180,41,.3);color:var(--yellow)}
 .badge svg{width:11px;height:11px}
 .pp{font-size:40px;font-weight:800;letter-spacing:-2px;line-height:1;
   font-family:var(--mono);margin-bottom:4px}
-.pp.pos{color:var(--green)}.pp.neg{color:var(--red)}.pp.yel{color:var(--yellow)}
+.pp.pos{color:var(--green)}.pp.neg{color:var(--red)}
 .ps{font-size:12.5px;color:var(--muted)}
 .ps .hi{font-weight:600}
-.ps .hi.pos{color:var(--green)}.ps .hi.neg{color:var(--red)}.ps .hi.yel{color:var(--yellow)}
+.ps .hi.pos{color:var(--green)}.ps .hi.neg{color:var(--red)}
 .bkr{display:flex;justify-content:space-between;align-items:flex-start;
   padding:10px 17px;border-bottom:1px solid var(--border);gap:9px}
 .bkr:last-child{border-bottom:none}
-.bkr.favored{background:rgba(240,180,41,.06);border-left:3px solid var(--yellow)}
-.bkr.be-leg{background:rgba(88,166,255,.04);border-left:3px solid rgba(88,166,255,.4)}
 .bkn{font-size:13px;font-weight:600}
 .bks{font-size:11px;color:var(--faint);margin-top:1px}
 .bkv{text-align:right;flex-shrink:0}
 .bkst{font-size:14px;font-weight:700;font-family:var(--mono)}
 .bkr2{font-size:11px;color:var(--muted);margin-top:1px}
 .bkm{font-size:10.5px;margin-top:2px;color:var(--yellow);font-family:var(--mono);font-weight:600}
-.bk-be-tag{font-size:10px;font-weight:600;color:var(--blue);margin-top:2px;font-family:var(--mono)}
 .sr{display:flex;justify-content:space-between;align-items:center;
   padding:8px 17px;border-bottom:1px solid var(--border)}
 .sr:last-child{border-bottom:none}
 .sl{font-size:12px;color:var(--muted)}
 .sv{font-size:13px;font-weight:600;font-family:var(--mono)}
-.sv.pos{color:var(--green)}.sv.neg{color:var(--red)}.sv.yel{color:var(--yellow)}
+.sv.pos{color:var(--green)}.sv.neg{color:var(--red)}
 .pw{padding:11px 17px 12px;border-top:1px solid var(--border)}
 .pl{display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-bottom:4px}
 .pt{height:4px;background:var(--inp);border-radius:99px;overflow:hidden}
@@ -217,30 +196,18 @@ select option{background:var(--raised);color:var(--text)}
   justify-content:space-between;border-bottom:1px solid var(--border);gap:9px}
 .bie{font-size:13.5px;font-weight:600}
 .bid{font-size:11px;color:var(--faint);margin-top:1px}
-.bim{display:flex;align-items:center;gap:7px;flex-shrink:0;flex-wrap:wrap}
+.bim{display:flex;align-items:center;gap:7px;flex-shrink:0}
 .pp2{padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700;font-family:var(--mono)}
 .pp2.pos{background:var(--gdim);color:var(--green);border:1px solid rgba(0,217,126,.25)}
 .pp2.neg{background:var(--rdim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
-.pp2.yel{background:var(--ydim);color:var(--yellow);border:1px solid rgba(240,180,41,.25)}
 .ss{background:var(--inp);border:1px solid var(--border);border-radius:5px;
   color:var(--text);font-size:12px;padding:3px 7px;outline:none;cursor:pointer}
-.ss option{background:var(--raised);color:var(--text)}
 .bd2{width:26px;height:26px;display:grid;place-items:center;border-radius:5px;
   color:var(--faint);border:1px solid transparent;transition:all var(--t);flex-shrink:0}
 .bd2:hover{background:var(--rdim);color:var(--red);border-color:rgba(255,95,95,.3)}
 .bd2 svg{width:12px;height:12px}
 .bl{padding:0}
-/* editable legs */
-.leg-edit{display:grid;grid-template-columns:1fr 1fr auto auto;
-  gap:5px 10px;padding:8px 15px;border-bottom:1px solid var(--border);align-items:center}
-.leg-edit:last-child{border-bottom:none}
-.leg-label{font-size:11px;color:var(--faint);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.leg-input{background:var(--inp);border:1px solid var(--border);border-radius:5px;
-  color:var(--text);font-size:12px;padding:4px 8px;outline:none;width:100%;
-  transition:border-color var(--t)}
-.leg-input:focus{border-color:var(--focus)}
-.leg-input.mono{font-family:var(--mono);text-align:right}
-.leg{display:grid;grid-template-columns:1fr 1fr auto auto auto;
+.leg{display:grid;grid-template-columns:1fr 1fr auto auto auto auto;
   gap:5px 10px;padding:8px 15px;border-bottom:1px solid var(--border);
   align-items:center;font-size:12.5px}
 .leg:last-child{border-bottom:none}
@@ -251,36 +218,28 @@ select option{background:var(--raised);color:var(--text)}
   padding:8px 15px;background:var(--raised);font-size:12.5px}
 .bfl{color:var(--muted)}
 .bfr{font-family:var(--mono);font-weight:700}
-.bfr.pos{color:var(--green)}.bfr.neg{color:var(--red)}.bfr.yel{color:var(--yellow)}
+.bfr.pos{color:var(--green)}.bfr.neg{color:var(--red)}
 
 /* status badge */
 .sb2{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;letter-spacing:.3px}
 .sp{background:var(--ydim);color:var(--yellow);border:1px solid rgba(240,180,41,.3)}
 .sw{background:var(--gdim);color:var(--green);border:1px solid rgba(0,217,126,.3)}
 .sl3{background:var(--rdim);color:var(--red);border:1px solid rgba(255,95,95,.3)}
-.sbz{background:rgba(88,166,255,.1);color:var(--blue);border:1px solid rgba(88,166,255,.3)}
 
-/* profit badge on history items */
-.profit-tag{font-size:11px;font-weight:700;font-family:var(--mono);
-  padding:2px 9px;border-radius:99px;}
-.profit-tag.pos{background:var(--gdim);color:var(--green);border:1px solid rgba(0,217,126,.25)}
-.profit-tag.neg{background:var(--rdim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
-.profit-tag.zer{background:rgba(88,166,255,.1);color:var(--blue);border:1px solid rgba(88,166,255,.3)}
-
-/* inline edit event/notes */
-.bi-ev-input{background:transparent;border:none;border-bottom:1px dashed var(--border);
-  color:var(--text);font-size:13.5px;font-weight:600;outline:none;width:100%;
-  padding:0 0 2px;transition:border-color var(--t)}
-.bi-ev-input:focus{border-color:var(--focus)}
-.bi-notes-input{background:transparent;border:none;border-bottom:1px dashed var(--border);
-  color:var(--muted);font-size:11.5px;outline:none;width:100%;margin-top:3px;
-  padding:0 0 2px;transition:border-color var(--t);font-style:italic}
-.bi-notes-input:focus{border-color:var(--focus);color:var(--text)}
-.bi-profit-input{background:var(--inp);border:1px solid var(--border);border-radius:5px;
-  color:var(--text);font-size:12px;padding:3px 7px;outline:none;
-  font-family:var(--mono);font-weight:700;width:80px;text-align:right;
-  transition:border-color var(--t)}
-.bi-profit-input:focus{border-color:var(--green)}
+/* ── WINNER SELECTION ── */
+.leg{position:relative}
+.win-btn{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:5px;
+  font-size:10.5px;font-weight:600;cursor:pointer;transition:all var(--t);flex-shrink:0;
+  background:var(--inp);border:1px solid var(--border);color:var(--faint)}
+.win-btn:hover{border-color:var(--green);color:var(--green);background:var(--gdim)}
+.win-btn.selected{background:var(--gdim);border-color:rgba(0,217,126,.5);color:var(--green)}
+.win-btn svg{width:10px;height:10px}
+.leg-winner{background:rgba(0,217,126,.04);border-left:2px solid var(--green)!important}
+.real-profit-row{display:flex;justify-content:space-between;align-items:center;
+  padding:6px 15px;background:rgba(0,217,126,.06);border-top:1px solid rgba(0,217,126,.15);
+  font-size:12px}
+.real-profit-label{color:var(--green);font-weight:600}
+.real-profit-val{font-family:var(--mono);font-weight:700;color:var(--green)}
 
 /* ── NORMAL / FREEBET ITEMS ── */
 .ni2{background:var(--surface);border:1px solid var(--border);
@@ -300,7 +259,7 @@ select option{background:var(--raised);color:var(--text)}
   font-size:10px;font-weight:600;letter-spacing:.3px;flex-shrink:0}
 .tp-normal{background:var(--bdim);color:var(--blue);border:1px solid rgba(88,166,255,.25)}
 .tp-freebet{background:var(--ydim);color:var(--yellow);border:1px solid rgba(240,180,41,.3)}
-.tp-combi{background:var(--pdim);color:var(--purple);border:1px solid rgba(148,103,189,.3)}
+.tp-combi{background:rgba(148,103,189,.12);color:#9467bd;border:1px solid rgba(148,103,189,.3)}
 
 /* ── PROFIT PAGE ── */
 .month-card{background:var(--surface);border:1px solid var(--border);
@@ -326,20 +285,11 @@ select option{background:var(--raised);color:var(--text)}
 .th-sub-label{font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px}
 .th-sub-val{font-size:16px;font-weight:700;font-family:var(--mono)}
 
-/* ── MODAL ── */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center}
-.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:420px;margin:16px}
-.modal-title{font-size:15px;font-weight:700;margin-bottom:16px}
-.modal-fields{display:flex;flex-direction:column;gap:11px}
-.modal-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.modal-actions{display:flex;gap:9px;margin-top:18px}
-
 /* ── RESPONSIVE ── */
 @media(max-width:900px){
   .pb{grid-template-columns:1fr;padding:13px}
   .rp2{order:-1}
   .stats{grid-template-columns:repeat(2,1fr)}
-  .oh,.or{grid-template-columns:1fr 1fr 86px 80px 32px}
 }
 @media(max-width:600px){
   .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%)}
@@ -348,10 +298,9 @@ select option{background:var(--raised);color:var(--text)}
   .sb-overlay.open{display:block}
   .ph{padding:12px 13px 10px 50px}
   .pb{padding:11px 9px;gap:11px}
-  .oh,.or{grid-template-columns:1fr 1fr 76px 32px}
-  .fav-toggle{display:none}
+  .oh,.or{grid-template-columns:1fr 1fr 86px 32px}
   .stats{grid-template-columns:1fr 1fr;gap:7px}
-  .leg{grid-template-columns:1fr 1fr}
+  .leg{grid-template-columns:1fr 1fr auto}
   .lm{display:none}
   .tb{gap:6px}
   .ni2{grid-template-columns:1fr auto}
@@ -416,21 +365,14 @@ select option{background:var(--raised);color:var(--text)}
               <div class="iw"><input type="number" class="ii" id="totalInv" value="100" min="0" step="1"><span class="isuf">€</span></div>
             </div>
             <div class="oh">
-              <div class="cl">Casa</div>
-              <div class="cl">Resultado</div>
-              <div class="cl" style="text-align:right">Cuota</div>
-              <div class="cl" style="text-align:center">Favorecer</div>
-              <div></div>
+              <div class="cl">Casa</div><div class="cl">Resultado</div>
+              <div class="cl" style="text-align:right">Cuota</div><div></div>
             </div>
             <div id="outcomesList"></div>
             <button class="ba" id="addBtn">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Añadir resultado
             </button>
-            <div id="favBanner" class="fav-banner">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              <span id="favBannerText">Modo favor activo: la pata favorecida maximiza retorno; la otra hace break-even.</span>
-            </div>
             <div class="rs">
               <div class="rh">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -492,12 +434,12 @@ select option{background:var(--raised);color:var(--text)}
 </div>
 
 <!-- ══ ADD NORMAL/FREEBET MODAL ══ -->
-<div id="addModal" class="modal-overlay">
-  <div class="modal-box">
-    <div class="modal-title">Añadir apuesta normal / freebet</div>
-    <div class="modal-fields">
+<div id="addModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:420px;margin:16px">
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px">Añadir apuesta normal / freebet</div>
+    <div style="display:flex;flex-direction:column;gap:11px">
       <div><label class="fl">Evento</label><input type="text" id="m-event" placeholder="España vs Portugal"></div>
-      <div class="modal-row">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label class="fl">Tipo</label>
           <select id="m-type">
             <option value="Normal">Normal</option>
@@ -510,49 +452,26 @@ select option{background:var(--raised);color:var(--text)}
       <div><label class="fl">Fecha</label><input type="date" id="m-date"></div>
       <div><label class="fl">Notas (opcional)</label><input type="text" id="m-notes" placeholder="Cuota boosted…"></div>
     </div>
-    <div class="modal-actions">
+    <div style="display:flex;gap:9px;margin-top:18px">
       <button class="btn-s" id="m-cancel" style="flex:1">Cancelar</button>
       <button class="btn-reg" id="m-save" style="flex:2">Guardar</button>
     </div>
   </div>
 </div>
 
-<!-- ══ REGISTER SUREBET MODAL ══ -->
-<div id="regModal" class="modal-overlay">
-  <div class="modal-box" style="max-width:480px">
-    <div class="modal-title">Registrar surebet</div>
-    <div class="modal-fields">
-      <div><label class="fl">Evento</label><input type="text" id="reg-event" placeholder="España vs Portugal"></div>
-      <div class="modal-row">
-        <div><label class="fl">Fecha</label><input type="date" id="reg-date"></div>
-        <div><label class="fl">Profit real (€)</label>
-          <div class="iw"><input type="number" id="reg-profit" placeholder="0.00" step="0.01"><span class="isuf">€</span></div>
-        </div>
-      </div>
-      <div><label class="fl">Notas (opcional)</label><input type="text" id="reg-notes" placeholder="Descripción de las patas…"></div>
-    </div>
-    <div style="margin-top:10px;padding:9px 12px;background:var(--raised);border-radius:7px;font-size:12px;color:var(--muted)">
-      Profit calculado: <span id="reg-calc-profit" style="font-family:var(--mono);font-weight:700;color:var(--green)"></span>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-s" id="reg-cancel" style="flex:1">Cancelar</button>
-      <button class="btn-reg" id="reg-save" style="flex:2">Guardar surebet</button>
-    </div>
-  </div>
-</div>
-
 <script>
 // ══════════════════════════════════════════
-//  STORE
+//  STORE — all data in localStorage
 // ══════════════════════════════════════════
-const STORE='sb_v4';
+const STORE = 'sb_v3';
 function loadData(){try{const r=localStorage.getItem(STORE);if(r)return JSON.parse(r)}catch(e){}return{bets:[],normals:[]}}
 function save(){localStorage.setItem(STORE,JSON.stringify(D))}
 
-let D=loadData();
+let D = loadData();
 
-// ── Preload data if first visit ──
-const EXCEL_SUREBETS=[
+// ── Pre-load Excel data if first visit ──
+// SUREBETS (left column of Excel, rows 1-50)
+const EXCEL_SUREBETS = [
   {id:9001,event:"Canada vs Bosnia",date:"2026-06-12",profit:2.5,notes:"",legs:[{house:"Bet365",result:"",odd:0,stake:0,minReturn:0}],status:"won"},
   {id:9002,event:"Spain & Uruguay",date:"2026-06-13",profit:6.0,notes:"",legs:[],status:"won"},
   {id:9003,event:"Qatar vs Switzerland",date:"2026-06-14",profit:5.0,notes:"",legs:[],status:"won"},
@@ -604,7 +523,9 @@ const EXCEL_SUREBETS=[
   {id:9049,event:"Spain vs Belgium (SF)",date:"2026-07-11",profit:5.0,notes:"",legs:[],status:"pending"},
   {id:9050,event:"Argentina vs Switzerland (SF)",date:"2026-07-11",profit:0.2,notes:"",legs:[],status:"pending"},
 ];
-const EXCEL_NORMALS=[
+
+// NORMALS/FREEBETS (right column of Excel)
+const EXCEL_NORMALS = [
   {id:8001,event:"Combined Bet",type:"Combi",profit:-0.1,date:"2026-06-12",notes:""},
   {id:8002,event:"Mexico vs South Africa",type:"Normal",profit:2.75,date:"2026-06-14",notes:""},
   {id:8003,event:"Mexico vs South Africa",type:"Freebet",profit:1.6,date:"2026-06-14",notes:"2€ freebet, odds boosted 1.8 — real net profit 1.6€"},
@@ -642,90 +563,28 @@ const EXCEL_NORMALS=[
   {id:8035,event:"France vs Morocco",type:"Normal",profit:10.0,date:"2026-07-11",notes:"Boosted odds 1.54 → 2.00"},
   {id:8036,event:"Spain vs Belgium",type:"Normal",profit:10.0,date:"2026-07-11",notes:"Boosted odds 1.54 → 2.00"},
 ];
-if(D.bets.length===0) D.bets=EXCEL_SUREBETS.map(b=>({...b}));
-if(D.normals.length===0) D.normals=EXCEL_NORMALS.map(n=>({...n}));
+
+// Inject preloaded data if store is fresh
+if(D.bets.length===0) D.bets = EXCEL_SUREBETS.map(b=>({...b}));
+if(D.normals.length===0) D.normals = EXCEL_NORMALS.map(n=>({...n}));
 save();
 
 // ══════════════════════════════════════════
 //  CALC STATE
 // ══════════════════════════════════════════
-let outcomes=[{id:1,house:'Casa 1',result:'',odd:2.30,favored:false},{id:2,house:'Casa 2',result:'',odd:1.90,favored:false}];
+let outcomes=[{id:1,house:'Casa 1',result:'',odd:2.30},{id:2,house:'Casa 2',result:'',odd:1.90}];
 let nextId=3,totalInv=100,roundMode='exact',customStep=0.1;
 
 function roundStep(v,s){if(!s||!isFinite(s)||s<=0)return v;const f=1/s;return parseFloat((Math.round(v*f)/f).toPrecision(12))}
 function applyRound(v){if(roundMode==='exact')return v;const s=roundMode==='custom'?customStep:parseFloat(roundMode);return roundStep(v,s)}
 function fmt(n,d=2){return Number(n).toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d})}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function fmtDate(d){if(!d)return'';const p=d.split('-');return`${p[2]}/${p[1]}/${p[0]}`}
+function fmtDate(d){if(!d)return '';const p=d.split('-');return`${p[2]}/${p[1]}/${p[0]}`}
+function sign(n){return n>0?'+':n<0?'':'';}
 
-// ── Calculate: standard or favor mode ──
 function calculate(){
   const valid=outcomes.filter(o=>o.odd>1);
-  if(valid.length<2) return null;
-
-  const favIdx=valid.findIndex(o=>o.favored);
-  const hasFavor=favIdx>=0;
-
-  if(hasFavor){
-    // Favor mode: favored leg gets stake to win profit; others break-even (stake = totalInv/odd)
-    // We set the break-even legs first, then the favored absorbs remaining budget
-    // Break-even: bet amount B on a leg with odd O → B*O = B (always true only if O=1, not useful)
-    // Real interpretation: split so that:
-    //   - NON-FAVORED leg: its return exactly covers its own stake (break-even) → stake = totalInv * weight
-    //   - FAVORED leg: gets remaining money → higher return
-    // Practical: for a 2-leg surebet favor, we just skew the distribution.
-    // Standard surebet: stake_i = totalInv / (odd_i * sumP)
-    // Favor: set non-favored stakes so return = their own stake → stake_i * odd_i = totalInv → stake_i = totalInv / odd_i
-    // Then favored gets leftover = totalInv - sum(non-fav stakes)
-
-    const nonFav=valid.filter((o,i)=>i!==favIdx);
-    const favLeg=valid[favIdx];
-
-    // BE stakes for non-favored: stake such that return = totalInv (the whole inv comes back)
-    // This doesn't scale well with many legs; instead we do:
-    // Non-fav stake_i = totalInv / (odd_i * sumAllInvOdds_nonFav)
-    // We use a simpler, cleaner approach:
-    // Non-favored: stake_i so return_i = totalInv (break-even on total)
-    // sum of non-fav stakes = sum(totalInv / odd_i)
-    // favored stake = totalInv - sum of non-fav stakes
-
-    const nonFavStakesRaw=nonFav.map(o=>totalInv/o.odd);
-    const nonFavTotal=nonFavStakesRaw.reduce((a,b)=>a+b,0);
-    const favStakeRaw=totalInv-nonFavTotal;
-
-    if(favStakeRaw<=0){
-      // Not enough budget to favor — fall back to standard
-      return calculateStandard(valid,false);
-    }
-
-    const rawStakes=valid.map((o,i)=>{
-      if(i===favIdx) return favStakeRaw;
-      const nfIdx=nonFav.findIndex(x=>x===o);
-      return nonFavStakesRaw[nfIdx];
-    });
-    const rounded=rawStakes.map(s=>applyRound(s));
-    const actual=rounded.reduce((a,b)=>a+b,0);
-    const returns=valid.map((o,i)=>rounded[i]*o.odd);
-    const favReturn=returns[favIdx];
-    const minNonFavReturn=Math.min(...returns.filter((_,i)=>i!==favIdx));
-    // profit if favored wins
-    const profitIfFav=favReturn-actual;
-    // profit if non-fav wins (should be ~0 = break-even)
-    const profitIfBE=minNonFavReturn-actual;
-    const minRet=Math.min(...returns);
-    const profit=minRet-actual;
-    const probs=valid.map(o=>1/o.odd);
-    const sumP=probs.reduce((a,b)=>a+b,0);
-
-    return{valid,sumPct:sumP*100,isSurebet:profitIfBE>=-0.5,isFavorMode:true,
-      stakes:rounded,returns,minReturn:minRet,actualTotal:actual,
-      profit,profitPct:actual>0?(profit/actual)*100:0,
-      profitIfFav,profitIfBE,favIdx};
-  }
-  return calculateStandard(valid,false);
-}
-
-function calculateStandard(valid){
+  if(valid.length<2)return null;
   const probs=valid.map(o=>1/o.odd),sumP=probs.reduce((a,b)=>a+b,0);
   const raw=valid.map(o=>(totalInv/o.odd)/sumP);
   const rounded=raw.map(s=>applyRound(s));
@@ -733,263 +592,88 @@ function calculateStandard(valid){
   const returns=valid.map((o,i)=>rounded[i]*o.odd);
   const minRet=Math.min(...returns);
   const profit=minRet-actual;
-  return{valid,sumPct:sumP*100,isSurebet:sumP<1,isFavorMode:false,
-    stakes:rounded,returns,minReturn:minRet,actualTotal:actual,
-    profit,profitPct:actual>0?(profit/actual)*100:0,favIdx:-1};
+  return{valid,sumPct:sumP*100,isSurebet:sumP<1,stakes:rounded,returns,minReturn:minRet,actualTotal:actual,profit,profitPct:actual>0?(profit/actual)*100:0};
 }
 
-// ── Render outcomes list ──
+// ── Render calc ──
 function renderOutcomes(){
   const list=document.getElementById('outcomesList');
   list.innerHTML='';
-  const res=calculate();
-  const lit=!!(res&&res.isSurebet);
+  const res=calculate();const lit=!!(res&&res.isSurebet);
   outcomes.forEach((o,idx)=>{
-    const row=document.createElement('div');
-    row.className='or';
-    const isFav=o.favored;
+    const row=document.createElement('div');row.className='or';
     row.innerHTML=`
       <input type="text" placeholder="Casa ${idx+1}" value="${esc(o.house)}" data-field="house" data-id="${o.id}">
       <input type="text" placeholder="Resultado" value="${esc(o.result)}" data-field="result" data-id="${o.id}">
       <input type="number" class="oi${lit?' lit':''}" placeholder="1,00" value="${o.odd>0?o.odd:''}" data-field="odd" data-id="${o.id}" min="1.01" step="0.01">
-      <button class="fav-toggle${isFav?' active':''}" data-fav="${o.id}" title="Favorecer esta pata (la otra hace break-even)">
-        <svg viewBox="0 0 24 24" fill="${isFav?'currentColor':'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        ${isFav?'Favorita':'Favorecer'}
-      </button>
       <button class="bd" data-id="${o.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`;
     list.appendChild(row);
   });
-
-  // Update favor banner
-  const favOutcome=outcomes.find(o=>o.favored);
-  const banner=document.getElementById('favBanner');
-  if(favOutcome){
-    banner.style.display='flex';
-    document.getElementById('favBannerText').textContent=`Favoreciendo "${favOutcome.house||favOutcome.result||'pata seleccionada'}": si gana, obtienes el máximo profit. Las demás patas hacen break-even.`;
-  } else {
-    banner.style.display='none';
-  }
 }
 
 function renderResult(){
   const panel=document.getElementById('resultPanel');
   const res=calculate();
-  if(!res){
-    panel.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>Añade al menos 2 cuotas &gt; 1,00.</p></div></div>`;
-    return;
-  }
-  const{isSurebet,isFavorMode,stakes,returns,minReturn,actualTotal,profit,profitPct,sumPct,valid,favIdx,profitIfFav,profitIfBE}=res;
+  if(!res){panel.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>Añade al menos 2 cuotas &gt; 1,00.</p></div></div>`;return;}
+  const{isSurebet,stakes,returns,minReturn,actualTotal,profit,profitPct,sumPct,valid}=res;
   const s=profit>=0?'+':'';
-
-  let badgeHtml,ppClass,mainProfit,mainPct,subText;
-
-  if(isFavorMode){
-    badgeHtml=`<div class="badge by"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Modo Favor</div>`;
-    ppClass='yel';
-    mainProfit=profitIfFav;
-    mainPct=actualTotal>0?(profitIfFav/actualTotal)*100:0;
-    subText=`Si gana favorita: <span class="hi yel">+${fmt(profitIfFav)} €</span> · Si otra: <span class="hi" style="color:var(--blue)">${fmt(profitIfBE)>=0?'+':''}${fmt(profitIfBE)} €</span>`;
-  } else {
-    badgeHtml=isSurebet?
-      `<div class="badge bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Surebet</div>`:
-      `<div class="badge br"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Sin surebet</div>`;
-    ppClass=profit>=0?'pos':'neg';
-    mainProfit=profit;
-    mainPct=profitPct;
-    subText=`Beneficio garantizado: <span class="hi ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span>`;
-  }
-
-  const bkHtml=valid.map((o,i)=>{
-    const isFav=isFavorMode&&i===favIdx;
-    const isBE=isFavorMode&&i!==favIdx;
-    return`<div class="bkr${isFav?' favored':isBE?' be-leg':''}">
-      <div>
-        <div class="bkn">${esc(o.house||`Casa ${i+1}`)}</div>
-        <div class="bks">${esc(o.result||`Resultado ${i+1}`)} · Cuota ${fmt(o.odd)}</div>
-        ${isFav?'<div class="bkm" style="color:var(--yellow)">★ Favorita</div>':''}
-        ${isBE?'<div class="bk-be-tag">≈ Break-even</div>':''}
-      </div>
-      <div class="bkv">
-        <div class="bkst">${fmt(stakes[i])} €</div>
-        <div class="bkr2">retorno ${fmt(returns[i])} €</div>
-        <div class="bkm">mín. ${fmt(returns[i])} €</div>
-      </div>
-    </div>`;
-  }).join('');
-
+  const badgeHtml=isSurebet?`<div class="badge bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Surebet</div>`:
+    `<div class="badge br"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Sin surebet</div>`;
+  const bkHtml=valid.map((o,i)=>`<div class="bkr"><div><div class="bkn">${esc(o.house||`Casa ${i+1}`)}</div><div class="bks">${esc(o.result||`Resultado ${i+1}`)} · Cuota ${fmt(o.odd)}</div></div><div class="bkv"><div class="bkst">${fmt(stakes[i])} €</div><div class="bkr2">retorno ${fmt(returns[i])} €</div><div class="bkm">mín. ${fmt(returns[i])} €</div></div></div>`).join('');
   const bW=Math.min(sumPct/1.3,100);
-  const canRegister=isSurebet||isFavorMode;
-
   panel.innerHTML=`
-    <div class="card ph2 ${isSurebet?'sb':''} ${isFavorMode?'fav-mode':''}">
-      ${badgeHtml}
-      <div class="pp ${ppClass}">${mainProfit>=0?'+':''}${fmt(mainPct)} %</div>
-      <div class="ps">${subText}</div>
-    </div>
+    <div class="card ph2 ${isSurebet?'sb':''}">${badgeHtml}<div class="pp ${profit>=0?'pos':'neg'}">${s}${fmt(profitPct)} %</div><div class="ps">Beneficio garantizado: <span class="hi ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span></div></div>
     <div class="card">${bkHtml}
       <div class="sr"><span class="sl">Inversión total</span><span class="sv">${fmt(actualTotal)} €</span></div>
       <div class="sr"><span class="sl">Retorno mínimo</span><span class="sv ${profit>=0?'pos':'neg'}">${fmt(minReturn)} €</span></div>
-      ${isFavorMode?`
-        <div class="sr"><span class="sl">Profit si favorita gana</span><span class="sv yel">+${fmt(profitIfFav)} €</span></div>
-        <div class="sr"><span class="sl">Resultado si otra gana</span><span class="sv" style="color:var(--blue)">${profitIfBE>=0?'+':''}${fmt(profitIfBE)} € (BE)</span></div>
-      `:`<div class="sr"><span class="sl">Beneficio garantizado</span><span class="sv ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span></div>`}
+      <div class="sr"><span class="sl">Beneficio</span><span class="sv ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span></div>
       <div class="pw"><div class="pl"><span>Suma prob. implícitas</span><span>${fmt(sumPct)} %</span></div><div class="pt"><div class="pf ${sumPct>100?'over':''}" style="width:${bW}%"></div></div></div>
     </div>
-    <button class="btn-reg" id="regBtn" ${!canRegister?'disabled':''}>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
-      ${canRegister?'Registrar esta surebet':'Sin surebet — no disponible'}
-    </button>`;
-  document.getElementById('regBtn').addEventListener('click',openRegModal);
+    <button class="btn-reg" id="regBtn" ${!isSurebet?'disabled':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>${isSurebet?'Registrar esta surebet':'Sin surebet — no disponible'}</button>`;
+  document.getElementById('regBtn').addEventListener('click',registerBet);
 }
 
 function render(){renderOutcomes();renderResult();}
 
-// ── Register modal ──
-let _pendingRes=null;
-function openRegModal(){
-  const res=calculate();
-  if(!res||(res.profit<-0.5&&!res.isFavorMode)) return;
-  _pendingRes=res;
-  document.getElementById('reg-event').value='';
-  document.getElementById('reg-date').value=new Date().toISOString().slice(0,10);
-  // Pre-fill profit with the expected value
-  const expectedProfit=res.isFavorMode?res.profitIfFav:res.profit;
-  document.getElementById('reg-profit').value=parseFloat(expectedProfit.toFixed(2));
-  document.getElementById('reg-notes').value='';
-  document.getElementById('reg-calc-profit').textContent=(expectedProfit>=0?'+':'')+fmt(expectedProfit)+' €';
-  document.getElementById('regModal').style.display='flex';
-  setTimeout(()=>document.getElementById('reg-event').focus(),50);
-}
-
-document.getElementById('reg-cancel').addEventListener('click',()=>{document.getElementById('regModal').style.display='none';});
-document.getElementById('regModal').addEventListener('click',e=>{if(e.target===document.getElementById('regModal'))document.getElementById('regModal').style.display='none';});
-
-document.getElementById('reg-save').addEventListener('click',()=>{
-  const ev=document.getElementById('reg-event').value.trim();
-  if(!ev){alert('Introduce el nombre del evento.');return;}
-  const res=_pendingRes;if(!res)return;
-  const realProfit=parseFloat(document.getElementById('reg-profit').value)||0;
-  const notes=document.getElementById('reg-notes').value.trim();
-  const dateVal=document.getElementById('reg-date').value||new Date().toISOString().slice(0,10);
-  const bet={
-    id:Date.now(),event:ev,date:dateVal,
-    profit:realProfit,
-    profitPct:res.actualTotal>0?(realProfit/res.actualTotal)*100:0,
-    totalStake:res.actualTotal,minReturn:res.minReturn,
-    status:'pending',notes,
-    isFavorMode:res.isFavorMode||false,
-    profitIfFav:res.isFavorMode?res.profitIfFav:null,
-    profitIfBE:res.isFavorMode?res.profitIfBE:null,
-    legs:res.valid.map((o,i)=>({
-      house:o.house||`Casa ${i+1}`,
-      result:o.result||`Resultado ${i+1}`,
-      odd:o.odd,stake:res.stakes[i],
-      minReturn:res.returns[i],
-      favored:res.isFavorMode&&i===res.favIdx
-    }))
-  };
+function registerBet(){
+  const res=calculate();if(!res||!res.isSurebet)return;
+  const ev=prompt('Nombre del evento:');if(!ev||!ev.trim())return;
+  const dateVal=new Date().toISOString().slice(0,10);
+  const bet={id:Date.now(),event:ev.trim(),date:dateVal,profitPct:res.profitPct,profit:res.profit,
+    totalStake:res.actualTotal,minReturn:res.minReturn,status:'pending',
+    legs:res.valid.map((o,i)=>({house:o.house||`Casa ${i+1}`,result:o.result||`Resultado ${i+1}`,odd:o.odd,stake:res.stakes[i],minReturn:res.returns[i]}))};
   D.bets.unshift(bet);save();updateBadges();
-  document.getElementById('regModal').style.display='none';
-  // Reset favor toggles
-  outcomes.forEach(o=>o.favored=false);
-  render();
-});
-
-// ══════════════════════════════════════════
-//  SUREBETS PAGE — with inline editing
-// ══════════════════════════════════════════
-function profitTagHtml(profit){
-  if(profit>0.005) return`<span class="profit-tag pos">+${fmt(profit)} €</span>`;
-  if(profit<-0.005) return`<span class="profit-tag neg">${fmt(profit)} €</span>`;
-  return`<span class="profit-tag zer">±0 €</span>`;
+  alert(`✓ Surebet registrada: ${ev}\nBeneficio esperado: +${fmt(res.profit)} €`);
 }
 
-function statusSelectHtml(bet){
-  const opts=[
-    {v:'pending',l:'Pendiente'},
-    {v:'won',l:`Ganada (+${fmt(bet.profit)} €)`},
-    {v:'lost',l:'Perdida (−)'},
-    {v:'breakeven',l:'Break-even (0 €)'}
-  ];
-  return`<select class="ss" data-sid="${bet.id}">`+
-    opts.map(o=>`<option value="${o.v}"${bet.status===o.v?' selected':''}>${o.l}</option>`).join('')+
-    `</select>`;
-}
-
+// ══════════════════════════════════════════
+//  SUREBETS PAGE
+// ══════════════════════════════════════════
 function renderSurebets(filter=''){
-  const bets=D.bets.filter(b=>!filter||
-    b.event.toLowerCase().includes(filter.toLowerCase())||
-    (b.legs||[]).some(l=>l.house&&l.house.toLowerCase().includes(filter.toLowerCase())));
-
-  const won=D.bets.filter(b=>b.status==='won');
-  const be=D.bets.filter(b=>b.status==='breakeven');
-  const pending=D.bets.filter(b=>b.status==='pending');
+  const bets=D.bets.filter(b=>!filter||b.event.toLowerCase().includes(filter.toLowerCase())||b.legs.some(l=>l.house&&l.house.toLowerCase().includes(filter.toLowerCase())));
+  const won=D.bets.filter(b=>b.status==='won'),lost=D.bets.filter(b=>b.status==='lost');
   const wonProfit=won.reduce((a,b)=>a+(b.profit||0),0);
-  const beProfit=be.reduce((a,b)=>a+0,0); // always 0
-
   document.getElementById('sbStats').innerHTML=`
     <div class="sc"><div class="sl2">Total surebets</div><div class="sv2">${D.bets.length}</div></div>
     <div class="sc"><div class="sl2">Ganadas</div><div class="sv2 pos">${won.length}</div></div>
-    <div class="sc"><div class="sl2">Pendientes</div><div class="sv2 yel">${pending.length}</div></div>
+    <div class="sc"><div class="sl2">Pendientes</div><div class="sv2 yel">${D.bets.filter(b=>b.status==='pending').length}</div></div>
     <div class="sc"><div class="sl2">Profit surebets</div><div class="sv2 ${wonProfit>=0?'pos':'neg'}">${wonProfit>=0?'+':''}${fmt(wonProfit)} €</div></div>`;
-
   const list=document.getElementById('sbList');
-  if(!bets.length){
-    list.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>No hay surebets registradas.</p></div></div>`;
-    return;
-  }
-
+  if(!bets.length){list.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>No hay surebets registradas.</p></div></div>`;return;}
   list.innerHTML=bets.map(b=>{
-    const signP=b.profit>0?'+':b.profit<0?'':b.status==='breakeven'?'±':'';
-    const pTagClass=b.status==='breakeven'?'zer':b.profit>0?'pos':b.profit<0?'neg':'zer';
-    const sLabel={pending:'Pendiente',won:'Ganada',lost:'Perdida',breakeven:'Break-even'}[b.status]||b.status;
-    const sCls={pending:'sp',won:'sw',lost:'sl3',breakeven:'sbz'}[b.status]||'';
-    const displayProfit=b.status==='breakeven'?0:b.profit;
-    const displayPct=b.status==='breakeven'?0:b.profitPct;
-
-    const legsHtml=(b.legs&&b.legs.length)?
-      `<div style="background:var(--raised);display:grid;grid-template-columns:1fr 1fr auto auto auto;gap:5px 10px;padding:5px 15px;font-size:10px;color:var(--faint)">
-        <span>CASA</span><span>RESULTADO</span><span style="text-align:right">CUOTA</span><span style="text-align:right">STAKE</span><span style="text-align:right">RETORNO</span>
-      </div>`+
-      b.legs.map(l=>`<div class="leg${l.favored?' favored':''}">
-        <span class="lh">${esc(l.house)}${l.favored?' ★':''}</span>
-        <span class="lr">${esc(l.result)}</span>
-        <span class="lo">${fmt(l.odd||0)}</span>
-        <span class="lk">${fmt(l.stake||0)} €</span>
-        <span class="lm">${fmt(l.minReturn||0)} €</span>
-      </div>`).join('')
-    : `<div style="padding:8px 15px;font-size:12px;color:var(--faint)">Sin desglose de patas</div>`;
-
-    // Favor mode extra info
-    const favorInfo=b.isFavorMode&&b.profitIfFav!=null?
-      `<span style="font-size:10px;color:var(--yellow);font-family:var(--mono);font-weight:600">★ Favor: +${fmt(b.profitIfFav)}€ / BE: ${fmt(b.profitIfBE||0)}€</span>`:'';
-
-    return`<div class="bi">
-      <div class="bih">
-        <div style="min-width:0;flex:1">
-          <input class="bi-ev-input" type="text" value="${esc(b.event)}" data-evid="${b.id}" title="Editar evento">
-          <div style="display:flex;align-items:center;gap:8px;margin-top:3px;flex-wrap:wrap">
-            <input type="date" value="${b.date||''}" data-dateid="${b.id}" style="background:transparent;border:none;border-bottom:1px dashed var(--border);color:var(--faint);font-size:11px;padding:0 0 1px;outline:none;width:105px">
-            ${favorInfo}
-            ${b.notes?`<span style="font-size:11px;color:var(--muted);font-style:italic">${esc(b.notes)}</span>`:''}
-          </div>
-        </div>
-        <div class="bim">
-          <span class="profit-tag ${pTagClass}">${signP}${fmt(displayProfit)} €</span>
-          <span class="sb2 ${sCls}">${sLabel}</span>
-          ${statusSelectHtml(b)}
-          <button class="bd2" data-bid="${b.id}" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
-        </div>
-      </div>
-      <div class="bl">${legsHtml}</div>
-      <div class="bf">
-        <span class="bfl">Invertido: ${fmt(b.totalStake||0)} € · Ret. mín.: ${fmt(b.minReturn||0)} €</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--faint)">Profit real:</span>
-          <input class="bi-profit-input" type="number" value="${b.profit||0}" step="0.01" data-profitid="${b.id}" title="Editar profit real">
-        </div>
-      </div>
-    </div>`;
+    const s=b.profitPct>=0?'+':'';
+    const sLabel={pending:'Pendiente',won:'Ganada',lost:'Perdida'}[b.status]||b.status;
+    const sCls={pending:'sp',won:'sw',lost:'sl3'}[b.status]||'';
+    const hasLegs=b.legs&&b.legs.length;
+    const winnerIdx=b.winnerLeg!=null?b.winnerLeg:-1;
+    const realProfit=winnerIdx>=0&&hasLegs?((b.legs[winnerIdx].minReturn||0)-(b.totalStake||0)):null;
+    const displayProfit=realProfit!=null?realProfit:b.profit;
+    const displayProfitPct=realProfit!=null&&(b.totalStake||0)>0?(realProfit/(b.totalStake||1))*100:b.profitPct;
+    const legsHtml=hasLegs?`<div style="background:var(--raised);display:grid;grid-template-columns:1fr 1fr auto auto auto auto;gap:5px 10px;padding:5px 15px;font-size:10px;color:var(--faint)"><span>CASA</span><span>RESULTADO</span><span style="text-align:right">CUOTA</span><span style="text-align:right">STAKE</span><span style="text-align:right">RETORNO</span><span></span></div>`+
+      b.legs.map((l,li)=>`<div class="leg${winnerIdx===li?' leg-winner':''}"><span class="lh">${esc(l.house)}</span><span class="lr">${esc(l.result)}</span><span class="lo">${fmt(l.odd||0)}</span><span class="lk">${fmt(l.stake||0)} €</span><span class="lm">${fmt(l.minReturn||0)} €</span><button class="win-btn${winnerIdx===li?' selected':''}" data-wbid="${b.id}" data-wleg="${li}" title="Marcar como ganadora">${winnerIdx===li?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Ganó`:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Ganó`}</button></div>`).join('')+
+      (winnerIdx>=0?`<div class="real-profit-row"><span class="real-profit-label">✓ Ganó ${esc(b.legs[winnerIdx].house)} — Profit real</span><span class="real-profit-val">+${fmt(realProfit)} €</span></div>`:'')
+    : `<div style="padding:8px 15px;font-size:12px;color:var(--faint)">Sin desglose de patas (surebet pre-cargada)</div>`;
+    return`<div class="bi"><div class="bih"><div><div class="bie">${esc(b.event)}</div><div class="bid">${fmtDate(b.date)}</div></div><div class="bim"><span class="pp2 ${displayProfitPct>=0?'pos':'neg'}">${displayProfitPct>=0?'+':''}${fmt(displayProfitPct)} %</span><span class="sb2 ${sCls}">${sLabel}</span><select class="ss" data-sid="${b.id}"><option value="pending" ${b.status==='pending'?'selected':''}>Pendiente</option><option value="won" ${b.status==='won'?'selected':''}>Ganada</option><option value="lost" ${b.status==='lost'?'selected':''}>Perdida</option></select><button class="bd2" data-bid="${b.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div><div class="bl">${legsHtml}</div><div class="bf"><span class="bfl">Invertido: ${fmt(b.totalStake||0)} € · Ret. mín.: ${fmt(b.minReturn||0)} €</span><span class="bfr ${displayProfit>=0?'pos':'neg'}">${displayProfit>=0?'+':''}${fmt(displayProfit)} €</span></div></div>`;
   }).join('');
 }
 
@@ -997,8 +681,8 @@ function renderSurebets(filter=''){
 //  NORMALES/FREEBETS PAGE
 // ══════════════════════════════════════════
 function typePill(t){
-  if(t==='Freebet') return`<span class="type-pill tp-freebet">Freebet</span>`;
-  if(t==='Combi') return`<span class="type-pill tp-combi">Combi</span>`;
+  if(t==='Freebet')return`<span class="type-pill tp-freebet">Freebet</span>`;
+  if(t==='Combi')return`<span class="type-pill tp-combi">Combi</span>`;
   return`<span class="type-pill tp-normal">Normal</span>`;
 }
 function renderNormals(filter=''){
@@ -1015,17 +699,9 @@ function renderNormals(filter=''){
   const list=document.getElementById('nbList');
   if(!items.length){list.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>No hay apuestas registradas.</p></div></div>`;return;}
   list.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">`+items.map(n=>{
-    const s=n.profit>0?'+':n.profit<0?'':n.profit===0?'±':'';
+    const s=n.profit>0?'+':n.profit<0?'':n.profit===0?'':'';
     const pCls=n.profit>0?'pos':n.profit<0?'neg':'zer';
-    return`<div class="ni2">
-      <div class="ni2-left">
-        <div class="ni2-ev">${esc(n.event)}</div>
-        <div class="ni2-meta"><span>${fmtDate(n.date)}</span>${typePill(n.type)}</div>
-        ${n.notes?`<div class="ni2-note">${esc(n.notes)}</div>`:''}
-      </div>
-      <div class="ni2-right"><div class="ni2-pnl ${pCls}">${s}${fmt(n.profit)} €</div></div>
-      <button class="bd2" data-nid="${n.id}" style="margin-top:2px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
-    </div>`;
+    return`<div class="ni2"><div class="ni2-left"><div class="ni2-ev">${esc(n.event)}</div><div class="ni2-meta"><span>${fmtDate(n.date)}</span>${typePill(n.type)}</div>${n.notes?`<div class="ni2-note">${esc(n.notes)}</div>`:''}</div><div class="ni2-right"><div class="ni2-pnl ${pCls}">${s}${fmt(n.profit)} €</div></div><button class="bd2" data-nid="${n.id}" style="margin-top:2px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div>`;
   }).join('')+`</div>`;
 }
 
@@ -1033,21 +709,12 @@ function renderNormals(filter=''){
 //  PROFIT PAGE
 // ══════════════════════════════════════════
 function renderProfit(){
-  // Only count resolved bets for profit (not pending)
+  // Combine all entries with dates
   const all=[];
-  D.bets.forEach(b=>{
-    if(!b.date) return;
-    // Status breakeven → profit = 0
-    const p=b.status==='breakeven'?0:(b.profit||0);
-    // Only include resolved bets in profit
-    if(b.status==='pending') return;
-    all.push({date:b.date,profit:p,cat:'surebet'});
-  });
-  D.normals.forEach(n=>{
-    if(n.date&&n.profit!==undefined)
-      all.push({date:n.date,profit:n.profit,cat:n.type==='Freebet'?'freebet':'normal'});
-  });
+  D.bets.forEach(b=>{if(b.date&&b.profit!==undefined)all.push({date:b.date,profit:b.profit,cat:'surebet'})});
+  D.normals.forEach(n=>{if(n.date&&n.profit!==undefined&&n.profit!==0)all.push({date:n.date,profit:n.profit,cat:n.type==='Freebet'?'freebet':'normal'})});
 
+  // Group by month
   const months={};
   all.forEach(e=>{
     const m=e.date.slice(0,7);
@@ -1057,30 +724,21 @@ function renderProfit(){
 
   const keys=Object.keys(months).sort();
   const totalAll=Object.values(months).reduce((a,m)=>a+m.surebet+m.normal+m.freebet,0);
-  // For totals, also exclude pending
-  const totalSB=D.bets.filter(b=>b.status!=='pending').reduce((a,b)=>a+(b.status==='breakeven'?0:(b.profit||0)),0);
+  const totalSB=D.bets.reduce((a,b)=>a+(b.profit||0),0);
   const totalNorm=D.normals.filter(n=>n.type==='Normal').reduce((a,n)=>a+(n.profit||0),0);
   const totalFB=D.normals.filter(n=>n.type==='Freebet').reduce((a,n)=>a+(n.profit||0),0);
 
-  const pendingProfit=D.bets.filter(b=>b.status==='pending').reduce((a,b)=>a+(b.profit||0),0);
-
-  const monthNames={
-    '2026-06':'Junio 2026','2026-07':'Julio 2026','2026-05':'Mayo 2026',
-    '2025-12':'Diciembre 2025','2026-08':'Agosto 2026','2026-09':'Septiembre 2026',
-    '2026-10':'Octubre 2026','2026-11':'Noviembre 2026','2026-04':'Abril 2026',
-    '2026-03':'Marzo 2026','2026-02':'Febrero 2026','2026-01':'Enero 2026'
-  };
+  const monthNames={'2026-06':'Junio 2026','2026-07':'Julio 2026','2026-05':'Mayo 2026','2025-12':'Diciembre 2025'};
   function mName(k){return monthNames[k]||k}
 
   document.getElementById('totalHero').innerHTML=`
     <div class="total-hero">
-      <div class="th-label">Profit Total (resueltas)</div>
+      <div class="th-label">Profit Total</div>
       <div class="th-val ${totalAll>=0?'pos':'neg'}">${totalAll>=0?'+':''}${fmt(totalAll)} €</div>
       <div class="th-sub">
         <div class="th-sub-item"><div class="th-sub-label">Surebets</div><div class="th-sub-val" style="color:var(--green)">${totalSB>=0?'+':''}${fmt(totalSB)} €</div></div>
         <div class="th-sub-item"><div class="th-sub-label">Normales</div><div class="th-sub-val" style="color:${totalNorm>=0?'var(--blue)':'var(--red)'}">${totalNorm>=0?'+':''}${fmt(totalNorm)} €</div></div>
         <div class="th-sub-item"><div class="th-sub-label">Freebets</div><div class="th-sub-val" style="color:var(--yellow)">${totalFB>=0?'+':''}${fmt(totalFB)} €</div></div>
-        <div class="th-sub-item"><div class="th-sub-label">Pendiente</div><div class="th-sub-val" style="color:var(--yellow)">+${fmt(pendingProfit)} €</div></div>
       </div>
     </div>`;
 
@@ -1096,44 +754,21 @@ function renderProfit(){
 }
 
 // ══════════════════════════════════════════
-//  EVENTS — CALCULATOR
+//  EVENTS
 // ══════════════════════════════════════════
 document.getElementById('outcomesList').addEventListener('input',e=>{
   const el=e.target,id=+el.dataset.id,field=el.dataset.field;
-  if(!id||!field)return;
-  const o=outcomes.find(x=>x.id===id);if(!o)return;
-  if(field==='odd') o.odd=parseFloat(el.value)||0;
-  else o[field]=el.value;
+  if(!id||!field)return;const o=outcomes.find(x=>x.id===id);if(!o)return;
+  if(field==='odd')o.odd=parseFloat(el.value)||0;else o[field]=el.value;
   renderResult();
-  const res=calculate();
-  document.querySelectorAll('.oi').forEach(i=>i.classList.toggle('lit',!!(res&&res.isSurebet)));
+  const res=calculate();document.querySelectorAll('.oi').forEach(i=>i.classList.toggle('lit',!!(res&&res.isSurebet)));
 });
-
 document.getElementById('outcomesList').addEventListener('click',e=>{
-  // Delete button
-  const delBtn=e.target.closest('.bd');
-  if(delBtn&&outcomes.length>2){
-    outcomes=outcomes.filter(o=>o.id!==+delBtn.dataset.id);
-    render();return;
-  }
-  // Favor toggle
-  const favBtn=e.target.closest('.fav-toggle');
-  if(favBtn){
-    const fid=+favBtn.dataset.fav;
-    // Toggle: if clicking active → deactivate; else → activate only this one
-    const o=outcomes.find(x=>x.id===fid);
-    if(!o)return;
-    const wasActive=o.favored;
-    outcomes.forEach(x=>x.favored=false);
-    if(!wasActive) o.favored=true;
-    render();
-    return;
-  }
+  const btn=e.target.closest('.bd');if(!btn||outcomes.length<=2)return;
+  outcomes=outcomes.filter(o=>o.id!==+btn.dataset.id);render();
 });
-
 document.getElementById('addBtn').addEventListener('click',()=>{
-  outcomes.push({id:nextId++,house:'',result:'',odd:0,favored:false});
-  render();
+  outcomes.push({id:nextId++,house:'',result:'',odd:0});render();
   setTimeout(()=>{const ins=document.querySelectorAll('.oi');if(ins.length)ins[ins.length-1].focus();},40);
 });
 document.getElementById('totalInv').addEventListener('input',e=>{totalInv=parseFloat(e.target.value)||0;renderResult();});
@@ -1146,93 +781,51 @@ document.getElementById('roundPills').addEventListener('click',e=>{
 });
 document.getElementById('customStep').addEventListener('input',e=>{customStep=parseFloat(e.target.value)||0.1;if(roundMode==='custom')renderResult();});
 
-// ══════════════════════════════════════════
-//  EVENTS — SUREBETS PAGE (inline editing)
-// ══════════════════════════════════════════
+// Surebets page events
 document.getElementById('sbSearch').addEventListener('input',e=>renderSurebets(e.target.value));
-
 document.getElementById('sbList').addEventListener('change',e=>{
-  // Status select
-  const sel=e.target.closest('[data-sid]');
-  if(sel&&sel.tagName==='SELECT'){
-    const b=D.bets.find(x=>x.id===+sel.dataset.sid);if(!b)return;
-    b.status=sel.value;
-    // If break-even, record profit as 0
-    if(b.status==='breakeven') b.profit=0;
-    save();
-    renderSurebets(document.getElementById('sbSearch').value);
-    renderProfit();
-    return;
-  }
+  const sel=e.target.closest('[data-sid]');if(!sel)return;
+  const b=D.bets.find(x=>x.id===+sel.dataset.sid);if(!b)return;
+  b.status=sel.value;save();renderSurebets(document.getElementById('sbSearch').value);renderProfit();
 });
-
-// Inline editing: event name, date, profit
-document.getElementById('sbList').addEventListener('input',e=>{
-  // Event name
-  const evInput=e.target.closest('[data-evid]');
-  if(evInput){
-    const b=D.bets.find(x=>x.id===+evInput.dataset.evid);if(!b)return;
-    b.event=evInput.value;save();
-    updateBadges();
-    return;
-  }
-  // Date
-  const dateInput=e.target.closest('[data-dateid]');
-  if(dateInput){
-    const b=D.bets.find(x=>x.id===+dateInput.dataset.dateid);if(!b)return;
-    b.date=dateInput.value;save();
-    renderProfit();
-    return;
-  }
-  // Profit
-  const profitInput=e.target.closest('[data-profitid]');
-  if(profitInput){
-    const b=D.bets.find(x=>x.id===+profitInput.dataset.profitid);if(!b)return;
-    b.profit=parseFloat(profitInput.value)||0;
-    b.profitPct=b.totalStake>0?(b.profit/b.totalStake)*100:0;
-    save();
-    // Re-render the profit tag for this specific item (avoid full re-render while typing)
-    const profitTag=profitInput.closest('.bi')?.querySelector('.profit-tag');
-    if(profitTag){
-      const p=b.profit;
-      const cls=p>0.005?'pos':p<-0.005?'neg':'zer';
-      const sign=p>0.005?'+':p<-0.005?'':b.status==='breakeven'?'±':'';
-      profitTag.className=`profit-tag ${cls}`;
-      profitTag.textContent=`${sign}${fmt(p)} €`;
-    }
-    renderProfit();
-    return;
-  }
-});
-
 document.getElementById('sbList').addEventListener('click',e=>{
+  // Winner leg selection
+  const winBtn=e.target.closest('[data-wbid]');
+  if(winBtn){
+    const bid=+winBtn.dataset.wbid,li=+winBtn.dataset.wleg;
+    const b=D.bets.find(x=>x.id===bid);if(!b)return;
+    // Toggle: click same leg again to deselect
+    if(b.winnerLeg===li){
+      delete b.winnerLeg;
+      b.profit=b.minReturn-(b.totalStake||0);
+    } else {
+      b.winnerLeg=li;
+      b.profit=(b.legs[li].minReturn||0)-(b.totalStake||0);
+    }
+    save();renderSurebets(document.getElementById('sbSearch').value);renderProfit();
+    return;
+  }
+  // Delete button
   const btn=e.target.closest('[data-bid]');if(!btn)return;
   if(!confirm('¿Eliminar esta surebet?'))return;
-  D.bets=D.bets.filter(b=>b.id!==+btn.dataset.bid);
-  save();updateBadges();
-  renderSurebets(document.getElementById('sbSearch').value);
-  renderProfit();
+  D.bets=D.bets.filter(b=>b.id!==+btn.dataset.bid);save();updateBadges();
+  renderSurebets(document.getElementById('sbSearch').value);renderProfit();
 });
-
 document.getElementById('sbExport').addEventListener('click',()=>{
   const blob=new Blob([JSON.stringify({bets:D.bets,normals:D.normals},null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download=`surebets_${new Date().toISOString().slice(0,10)}.json`;a.click();
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`surebets_${new Date().toISOString().slice(0,10)}.json`;a.click();
 });
 document.getElementById('sbImport').addEventListener('click',()=>document.getElementById('sbFile').click());
 document.getElementById('sbFile').addEventListener('change',e=>{
   const file=e.target.files[0];if(!file)return;
   const r=new FileReader();r.onload=ev=>{
-    try{
-      const p=JSON.parse(ev.target.result);
-      if(!confirm(`Importar ${(p.bets||[]).length} surebets y ${(p.normals||[]).length} normales?`))return;
-      const existS=new Set(D.bets.map(b=>b.id));
-      const existN=new Set(D.normals.map(n=>n.id));
-      D.bets=[...(p.bets||[]).filter(b=>!existS.has(b.id)),...D.bets];
-      D.normals=[...(p.normals||[]).filter(n=>!existN.has(n.id)),...D.normals];
-      save();updateBadges();renderSurebets();renderNormals();renderProfit();
-      alert('Importado correctamente.');
-    }catch(err){alert('Error: '+err.message);}
+    try{const p=JSON.parse(ev.target.result);
+    if(!confirm(`Importar ${(p.bets||[]).length} surebets y ${(p.normals||[]).length} normales?`))return;
+    const existS=new Set(D.bets.map(b=>b.id)),existN=new Set(D.normals.map(n=>n.id));
+    D.bets=[...(p.bets||[]).filter(b=>!existS.has(b.id)),...D.bets];
+    D.normals=[...(p.normals||[]).filter(n=>!existN.has(n.id)),...D.normals];
+    save();updateBadges();renderSurebets();renderNormals();renderProfit();alert('Importado correctamente.');}
+    catch(err){alert('Error: '+err.message);}
   };r.readAsText(file);e.target.value='';
 });
 document.getElementById('sbClear').addEventListener('click',()=>{
@@ -1240,17 +833,13 @@ document.getElementById('sbClear').addEventListener('click',()=>{
   D.bets=[];save();updateBadges();renderSurebets();renderProfit();
 });
 
-// ══════════════════════════════════════════
-//  EVENTS — NORMALES PAGE
-// ══════════════════════════════════════════
+// Normales page events
 document.getElementById('nbSearch').addEventListener('input',e=>renderNormals(e.target.value));
 document.getElementById('nbList').addEventListener('click',e=>{
   const btn=e.target.closest('[data-nid]');if(!btn)return;
   if(!confirm('¿Eliminar esta entrada?'))return;
-  D.normals=D.normals.filter(n=>n.id!==+btn.dataset.nid);
-  save();updateBadges();
-  renderNormals(document.getElementById('nbSearch').value);
-  renderProfit();
+  D.normals=D.normals.filter(n=>n.id!==+btn.dataset.nid);save();updateBadges();
+  renderNormals(document.getElementById('nbSearch').value);renderProfit();
 });
 
 // Add normal modal
@@ -1258,10 +847,8 @@ const modal=document.getElementById('addModal');
 document.getElementById('nbAddBtn').addEventListener('click',()=>{
   document.getElementById('m-date').value=new Date().toISOString().slice(0,10);
   modal.style.display='flex';
-  setTimeout(()=>document.getElementById('m-event').focus(),50);
 });
 document.getElementById('m-cancel').addEventListener('click',()=>{modal.style.display='none';});
-modal.addEventListener('click',e=>{if(e.target===modal)modal.style.display='none';});
 document.getElementById('m-save').addEventListener('click',()=>{
   const ev=document.getElementById('m-event').value.trim();
   if(!ev){alert('Introduce el evento.');return;}
@@ -1270,8 +857,7 @@ document.getElementById('m-save').addEventListener('click',()=>{
     date:document.getElementById('m-date').value,
     notes:document.getElementById('m-notes').value.trim()};
   D.normals.unshift(n);save();updateBadges();
-  renderNormals(document.getElementById('nbSearch').value);
-  renderProfit();
+  renderNormals(document.getElementById('nbSearch').value);renderProfit();
   modal.style.display='none';
   ['m-event','m-profit','m-notes'].forEach(id=>document.getElementById(id).value='');
 });
@@ -1281,9 +867,9 @@ document.getElementById('m-save').addEventListener('click',()=>{
 // ══════════════════════════════════════════
 const pgMeta={
   calc:{title:'Calculadora',sub:'Calcula stakes y surebets al instante'},
-  surebets:{title:'Mis surebets',sub:'Historial editable con profit por surebet'},
+  surebets:{title:'Mis surebets',sub:'Historial completo con retorno mínimo'},
   normales:{title:'Normales & Freebets',sub:'Apuestas estándar y freebets por tipo y fecha'},
-  profit:{title:'Profit',sub:'Rendimiento por mes y total acumulado (resueltas)'},
+  profit:{title:'Profit',sub:'Rendimiento por mes y total acumulado'},
 };
 document.querySelectorAll('.ni[data-page]').forEach(item=>{
   item.addEventListener('click',()=>{
