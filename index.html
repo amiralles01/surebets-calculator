@@ -13,6 +13,7 @@
   --yellow:#f0b429;--ydim:rgba(240,180,41,.12);
   --blue:#58a6ff;--bdim:rgba(88,166,255,.1);
   --text:#e6edf3;--muted:#7d8fa8;--faint:#4a5a72;
+  --cyan:#22d3ee;--cdim:rgba(34,211,238,.12);--purple:#c084fc;--pdim:rgba(192,132,252,.12);
   --r:10px;--sw:210px;--mono:'JetBrains Mono','Fira Code',monospace;--t:.16s ease;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -285,6 +286,114 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
 .th-sub-label{font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px}
 .th-sub-val{font-size:16px;font-weight:700;font-family:var(--mono)}
 
+/* ── SIDEBAR PROFILE ── */
+.profile-block{display:flex;align-items:center;gap:10px;min-width:0}
+.profile-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid var(--border);flex-shrink:0}
+.profile-avatar-fallback{width:36px;height:36px;border-radius:50%;background:var(--gdim);color:var(--green);
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;
+  border:1px solid rgba(0,217,126,.3);flex-shrink:0}
+.profile-info{min-width:0}
+.profile-name{font-size:14px;font-weight:700;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.profile-sub{font-size:11px;color:var(--faint);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── CALC TABS (Calculadoras) ── */
+.calc-tabs{display:flex;gap:2px;padding:10px 10px 0;overflow-x:auto;border-bottom:1px solid var(--border)}
+.calc-tab{padding:9px 14px;font-size:12.5px;font-weight:600;color:var(--muted);
+  border-radius:8px 8px 0 0;white-space:nowrap;transition:all var(--t);border-bottom:2px solid transparent}
+.calc-tab:hover{color:var(--text);background:var(--raised)}
+.calc-tab.active{color:var(--green);background:var(--gdim);border-bottom:2px solid var(--green)}
+.dynrow{display:grid;grid-template-columns:1fr 100px 32px;gap:6px;margin-bottom:6px;align-items:center;animation:fi .18s ease}
+.dyn-label{width:100%}
+
+/* ── PENDIENTES PAGE ── */
+.pend-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:13px 15px;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  flex-wrap:wrap;animation:fi .2s ease;border-left:3px solid var(--yellow)}
+.pend-left{min-width:0;flex:1}
+.pend-ev{font-size:13.5px;font-weight:600}
+.pend-meta{font-size:11px;color:var(--faint);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap}
+.pend-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.pend-profit{font-size:15px;font-weight:700;font-family:var(--mono);color:var(--green);white-space:nowrap}
+.btn-accept{display:flex;align-items:center;gap:5px;padding:7px 13px;border-radius:7px;
+  background:var(--gdim);border:1px solid rgba(0,217,126,.4);color:var(--green);
+  font-size:12.5px;font-weight:600;transition:all var(--t);white-space:nowrap}
+.btn-accept:hover{background:rgba(0,217,126,.22);box-shadow:0 0 0 3px var(--gglow)}
+.btn-accept svg{width:13px;height:13px}
+.btn-reject{padding:7px 10px;border-radius:7px;background:transparent;border:1px solid var(--border);
+  color:var(--muted);font-size:12px;font-weight:500;transition:all var(--t);white-space:nowrap}
+.btn-reject:hover{border-color:rgba(255,95,95,.4);color:var(--red);background:var(--rdim)}
+
+/* ── PERFIL PAGE ── */
+.profile-card-head{align-items:center}
+.profile-avatar-lg{width:52px;height:52px}
+.profile-avatar-fallback-lg{width:52px;height:52px;font-size:19px}
+.profile-name-lg{font-size:16px;font-weight:700;letter-spacing:-.2px}
+.icon-btn{width:30px;height:30px;display:grid;place-items:center;border-radius:7px;
+  color:var(--faint);border:1px solid var(--border);transition:all var(--t);flex-shrink:0}
+.icon-btn:hover{color:var(--text);border-color:var(--focus)}
+.icon-btn svg{width:14px;height:14px}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.statbox{background:var(--raised);border:1px solid var(--border);border-radius:9px;padding:11px 12px}
+.statbox-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--faint);margin-bottom:5px}
+.statbox-val{font-size:17px;font-weight:800;font-family:var(--mono);letter-spacing:-.5px}
+.statbox-val.pos{color:var(--green)}.statbox-val.neg{color:var(--red)}.statbox-val.neu{color:var(--text)}
+.statrow{display:flex;justify-content:space-between;align-items:center;padding:9px 2px;
+  border-bottom:1px solid var(--border);font-size:12.5px}
+.statrow:last-of-type{border-bottom:none}
+.statrow .sl{color:var(--muted)}
+.statrow .sv-combo{font-family:var(--mono);font-weight:600;display:flex;align-items:center;gap:6px}
+.statrow .nb2{font-size:10.5px;color:var(--green);background:var(--gdim);border-radius:99px;padding:1px 6px;font-family:var(--mono)}
+.clv-head{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.7px;margin:16px 0 9px;padding-top:12px;border-top:1px solid var(--border)}
+.clv-head svg{width:12px;height:12px;opacity:.6}
+.stats2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+.stats2 .label{font-size:10.5px;color:var(--faint);margin-bottom:3px}
+.stats2 .val{font-size:15px;font-weight:700;font-family:var(--mono)}
+.stats2 .val.pos{color:var(--green)}.stats2 .val.dash{color:var(--faint)}
+
+/* calendar */
+.cal-wrap{margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-month-label{font-size:13.5px;font-weight:700}
+.cal-month-total{font-size:14px;font-weight:700;font-family:var(--mono)}
+.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
+.cal-dow{text-align:center;font-size:9.5px;font-weight:600;color:var(--faint);letter-spacing:.5px}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-cell{aspect-ratio:1;border-radius:6px;background:var(--raised);border:1px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:40px}
+.cal-cell.empty{background:transparent;border-color:transparent}
+.cal-cell.cal-pos{background:var(--gdim);border-color:rgba(0,217,126,.3)}
+.cal-cell.cal-neg{background:var(--rdim);border-color:rgba(255,95,95,.3)}
+.cal-daynum{font-size:10px;color:var(--faint);font-weight:600}
+.cal-cell.cal-pos .cal-daynum,.cal-cell.cal-neg .cal-daynum{color:var(--muted)}
+.cal-amt{font-size:9.5px;font-weight:700;font-family:var(--mono)}
+.cal-cell.cal-pos .cal-amt{color:var(--green)}
+.cal-cell.cal-neg .cal-amt{color:var(--red)}
+.cal-footer{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px}
+.cal-nav-btn{padding:6px 14px;border-radius:7px;border:1px solid var(--border);background:var(--inp);
+  color:var(--muted);font-size:12px;font-weight:500;transition:all var(--t)}
+.cal-nav-btn:hover{border-color:var(--focus);color:var(--text)}
+
+/* performance chart */
+.perf-head{align-items:flex-start;flex-wrap:wrap;gap:12px}
+.perf-total-label{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px}
+.perf-total-val{font-size:24px;font-weight:800;font-family:var(--mono);letter-spacing:-1px}
+.perf-total-val.pos{color:var(--green)}.perf-total-val.neg{color:var(--red)}
+.perf-exp-boxes{display:flex;gap:10px;flex-wrap:wrap}
+.perf-exp-box{display:flex;align-items:center;gap:8px;background:var(--raised);border:1px solid var(--border);
+  border-radius:9px;padding:7px 12px}
+.perf-exp-dot{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:grid;place-items:center}
+.perf-exp-dot.ev{background:var(--cdim);border:1.5px solid var(--cyan)}
+.perf-exp-dot.clv{background:var(--pdim);border:1.5px solid var(--purple)}
+.perf-exp-label{font-size:9.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px}
+.perf-exp-val{font-size:13px;font-weight:700;font-family:var(--mono)}
+.perf-legend{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px;font-size:11.5px;color:var(--muted)}
+.perf-legend-item{display:flex;align-items:center;gap:5px}
+.perf-legend-swatch{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.perf-legend-line{width:16px;height:2px;flex-shrink:0}
+.perf-chart-empty{padding:40px 16px;text-align:center;color:var(--faint)}
+.perf-chart-svg{width:100%;height:auto;display:block}
+
 /* ── RESPONSIVE ── */
 @media(max-width:900px){
   .pb{grid-template-columns:1fr;padding:13px}
@@ -304,6 +413,19 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
   .lm{display:none}
   .tb{gap:6px}
   .ni2{grid-template-columns:1fr auto}
+  .stats3{grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .statbox{padding:8px 8px}
+  .statbox-val{font-size:14px}
+  .dynrow{grid-template-columns:1fr 78px 30px}
+  .cal-cell{min-height:32px;border-radius:5px}
+  .cal-daynum{font-size:9px}
+  .cal-amt{font-size:8px}
+  .pend-item{flex-direction:column;align-items:stretch}
+  .pend-right{justify-content:space-between}
+  .perf-head{flex-direction:column}
+  .perf-exp-boxes{width:100%}
+  .perf-exp-box{flex:1}
+  .calc-tab{padding:8px 11px;font-size:11.5px}
 }
 
 /* ── AUTH ── */
@@ -350,8 +472,14 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
 <!-- ══ SIDEBAR ══ -->
 <aside class="sidebar" id="sidebar">
   <div class="sb-head">
-    <div class="sb-title">Surebets</div>
-    <div class="sb-sub">Calculadora &amp; registro</div>
+    <div class="profile-block">
+      <img class="profile-avatar" id="sbAvatar" src="" alt="" style="display:none">
+      <div class="profile-avatar-fallback" id="sbAvatarFallback">S</div>
+      <div class="profile-info">
+        <div class="profile-name" id="sbName">Surebets</div>
+        <div class="profile-sub" id="sbSub">Calculadora &amp; registro</div>
+      </div>
+    </div>
   </div>
   <nav class="nav">
     <div class="ni active" data-page="calc">
@@ -368,9 +496,22 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
       Normales &amp; freebets
       <span class="nb" id="nbCount">0</span>
     </div>
+    <div class="ni" data-page="pendientes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Pendientes
+      <span class="nb" id="pendCount">0</span>
+    </div>
     <div class="ni" data-page="profit">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
       Profit
+    </div>
+    <div class="ni" data-page="perfil">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Perfil
+    </div>
+    <div class="ni" data-page="calculadoras">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="10" y2="11"/><line x1="14" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="10" y2="15"/><line x1="14" y1="15" x2="16" y2="15"/><line x1="8" y1="19" x2="10" y2="19"/><line x1="14" y1="19" x2="16" y2="19"/></svg>
+      Calculadoras
     </div>
   </nav>
 </aside>
@@ -449,6 +590,9 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Añadir
         </button>
+        <button class="btn-s" id="nbExport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Exportar</button>
+        <button class="btn-s" id="nbImport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Importar</button>
+        <input type="file" id="nbFile" accept=".json" style="display:none">
       </div>
       <div id="nbList"></div>
     </div>
@@ -457,6 +601,101 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
     <div id="page-profit" class="fw" style="display:none">
       <div id="totalHero"></div>
       <div id="monthList"></div>
+    </div>
+
+    <!-- ═══ PENDIENTES PAGE ═══ -->
+    <div id="page-pendientes" class="fw" style="display:none">
+      <div class="stats" id="pendStats"></div>
+      <div id="pendList"></div>
+    </div>
+
+    <!-- ═══ PERFIL PAGE ═══ -->
+    <div id="page-perfil" class="fw" style="display:none">
+      <div class="card profile-card">
+        <div class="ch profile-card-head">
+          <div class="profile-block">
+            <img class="profile-avatar profile-avatar-lg" id="perfilAvatar" src="" alt="" style="display:none">
+            <div class="profile-avatar-fallback profile-avatar-fallback-lg" id="perfilAvatarFallback">S</div>
+            <div class="profile-info">
+              <div class="profile-name-lg" id="perfilName">Usuario</div>
+              <div class="profile-sub">Personal Stats</div>
+            </div>
+          </div>
+          <button class="icon-btn" id="perfilShareBtn" title="Compartir">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </button>
+        </div>
+        <div class="cb">
+          <div class="stats3">
+            <div class="statbox"><div class="statbox-label">ROI</div><div class="statbox-val" id="statROI">—</div></div>
+            <div class="statbox"><div class="statbox-label">Wagered</div><div class="statbox-val neu" id="statWagered">—</div></div>
+            <div class="statbox"><div class="statbox-label">Win Rate</div><div class="statbox-val neu" id="statWinRate">—</div></div>
+          </div>
+          <div class="statrow"><span class="sl">Bets</span><span class="sv-combo" id="statBets">0</span></div>
+          <div class="statrow"><span class="sl">Average Bet</span><span class="sv-combo" id="statAvgBet">—</span></div>
+          <div class="statrow"><span class="sl">Average Profit</span><span class="sv-combo" id="statAvgProfit">—</span></div>
+          <div class="clv-head">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            Closing Line Value
+          </div>
+          <div class="stats2">
+            <div><div class="label">Average CLV</div><div class="val" id="statAvgCLV">—</div></div>
+            <div><div class="label">Beating CLV</div><div class="val" id="statBeatCLV">—</div></div>
+          </div>
+          <div class="cal-wrap">
+            <div class="cal-head">
+              <span class="cal-month-label" id="calMonthLabel">—</span>
+              <span class="cal-month-total" id="calMonthTotal"></span>
+            </div>
+            <div class="cal-dow-row">
+              <div class="cal-dow">MON</div><div class="cal-dow">TUE</div><div class="cal-dow">WED</div>
+              <div class="cal-dow">THU</div><div class="cal-dow">FRI</div><div class="cal-dow">SAT</div><div class="cal-dow">SUN</div>
+            </div>
+            <div class="cal-days" id="calDays"></div>
+            <div class="cal-footer">
+              <button class="cal-nav-btn" id="calPrevBtn">‹ Prev</button>
+              <button class="cal-nav-btn" id="calTodayBtn">Today</button>
+              <button class="cal-nav-btn" id="calNextBtn">Next ›</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch perf-head">
+          <div>
+            <div class="perf-total-label">Performance</div>
+            <div class="perf-total-val" id="perfTotal">—</div>
+          </div>
+          <div class="perf-exp-boxes">
+            <div class="perf-exp-box"><div class="perf-exp-dot ev"></div><div><div class="perf-exp-label">Expected (EV)</div><div class="perf-exp-val" id="perfEV">—</div></div></div>
+            <div class="perf-exp-box"><div class="perf-exp-dot clv"></div><div><div class="perf-exp-label">Expected (CLV)</div><div class="perf-exp-val" id="perfCLV">—</div></div></div>
+          </div>
+        </div>
+        <div class="cb">
+          <div class="perf-legend">
+            <span class="perf-legend-item"><span class="perf-legend-swatch" style="background:var(--blue)"></span>Profit</span>
+            <span class="perf-legend-item"><span class="perf-legend-line" style="border-top:2px dashed var(--cyan)"></span>EV</span>
+            <span class="perf-legend-item"><span class="perf-legend-line" style="border-top:2px dashed var(--purple)"></span>CLV</span>
+            <span class="perf-legend-item"><span class="perf-legend-swatch" style="background:var(--green);border-radius:2px"></span>Daily P/L</span>
+          </div>
+          <div id="perfChartWrap"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ CALCULADORAS PAGE ═══ -->
+    <div id="page-calculadoras" class="fw" style="display:none">
+      <div class="card">
+        <div class="calc-tabs" id="calcTabs">
+          <button class="calc-tab active" data-calc="kelly">Criterio de Kelly</button>
+          <button class="calc-tab" data-calc="novig">No-Vig</button>
+          <button class="calc-tab" data-calc="hedge">Hedge</button>
+          <button class="calc-tab" data-calc="freebet">Free Bet</button>
+          <button class="calc-tab" data-calc="hold">Hold</button>
+        </div>
+        <div class="cb" id="calcBody"></div>
+      </div>
     </div>
 
   </div>
@@ -498,104 +737,6 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
 function save(){return window.__fsSave ? window.__fsSave() : Promise.resolve();}
 
 let D = {bets:[],normals:[]};
-
-// ── Pre-load Excel data if first visit ──
-// SUREBETS (left column of Excel, rows 1-50)
-const EXCEL_SUREBETS = [
-  {id:9001,event:"Canada vs Bosnia",date:"2026-06-12",profit:2.5,notes:"",legs:[{house:"Bet365",result:"",odd:0,stake:0,minReturn:0}],status:"won"},
-  {id:9002,event:"Spain & Uruguay",date:"2026-06-13",profit:6.0,notes:"",legs:[],status:"won"},
-  {id:9003,event:"Qatar vs Switzerland",date:"2026-06-14",profit:5.0,notes:"",legs:[],status:"won"},
-  {id:9004,event:"Brazil vs Morocco",date:"2026-06-15",profit:1.25,notes:"Brazil scores first: +1.10 / None score: +1.50 / Morocco wins: +1.25",legs:[],status:"won"},
-  {id:9005,event:"Scotland vs Haiti",date:"2026-06-16",profit:2.17,notes:"No goal: +2.12 / Scotland scores: +2.17 / Haiti scores: +2.32",legs:[],status:"won"},
-  {id:9006,event:"Ilia vs Gaethje (UFC)",date:"2026-06-01",profit:4.1,notes:"+1.5 rounds: +4.10 / Ilia wins Rd 1: +4.80 / Gaethje wins Rd 1: +5.10",legs:[],status:"won"},
-  {id:9007,event:"Ilia Topuria (Bet365 + WH)",date:"2026-06-01",profit:1.1,notes:"",legs:[],status:"won"},
-  {id:9008,event:"Belgium vs Egypt",date:"2026-06-17",profit:1.4,notes:"No goals: +0.50 / Egypt scores first: +1.40 / Belgium scores first: +2.50",legs:[],status:"won"},
-  {id:9009,event:"Spain vs Cape Verde",date:"2026-06-18",profit:4.3,notes:"Spain wins by <2: +4.30 / Spain wins by 2+: +4.50",legs:[],status:"won"},
-  {id:9010,event:"Spain vs Cape Verde",date:"2026-06-18",profit:1.01,notes:"Cape Verde wins: +0.46 / Draw: +1.01 / Both score+Spain wins: +0.85",legs:[],status:"won"},
-  {id:9011,event:"Senegal vs France",date:"2026-06-19",profit:2.5,notes:"France doesn't score 1st half: +2.50 / France scores: +0.00",legs:[],status:"won"},
-  {id:9012,event:"Senegal vs France",date:"2026-06-19",profit:2.0,notes:"Olise no shot on target: +2.40 / Olise shoots: +2.00",legs:[],status:"won"},
-  {id:9013,event:"Bosnia vs Switzerland",date:"2026-06-20",profit:2.0,notes:"Tie or Switzerland first goal: +2",legs:[],status:"won"},
-  {id:9014,event:"Bosnia vs Switzerland",date:"2026-06-20",profit:1.66,notes:"3-0 Switzerland",legs:[],status:"won"},
-  {id:9015,event:"USA vs Australia",date:"2026-06-21",profit:1.0,notes:"USA scores first → +1€. No goals → +5€",legs:[],status:"won"},
-  {id:9016,event:"Brazil vs Haití",date:"2026-06-22",profit:2.4,notes:"Brazil to score in both halves +2€",legs:[],status:"won"},
-  {id:9017,event:"Netherlands vs Sweden",date:"2026-06-23",profit:0.5,notes:"Both score +2.5 goals",legs:[],status:"won"},
-  {id:9018,event:"Germany vs Ivory Coast",date:"2026-06-24",profit:2.33,notes:"Germany first goal +€2.20 / No goal +€2.60 / Ivory Coast first +€2.33",legs:[],status:"won"},
-  {id:9019,event:"Spain vs Saudi Arabia",date:"2026-06-25",profit:4.5,notes:"Spain no goal 1st half +3.75€ / if goal +4.5€",legs:[],status:"won"},
-  {id:9020,event:"Spain vs Saudi Arabia",date:"2026-06-25",profit:4.0,notes:"Spain wins with over 1.5 goals +4€",legs:[],status:"won"},
-  {id:9021,event:"Norway vs Senegal",date:"2026-06-26",profit:4.0,notes:"No goals first half +2.3€ / +0.5 goals +4€",legs:[],status:"won"},
-  {id:9022,event:"Argentina vs Australia",date:"2026-06-27",profit:2.5,notes:"Messi +1.5 shots on goal +2.5€ / -1.5 shots on goal +2.5€",legs:[],status:"won"},
-  {id:9023,event:"Croatia vs Panama",date:"2026-06-28",profit:3.8,notes:"3.8 no goals first half / +4 goal on first half",legs:[],status:"won"},
-  {id:9024,event:"Brazil vs Scotland",date:"2026-06-29",profit:0.9,notes:"",legs:[],status:"won"},
-  {id:9025,event:"Germany vs Ecuador",date:"2026-06-30",profit:2.8,notes:"No goal whole match +0.8 / germany first +2.8",legs:[],status:"won"},
-  {id:9026,event:"USA vs Turkey",date:"2026-07-01",profit:4.0,notes:"3.5 if no goals on first half / 4 if at least one goal",legs:[],status:"won"},
-  {id:9027,event:"Uruguay vs Spain",date:"2026-07-02",profit:3.0,notes:"Spain first goal +3 / Uruguay first goal +0.5 + penalties",legs:[],status:"won"},
-  {id:9028,event:"New Zealand vs Belgium",date:"2026-07-03",profit:2.0,notes:"De Bruyne -0.5 shots on net +2",legs:[],status:"won"},
-  {id:9029,event:"Colombia vs Portugal",date:"2026-07-03",profit:2.6,notes:"No goal 1st half +4 / if goal +2.6",legs:[],status:"won"},
-  {id:9030,event:"Inglaterra vs Panama",date:"2026-07-04",profit:0.8,notes:"No goal in both parts 0.8 / if goal 1",legs:[],status:"won"},
-  {id:9031,event:"Canada vs Sudáfrica",date:"2026-07-05",profit:2.98,notes:"",legs:[],status:"won"},
-  {id:9032,event:"Japan vs Brazil",date:"2026-07-05",profit:1.3,notes:"",legs:[],status:"won"},
-  {id:9033,event:"Netherlands vs Marruecos",date:"2026-07-06",profit:2.3,notes:"",legs:[],status:"won"},
-  {id:9034,event:"Côte d'Ivoire vs Norway",date:"2026-07-06",profit:0.0,notes:"",legs:[],status:"won"},
-  {id:9035,event:"France vs Sweden",date:"2026-07-07",profit:3.0,notes:"",legs:[],status:"won"},
-  {id:9036,event:"USA vs Bosnia",date:"2026-07-07",profit:4.0,notes:"",legs:[],status:"won"},
-  {id:9037,event:"Spain vs Austria",date:"2026-07-08",profit:4.75,notes:"0.75, 0.48, 4.75, 4.56",legs:[],status:"won"},
-  {id:9038,event:"Spain vs Austria",date:"2026-07-08",profit:0.22,notes:"",legs:[],status:"won"},
-  {id:9039,event:"Switzerland vs Argelia",date:"2026-07-09",profit:2.0,notes:"",legs:[],status:"won"},
-  {id:9040,event:"Colombia vs Ghana",date:"2026-07-09",profit:3.0,notes:"",legs:[],status:"won"},
-  {id:9041,event:"???",date:"2026-07-09",profit:1.0,notes:"",legs:[],status:"won"},
-  {id:9042,event:"Canada vs Morocco",date:"2026-07-10",profit:0.45,notes:"",legs:[],status:"won"},
-  {id:9043,event:"Spain vs Portugal (QF)",date:"2026-07-10",profit:3.0,notes:"Portugal to score first +0.25 / Spain first +3",legs:[],status:"won"},
-  {id:9044,event:"Spain vs Portugal (QF)",date:"2026-07-10",profit:3.5,notes:"Oyarzabal -0.5 shots in net +0.08 / +0.5 +3.5",legs:[],status:"won"},
-  {id:9045,event:"Argentina vs Egypt",date:"2026-07-10",profit:1.6,notes:"Argentina goal first half +2 / if no +1.6",legs:[],status:"won"},
-  {id:9046,event:"Switzerland vs Colombia",date:"2026-07-11",profit:1.5,notes:"Switzerland first kickoff +1.56 / if Colombia +1.5",legs:[],status:"pending"},
-  {id:9047,event:"Morocco vs France (SF)",date:"2026-07-11",profit:2.0,notes:"",legs:[],status:"pending"},
-  {id:9048,event:"Spain vs Belgium (SF)",date:"2026-07-11",profit:3.0,notes:"",legs:[],status:"pending"},
-  {id:9049,event:"Spain vs Belgium (SF)",date:"2026-07-11",profit:5.0,notes:"",legs:[],status:"pending"},
-  {id:9050,event:"Argentina vs Switzerland (SF)",date:"2026-07-11",profit:0.2,notes:"",legs:[],status:"pending"},
-];
-
-// NORMALS/FREEBETS (right column of Excel)
-const EXCEL_NORMALS = [
-  {id:8001,event:"Combined Bet",type:"Combi",profit:-0.1,date:"2026-06-12",notes:""},
-  {id:8002,event:"Mexico vs South Africa",type:"Normal",profit:2.75,date:"2026-06-14",notes:""},
-  {id:8003,event:"Mexico vs South Africa",type:"Freebet",profit:1.6,date:"2026-06-14",notes:"2€ freebet, odds boosted 1.8 — real net profit 1.6€"},
-  {id:8004,event:"Canada vs Bosnia",type:"Normal",profit:-1.1,date:"2026-06-12",notes:""},
-  {id:8005,event:"USA vs Paraguay",type:"Normal",profit:-0.2,date:"2026-06-15",notes:""},
-  {id:8006,event:"Brazil vs Morocco",type:"Normal",profit:-0.1,date:"2026-06-15",notes:""},
-  {id:8007,event:"Brazil vs Morocco",type:"Normal",profit:-0.2,date:"2026-06-15",notes:""},
-  {id:8008,event:"Spain vs Cape Verde",type:"Normal",profit:-2.5,date:"2026-06-18",notes:""},
-  {id:8009,event:"Germany vs Curaçao",type:"Normal",profit:5.0,date:"2026-06-16",notes:"Boosted odds 1.44 → 2.00"},
-  {id:8010,event:"Japan vs Netherlands",type:"Normal",profit:-5.0,date:"2026-06-17",notes:"Boosted odds 1.54 → 2.00 — disguise at Winamax"},
-  {id:8011,event:"Ilia Topuria (Method: Win)",type:"Normal",profit:-5.0,date:"2026-06-01",notes:""},
-  {id:8012,event:"Promo Cape Verde",type:"Normal",profit:-5.0,date:"2026-06-18",notes:"Loss returned as +5€ freebet"},
-  {id:8013,event:"France vs Senegal",type:"Freebet",profit:10.0,date:"2026-06-19",notes:"10€ freebet, odds boosted 1.44→2"},
-  {id:8014,event:"Combined Bet",type:"Combi",profit:0.18,date:"2026-06-19",notes:""},
-  {id:8015,event:"Combined Bet (Argentina vs Argelia)",type:"Combi",profit:-0.2,date:"2026-06-20",notes:""},
-  {id:8016,event:"Sweden vs Netherlands",type:"Freebet",profit:5.0,date:"2026-06-23",notes:"5€ freebet, odds boosted 1.44→2"},
-  {id:8017,event:"Spain vs Saudi Arabia",type:"Freebet",profit:10.0,date:"2026-06-25",notes:"10€ freebet, odds boosted 1.33→2"},
-  {id:8018,event:"Norway vs Senegal",type:"Normal",profit:0.5,date:"2026-06-26",notes:""},
-  {id:8019,event:"Portugal vs Uzbekistan",type:"Freebet",profit:8.0,date:"2026-06-27",notes:"15€ freebet, odds boosted 1.53"},
-  {id:8020,event:"Combined Bet",type:"Freebet",profit:7.01,date:"2026-06-28",notes:"5€ freebet 2.40 odds"},
-  {id:8021,event:"Mexico vs Czechia",type:"Normal",profit:-1.0,date:"2026-06-28",notes:""},
-  {id:8022,event:"Combined Bet",type:"Freebet",profit:0.0,date:"2026-06-29",notes:"5€ freebet 3.07 odds"},
-  {id:8023,event:"Combined Bet",type:"Freebet",profit:13.6,date:"2026-06-30",notes:"20€ freebet 1.68"},
-  {id:8024,event:"Austria vs Argelia",type:"Freebet",profit:0,date:"2026-07-01",notes:"Pending"},
-  {id:8025,event:"Brazil vs Japan",type:"Freebet",profit:4.6,date:"2026-07-05",notes:"5€ freebet 1.92 odds"},
-  {id:8026,event:"Paraguay vs Germany",type:"Freebet",profit:0,date:"2026-07-06",notes:"5€ freebet 2.0 odds"},
-  {id:8027,event:"France & Mexico",type:"Freebet",profit:4.95,date:"2026-07-07",notes:"5€ freebet 1.99 odds"},
-  {id:8028,event:"Congo vs England",type:"Normal",profit:5.0,date:"2026-07-04",notes:"Boosted odds 1.75 → 2.00"},
-  {id:8029,event:"Cape Verde vs Argentina",type:"Freebet",profit:10.0,date:"2026-07-08",notes:"Boosted odds → 2.00"},
-  {id:8030,event:"France — Mbappé to score",type:"Freebet",profit:10.0,date:"2026-07-08",notes:"Boosted odds → 2.00"},
-  {id:8031,event:"Haaland or Vini to score",type:"Freebet",profit:10.0,date:"2026-07-09",notes:"Boosted odds → 2.00"},
-  {id:8032,event:"Lamine or Cristiano to score",type:"Normal",profit:-13.0,date:"2026-07-10",notes:"Boosted odd 1.5 to 3"},
-  {id:8033,event:"Spain vs Portugal",type:"Freebet",profit:10.0,date:"2026-07-10",notes:"Boosted odds → 2.00"},
-  {id:8034,event:"Argentina vs Egypt",type:"Freebet",profit:10.0,date:"2026-07-10",notes:"Boosted odds → 2.00"},
-  {id:8035,event:"France vs Morocco",type:"Normal",profit:10.0,date:"2026-07-11",notes:"Boosted odds 1.54 → 2.00"},
-  {id:8036,event:"Spain vs Belgium",type:"Normal",profit:10.0,date:"2026-07-11",notes:"Boosted odds 1.54 → 2.00"},
-];
-
-// Preloaded data injection now happens in bootApp() (module script above)
-// after the real document is loaded from Firestore.
 
 // ══════════════════════════════════════════
 //  CALC STATE
@@ -668,7 +809,7 @@ function registerBet(){
   const ev=prompt('Nombre del evento:');if(!ev||!ev.trim())return;
   const dateVal=new Date().toISOString().slice(0,10);
   const bet={id:Date.now(),event:ev.trim(),date:dateVal,profitPct:res.profitPct,profit:res.profit,
-    totalStake:res.actualTotal,minReturn:res.minReturn,status:'pending',
+    expectedProfit:res.profit,totalStake:res.actualTotal,minReturn:res.minReturn,status:'pending',
     legs:res.valid.map((o,i)=>({house:o.house||`Casa ${i+1}`,result:o.result||`Resultado ${i+1}`,odd:o.odd,stake:res.stakes[i],minReturn:res.returns[i]}))};
   D.bets.unshift(bet);save();updateBadges();
   alert(`✓ Surebet registrada: ${ev}\nBeneficio esperado: +${fmt(res.profit)} €`);
@@ -814,7 +955,7 @@ document.getElementById('sbSearch').addEventListener('input',e=>renderSurebets(e
 document.getElementById('sbList').addEventListener('change',e=>{
   const sel=e.target.closest('[data-sid]');if(!sel)return;
   const b=D.bets.find(x=>x.id===+sel.dataset.sid);if(!b)return;
-  b.status=sel.value;save();renderSurebets(document.getElementById('sbSearch').value);renderProfit();
+  b.status=sel.value;save();updateBadges();renderSurebets(document.getElementById('sbSearch').value);renderProfit();
 });
 document.getElementById('sbList').addEventListener('click',e=>{
   // Winner leg selection
@@ -839,26 +980,55 @@ document.getElementById('sbList').addEventListener('click',e=>{
   D.bets=D.bets.filter(b=>b.id!==+btn.dataset.bid);save();updateBadges();
   renderSurebets(document.getElementById('sbSearch').value);renderProfit();
 });
+// Accepts either a raw JSON array, or an object like {bets:[...]} / {normals:[...]}
+function extractImportArray(parsed, key){
+  if(Array.isArray(parsed))return parsed;
+  if(parsed && Array.isArray(parsed[key]))return parsed[key];
+  return null;
+}
+
 document.getElementById('sbExport').addEventListener('click',()=>{
-  const blob=new Blob([JSON.stringify({bets:D.bets,normals:D.normals},null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({bets:D.bets},null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`surebets_${new Date().toISOString().slice(0,10)}.json`;a.click();
 });
 document.getElementById('sbImport').addEventListener('click',()=>document.getElementById('sbFile').click());
 document.getElementById('sbFile').addEventListener('change',e=>{
   const file=e.target.files[0];if(!file)return;
   const r=new FileReader();r.onload=ev=>{
-    try{const p=JSON.parse(ev.target.result);
-    if(!confirm(`Importar ${(p.bets||[]).length} surebets y ${(p.normals||[]).length} normales?`))return;
-    const existS=new Set(D.bets.map(b=>b.id)),existN=new Set(D.normals.map(n=>n.id));
-    D.bets=[...(p.bets||[]).filter(b=>!existS.has(b.id)),...D.bets];
-    D.normals=[...(p.normals||[]).filter(n=>!existN.has(n.id)),...D.normals];
-    save();updateBadges();renderSurebets();renderNormals();renderProfit();alert('Importado correctamente.');}
-    catch(err){alert('Error: '+err.message);}
+    try{
+      const parsed=JSON.parse(ev.target.result);
+      const incoming=extractImportArray(parsed,'bets');
+      if(!incoming){alert('El JSON debe ser un array de surebets, o un objeto {"bets":[...]}.');return;}
+      if(!confirm(`Importar ${incoming.length} surebets?`))return;
+      const exist=new Set(D.bets.map(b=>b.id));
+      D.bets=[...incoming.filter(b=>!exist.has(b.id)),...D.bets];
+      save();updateBadges();renderSurebets();renderProfit();alert('Importado correctamente.');
+    }catch(err){alert('Error: '+err.message);}
   };r.readAsText(file);e.target.value='';
 });
 document.getElementById('sbClear').addEventListener('click',()=>{
   if(!confirm('¿Borrar TODAS las surebets? Esto no se puede deshacer.'))return;
   D.bets=[];save();updateBadges();renderSurebets();renderProfit();
+});
+
+document.getElementById('nbExport').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify({normals:D.normals},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`normales_${new Date().toISOString().slice(0,10)}.json`;a.click();
+});
+document.getElementById('nbImport').addEventListener('click',()=>document.getElementById('nbFile').click());
+document.getElementById('nbFile').addEventListener('change',e=>{
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();r.onload=ev=>{
+    try{
+      const parsed=JSON.parse(ev.target.result);
+      const incoming=extractImportArray(parsed,'normals');
+      if(!incoming){alert('El JSON debe ser un array de normales/freebets, o un objeto {"normals":[...]}.');return;}
+      if(!confirm(`Importar ${incoming.length} normales/freebets?`))return;
+      const exist=new Set(D.normals.map(n=>n.id));
+      D.normals=[...incoming.filter(n=>!exist.has(n.id)),...D.normals];
+      save();updateBadges();renderNormals();renderProfit();alert('Importado correctamente.');
+    }catch(err){alert('Error: '+err.message);}
+  };r.readAsText(file);e.target.value='';
 });
 
 // Normales page events
@@ -891,6 +1061,453 @@ document.getElementById('m-save').addEventListener('click',()=>{
 });
 
 // ══════════════════════════════════════════
+//  HELPERS shared by new sections
+// ══════════════════════════════════════════
+function fmtCompact(n){
+  const abs=Math.abs(n||0);
+  if(abs>=1000)return(n/1000).toLocaleString('es-ES',{minimumFractionDigits:1,maximumFractionDigits:1})+'k';
+  return fmt(n||0,0);
+}
+function emptyStateHtml(msg){
+  return`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>${msg}</p></div></div>`;
+}
+
+// ══════════════════════════════════════════
+//  PENDIENTES PAGE
+// ══════════════════════════════════════════
+function renderPendientes(){
+  const pend=D.bets.filter(b=>b.status==='pending').sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const totalExpected=pend.reduce((a,b)=>a+(b.profit||0),0);
+  const totalStake=pend.reduce((a,b)=>a+(b.totalStake||0),0);
+  const totalMinRet=pend.reduce((a,b)=>a+(b.minReturn||0),0);
+  document.getElementById('pendStats').innerHTML=`
+    <div class="sc"><div class="sl2">Pendientes</div><div class="sv2 yel">${pend.length}</div></div>
+    <div class="sc"><div class="sl2">Beneficio esperado</div><div class="sv2 ${totalExpected>=0?'pos':'neg'}">${totalExpected>=0?'+':''}${fmt(totalExpected)} €</div></div>
+    <div class="sc"><div class="sl2">Invertido</div><div class="sv2">${fmt(totalStake)} €</div></div>
+    <div class="sc"><div class="sl2">Retorno mín. total</div><div class="sv2">${fmt(totalMinRet)} €</div></div>`;
+  const list=document.getElementById('pendList');
+  if(!pend.length){list.innerHTML=emptyStateHtml('No tienes surebets pendientes ahora mismo.');return;}
+  list.innerHTML=pend.map(b=>{
+    const legsInfo=b.legs&&b.legs.length?b.legs.map(l=>`${esc(l.house)} @ ${fmt(l.odd||0)}`).join(' · '):'Sin desglose de patas';
+    return`<div class="pend-item">
+      <div class="pend-left">
+        <div class="pend-ev">${esc(b.event)}</div>
+        <div class="pend-meta"><span>${fmtDate(b.date)}</span><span>${esc(legsInfo)}</span>${b.totalStake?`<span>Invertido: ${fmt(b.totalStake)} €</span>`:''}</div>
+      </div>
+      <div class="pend-right">
+        <div class="pend-profit">+${fmt(b.profit||0)} €</div>
+        <button class="btn-reject" data-pid="${b.id}" data-action="lost">Perdida</button>
+        <button class="btn-accept" data-pid="${b.id}" data-action="won"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Aceptar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+document.getElementById('pendList').addEventListener('click',e=>{
+  const btn=e.target.closest('[data-pid]');if(!btn)return;
+  const bet=D.bets.find(b=>b.id===+btn.dataset.pid);if(!bet)return;
+  bet.status=btn.dataset.action;
+  save();updateBadges();renderPendientes();renderProfit();
+});
+
+// ══════════════════════════════════════════
+//  CALCULADORAS — Kelly · No-Vig · Hedge · Free Bet · Hold
+// ══════════════════════════════════════════
+let novigRows=[{id:1,label:'',odd:''},{id:2,label:'',odd:''}],novigNextId=3;
+let holdRows=[{id:1,label:'',odd:''},{id:2,label:'',odd:''}],holdNextId=3;
+const CALC_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>';
+
+function renderCalcTab(tab){
+  document.querySelectorAll('.calc-tab').forEach(b=>b.classList.toggle('active',b.dataset.calc===tab));
+  const body=document.getElementById('calcBody');
+  if(tab==='kelly'){
+    body.innerHTML=`
+      <div style="display:flex;flex-direction:column;gap:13px;max-width:420px">
+        <div><label class="fl">Cuota decimal</label><input type="number" id="k-odds" placeholder="Ej. 2,00" min="1.01" step="0.01"></div>
+        <div><label class="fl">Probabilidad estimada de ganar</label><div class="iw"><input type="number" class="ii" id="k-prob" placeholder="Ej. 55" min="0.1" max="99.9" step="0.1"><span class="isuf">%</span></div></div>
+        <div><label class="fl">Bankroll total</label><div class="iw"><input type="number" class="ii" id="k-bankroll" placeholder="Ej. 1000" min="0" step="1"><span class="isuf">€</span></div></div>
+        <button class="btn-reg" id="k-calc-btn">${CALC_ICON}Calcular</button>
+      </div>
+      <div id="k-result" style="margin-top:16px;max-width:420px"></div>`;
+    document.getElementById('k-calc-btn').addEventListener('click',calcKelly);
+  }else if(tab==='novig'){
+    body.innerHTML=`
+      <div style="max-width:520px">
+        <div class="oh" style="grid-template-columns:1fr 100px 32px"><div class="cl">Resultado</div><div class="cl" style="text-align:right">Cuota</div><div></div></div>
+        <div id="novigRowsList"></div>
+        <button class="ba" id="novigAddBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Añadir resultado</button>
+        <button class="btn-reg" id="novig-calc-btn" style="margin-top:14px">${CALC_ICON}Calcular</button>
+      </div>
+      <div id="n-result" style="margin-top:16px;max-width:520px"></div>`;
+    renderNovigRowsList();
+    document.getElementById('novigAddBtn').addEventListener('click',()=>{novigRows.push({id:novigNextId++,label:'',odd:''});renderNovigRowsList();});
+    document.getElementById('novig-calc-btn').addEventListener('click',calcNovig);
+    wireNovigRowEvents();
+  }else if(tab==='hedge'){
+    body.innerHTML=`
+      <div style="display:flex;flex-direction:column;gap:13px;max-width:420px">
+        <div><label class="fl">Cantidad de la apuesta original</label><div class="iw"><input type="number" class="ii" id="h-stake" placeholder="Ej. 50" min="0" step="0.01"><span class="isuf">€</span></div></div>
+        <div><label class="fl">Cuota original</label><input type="number" id="h-odds-orig" placeholder="Ej. 3,50" min="1.01" step="0.01"></div>
+        <div><label class="fl">Cuota actual del resultado opuesto</label><input type="number" id="h-odds-opp" placeholder="Ej. 1,60" min="1.01" step="0.01"></div>
+        <button class="btn-reg" id="h-calc-btn">${CALC_ICON}Calcular</button>
+      </div>
+      <div id="h-result" style="margin-top:16px;max-width:420px"></div>`;
+    document.getElementById('h-calc-btn').addEventListener('click',calcHedge);
+  }else if(tab==='freebet'){
+    body.innerHTML=`
+      <div style="display:flex;flex-direction:column;gap:13px;max-width:420px">
+        <div><label class="fl">Valor de la Free Bet</label><div class="iw"><input type="number" class="ii" id="f-value" placeholder="Ej. 25" min="0" step="0.01"><span class="isuf">€</span></div></div>
+        <div><label class="fl">Cuota de la apuesta</label><input type="number" id="f-odds" placeholder="Ej. 4,00" min="1.01" step="0.01"></div>
+        <button class="btn-reg" id="f-calc-btn">${CALC_ICON}Calcular</button>
+      </div>
+      <div id="f-result" style="margin-top:16px;max-width:420px"></div>`;
+    document.getElementById('f-calc-btn').addEventListener('click',calcFreebet);
+  }else if(tab==='hold'){
+    body.innerHTML=`
+      <div style="max-width:520px">
+        <div class="oh" style="grid-template-columns:1fr 100px 32px"><div class="cl">Resultado</div><div class="cl" style="text-align:right">Cuota</div><div></div></div>
+        <div id="holdRowsList"></div>
+        <button class="ba" id="holdAddBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Añadir resultado</button>
+        <button class="btn-reg" id="hold-calc-btn" style="margin-top:14px">${CALC_ICON}Calcular</button>
+      </div>
+      <div id="ho-result" style="margin-top:16px;max-width:520px"></div>`;
+    renderHoldRowsList();
+    document.getElementById('holdAddBtn').addEventListener('click',()=>{holdRows.push({id:holdNextId++,label:'',odd:''});renderHoldRowsList();});
+    document.getElementById('hold-calc-btn').addEventListener('click',calcHold);
+    wireHoldRowEvents();
+  }
+}
+document.getElementById('calcTabs').addEventListener('click',e=>{
+  const btn=e.target.closest('.calc-tab');if(!btn)return;
+  renderCalcTab(btn.dataset.calc);
+});
+
+// ── 1. Kelly Criterion ──
+function calcKelly(){
+  const odds=parseFloat(document.getElementById('k-odds').value);
+  const probPct=parseFloat(document.getElementById('k-prob').value);
+  const bankroll=parseFloat(document.getElementById('k-bankroll').value);
+  const out=document.getElementById('k-result');
+  if(!(odds>1)||!(probPct>0&&probPct<100)||!(bankroll>0)){
+    out.innerHTML=emptyStateHtml('Introduce cuota (mayor de 1,00), probabilidad (0-100%) y bankroll válidos.');return;
+  }
+  const b=odds-1,p=probPct/100,q=1-p;
+  const f=(b*p-q)/b;
+  const hasEdge=f>0;
+  const stake=Math.max(f,0)*bankroll;
+  const edge=(p-1/odds)*100;
+  out.innerHTML=`
+    <div class="card ph2 ${hasEdge?'sb':''}">
+      <div class="badge ${hasEdge?'bg':'br'}">${hasEdge?'Valor positivo (+EV)':'Sin valor — no apostar'}</div>
+      <div class="pp ${hasEdge?'pos':'neg'}">${fmt(Math.max(f,0)*100)} %</div>
+      <div class="ps">Fracción de Kelly del bankroll</div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="sr"><span class="sl">Cantidad sugerida (Kelly completo)</span><span class="sv ${hasEdge?'pos':''}">${fmt(stake)} €</span></div>
+      <div class="sr"><span class="sl">½ Kelly (recomendado, menos varianza)</span><span class="sv ${hasEdge?'pos':''}">${fmt(stake/2)} €</span></div>
+      <div class="sr"><span class="sl">Probabilidad implícita de la cuota</span><span class="sv">${fmt(100/odds)} %</span></div>
+      <div class="sr"><span class="sl">Tu ventaja estimada (edge)</span><span class="sv ${edge>=0?'pos':'neg'}">${edge>=0?'+':''}${fmt(edge)} %</span></div>
+    </div>`;
+}
+
+// ── 2. No-Vig / Fair Odds ──
+function renderNovigRowsList(){
+  document.getElementById('novigRowsList').innerHTML=novigRows.map((r,idx)=>`
+    <div class="dynrow">
+      <input type="text" class="dyn-label" data-rid="${r.id}" placeholder="Resultado ${idx+1}" value="${esc(r.label)}">
+      <input type="number" class="oi dyn-odd" data-rid="${r.id}" placeholder="1,00" value="${r.odd}" min="1.01" step="0.01">
+      <button class="bd dyn-remove" data-rid="${r.id}"${novigRows.length<=2?' style="opacity:.3;pointer-events:none"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+    </div>`).join('');
+}
+function wireNovigRowEvents(){
+  const list=document.getElementById('novigRowsList');
+  list.addEventListener('input',e=>{
+    const rid=+e.target.dataset.rid;const r=novigRows.find(x=>x.id===rid);if(!r)return;
+    if(e.target.classList.contains('dyn-label'))r.label=e.target.value;else r.odd=e.target.value;
+  });
+  list.addEventListener('click',e=>{
+    const btn=e.target.closest('.dyn-remove');if(!btn||novigRows.length<=2)return;
+    novigRows=novigRows.filter(r=>r.id!==+btn.dataset.rid);renderNovigRowsList();
+  });
+}
+function calcNovig(){
+  const rows=novigRows.filter(r=>parseFloat(r.odd)>1);
+  const out=document.getElementById('n-result');
+  if(rows.length<2){out.innerHTML=emptyStateHtml('Añade al menos 2 cuotas válidas (mayores de 1,00).');return;}
+  const odds=rows.map(r=>parseFloat(r.odd));
+  const implied=odds.map(o=>1/o);
+  const sum=implied.reduce((a,b)=>a+b,0);
+  const overround=(sum-1)*100;
+  const fairP=implied.map(i=>i/sum);
+  const fairOdds=fairP.map(p=>1/p);
+  out.innerHTML=`
+    <div class="card ph2">
+      <div class="badge ${overround>=0?'br':'bg'}">Margen del mercado</div>
+      <div class="pp ${overround>=0?'neg':'pos'}">${overround>=0?'+':''}${fmt(overround)} %</div>
+      <div class="ps">Overround sobre el 100% ideal</div>
+    </div>
+    <div class="card" style="margin-top:12px">${rows.map((r,i)=>`
+      <div class="bkr"><div><div class="bkn">${esc(r.label)||'Resultado '+(i+1)}</div><div class="bks">Cuota original ${fmt(odds[i])}</div></div>
+      <div class="bkv"><div class="bkst">${fmt(fairP[i]*100)} %</div><div class="bkr2">Cuota real ${fmt(fairOdds[i])}</div></div></div>`).join('')}
+    </div>`;
+}
+
+// ── 5. Hold / Margen ── (shares the dynamic-rows UI pattern with No-Vig)
+function renderHoldRowsList(){
+  document.getElementById('holdRowsList').innerHTML=holdRows.map((r,idx)=>`
+    <div class="dynrow">
+      <input type="text" class="dyn-label" data-rid="${r.id}" placeholder="Resultado ${idx+1}" value="${esc(r.label)}">
+      <input type="number" class="oi dyn-odd" data-rid="${r.id}" placeholder="1,00" value="${r.odd}" min="1.01" step="0.01">
+      <button class="bd dyn-remove" data-rid="${r.id}"${holdRows.length<=2?' style="opacity:.3;pointer-events:none"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+    </div>`).join('');
+}
+function wireHoldRowEvents(){
+  const list=document.getElementById('holdRowsList');
+  list.addEventListener('input',e=>{
+    const rid=+e.target.dataset.rid;const r=holdRows.find(x=>x.id===rid);if(!r)return;
+    if(e.target.classList.contains('dyn-label'))r.label=e.target.value;else r.odd=e.target.value;
+  });
+  list.addEventListener('click',e=>{
+    const btn=e.target.closest('.dyn-remove');if(!btn||holdRows.length<=2)return;
+    holdRows=holdRows.filter(r=>r.id!==+btn.dataset.rid);renderHoldRowsList();
+  });
+}
+function calcHold(){
+  const rows=holdRows.filter(r=>parseFloat(r.odd)>1);
+  const out=document.getElementById('ho-result');
+  if(rows.length<2){out.innerHTML=emptyStateHtml('Añade al menos 2 cuotas válidas (mayores de 1,00).');return;}
+  const odds=rows.map(r=>parseFloat(r.odd));
+  const sum=odds.reduce((a,o)=>a+1/o,0);
+  const hold=(sum-1)*100;
+  out.innerHTML=`
+    <div class="card ph2">
+      <div class="badge ${hold>=0?'br':'bg'}">Hold de la casa</div>
+      <div class="pp ${hold>=0?'neg':'pos'}">${hold>=0?'+':''}${fmt(hold)} %</div>
+      <div class="ps">Margen que se queda la casa de apuestas</div>
+    </div>
+    <div class="card" style="margin-top:12px">${rows.map((r,i)=>`
+      <div class="sr"><span class="sl">${esc(r.label)||'Resultado '+(i+1)}</span><span class="sv">Cuota ${fmt(odds[i])} · Prob. implícita ${fmt(100/odds[i])} %</span></div>`).join('')}
+    </div>`;
+}
+
+// ── 3. Hedge ──
+function calcHedge(){
+  const stake=parseFloat(document.getElementById('h-stake').value);
+  const oddsOrig=parseFloat(document.getElementById('h-odds-orig').value);
+  const oddsOpp=parseFloat(document.getElementById('h-odds-opp').value);
+  const out=document.getElementById('h-result');
+  if(!(stake>0)||!(oddsOrig>1)||!(oddsOpp>1)){out.innerHTML=emptyStateHtml('Introduce un importe y cuotas (mayores de 1,00) válidas.');return;}
+  const hedgeStake=(stake*oddsOrig)/oddsOpp;
+  const totalOutlay=stake+hedgeStake;
+  const guaranteed=stake*oddsOrig-totalOutlay;
+  const noHedgeProfit=stake*(oddsOrig-1);
+  out.innerHTML=`
+    <div class="card ph2 ${guaranteed>=0?'sb':''}">
+      <div class="badge ${guaranteed>=0?'bg':'br'}">${guaranteed>=0?'Beneficio asegurado':'Pérdida asegurada'}</div>
+      <div class="pp ${guaranteed>=0?'pos':'neg'}">${guaranteed>=0?'+':''}${fmt(guaranteed)} €</div>
+      <div class="ps">Resultado garantizado, gane quien gane</div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="sr"><span class="sl">Apostar en el lado contrario</span><span class="sv pos">${fmt(hedgeStake)} €</span></div>
+      <div class="sr"><span class="sl">Inversión total</span><span class="sv">${fmt(totalOutlay)} €</span></div>
+      <div class="sr"><span class="sl">Si dejas correr la original (sin cobertura)</span><span class="sv ${noHedgeProfit>=0?'pos':'neg'}">${noHedgeProfit>=0?'+':''}${fmt(noHedgeProfit)} €</span></div>
+    </div>`;
+}
+
+// ── 4. Free Bet ──
+function calcFreebet(){
+  const value=parseFloat(document.getElementById('f-value').value);
+  const odds=parseFloat(document.getElementById('f-odds').value);
+  const out=document.getElementById('f-result');
+  if(!(value>0)||!(odds>1)){out.innerHTML=emptyStateHtml('Introduce el valor de la free bet y la cuota (mayor de 1,00).');return;}
+  const profit=(odds-1)*value;
+  const extraction=(odds-1)/odds*100;
+  out.innerHTML=`
+    <div class="card ph2 sb">
+      <div class="badge bg">Beneficio neto si gana</div>
+      <div class="pp pos">+${fmt(profit)} €</div>
+      <div class="ps">La casa no devuelve el importe de la Free Bet, solo las ganancias</div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="sr"><span class="sl">Valor de la Free Bet</span><span class="sv">${fmt(value)} €</span></div>
+      <div class="sr"><span class="sl">Si pierde</span><span class="sv">0 € (no arriesgas capital propio)</span></div>
+      <div class="sr"><span class="sl">Tasa de conversión (vs. cuota justa)</span><span class="sv">${fmt(extraction)} %</span></div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════
+//  PROFILE (Google account → sidebar + Perfil header)
+// ══════════════════════════════════════════
+function setProfileUI(user){
+  const name=user.displayName||user.email||'Usuario';
+  const initial=name.charAt(0).toUpperCase();
+  [['sbAvatar','sbAvatarFallback','sbName'],['perfilAvatar','perfilAvatarFallback','perfilName']].forEach(([avId,fbId,nmId])=>{
+    const av=document.getElementById(avId),fb=document.getElementById(fbId),nm=document.getElementById(nmId);
+    if(nm)nm.textContent=name;
+    if(av&&fb){
+      if(user.photoURL){av.src=user.photoURL;av.style.display='block';fb.style.display='none';}
+      else{av.style.display='none';fb.style.display='flex';fb.textContent=initial;}
+    }
+  });
+  const sbSub=document.getElementById('sbSub');if(sbSub)sbSub.textContent=user.email||'Calculadora & registro';
+}
+function clearProfileUI(){
+  const nm=document.getElementById('sbName');if(nm)nm.textContent='Surebets';
+  const sbSub=document.getElementById('sbSub');if(sbSub)sbSub.textContent='Calculadora & registro';
+  const av=document.getElementById('sbAvatar');if(av)av.style.display='none';
+  const fb=document.getElementById('sbAvatarFallback');if(fb){fb.style.display='flex';fb.textContent='S';}
+}
+document.getElementById('perfilShareBtn').addEventListener('click',()=>{
+  const s=computeStats();
+  const text=`Mis stats en Surebets — ROI: ${s.roi==null?'—':fmt(s.roi,1)+'%'} · Win Rate: ${s.winRate==null?'—':fmt(s.winRate,0)+'%'} · Bets: ${s.totalCount}`;
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>alert('Estadísticas copiadas al portapapeles.')).catch(()=>alert(text));
+  }else alert(text);
+});
+
+// ══════════════════════════════════════════
+//  PERFIL — stats reales a partir de D.bets / D.normals
+// ══════════════════════════════════════════
+function computeStats(){
+  const wagered=D.bets.reduce((a,b)=>a+(b.totalStake||0),0);
+  const totalProfit=D.bets.reduce((a,b)=>a+(b.profit||0),0)+D.normals.reduce((a,n)=>a+(n.profit||0),0);
+  const totalCount=D.bets.length+D.normals.length;
+  const wonBets=D.bets.filter(b=>b.status==='won').length;
+  const lostBets=D.bets.filter(b=>b.status==='lost').length;
+  const wonNormals=D.normals.filter(n=>(n.profit||0)>0).length;
+  const lostNormals=D.normals.filter(n=>(n.profit||0)<0).length;
+  const decided=wonBets+lostBets+wonNormals+lostNormals;
+  const wins=wonBets+wonNormals;
+  const winRate=decided>0?(wins/decided*100):null;
+  const roi=wagered>0?(totalProfit/wagered*100):null;
+  const stakedCount=D.bets.filter(b=>(b.totalStake||0)>0).length;
+  const avgBet=stakedCount>0?(wagered/stakedCount):null;
+  const avgProfit=totalCount>0?(totalProfit/totalCount):null;
+  const edgeBets=D.bets.filter(b=>typeof b.profitPct==='number');
+  const avgCLV=edgeBets.length?edgeBets.reduce((a,b)=>a+b.profitPct,0)/edgeBets.length:null;
+  const beatingCLV=edgeBets.length?(edgeBets.filter(b=>b.profitPct>0).length/edgeBets.length*100):null;
+  return{wagered,totalProfit,totalCount,winRate,roi,avgBet,avgProfit,avgCLV,beatingCLV};
+}
+function renderPerfilStats(){
+  const s=computeStats();
+  const roiEl=document.getElementById('statROI');
+  if(s.roi==null){roiEl.textContent='—';roiEl.className='statbox-val neu';}
+  else{roiEl.textContent=(s.roi>=0?'+':'')+fmt(s.roi,1)+'%';roiEl.className='statbox-val '+(s.roi>=0?'pos':'neg');}
+  document.getElementById('statWagered').textContent=fmtCompact(s.wagered)+' €';
+  document.getElementById('statWinRate').textContent=s.winRate==null?'—':fmt(s.winRate,0)+'%';
+  document.getElementById('statBets').textContent=s.totalCount.toLocaleString('es-ES');
+  document.getElementById('statAvgBet').textContent=s.avgBet==null?'—':fmt(s.avgBet,0)+' €';
+  document.getElementById('statAvgProfit').textContent=s.avgProfit==null?'—':(s.avgProfit>=0?'+':'')+fmt(s.avgProfit,1)+' €';
+  const clvEl=document.getElementById('statAvgCLV');
+  if(s.avgCLV==null){clvEl.textContent='—';clvEl.className='val dash';}
+  else{clvEl.textContent=(s.avgCLV>=0?'+':'')+fmt(s.avgCLV,1)+'%';clvEl.className='val '+(s.avgCLV>=0?'pos':'');}
+  const beatEl=document.getElementById('statBeatCLV');
+  beatEl.textContent=s.beatingCLV==null?'—':fmt(s.beatingCLV,0)+'%';
+  beatEl.className='val '+(s.beatingCLV==null?'dash':'pos');
+}
+
+// ── Calendar ──
+let calYear,calMonth;
+(function initCal(){const t=new Date();calYear=t.getFullYear();calMonth=t.getMonth();})();
+const MES_ES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+function renderCalendar(){
+  document.getElementById('calMonthLabel').textContent=`${MES_ES[calMonth]} ${calYear}`;
+  const ym=`${calYear}-${String(calMonth+1).padStart(2,'0')}`;
+  const dayTotals={};
+  D.bets.forEach(b=>{if(b.date&&b.date.startsWith(ym)){const d=+b.date.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+(b.profit||0);}});
+  D.normals.forEach(n=>{if(n.date&&n.date.startsWith(ym)){const d=+n.date.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+(n.profit||0);}});
+  const hasData=Object.keys(dayTotals).length>0;
+  const monthTotal=Object.values(dayTotals).reduce((a,b)=>a+b,0);
+  document.getElementById('calMonthTotal').innerHTML=hasData?`<span style="color:${monthTotal>=0?'var(--green)':'var(--red)'}">${monthTotal>=0?'+':''}${fmt(monthTotal,0)} €</span>`:'';
+  const firstDow=(new Date(calYear,calMonth,1).getDay()+6)%7;
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  let html='';
+  for(let i=0;i<firstDow;i++)html+='<div class="cal-cell empty"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const val=dayTotals[d];
+    let cls='cal-cell';let inner=`<div class="cal-daynum">${d}</div>`;
+    if(val!==undefined&&Math.abs(val)>0.001){
+      cls+=val>0?' cal-pos':' cal-neg';
+      inner+=`<div class="cal-amt">€${fmt(Math.abs(val),0)}</div>`;
+    }
+    html+=`<div class="${cls}">${inner}</div>`;
+  }
+  document.getElementById('calDays').innerHTML=html;
+}
+document.getElementById('calPrevBtn').addEventListener('click',()=>{calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();});
+document.getElementById('calNextBtn').addEventListener('click',()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();});
+document.getElementById('calTodayBtn').addEventListener('click',()=>{const t=new Date();calYear=t.getFullYear();calMonth=t.getMonth();renderCalendar();});
+
+// ── Performance chart (hand-drawn SVG, no external deps) ──
+const MONTH_SHORT_ES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+function dLabel(dateStr){const dt=new Date(dateStr);return`${dt.getUTCDate()} ${MONTH_SHORT_ES[dt.getUTCMonth()]}`;}
+function renderPerfChart(){
+  const entries=[];
+  D.bets.forEach(b=>{if(b.date)entries.push({date:b.date,profit:b.profit||0,expected:(b.expectedProfit!=null?b.expectedProfit:b.profit)||0,isBet:true});});
+  D.normals.forEach(n=>{if(n.date)entries.push({date:n.date,profit:n.profit||0,expected:n.profit||0,isBet:false});});
+  const wrap=document.getElementById('perfChartWrap');
+  if(!entries.length){
+    wrap.innerHTML='<div class="perf-chart-empty">Aún no hay datos suficientes para mostrar el rendimiento.</div>';
+    document.getElementById('perfTotal').textContent='—';
+    document.getElementById('perfEV').textContent='—';document.getElementById('perfCLV').textContent='—';
+    return;
+  }
+  const byDate={};
+  entries.forEach(e=>{
+    if(!byDate[e.date])byDate[e.date]={profit:0,expected:0,betExpected:0};
+    byDate[e.date].profit+=e.profit;byDate[e.date].expected+=e.expected;
+    if(e.isBet)byDate[e.date].betExpected+=e.expected;
+  });
+  const dates=Object.keys(byDate).sort();
+  let cp=0,ce=0,cc=0;
+  const series=dates.map(d=>{cp+=byDate[d].profit;ce+=byDate[d].expected;cc+=byDate[d].betExpected;
+    return{date:d,daily:byDate[d].profit,cumProfit:cp,cumEV:ce,cumCLV:cc};});
+  const last=series[series.length-1];
+  document.getElementById('perfTotal').textContent=(last.cumProfit>=0?'+':'')+fmt(last.cumProfit,0)+' €';
+  document.getElementById('perfTotal').className='perf-total-val '+(last.cumProfit>=0?'pos':'neg');
+  document.getElementById('perfEV').textContent=(last.cumEV>=0?'+':'')+fmt(last.cumEV,0)+' €';
+  document.getElementById('perfCLV').textContent=(last.cumCLV>=0?'+':'')+fmt(last.cumCLV,0)+' €';
+
+  const W=900,H=340,padL=46,padR=14,padT=16,padB=26;
+  const plotW=W-padL-padR,plotH=H-padT-padB;
+  const allVals=[0];
+  series.forEach(s=>allVals.push(s.cumProfit,s.cumEV,s.cumCLV,s.daily));
+  let yMin=Math.min(...allVals),yMax=Math.max(...allVals);
+  const yPad=(yMax-yMin)*0.12||10;yMin-=yPad;yMax+=yPad;
+  const t0=new Date(series[0].date).getTime(),t1=new Date(series[series.length-1].date).getTime();
+  const tSpan=Math.max(t1-t0,86400000);
+  const x=d=>padL+((new Date(d).getTime()-t0)/tSpan)*plotW;
+  const y=v=>padT+plotH-((v-yMin)/(yMax-yMin))*plotH;
+  const path=key=>series.map((s,i)=>`${i===0?'M':'L'}${x(s.date).toFixed(1)},${y(s[key]).toFixed(1)}`).join(' ');
+  const rawStep=(yMax-yMin)/5;
+  const mag=Math.pow(10,Math.floor(Math.log10(rawStep||1)));
+  const step=(Math.ceil((rawStep||1)/mag)*mag)||1;
+  const yTicks=[];for(let v=Math.ceil(yMin/step)*step;v<=yMax;v+=step)yTicks.push(v);
+  const xTickCount=Math.min(7,series.length);
+  const xTicks=[];for(let i=0;i<xTickCount;i++){const idx=Math.round(i*(series.length-1)/((xTickCount-1)||1));xTicks.push(series[idx]);}
+  const barW=Math.max(plotW/series.length*0.5,1.5);
+  const bars=series.map(s=>{
+    const bh=Math.max(Math.abs(y(s.daily)-y(0)),1);
+    const by=s.daily>=0?y(s.daily):y(0);
+    return`<rect x="${(x(s.date)-barW/2).toFixed(1)}" y="${by.toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" fill="${s.daily>=0?'var(--green)':'var(--red)'}" opacity="0.55"/>`;
+  }).join('');
+  const svg=`<svg class="perf-chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+    ${yTicks.map(v=>`<line x1="${padL}" y1="${y(v).toFixed(1)}" x2="${W-padR}" y2="${y(v).toFixed(1)}" stroke="var(--border)" stroke-width="1"/><text x="${padL-8}" y="${(y(v)+3).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--faint)">${fmtCompact(v)}</text>`).join('')}
+    ${bars}
+    <path d="${path('cumEV')}" fill="none" stroke="var(--cyan)" stroke-width="2" stroke-dasharray="5,4"/>
+    <path d="${path('cumCLV')}" fill="none" stroke="var(--purple)" stroke-width="2" stroke-dasharray="5,4"/>
+    <path d="${path('cumProfit')}" fill="none" stroke="var(--blue)" stroke-width="2.5"/>
+    ${xTicks.map(s=>`<text x="${x(s.date).toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="10" fill="var(--faint)">${dLabel(s.date)}</text>`).join('')}
+  </svg>`;
+  wrap.innerHTML=svg;
+}
+
+function renderPerfil(){
+  renderPerfilStats();
+  renderCalendar();
+  renderPerfChart();
+}
+
+// ══════════════════════════════════════════
 //  NAV
 // ══════════════════════════════════════════
 const pgMeta={
@@ -898,12 +1515,16 @@ const pgMeta={
   surebets:{title:'Mis surebets',sub:'Historial completo con retorno mínimo'},
   normales:{title:'Normales & Freebets',sub:'Apuestas estándar y freebets por tipo y fecha'},
   profit:{title:'Profit',sub:'Rendimiento por mes y total acumulado'},
+  pendientes:{title:'Pendientes',sub:'Surebets a la espera de resultado'},
+  perfil:{title:'Perfil',sub:'Tus estadísticas y rendimiento personal'},
+  calculadoras:{title:'Calculadoras',sub:'Kelly, No-Vig, Hedge, Free Bet y Hold'},
 };
+const ALL_PAGES=['calc','surebets','normales','profit','pendientes','perfil','calculadoras'];
 document.querySelectorAll('.ni[data-page]').forEach(item=>{
   item.addEventListener('click',()=>{
     const page=item.dataset.page;
     document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));item.classList.add('active');
-    ['calc','surebets','normales','profit'].forEach(p=>{
+    ALL_PAGES.forEach(p=>{
       const el=document.getElementById('page-'+p);if(el)el.style.display='none';
     });
     const target=document.getElementById('page-'+page);
@@ -914,6 +1535,9 @@ document.querySelectorAll('.ni[data-page]').forEach(item=>{
     else if(page==='surebets')renderSurebets();
     else if(page==='normales')renderNormals();
     else if(page==='profit')renderProfit();
+    else if(page==='pendientes')renderPendientes();
+    else if(page==='perfil')renderPerfil();
+    else if(page==='calculadoras')renderCalcTab(document.querySelector('.calc-tab.active')?.dataset.calc||'kelly');
     if(window.innerWidth<600)closeSB();
   });
 });
@@ -921,6 +1545,7 @@ document.querySelectorAll('.ni[data-page]').forEach(item=>{
 function updateBadges(){
   document.getElementById('sbCount').textContent=D.bets.length;
   document.getElementById('nbCount').textContent=D.normals.length;
+  document.getElementById('pendCount').textContent=D.bets.filter(b=>b.status==='pending').length;
 }
 
 // ── Mobile sidebar ──
@@ -935,12 +1560,13 @@ overlay.addEventListener('click',closeSB);
 //  FIREBASE — Auth + Firestore sync
 // ══════════════════════════════════════════
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_PROYECTO.firebaseapp.com",
-  projectId: "TU_PROYECTO",
-  storageBucket: "TU_PROYECTO.appspot.com",
-  messagingSenderId: "TU_SENDER_ID",
-  appId: "TU_APP_ID"
+  apiKey: "AIzaSyBnJ5fne_yyf3s2aXZPaI5Azm5chwibJS0",
+  authDomain: "calculadora-a719f.firebaseapp.com",
+  projectId: "calculadora-a719f",
+  storageBucket: "calculadora-a719f.firebasestorage.app",
+  messagingSenderId: "597066196263",
+  appId: "1:597066196263:web:e78b380d8af8e2ac30b502",
+  measurementId: "G-262BGYX2Q1"
 };
 
 let docRef = null;
@@ -952,6 +1578,21 @@ const authScreen = document.getElementById('authScreen');
 const appRoot = document.getElementById('appRoot');
 const authStatus = document.getElementById('authStatus');
 const googleLoginBtn = document.getElementById('googleLoginBtn');
+
+// window.signIn se define YA (de forma síncrona) para que nunca sea 'undefined',
+// aunque el usuario pulse el botón antes de que terminen de cargar los módulos
+// de Firebase (que se importan de forma asíncrona más abajo). En cuanto Firebase
+// esté listo, esta función se sustituye por la implementación real.
+window.signIn = function () {
+  if (authStatus) authStatus.textContent = 'Cargando… inténtalo de nuevo en un segundo.';
+  console.warn('[signIn] Firebase aún se está inicializando, espera un momento.');
+};
+
+// Convierte un email en un ID de documento válido para Firestore:
+// "usuario@gmail.com" -> "usuario_gmail_com"
+function emailToPath(email) {
+  return (email || '').trim().toLowerCase().replace(/[@.]/g, '_');
+}
 
 (async () => {
   const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js');
@@ -965,15 +1606,18 @@ const googleLoginBtn = document.getElementById('googleLoginBtn');
   const dbFs = getFirestore(fbApp);
   const provider = new GoogleAuthProvider();
 
-  googleLoginBtn.addEventListener('click', async () => {
+  // Sustituye el stub inicial por la implementación real ahora que Firebase está listo.
+  window.signIn = async function () {
     authStatus.textContent = 'Conectando…';
     try {
       await signInWithPopup(auth, provider);
     } catch (e) {
       authStatus.textContent = 'Error al iniciar sesión. Inténtalo de nuevo.';
-      console.error(e);
+      console.error('[signIn] Error en signInWithPopup:', e);
     }
-  });
+  };
+
+  googleLoginBtn.addEventListener('click', () => window.signIn());
 
   async function bootApp() {
     const LOCAL_STORE_KEY = 'sb_v3';
@@ -992,8 +1636,6 @@ const googleLoginBtn = document.getElementById('googleLoginBtn');
       D = migrated || { bets: [], normals: [] };
       if (!Array.isArray(D.bets)) D.bets = [];
       if (!Array.isArray(D.normals)) D.normals = [];
-      if (D.bets.length === 0) D.bets = EXCEL_SUREBETS.map(b => ({ ...b }));
-      if (D.normals.length === 0) D.normals = EXCEL_NORMALS.map(n => ({ ...n }));
       await setDoc(docRef, D);
     }
 
@@ -1021,6 +1663,8 @@ const googleLoginBtn = document.getElementById('googleLoginBtn');
     else if (activePage === 'surebets') renderSurebets(document.getElementById('sbSearch')?.value || '');
     else if (activePage === 'normales') renderNormals(document.getElementById('nbSearch')?.value || '');
     else if (activePage === 'profit') renderProfit();
+    else if (activePage === 'pendientes') renderPendientes();
+    else if (activePage === 'perfil') renderPerfil();
   }
 
   window.__fsSave = async function () {
@@ -1036,12 +1680,22 @@ const googleLoginBtn = document.getElementById('googleLoginBtn');
   onAuthStateChanged(auth, async (user) => {
     if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
     if (user) {
-      docRef = doc(dbFs, 'users', user.uid, 'app', 'data');
+      setProfileUI(user);
+      // Aislamiento por correo: cada usuario tiene su propio documento en
+      // users/{email_normalizado}/app/data, en vez de compartir uno genérico o por UID.
+      let emailId = emailToPath(user.email);
+      if (!emailId) {
+        // Fallback defensivo por si la cuenta de Google no expone email (caso raro).
+        console.warn('[Firestore] El usuario no tiene email, usando UID como respaldo:', user.uid);
+        emailId = user.uid;
+      }
+      docRef = doc(dbFs, 'users', emailId, 'app', 'data');
       authStatus.textContent = 'Sincronizando datos…';
       await bootApp();
       authScreen.classList.add('hidden');
       appRoot.classList.add('ready');
     } else {
+      clearProfileUI();
       docRef = null;
       firestoreReady = false;
       appRoot.classList.remove('ready');
