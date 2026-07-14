@@ -77,6 +77,10 @@ input[type=number],input[type=text],select{
   border-radius:7px;padding:8px 11px;color:var(--text);font-size:14px;
   outline:none;transition:border-color var(--t),box-shadow var(--t)}
 input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,139,255,.13)}
+.jsonbox{width:100%;min-height:190px;background:var(--inp);border:1px solid var(--border);
+  border-radius:7px;padding:10px 11px;color:var(--text);font-family:var(--mono);
+  font-size:12.5px;line-height:1.5;resize:vertical;outline:none;transition:border-color var(--t),box-shadow var(--t)}
+.jsonbox:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,139,255,.13)}
 .iw{position:relative;display:flex;align-items:center}
 .isuf{position:absolute;right:10px;color:var(--faint);font-size:12px;pointer-events:none}
 .ii{font-size:16px;font-weight:600;text-align:right;padding-right:26px!important}
@@ -576,6 +580,7 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
         <button class="btn-s" id="sbExport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Exportar</button>
         <button class="btn-s" id="sbImport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Importar</button>
         <input type="file" id="sbFile" accept=".json" style="display:none">
+        <button class="btn-s" id="jsonImportOpenSb" title="Pegar JSON manualmente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>Pegar JSON</button>
         <button class="btn-d" id="sbClear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Borrar todo</button>
       </div>
       <div id="sbList"></div>
@@ -593,6 +598,7 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
         <button class="btn-s" id="nbExport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Exportar</button>
         <button class="btn-s" id="nbImport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Importar</button>
         <input type="file" id="nbFile" accept=".json" style="display:none">
+        <button class="btn-s" id="jsonImportOpenNb" title="Pegar JSON manualmente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>Pegar JSON</button>
       </div>
       <div id="nbList"></div>
     </div>
@@ -724,6 +730,25 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
     <div style="display:flex;gap:9px;margin-top:18px">
       <button class="btn-s" id="m-cancel" style="flex:1">Cancelar</button>
       <button class="btn-reg" id="m-save" style="flex:2">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ IMPORTAR JSON MANUALMENTE (pegar y guardar) ══ -->
+<div id="jsonImportModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:540px;margin:16px">
+    <div style="font-size:15px;font-weight:700;margin-bottom:6px">Importar JSON manualmente</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">
+      Pega aquí el JSON y se inyecta directamente en tu cuenta (se guarda igual que el resto de la app). Admite un objeto tipo <code style="background:var(--inp);padding:1px 5px;border-radius:4px;font-family:var(--mono)">{"bets":[...],"normals":[...]}</code> — puedes incluir solo una de las dos claves — o directamente un array de surebets.
+    </div>
+    <textarea id="jsonImportInput" class="jsonbox" placeholder='{"bets": [...], "normals": [...]}'></textarea>
+    <div id="jsonImportError" style="display:none;color:var(--red);font-size:12px;margin-top:8px"></div>
+    <div style="display:flex;gap:9px;margin-top:14px">
+      <button class="btn-s" id="jsonImportCancel" style="flex:1">Cancelar</button>
+      <button class="btn-reg" id="jsonImportBtn" style="flex:2">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Importar y guardar
+      </button>
     </div>
   </div>
 </div>
@@ -981,9 +1006,11 @@ document.getElementById('sbList').addEventListener('click',e=>{
   renderSurebets(document.getElementById('sbSearch').value);renderProfit();
 });
 // Accepts either a raw JSON array, or an object like {bets:[...]} / {normals:[...]}
-function extractImportArray(parsed, key){
+// keyOrKeys puede ser una clave única ("bets") o una lista de alias a probar (["bets","surebets"])
+function extractImportArray(parsed, keyOrKeys){
   if(Array.isArray(parsed))return parsed;
-  if(parsed && Array.isArray(parsed[key]))return parsed[key];
+  const keys=Array.isArray(keyOrKeys)?keyOrKeys:[keyOrKeys];
+  if(parsed)for(const k of keys)if(Array.isArray(parsed[k]))return parsed[k];
   return null;
 }
 
@@ -1029,6 +1056,105 @@ document.getElementById('nbFile').addEventListener('change',e=>{
       save();updateBadges();renderNormals();renderProfit();alert('Importado correctamente.');
     }catch(err){alert('Error: '+err.message);}
   };r.readAsText(file);e.target.value='';
+});
+
+// ══════════════════════════════════════════
+//  IMPORTAR JSON MANUAL (pegar y listo)
+//  Alternativa al import por archivo: pega el JSON tal cual y se
+//  inyecta en D + se guarda en Firestore, sin pasar por un <input type=file>.
+// ══════════════════════════════════════════
+function mergeById(target, incoming){
+  // Si un elemento pegado NO trae id, le asignamos uno nuevo (único) para que nunca
+  // choque con nada. Si SÍ trae id y ese id ya existe en target, se descarta (evita duplicados
+  // al re-importar el mismo JSON dos veces) — mismo criterio que ya usaba el import por archivo.
+  const existIds=new Set(target.map(x=>x.id));
+  const usedIds=new Set(existIds);
+  const withIds=incoming.map(item=>{
+    if(!item)return item;
+    if(item.id===undefined || item.id===null){
+      let newId;
+      do{newId=Date.now()+Math.floor(Math.random()*1e6);}while(usedIds.has(newId));
+      usedIds.add(newId);
+      return{...item,id:newId};
+    }
+    return item;
+  });
+  const fresh=withIds.filter(x=>!existIds.has(x.id));
+  return[...fresh,...target];
+}
+
+function showJsonError(msg){
+  const errBox=document.getElementById('jsonImportError');
+  if(errBox){errBox.textContent=msg;errBox.style.display='block';}
+  else alert(msg);
+}
+
+// Se puede llamar de 3 formas:
+//   importManual()                        -> lee el textarea del modal
+//   importManual('{"bets":[...]}')        -> parsea el string JSON pasado
+//   importManual({bets:[...],normals:[]}) -> usa el objeto ya parseado directamente
+function importManual(data){
+  const errBox=document.getElementById('jsonImportError');
+  if(errBox){errBox.style.display='none';errBox.textContent='';}
+
+  let parsed;
+  if(data===undefined){
+    const ta=document.getElementById('jsonImportInput');
+    const raw=ta?ta.value.trim():'';
+    if(!raw){showJsonError('Pega primero el JSON que quieres importar.');return false;}
+    try{parsed=JSON.parse(raw);}catch(err){showJsonError('JSON inválido: '+err.message);return false;}
+  }else if(typeof data==='string'){
+    try{parsed=JSON.parse(data);}catch(err){showJsonError('JSON inválido: '+err.message);return false;}
+  }else{
+    parsed=data;
+  }
+
+  // Admite {bets:[...]} / {surebets:[...]} y {normals:[...]} / {bets_and_freebets:[...]} / {freebets:[...]}
+  // Un array suelto se trata siempre como surebets (igual que el import por archivo).
+  const betsArr=extractImportArray(parsed,['bets','surebets']);
+  const normalsArr=Array.isArray(parsed)?null:extractImportArray(parsed,['normals','bets_and_freebets','freebets','normales']);
+
+  if(!betsArr && !normalsArr){
+    showJsonError('No se han reconocido datos. Usa {"bets":[...]}, {"normals":[...]} o ambos a la vez (o un array de surebets).');
+    return false;
+  }
+
+  let addedBets=0,addedNormals=0;
+  if(betsArr){const before=D.bets.length;D.bets=mergeById(D.bets,betsArr);addedBets=D.bets.length-before;}
+  if(normalsArr){const before=D.normals.length;D.normals=mergeById(D.normals,normalsArr);addedNormals=D.normals.length-before;}
+
+  try{
+    console.log('Guardando datos importados manualmente…',{addedBets,addedNormals});
+    save();
+    updateBadges();
+    renderSurebets(document.getElementById('sbSearch')?.value||'');
+    renderNormals(document.getElementById('nbSearch')?.value||'');
+    renderProfit();
+    renderPendientes();
+    renderPerfil();
+    const ta=document.getElementById('jsonImportInput');if(ta)ta.value='';
+    alert(`✓ Datos inyectados y guardados.\n${addedBets} surebets · ${addedNormals} normales/freebets.`);
+  }catch(e){
+    console.error('Fallo al guardar los datos importados:',e);
+    showJsonError('Los datos se añadieron pero hubo un error al guardar: '+e.message);
+    return false;
+  }
+  return true;
+}
+window.importManual=importManual; // también se puede invocar desde la consola: importManual({bets:[...],normals:[...]})
+
+const jsonImportModal=document.getElementById('jsonImportModal');
+function openJsonImport(){
+  const errBox=document.getElementById('jsonImportError');if(errBox)errBox.style.display='none';
+  jsonImportModal.style.display='flex';
+  setTimeout(()=>document.getElementById('jsonImportInput')?.focus(),30);
+}
+function closeJsonImport(){jsonImportModal.style.display='none';}
+document.getElementById('jsonImportOpenSb').addEventListener('click',openJsonImport);
+document.getElementById('jsonImportOpenNb').addEventListener('click',openJsonImport);
+document.getElementById('jsonImportCancel').addEventListener('click',closeJsonImport);
+document.getElementById('jsonImportBtn').addEventListener('click',()=>{
+  if(importManual())closeJsonImport();
 });
 
 // Normales page events
