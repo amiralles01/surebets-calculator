@@ -205,6 +205,7 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
 .pp2{padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700;font-family:var(--mono)}
 .pp2.pos{background:var(--gdim);color:var(--green);border:1px solid rgba(0,217,126,.25)}
 .pp2.neg{background:var(--rdim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
+.pp2.neu{background:rgba(125,143,168,.14);color:var(--muted);border:1px solid rgba(125,143,168,.25)}
 .ss{background:var(--inp);border:1px solid var(--border);border-radius:5px;
   color:var(--text);font-size:12px;padding:3px 7px;outline:none;cursor:pointer}
 .bd2{width:26px;height:26px;display:grid;place-items:center;border-radius:5px;
@@ -223,13 +224,14 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
   padding:8px 15px;background:var(--raised);font-size:12.5px}
 .bfl{color:var(--muted)}
 .bfr{font-family:var(--mono);font-weight:700}
-.bfr.pos{color:var(--green)}.bfr.neg{color:var(--red)}
+.bfr.pos{color:var(--green)}.bfr.neg{color:var(--red)}.bfr.neu{color:var(--muted)}
 
 /* status badge */
 .sb2{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;letter-spacing:.3px}
 .sp{background:var(--ydim);color:var(--yellow);border:1px solid rgba(240,180,41,.3)}
 .sw{background:var(--gdim);color:var(--green);border:1px solid rgba(0,217,126,.3)}
 .sl3{background:var(--rdim);color:var(--red);border:1px solid rgba(255,95,95,.3)}
+.sa{background:rgba(125,143,168,.14);color:var(--muted);border:1px solid rgba(125,143,168,.3)}
 
 /* ── WINNER SELECTION ── */
 .leg{position:relative}
@@ -326,8 +328,16 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
 .btn-reject{padding:7px 10px;border-radius:7px;background:transparent;border:1px solid var(--border);
   color:var(--muted);font-size:12px;font-weight:500;transition:all var(--t);white-space:nowrap}
 .btn-reject:hover{border-color:rgba(255,95,95,.4);color:var(--red);background:var(--rdim)}
+.btn-void{padding:7px 10px;border-radius:7px;background:transparent;border:1px solid var(--border);
+  color:var(--muted);font-size:12px;font-weight:500;transition:all var(--t);white-space:nowrap}
+.btn-void:hover{border-color:rgba(125,143,168,.5);color:var(--muted);background:rgba(125,143,168,.14)}
 
 /* ── PERFIL PAGE ── */
+.profit-mes-box{background:var(--raised);border:1px solid var(--border);border-radius:var(--r);
+  padding:16px 18px;text-align:center;margin-bottom:16px}
+.profit-mes-label{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.profit-mes-val{font-size:30px;font-weight:900;font-family:var(--mono);letter-spacing:-1px}
+.profit-mes-val.pos{color:var(--green)}.profit-mes-val.neg{color:var(--red)}.profit-mes-val.neu{color:var(--text)}
 .profile-card-head{align-items:center}
 .profile-avatar-lg{width:52px;height:52px}
 .profile-avatar-fallback-lg{width:52px;height:52px;font-size:19px}
@@ -346,6 +356,7 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
 .statrow:last-of-type{border-bottom:none}
 .statrow .sl{color:var(--muted)}
 .statrow .sv-combo{font-family:var(--mono);font-weight:600;display:flex;align-items:center;gap:6px}
+.statrow .sv-combo.pos{color:var(--green)}.statrow .sv-combo.neg{color:var(--red)}
 .statrow .nb2{font-size:10.5px;color:var(--green);background:var(--gdim);border-radius:99px;padding:1px 6px;font-family:var(--mono)}
 .clv-head{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--muted);
   text-transform:uppercase;letter-spacing:.7px;margin:16px 0 9px;padding-top:12px;border-top:1px solid var(--border)}
@@ -632,14 +643,25 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
           </button>
         </div>
         <div class="cb">
+          <div class="profit-mes-box">
+            <div class="profit-mes-label" id="profitMesLabel">Profit del mes</div>
+            <div class="profit-mes-val neu" id="profitMesVal">—</div>
+          </div>
           <div class="stats3">
             <div class="statbox"><div class="statbox-label">ROI</div><div class="statbox-val" id="statROI">—</div></div>
             <div class="statbox"><div class="statbox-label">Wagered</div><div class="statbox-val neu" id="statWagered">—</div></div>
-            <div class="statbox"><div class="statbox-label">Win Rate</div><div class="statbox-val neu" id="statWinRate">—</div></div>
+            <div class="statbox"><div class="statbox-label">Win Rate Bets</div><div class="statbox-val neu" id="statWinRateBets">—</div></div>
           </div>
-          <div class="statrow"><span class="sl">Bets</span><span class="sv-combo" id="statBets">0</span></div>
+          <div class="stats3">
+            <div class="statbox"><div class="statbox-label">Win Rate Freebets</div><div class="statbox-val neu" id="statWinRateFB">—</div></div>
+            <div class="statbox"><div class="statbox-label">Ganado Surebets</div><div class="statbox-val" id="statGanadoSB">—</div></div>
+            <div class="statbox"><div class="statbox-label">Ganado Freebets</div><div class="statbox-val" id="statGanadoFB">—</div></div>
+          </div>
+          <div class="statrow"><span class="sl">Total Bets</span><span class="sv-combo" id="statTotalBets">0</span></div>
+          <div class="statrow"><span class="sl">Total Freebets</span><span class="sv-combo" id="statTotalFB">0</span></div>
           <div class="statrow"><span class="sl">Average Bet</span><span class="sv-combo" id="statAvgBet">—</span></div>
-          <div class="statrow"><span class="sl">Average Profit</span><span class="sv-combo" id="statAvgProfit">—</span></div>
+          <div class="statrow"><span class="sl">Average Freebet</span><span class="sv-combo" id="statAvgFreebet">—</span></div>
+          <div class="statrow"><span class="sl">Average Freebet Profit</span><span class="sv-combo" id="statAvgFreebetProfit">—</span></div>
           <div class="clv-head">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             Closing Line Value
@@ -762,6 +784,10 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
 function save(){return window.__fsSave ? window.__fsSave() : Promise.resolve();}
 
 let D = {bets:[],normals:[]};
+// Una surebet "anulada" no se gana ni se pierde: no aporta profit ni cuenta como dinero arriesgado
+// en ninguna estadística agregada (ROI, wagered, profit del mes, gráficos, etc).
+function betProfit(b){return b.status==='anulada'?0:(b.profit||0);}
+function betStake(b){return b.status==='anulada'?0:(b.totalStake||0);}
 
 // ══════════════════════════════════════════
 //  CALC STATE
@@ -855,19 +881,23 @@ function renderSurebets(filter=''){
   const list=document.getElementById('sbList');
   if(!bets.length){list.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>No hay surebets registradas.</p></div></div>`;return;}
   list.innerHTML=bets.map(b=>{
+    const isVoid=b.status==='anulada';
     const s=b.profitPct>=0?'+':'';
-    const sLabel={pending:'Pendiente',won:'Ganada',lost:'Perdida'}[b.status]||b.status;
-    const sCls={pending:'sp',won:'sw',lost:'sl3'}[b.status]||'';
+    const sLabel={pending:'Pendiente',won:'Ganada',lost:'Perdida',anulada:'Anulada'}[b.status]||b.status;
+    const sCls={pending:'sp',won:'sw',lost:'sl3',anulada:'sa'}[b.status]||'';
     const hasLegs=b.legs&&b.legs.length;
     const winnerIdx=b.winnerLeg!=null?b.winnerLeg:-1;
     const realProfit=winnerIdx>=0&&hasLegs?((b.legs[winnerIdx].minReturn||0)-(b.totalStake||0)):null;
-    const displayProfit=realProfit!=null?realProfit:b.profit;
-    const displayProfitPct=realProfit!=null&&(b.totalStake||0)>0?(realProfit/(b.totalStake||1))*100:b.profitPct;
+    const displayProfit=isVoid?0:(realProfit!=null?realProfit:b.profit);
+    const displayProfitPct=isVoid?0:(realProfit!=null&&(b.totalStake||0)>0?(realProfit/(b.totalStake||1))*100:b.profitPct);
+    const hasPct=typeof displayProfitPct==='number'&&!isNaN(displayProfitPct);
+    const pctCls=isVoid?'neu':(hasPct?(displayProfitPct>=0?'pos':'neg'):'neu');
+    const pctLabel=hasPct?(displayProfitPct>=0?'+':'')+fmt(displayProfitPct)+' %':'—';
     const legsHtml=hasLegs?`<div style="background:var(--raised);display:grid;grid-template-columns:1fr 1fr auto auto auto auto;gap:5px 10px;padding:5px 15px;font-size:10px;color:var(--faint)"><span>CASA</span><span>RESULTADO</span><span style="text-align:right">CUOTA</span><span style="text-align:right">STAKE</span><span style="text-align:right">RETORNO</span><span></span></div>`+
       b.legs.map((l,li)=>`<div class="leg${winnerIdx===li?' leg-winner':''}"><span class="lh">${esc(l.house)}</span><span class="lr">${esc(l.result)}</span><span class="lo">${fmt(l.odd||0)}</span><span class="lk">${fmt(l.stake||0)} €</span><span class="lm">${fmt(l.minReturn||0)} €</span><button class="win-btn${winnerIdx===li?' selected':''}" data-wbid="${b.id}" data-wleg="${li}" title="Marcar como ganadora">${winnerIdx===li?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Ganó`:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Ganó`}</button></div>`).join('')+
-      (winnerIdx>=0?`<div class="real-profit-row"><span class="real-profit-label">✓ Ganó ${esc(b.legs[winnerIdx].house)} — Profit real</span><span class="real-profit-val">+${fmt(realProfit)} €</span></div>`:'')
+      (winnerIdx>=0&&!isVoid?`<div class="real-profit-row"><span class="real-profit-label">✓ Ganó ${esc(b.legs[winnerIdx].house)} — Profit real</span><span class="real-profit-val">+${fmt(realProfit)} €</span></div>`:'')
     : `<div style="padding:8px 15px;font-size:12px;color:var(--faint)">Sin desglose de patas (surebet pre-cargada)</div>`;
-    return`<div class="bi"><div class="bih"><div><div class="bie">${esc(b.event)}</div><div class="bid">${fmtDate(b.date)}</div></div><div class="bim"><span class="pp2 ${displayProfitPct>=0?'pos':'neg'}">${displayProfitPct>=0?'+':''}${fmt(displayProfitPct)} %</span><span class="sb2 ${sCls}">${sLabel}</span><select class="ss" data-sid="${b.id}"><option value="pending" ${b.status==='pending'?'selected':''}>Pendiente</option><option value="won" ${b.status==='won'?'selected':''}>Ganada</option><option value="lost" ${b.status==='lost'?'selected':''}>Perdida</option></select><button class="bd2" data-bid="${b.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div><div class="bl">${legsHtml}</div><div class="bf"><span class="bfl">Invertido: ${fmt(b.totalStake||0)} € · Ret. mín.: ${fmt(b.minReturn||0)} €</span><span class="bfr ${displayProfit>=0?'pos':'neg'}">${displayProfit>=0?'+':''}${fmt(displayProfit)} €</span></div></div>`;
+    return`<div class="bi"><div class="bih"><div><div class="bie">${esc(b.event)}</div><div class="bid">${fmtDate(b.date)}</div></div><div class="bim"><span class="pp2 ${pctCls}">${pctLabel}</span><span class="sb2 ${sCls}">${sLabel}</span><select class="ss" data-sid="${b.id}"><option value="pending" ${b.status==='pending'?'selected':''}>Pendiente</option><option value="won" ${b.status==='won'?'selected':''}>Ganada</option><option value="lost" ${b.status==='lost'?'selected':''}>Perdida</option><option value="anulada" ${b.status==='anulada'?'selected':''}>Anulada</option></select><button class="bd2" data-bid="${b.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div><div class="bl">${legsHtml}</div><div class="bf"><span class="bfl">Invertido: ${fmt(b.totalStake||0)} € · Ret. mín.: ${fmt(b.minReturn||0)} €</span><span class="bfr ${isVoid?'neu':(displayProfit>=0?'pos':'neg')}">${displayProfit>=0?'+':''}${fmt(displayProfit)} €</span></div></div>`;
   }).join('');
 }
 
@@ -905,7 +935,7 @@ function renderNormals(filter=''){
 function renderProfit(){
   // Combine all entries with dates
   const all=[];
-  D.bets.forEach(b=>{if(b.date&&b.profit!==undefined)all.push({date:b.date,profit:b.profit,cat:'surebet'})});
+  D.bets.forEach(b=>{if(b.date&&b.profit!==undefined)all.push({date:b.date,profit:betProfit(b),cat:'surebet'})});
   D.normals.forEach(n=>{if(n.date&&n.profit!==undefined&&n.profit!==0)all.push({date:n.date,profit:n.profit,cat:n.type==='Freebet'?'freebet':'normal'})});
 
   // Group by month
@@ -918,7 +948,7 @@ function renderProfit(){
 
   const keys=Object.keys(months).sort();
   const totalAll=Object.values(months).reduce((a,m)=>a+m.surebet+m.normal+m.freebet,0);
-  const totalSB=D.bets.reduce((a,b)=>a+(b.profit||0),0);
+  const totalSB=D.bets.reduce((a,b)=>a+betProfit(b),0);
   const totalNorm=D.normals.filter(n=>n.type==='Normal').reduce((a,n)=>a+(n.profit||0),0);
   const totalFB=D.normals.filter(n=>n.type==='Freebet').reduce((a,n)=>a+(n.profit||0),0);
 
@@ -1223,6 +1253,7 @@ function renderPendientes(){
       <div class="pend-right">
         <div class="pend-profit">+${fmt(b.profit||0)} €</div>
         <button class="btn-reject" data-pid="${b.id}" data-action="lost">Perdida</button>
+        <button class="btn-void" data-pid="${b.id}" data-action="anulada" title="No cuenta como ganada ni perdida">Anular</button>
         <button class="btn-accept" data-pid="${b.id}" data-action="won"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Aceptar</button>
       </div>
     </div>`;
@@ -1484,7 +1515,7 @@ function clearProfileUI(){
 }
 document.getElementById('perfilShareBtn').addEventListener('click',()=>{
   const s=computeStats();
-  const text=`Mis stats en Surebets — ROI: ${s.roi==null?'—':fmt(s.roi,1)+'%'} · Win Rate: ${s.winRate==null?'—':fmt(s.winRate,0)+'%'} · Bets: ${s.totalCount}`;
+  const text=`Mis stats en Surebets — ROI: ${s.roi==null?'—':fmt(s.roi,1)+'%'} · Win Rate: ${s.winRateBets==null?'—':fmt(s.winRateBets,0)+'%'} · Bets: ${s.totalBets}`;
   if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(text).then(()=>alert('Estadísticas copiadas al portapapeles.')).catch(()=>alert(text));
   }else alert(text);
@@ -1494,24 +1525,49 @@ document.getElementById('perfilShareBtn').addEventListener('click',()=>{
 //  PERFIL — stats reales a partir de D.bets / D.normals
 // ══════════════════════════════════════════
 function computeStats(){
-  const wagered=D.bets.reduce((a,b)=>a+(b.totalStake||0),0);
-  const totalProfit=D.bets.reduce((a,b)=>a+(b.profit||0),0)+D.normals.reduce((a,n)=>a+(n.profit||0),0);
-  const totalCount=D.bets.length+D.normals.length;
+  // Wagered y ganancia de surebets: las anuladas no arriesgan ni ganan nada (betStake/betProfit las tratan como 0)
+  const wagered=D.bets.reduce((a,b)=>a+betStake(b),0);
+  const gananciaSurebets=D.bets.reduce((a,b)=>a+betProfit(b),0);
+  const freebets=D.normals.filter(n=>n.type==='Freebet');
+  const gananciaFreebets=freebets.reduce((a,n)=>a+(n.profit||0),0);
+  const totalProfit=gananciaSurebets+D.normals.reduce((a,n)=>a+(n.profit||0),0);
+  const totalBets=D.bets.length;
+  const totalFreebets=freebets.length;
+  const totalCount=totalBets+D.normals.length;
+
+  // Win rate de bets (surebets): solo ganadas/perdidas deciden; pendientes y anuladas no cuentan
   const wonBets=D.bets.filter(b=>b.status==='won').length;
   const lostBets=D.bets.filter(b=>b.status==='lost').length;
-  const wonNormals=D.normals.filter(n=>(n.profit||0)>0).length;
-  const lostNormals=D.normals.filter(n=>(n.profit||0)<0).length;
-  const decided=wonBets+lostBets+wonNormals+lostNormals;
-  const wins=wonBets+wonNormals;
-  const winRate=decided>0?(wins/decided*100):null;
-  const roi=wagered>0?(totalProfit/wagered*100):null;
-  const stakedCount=D.bets.filter(b=>(b.totalStake||0)>0).length;
+  const winRateBets=(wonBets+lostBets)>0?(wonBets/(wonBets+lostBets)*100):null;
+
+  // Win rate de freebets
+  const wonFB=freebets.filter(n=>(n.profit||0)>0).length;
+  const lostFB=freebets.filter(n=>(n.profit||0)<0).length;
+  const winRateFreebets=(wonFB+lostFB)>0?(wonFB/(wonFB+lostFB)*100):null;
+
+  // ROI: SOLO apuestas a mano — surebets con % de ROI conocido (excluye importadas sin profitPct,
+  // excluye normales/freebets por completo, y excluye anuladas)
+  const roiBets=D.bets.filter(b=>b.status!=='anulada'&&typeof b.profitPct==='number');
+  const roiWagered=roiBets.reduce((a,b)=>a+(b.totalStake||0),0);
+  const roiProfit=roiBets.reduce((a,b)=>a+(b.profit||0),0);
+  const roi=roiWagered>0?(roiProfit/roiWagered*100):null;
+
+  const stakedCount=D.bets.filter(b=>b.status!=='anulada'&&(b.totalStake||0)>0).length;
   const avgBet=stakedCount>0?(wagered/stakedCount):null;
   const avgProfit=totalCount>0?(totalProfit/totalCount):null;
-  const edgeBets=D.bets.filter(b=>typeof b.profitPct==='number');
+
+  // Average freebet: profit medio de TODAS las freebets (ganadas, perdidas y en tablas)
+  const avgFreebet=totalFreebets>0?(gananciaFreebets/totalFreebets):null;
+  // Average freebet profit: profit medio SOLO de las freebets ganadas
+  const winningFB=freebets.filter(n=>(n.profit||0)>0);
+  const avgFreebetProfit=winningFB.length>0?(winningFB.reduce((a,n)=>a+(n.profit||0),0)/winningFB.length):null;
+
+  const edgeBets=D.bets.filter(b=>b.status!=='anulada'&&typeof b.profitPct==='number');
   const avgCLV=edgeBets.length?edgeBets.reduce((a,b)=>a+b.profitPct,0)/edgeBets.length:null;
   const beatingCLV=edgeBets.length?(edgeBets.filter(b=>b.profitPct>0).length/edgeBets.length*100):null;
-  return{wagered,totalProfit,totalCount,winRate,roi,avgBet,avgProfit,avgCLV,beatingCLV};
+
+  return{wagered,totalProfit,totalCount,totalBets,totalFreebets,winRateBets,winRateFreebets,roi,
+    gananciaSurebets,gananciaFreebets,avgBet,avgProfit,avgFreebet,avgFreebetProfit,avgCLV,beatingCLV};
 }
 function renderPerfilStats(){
   const s=computeStats();
@@ -1519,10 +1575,23 @@ function renderPerfilStats(){
   if(s.roi==null){roiEl.textContent='—';roiEl.className='statbox-val neu';}
   else{roiEl.textContent=(s.roi>=0?'+':'')+fmt(s.roi,1)+'%';roiEl.className='statbox-val '+(s.roi>=0?'pos':'neg');}
   document.getElementById('statWagered').textContent=fmtCompact(s.wagered)+' €';
-  document.getElementById('statWinRate').textContent=s.winRate==null?'—':fmt(s.winRate,0)+'%';
-  document.getElementById('statBets').textContent=s.totalCount.toLocaleString('es-ES');
+  document.getElementById('statWinRateBets').textContent=s.winRateBets==null?'—':fmt(s.winRateBets,0)+'%';
+  document.getElementById('statWinRateFB').textContent=s.winRateFreebets==null?'—':fmt(s.winRateFreebets,0)+'%';
+  const gsbEl=document.getElementById('statGanadoSB');
+  gsbEl.textContent=(s.gananciaSurebets>=0?'+':'')+fmt(s.gananciaSurebets,0)+' €';
+  gsbEl.className='statbox-val '+(s.gananciaSurebets>=0?'pos':'neg');
+  const gfbEl=document.getElementById('statGanadoFB');
+  gfbEl.textContent=(s.gananciaFreebets>=0?'+':'')+fmt(s.gananciaFreebets,0)+' €';
+  gfbEl.className='statbox-val '+(s.gananciaFreebets>=0?'pos':'neg');
+  document.getElementById('statTotalBets').textContent=s.totalBets.toLocaleString('es-ES');
+  document.getElementById('statTotalFB').textContent=s.totalFreebets.toLocaleString('es-ES');
   document.getElementById('statAvgBet').textContent=s.avgBet==null?'—':fmt(s.avgBet,0)+' €';
-  document.getElementById('statAvgProfit').textContent=s.avgProfit==null?'—':(s.avgProfit>=0?'+':'')+fmt(s.avgProfit,1)+' €';
+  const avgFbEl=document.getElementById('statAvgFreebet');
+  avgFbEl.textContent=s.avgFreebet==null?'—':(s.avgFreebet>=0?'+':'')+fmt(s.avgFreebet,1)+' €';
+  avgFbEl.className='sv-combo '+(s.avgFreebet==null?'':(s.avgFreebet>=0?'pos':'neg'));
+  const avgFbpEl=document.getElementById('statAvgFreebetProfit');
+  avgFbpEl.textContent=s.avgFreebetProfit==null?'—':'+'+fmt(s.avgFreebetProfit,1)+' €';
+  avgFbpEl.className='sv-combo '+(s.avgFreebetProfit==null?'':'pos');
   const clvEl=document.getElementById('statAvgCLV');
   if(s.avgCLV==null){clvEl.textContent='—';clvEl.className='val dash';}
   else{clvEl.textContent=(s.avgCLV>=0?'+':'')+fmt(s.avgCLV,1)+'%';clvEl.className='val '+(s.avgCLV>=0?'pos':'');}
@@ -1535,12 +1604,17 @@ function renderPerfilStats(){
 let calYear,calMonth;
 (function initCal(){const t=new Date();calYear=t.getFullYear();calMonth=t.getMonth();})();
 const MES_ES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+// Totales por día de un año-mes dado. Las surebets anuladas no suman (ni ganan ni pierden).
+function computeDayTotals(year,month){
+  const ym=`${year}-${String(month+1).padStart(2,'0')}`;
+  const dayTotals={};
+  D.bets.forEach(b=>{if(b.date&&b.date.startsWith(ym)){const d=+b.date.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+betProfit(b);}});
+  D.normals.forEach(n=>{if(n.date&&n.date.startsWith(ym)){const d=+n.date.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+(n.profit||0);}});
+  return dayTotals;
+}
 function renderCalendar(){
   document.getElementById('calMonthLabel').textContent=`${MES_ES[calMonth]} ${calYear}`;
-  const ym=`${calYear}-${String(calMonth+1).padStart(2,'0')}`;
-  const dayTotals={};
-  D.bets.forEach(b=>{if(b.date&&b.date.startsWith(ym)){const d=+b.date.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+(b.profit||0);}});
-  D.normals.forEach(n=>{if(n.date&&n.date.startsWith(ym)){const d=+n.date.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+(n.profit||0);}});
+  const dayTotals=computeDayTotals(calYear,calMonth);
   const hasData=Object.keys(dayTotals).length>0;
   const monthTotal=Object.values(dayTotals).reduce((a,b)=>a+b,0);
   document.getElementById('calMonthTotal').innerHTML=hasData?`<span style="color:${monthTotal>=0?'var(--green)':'var(--red)'}">${monthTotal>=0?'+':''}${fmt(monthTotal,0)} €</span>`:'';
@@ -1563,12 +1637,25 @@ document.getElementById('calPrevBtn').addEventListener('click',()=>{calMonth--;i
 document.getElementById('calNextBtn').addEventListener('click',()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();});
 document.getElementById('calTodayBtn').addEventListener('click',()=>{const t=new Date();calYear=t.getFullYear();calMonth=t.getMonth();renderCalendar();});
 
+// ── Profit del mes (caja superior del perfil) ──
+// Siempre refleja el mes natural actual, independientemente de qué mes se esté navegando en el calendario de abajo.
+function renderProfitMesBox(){
+  const t=new Date();
+  const dayTotals=computeDayTotals(t.getFullYear(),t.getMonth());
+  const hasData=Object.keys(dayTotals).length>0;
+  const total=Object.values(dayTotals).reduce((a,b)=>a+b,0);
+  document.getElementById('profitMesLabel').textContent=`Profit de ${MES_ES[t.getMonth()]} ${t.getFullYear()}`;
+  const val=document.getElementById('profitMesVal');
+  if(!hasData){val.textContent='—';val.className='profit-mes-val neu';}
+  else{val.textContent=(total>=0?'+':'')+fmt(total,0)+' €';val.className='profit-mes-val '+(total>=0?'pos':'neg');}
+}
+
 // ── Performance chart (hand-drawn SVG, no external deps) ──
 const MONTH_SHORT_ES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 function dLabel(dateStr){const dt=new Date(dateStr);return`${dt.getUTCDate()} ${MONTH_SHORT_ES[dt.getUTCMonth()]}`;}
 function renderPerfChart(){
   const entries=[];
-  D.bets.forEach(b=>{if(b.date)entries.push({date:b.date,profit:b.profit||0,expected:(b.expectedProfit!=null?b.expectedProfit:b.profit)||0,isBet:true});});
+  D.bets.forEach(b=>{if(b.date)entries.push({date:b.date,profit:betProfit(b),expected:b.status==='anulada'?0:((b.expectedProfit!=null?b.expectedProfit:b.profit)||0),isBet:true});});
   D.normals.forEach(n=>{if(n.date)entries.push({date:n.date,profit:n.profit||0,expected:n.profit||0,isBet:false});});
   const wrap=document.getElementById('perfChartWrap');
   if(!entries.length){
@@ -1628,6 +1715,7 @@ function renderPerfChart(){
 }
 
 function renderPerfil(){
+  renderProfitMesBox();
   renderPerfilStats();
   renderCalendar();
   renderPerfChart();
