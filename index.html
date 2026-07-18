@@ -516,6 +516,11 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
       Pendientes
       <span class="nb" id="pendCount">0</span>
     </div>
+    <div class="ni" data-page="casas">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>
+      Casas
+      <span class="nb" id="casasCount">0</span>
+    </div>
     <div class="ni" data-page="profit">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
       Profit
@@ -624,6 +629,19 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
     <div id="page-pendientes" class="fw" style="display:none">
       <div class="stats" id="pendStats"></div>
       <div id="pendList"></div>
+    </div>
+
+    <!-- ═══ CASAS PAGE ═══ -->
+    <div id="page-casas" class="fw" style="display:none">
+      <div class="stats" id="casasStats"></div>
+      <div class="tb">
+        <input type="text" id="casasSearch" placeholder="Buscar casa…">
+        <button class="btn-s" id="casasAddBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Añadir casa
+        </button>
+      </div>
+      <div id="casasList"></div>
     </div>
 
     <!-- ═══ PERFIL PAGE ═══ -->
@@ -756,6 +774,30 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
   </div>
 </div>
 
+<!-- ══ ADD/EDIT CASA MODAL ══ -->
+<div id="addCasaModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:420px;margin:16px">
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px" id="casaModalTitle">Añadir casa de apuestas</div>
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <div>
+        <label class="fl">Casa de apuestas</label>
+        <input type="text" id="c-name" placeholder="Bet365, Bwin, Winamax…" list="casaSuggestions">
+        <datalist id="casaSuggestions">
+          <option value="Bet365"></option><option value="Bwin"></option><option value="Winamax"></option><option value="William Hill"></option>
+          <option value="Betfair"></option><option value="1xBet"></option><option value="Codere"></option><option value="Marathonbet"></option>
+          <option value="Pinnacle"></option><option value="Interwetten"></option><option value="Kirolbet"></option><option value="Sportium"></option>
+        </datalist>
+      </div>
+      <div><label class="fl">Dinero depositado</label><div class="iw"><input type="number" class="ii" id="c-amount" placeholder="0" min="0" step="0.01"><span class="isuf">€</span></div></div>
+      <div><label class="fl">Notas (opcional)</label><input type="text" id="c-notes" placeholder="Bono bienvenida, cuenta verificada…"></div>
+    </div>
+    <div style="display:flex;gap:9px;margin-top:18px">
+      <button class="btn-s" id="c-cancel" style="flex:1">Cancelar</button>
+      <button class="btn-reg" id="c-save" style="flex:2">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ IMPORTAR JSON MANUALMENTE (pegar y guardar) ══ -->
 <div id="jsonImportModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:540px;margin:16px">
@@ -783,7 +825,7 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
 // ══════════════════════════════════════════
 function save(){return window.__fsSave ? window.__fsSave() : Promise.resolve();}
 
-let D = {bets:[],normals:[]};
+let D = {bets:[],normals:[],casas:[]};
 // Una surebet "anulada" no se gana ni se pierde: no aporta profit ni cuenta como dinero arriesgado
 // en ninguna estadística agregada (ROI, wagered, profit del mes, gráficos, etc).
 function betProfit(b){return b.status==='anulada'?0:(b.profit||0);}
@@ -1267,6 +1309,75 @@ document.getElementById('pendList').addEventListener('click',e=>{
 });
 
 // ══════════════════════════════════════════
+//  CASAS DE APUESTAS — casa + dinero depositado
+// ══════════════════════════════════════════
+let editingCasaId=null;
+
+function renderCasas(filter=''){
+  const items=D.casas.filter(c=>!filter||c.name.toLowerCase().includes(filter.toLowerCase()));
+  const total=D.casas.reduce((a,c)=>a+(c.amount||0),0);
+  const avg=D.casas.length?total/D.casas.length:0;
+  const top=D.casas.reduce((best,c)=>(!best||(c.amount||0)>(best.amount||0))?c:best,null);
+  document.getElementById('casasStats').innerHTML=`
+    <div class="sc"><div class="sl2">Casas registradas</div><div class="sv2">${D.casas.length}</div></div>
+    <div class="sc"><div class="sl2">Total depositado</div><div class="sv2 pos">${fmt(total)} €</div></div>
+    <div class="sc"><div class="sl2">Promedio por casa</div><div class="sv2">${fmt(avg)} €</div></div>
+    <div class="sc"><div class="sl2">Casa líder</div><div class="sv2" style="font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${top?esc(top.name):'—'}</div></div>`;
+  const list=document.getElementById('casasList');
+  if(!items.length){list.innerHTML=emptyStateHtml(D.casas.length?'No hay casas que coincidan con la búsqueda.':'No tienes casas de apuestas registradas.');return;}
+  const sorted=[...items].sort((a,b)=>(b.amount||0)-(a.amount||0));
+  list.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">`+sorted.map(c=>{
+    const amt=c.amount||0,pCls=amt>0?'pos':'zer';
+    return`<div class="ni2">
+      <div class="ni2-left"><div class="ni2-ev">${esc(c.name)}</div>${c.notes?`<div class="ni2-note">${esc(c.notes)}</div>`:''}</div>
+      <div class="ni2-right"><div class="ni2-pnl ${pCls}">${fmt(amt)} €</div></div>
+      <div style="display:flex;gap:4px;margin-top:2px">
+        <button class="bd2" data-edit-cid="${c.id}" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
+        <button class="bd2" data-cid="${c.id}" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+      </div>
+    </div>`;
+  }).join('')+`</div>`;
+}
+
+const casaModal=document.getElementById('addCasaModal');
+function openCasaModal(editId){
+  editingCasaId=editId||null;
+  const c=editId?D.casas.find(x=>x.id===editId):null;
+  document.getElementById('casaModalTitle').textContent=c?'Editar casa de apuestas':'Añadir casa de apuestas';
+  document.getElementById('c-name').value=c?c.name:'';
+  document.getElementById('c-amount').value=c?c.amount:'';
+  document.getElementById('c-notes').value=c?(c.notes||''):'';
+  casaModal.style.display='flex';
+  setTimeout(()=>document.getElementById('c-name').focus(),30);
+}
+document.getElementById('casasAddBtn').addEventListener('click',()=>openCasaModal());
+document.getElementById('c-cancel').addEventListener('click',()=>{casaModal.style.display='none';editingCasaId=null;});
+document.getElementById('c-save').addEventListener('click',()=>{
+  const name=document.getElementById('c-name').value.trim();
+  if(!name){alert('Introduce el nombre de la casa.');return;}
+  const amount=parseFloat(document.getElementById('c-amount').value)||0;
+  const notes=document.getElementById('c-notes').value.trim();
+  if(editingCasaId){
+    const c=D.casas.find(x=>x.id===editingCasaId);
+    if(c){c.name=name;c.amount=amount;c.notes=notes;}
+  }else{
+    D.casas.unshift({id:Date.now(),name,amount,notes});
+  }
+  save();updateBadges();
+  renderCasas(document.getElementById('casasSearch').value);
+  casaModal.style.display='none';editingCasaId=null;
+});
+document.getElementById('casasSearch').addEventListener('input',e=>renderCasas(e.target.value));
+document.getElementById('casasList').addEventListener('click',e=>{
+  const editBtn=e.target.closest('[data-edit-cid]');
+  if(editBtn){openCasaModal(+editBtn.dataset.editCid);return;}
+  const delBtn=e.target.closest('[data-cid]');if(!delBtn)return;
+  if(!confirm('¿Eliminar esta casa de apuestas?'))return;
+  D.casas=D.casas.filter(c=>c.id!==+delBtn.dataset.cid);save();updateBadges();
+  renderCasas(document.getElementById('casasSearch').value);
+});
+
+// ══════════════════════════════════════════
 //  CALCULADORAS — Kelly · No-Vig · Hedge · Free Bet · Hold
 // ══════════════════════════════════════════
 let novigRows=[{id:1,label:'',odd:''},{id:2,label:'',odd:''}],novigNextId=3;
@@ -1730,10 +1841,11 @@ const pgMeta={
   normales:{title:'Normales & Freebets',sub:'Apuestas estándar y freebets por tipo y fecha'},
   profit:{title:'Profit',sub:'Rendimiento por mes y total acumulado'},
   pendientes:{title:'Pendientes',sub:'Surebets a la espera de resultado'},
+  casas:{title:'Casas de apuestas',sub:'Casas registradas y dinero depositado en cada una'},
   perfil:{title:'Perfil',sub:'Tus estadísticas y rendimiento personal'},
   calculadoras:{title:'Calculadoras',sub:'Kelly, No-Vig, Hedge, Free Bet y Hold'},
 };
-const ALL_PAGES=['calc','surebets','normales','profit','pendientes','perfil','calculadoras'];
+const ALL_PAGES=['calc','surebets','normales','profit','pendientes','casas','perfil','calculadoras'];
 document.querySelectorAll('.ni[data-page]').forEach(item=>{
   item.addEventListener('click',()=>{
     const page=item.dataset.page;
@@ -1750,6 +1862,7 @@ document.querySelectorAll('.ni[data-page]').forEach(item=>{
     else if(page==='normales')renderNormals();
     else if(page==='profit')renderProfit();
     else if(page==='pendientes')renderPendientes();
+    else if(page==='casas')renderCasas();
     else if(page==='perfil')renderPerfil();
     else if(page==='calculadoras')renderCalcTab(document.querySelector('.calc-tab.active')?.dataset.calc||'kelly');
     if(window.innerWidth<600)closeSB();
@@ -1760,6 +1873,7 @@ function updateBadges(){
   document.getElementById('sbCount').textContent=D.bets.length;
   document.getElementById('nbCount').textContent=D.normals.length;
   document.getElementById('pendCount').textContent=D.bets.filter(b=>b.status==='pending').length;
+  document.getElementById('casasCount').textContent=D.casas.length;
 }
 
 // ── Mobile sidebar ──
@@ -1841,15 +1955,17 @@ function emailToPath(email) {
       D = snap.data();
       if (!Array.isArray(D.bets)) D.bets = [];
       if (!Array.isArray(D.normals)) D.normals = [];
+      if (!Array.isArray(D.casas)) D.casas = [];
     } else {
       let migrated = null;
       try {
         const raw = localStorage.getItem(LOCAL_STORE_KEY);
         if (raw) migrated = JSON.parse(raw);
       } catch (e) {}
-      D = migrated || { bets: [], normals: [] };
+      D = migrated || { bets: [], normals: [], casas: [] };
       if (!Array.isArray(D.bets)) D.bets = [];
       if (!Array.isArray(D.normals)) D.normals = [];
+      if (!Array.isArray(D.casas)) D.casas = [];
       await setDoc(docRef, D);
     }
 
@@ -1863,6 +1979,7 @@ function emailToPath(email) {
       D = docSnap.data();
       if (!Array.isArray(D.bets)) D.bets = [];
       if (!Array.isArray(D.normals)) D.normals = [];
+      if (!Array.isArray(D.casas)) D.casas = [];
       refreshCurrentView();
     });
 
@@ -1878,6 +1995,7 @@ function emailToPath(email) {
     else if (activePage === 'normales') renderNormals(document.getElementById('nbSearch')?.value || '');
     else if (activePage === 'profit') renderProfit();
     else if (activePage === 'pendientes') renderPendientes();
+    else if (activePage === 'casas') renderCasas(document.getElementById('casasSearch')?.value || '');
     else if (activePage === 'perfil') renderPerfil();
   }
 
