@@ -86,13 +86,15 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
 .ii{font-size:16px;font-weight:600;text-align:right;padding-right:26px!important}
 
 /* ── OUTCOMES ── */
-.oh{display:grid;grid-template-columns:1fr 1fr 100px 32px;gap:6px;margin-bottom:6px}
+.oh{display:grid;grid-template-columns:1fr 1fr 88px 100px 32px;gap:6px;margin-bottom:6px}
 .cl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--faint);padding:0 3px}
-.or{display:grid;grid-template-columns:1fr 1fr 100px 32px;gap:6px;
+.or{display:grid;grid-template-columns:1fr 1fr 88px 100px 32px;gap:6px;
   margin-bottom:6px;align-items:center;animation:fi .18s ease}
 @keyframes fi{from{opacity:0;transform:translateY(-4px)}to{opacity:1}}
 .oi{text-align:right;font-family:var(--mono);font-size:15px;font-weight:600}
 .oi.lit{border-color:var(--green);box-shadow:0 0 0 3px var(--gglow)}
+.msi{text-align:right;font-family:var(--mono);font-size:13px;font-weight:600;color:var(--yellow)}
+.msi::placeholder{color:var(--faint);font-weight:500}
 .bd{width:32px;height:32px;display:grid;place-items:center;border-radius:7px;
   color:var(--faint);border:1px solid transparent;transition:all var(--t);flex-shrink:0}
 .bd:hover{background:var(--rdim);color:var(--red);border-color:rgba(255,95,95,.3)}
@@ -422,7 +424,7 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
   .sb-overlay.open{display:block}
   .ph{padding:12px 13px 10px 50px}
   .pb{padding:11px 9px;gap:11px}
-  .oh,.or{grid-template-columns:1fr 1fr 86px 32px}
+  .oh,.or{grid-template-columns:1fr 1fr 60px 68px 32px}
   .stats{grid-template-columns:1fr 1fr;gap:7px}
   .leg{grid-template-columns:1fr 1fr auto}
   .lm{display:none}
@@ -557,7 +559,8 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
             </div>
             <div class="oh">
               <div class="cl">Casa</div><div class="cl">Resultado</div>
-              <div class="cl" style="text-align:right">Cuota</div><div></div>
+              <div class="cl" style="text-align:right">Cuota</div>
+              <div class="cl" style="text-align:right">Stake manual</div><div></div>
             </div>
             <div id="outcomesList"></div>
             <button class="ba" id="addBtn">
@@ -834,7 +837,7 @@ function betStake(b){return b.status==='anulada'?0:(b.totalStake||0);}
 // ══════════════════════════════════════════
 //  CALC STATE
 // ══════════════════════════════════════════
-let outcomes=[{id:1,house:'Casa 1',result:'',odd:2.30},{id:2,house:'Casa 2',result:'',odd:1.90}];
+let outcomes=[{id:1,house:'Casa 1',result:'',odd:2.30,manualStake:null},{id:2,house:'Casa 2',result:'',odd:1.90,manualStake:null}];
 let nextId=3,totalInv=100,roundMode='exact',customStep=0.1;
 
 function roundStep(v,s){if(!s||!isFinite(s)||s<=0)return v;const f=1/s;return parseFloat((Math.round(v*f)/f).toPrecision(12))}
@@ -848,13 +851,24 @@ function calculate(){
   const valid=outcomes.filter(o=>o.odd>1);
   if(valid.length<2)return null;
   const probs=valid.map(o=>1/o.odd),sumP=probs.reduce((a,b)=>a+b,0);
-  const raw=valid.map(o=>(totalInv/o.odd)/sumP);
-  const rounded=raw.map(s=>applyRound(s));
+  // Resultados con stake manual: se respeta el importe introducido tal cual.
+  // El resto ("auto") se reparte proporcionalmente a su probabilidad implícita
+  // usando el presupuesto que queda tras restar los stakes manuales.
+  const manualIdx=[],autoIdx=[];
+  valid.forEach((o,i)=>{(o.manualStake>0?manualIdx:autoIdx).push(i)});
+  const sumManual=manualIdx.reduce((a,i)=>a+valid[i].manualStake,0);
+  const remaining=Math.max(0,totalInv-sumManual);
+  const rounded=new Array(valid.length).fill(0);
+  manualIdx.forEach(i=>{rounded[i]=valid[i].manualStake});
+  if(autoIdx.length){
+    const autoP=autoIdx.map(i=>1/valid[i].odd),sumAutoP=autoP.reduce((a,b)=>a+b,0);
+    autoIdx.forEach((i,k)=>{rounded[i]=applyRound((remaining*autoP[k])/sumAutoP)});
+  }
   const actual=rounded.reduce((a,b)=>a+b,0);
   const returns=valid.map((o,i)=>rounded[i]*o.odd);
   const minRet=Math.min(...returns);
   const profit=minRet-actual;
-  return{valid,sumPct:sumP*100,isSurebet:sumP<1,stakes:rounded,returns,minReturn:minRet,actualTotal:actual,profit,profitPct:actual>0?(profit/actual)*100:0};
+  return{valid,sumPct:sumP*100,isSurebet:sumP<1,stakes:rounded,returns,minReturn:minRet,actualTotal:actual,profit,profitPct:actual>0?(profit/actual)*100:0,hasManual:manualIdx.length>0};
 }
 
 // ── Render calc ──
@@ -868,6 +882,7 @@ function renderOutcomes(){
       <input type="text" placeholder="Casa ${idx+1}" value="${esc(o.house)}" data-field="house" data-id="${o.id}">
       <input type="text" placeholder="Resultado" value="${esc(o.result)}" data-field="result" data-id="${o.id}">
       <input type="number" class="oi${lit?' lit':''}" placeholder="1,00" value="${o.odd>0?o.odd:''}" data-field="odd" data-id="${o.id}" min="1.01" step="0.01">
+      <input type="number" class="msi" placeholder="Auto" title="Stake manual para este resultado (opcional). Si lo rellenas, el resto se reparte con el presupuesto restante." value="${o.manualStake>0?o.manualStake:''}" data-field="manualStake" data-id="${o.id}" min="0" step="0.01">
       <button class="bd" data-id="${o.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`;
     list.appendChild(row);
   });
@@ -881,7 +896,7 @@ function renderResult(){
   const s=profit>=0?'+':'';
   const badgeHtml=isSurebet?`<div class="badge bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Surebet</div>`:
     `<div class="badge br"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Sin surebet</div>`;
-  const bkHtml=valid.map((o,i)=>`<div class="bkr"><div><div class="bkn">${esc(o.house||`Casa ${i+1}`)}</div><div class="bks">${esc(o.result||`Resultado ${i+1}`)} · Cuota ${fmt(o.odd)}</div></div><div class="bkv"><div class="bkst">${fmt(stakes[i])} €</div><div class="bkr2">retorno ${fmt(returns[i])} €</div><div class="bkm">mín. ${fmt(returns[i])} €</div></div></div>`).join('');
+  const bkHtml=valid.map((o,i)=>`<div class="bkr"><div><div class="bkn">${esc(o.house||`Casa ${i+1}`)}</div><div class="bks">${esc(o.result||`Resultado ${i+1}`)} · Cuota ${fmt(o.odd)}</div></div><div class="bkv"><div class="bkst">${fmt(stakes[i])} €${o.manualStake>0?' <span style="color:var(--yellow);font-size:10px;font-weight:600">MANUAL</span>':''}</div><div class="bkr2">retorno ${fmt(returns[i])} €</div><div class="bkm">mín. ${fmt(returns[i])} €</div></div></div>`).join('');
   const bW=Math.min(sumPct/1.3,100);
   panel.innerHTML=`
     <div class="card ph2 ${isSurebet?'sb':''}">${badgeHtml}<div class="pp ${profit>=0?'pos':'neg'}">${s}${fmt(profitPct)} %</div><div class="ps">Beneficio garantizado: <span class="hi ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span></div></div>
@@ -1025,7 +1040,9 @@ function renderProfit(){
 document.getElementById('outcomesList').addEventListener('input',e=>{
   const el=e.target,id=+el.dataset.id,field=el.dataset.field;
   if(!id||!field)return;const o=outcomes.find(x=>x.id===id);if(!o)return;
-  if(field==='odd')o.odd=parseFloat(el.value)||0;else o[field]=el.value;
+  if(field==='odd')o.odd=parseFloat(el.value)||0;
+  else if(field==='manualStake')o.manualStake=el.value===''?null:(parseFloat(el.value)||0);
+  else o[field]=el.value;
   renderResult();
   const res=calculate();document.querySelectorAll('.oi').forEach(i=>i.classList.toggle('lit',!!(res&&res.isSurebet)));
 });
@@ -1034,7 +1051,7 @@ document.getElementById('outcomesList').addEventListener('click',e=>{
   outcomes=outcomes.filter(o=>o.id!==+btn.dataset.id);render();
 });
 document.getElementById('addBtn').addEventListener('click',()=>{
-  outcomes.push({id:nextId++,house:'',result:'',odd:0});render();
+  outcomes.push({id:nextId++,house:'',result:'',odd:0,manualStake:null});render();
   setTimeout(()=>{const ins=document.querySelectorAll('.oi');if(ins.length)ins[ins.length-1].focus();},40);
 });
 document.getElementById('totalInv').addEventListener('input',e=>{totalInv=parseFloat(e.target.value)||0;renderResult();});
