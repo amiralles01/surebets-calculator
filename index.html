@@ -208,7 +208,7 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
 .pp2.pos{background:var(--gdim);color:var(--green);border:1px solid rgba(0,217,126,.25)}
 .pp2.neg{background:var(--rdim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
 .pp2.neu{background:rgba(125,143,168,.14);color:var(--muted);border:1px solid rgba(125,143,168,.25)}
-.ss,.ns{background:var(--inp);border:1px solid var(--border);border-radius:5px;
+.ss{background:var(--inp);border:1px solid var(--border);border-radius:5px;
   color:var(--text);font-size:12px;padding:3px 7px;outline:none;cursor:pointer}
 .bd2{width:26px;height:26px;display:grid;place-items:center;border-radius:5px;
   color:var(--faint);border:1px solid transparent;transition:all var(--t);flex-shrink:0}
@@ -261,9 +261,35 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
 .ni2-note{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4;
   font-style:italic;padding:5px 8px;background:var(--raised);border-radius:5px;
   border-left:2px solid var(--border)}
-.ni2-right{text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.ni2-right{text-align:right;flex-shrink:0}
 .ni2-pnl{font-size:16px;font-weight:700;font-family:var(--mono)}
 .ni2-pnl.pos{color:var(--green)}.ni2-pnl.neg{color:var(--red)}.ni2-pnl.zer{color:var(--muted)}
+
+/* ── NOTAS ── */
+.notas-layout{display:flex;gap:14px;flex:1;min-height:0}
+.notas-folders{width:190px;flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;overflow:hidden;align-self:flex-start;max-height:100%}
+.notas-folders-head{padding:11px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--faint)}
+.notas-folders-head button{color:var(--faint);width:22px;height:22px;display:grid;place-items:center;border-radius:6px}
+.notas-folders-head button:hover{background:var(--raised);color:var(--green)}
+.notas-folders-head button svg{width:13px;height:13px}
+.nf-list{overflow-y:auto;padding:6px}
+.nf-item{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:7px;color:var(--muted);font-size:13px;cursor:pointer;user-select:none}
+.nf-item:hover{background:var(--raised);color:var(--text)}
+.nf-item.active{background:var(--gdim);color:var(--green)}
+.nf-item .nfn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nf-item .nfc{font-size:10px;color:var(--faint);background:var(--raised);border-radius:99px;padding:1px 6px;flex-shrink:0}
+.nf-item.active .nfc{color:var(--green)}
+.nf-item .nfdel{display:none;color:var(--faint);width:14px;height:14px;flex-shrink:0}
+.nf-item:hover .nfdel{display:block}
+.nf-item .nfdel:hover{color:var(--red)}
+.notas-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;min-height:0}
+.nlist{display:flex;flex-direction:column;gap:8px;overflow-y:auto}
+.note-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;cursor:pointer;transition:border-color var(--t)}
+.note-card:hover{border-color:var(--focus)}
+.note-title{font-size:13.5px;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.note-snippet{font-size:12px;color:var(--muted);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.note-meta{font-size:10.5px;color:var(--faint);margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.note-meta span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .type-pill{display:inline-block;padding:2px 8px;border-radius:99px;
   font-size:10px;font-weight:600;letter-spacing:.3px;flex-shrink:0}
 .tp-normal{background:var(--bdim);color:var(--blue);border:1px solid rgba(88,166,255,.25)}
@@ -322,11 +348,6 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
 .pend-meta{font-size:11px;color:var(--faint);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap}
 .pend-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .pend-profit{font-size:15px;font-weight:700;font-family:var(--mono);color:var(--green);white-space:nowrap}
-.pend-preview{font-size:12px;font-family:var(--mono);white-space:nowrap}
-.pend-preview-pos{color:var(--green);font-weight:700}
-.pend-preview-neg{color:var(--red);font-weight:700}
-.type-badge-kind{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;
-  background:rgba(125,143,168,.14);color:var(--muted);border:1px solid rgba(125,143,168,.3)}
 .btn-accept{display:flex;align-items:center;gap:5px;padding:7px 13px;border-radius:7px;
   background:var(--gdim);border:1px solid rgba(0,217,126,.4);color:var(--green);
   font-size:12.5px;font-weight:600;transition:all var(--t);white-space:nowrap}
@@ -431,6 +452,8 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
   .pb{padding:11px 9px;gap:11px}
   .oh,.or{grid-template-columns:1fr 1fr 60px 68px 32px}
   .stats{grid-template-columns:1fr 1fr;gap:7px}
+  .notas-layout{flex-direction:column}
+  .notas-folders{width:100%;max-height:140px}
   .leg{grid-template-columns:1fr 1fr auto}
   .lm{display:none}
   .tb{gap:6px}
@@ -527,6 +550,10 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>
       Casas
       <span class="nb" id="casasCount">0</span>
+    </div>
+    <div class="ni" data-page="notas">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+      Notas
     </div>
     <div class="ni" data-page="profit">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -652,6 +679,32 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
       <div id="casasList"></div>
     </div>
 
+    <!-- ═══ NOTAS PAGE ═══ -->
+    <div id="page-notas" class="fw" style="display:none">
+      <div class="notas-layout">
+        <div class="notas-folders">
+          <div class="notas-folders-head">
+            <span>Carpetas</span>
+            <button id="notaFolderAddBtn" title="Nueva carpeta">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <div class="nf-list" id="notasFolderList"></div>
+        </div>
+        <div class="notas-main">
+          <div class="tb">
+            <input type="text" id="notasSearch" placeholder="Buscar notas…" style="flex:1;min-width:140px">
+            <button class="btn-s" id="notasSortBtn" title="Cambiar orden">Fecha</button>
+            <button class="btn-s" id="notasAddBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Nueva nota
+            </button>
+          </div>
+          <div class="nlist" id="notasList"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ═══ PERFIL PAGE ═══ -->
     <div id="page-perfil" class="fw" style="display:none">
       <div class="card profile-card">
@@ -770,41 +823,14 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
             <option value="Combi">Combi</option>
           </select>
         </div>
-        <div><label class="fl">Cuota</label><input type="number" id="m-odd" placeholder="1,80" step="0.01" min="1.01"></div>
+        <div><label class="fl">Profit (€)</label><input type="number" id="m-profit" placeholder="2.50" step="0.01"></div>
       </div>
-      <div><label class="fl" id="m-stake-label">Dinero invertido (€)</label><input type="number" id="m-stake" placeholder="20" step="0.01" min="0"></div>
-      <div id="m-preview" style="display:none;background:var(--raised);border-radius:7px;padding:8px 11px;font-size:12px;justify-content:space-between;gap:8px">
-        <span>Si gana: <span class="pend-preview-pos" id="m-preview-win"></span></span>
-        <span>Si pierde: <span class="pend-preview-neg" id="m-preview-loss"></span></span>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label class="fl">Empieza</label><input type="date" id="m-date"></div>
-        <div><label class="fl">Se resuelve (aprox)</label><input type="date" id="m-resolve"></div>
-      </div>
+      <div><label class="fl">Fecha</label><input type="date" id="m-date"></div>
       <div><label class="fl">Notas (opcional)</label><input type="text" id="m-notes" placeholder="Cuota boosted…"></div>
     </div>
     <div style="display:flex;gap:9px;margin-top:18px">
       <button class="btn-s" id="m-cancel" style="flex:1">Cancelar</button>
-      <button class="btn-reg" id="m-save" style="flex:2">Guardar en pendientes</button>
-    </div>
-  </div>
-
-</div>
-
-<!-- ══ REGISTRAR SUREBET MODAL ══ -->
-<div id="sbRegModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:420px;margin:16px">
-    <div style="font-size:15px;font-weight:700;margin-bottom:16px">Registrar surebet</div>
-    <div style="display:flex;flex-direction:column;gap:11px">
-      <div><label class="fl">Evento</label><input type="text" id="sbr-event" placeholder="España vs Portugal"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label class="fl">Empieza</label><input type="date" id="sbr-start"></div>
-        <div><label class="fl">Se resuelve (aprox)</label><input type="date" id="sbr-resolve"></div>
-      </div>
-    </div>
-    <div style="display:flex;gap:9px;margin-top:18px">
-      <button class="btn-s" id="sbr-cancel" style="flex:1">Cancelar</button>
-      <button class="btn-reg" id="sbr-save" style="flex:2">Registrar en pendientes</button>
+      <button class="btn-reg" id="m-save" style="flex:2">Guardar</button>
     </div>
   </div>
 </div>
@@ -829,6 +855,22 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
     <div style="display:flex;gap:9px;margin-top:18px">
       <button class="btn-s" id="c-cancel" style="flex:1">Cancelar</button>
       <button class="btn-reg" id="c-save" style="flex:2">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ NOTA (crear/editar) ══ -->
+<div id="noteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:520px;margin:16px">
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px" id="noteModalTitle">Nueva nota</div>
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <div><label class="fl">Título</label><input type="text" id="note-title" placeholder="Título de la nota"></div>
+      <div><label class="fl">Carpeta</label><select id="note-folder"></select></div>
+      <div><label class="fl">Contenido</label><textarea id="note-content" class="jsonbox" style="min-height:160px;font-family:inherit;font-size:13.5px" placeholder="Escribe aquí…"></textarea></div>
+    </div>
+    <div style="display:flex;gap:9px;margin-top:18px">
+      <button class="btn-s" id="note-cancel" style="flex:1">Cancelar</button>
+      <button class="btn-reg" id="note-save" style="flex:2">Guardar</button>
     </div>
   </div>
 </div>
@@ -860,12 +902,11 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
 // ══════════════════════════════════════════
 function save(){return window.__fsSave ? window.__fsSave() : Promise.resolve();}
 
-let D = {bets:[],normals:[],casas:[]};
+let D = {bets:[],normals:[],casas:[],notes:[],notesFolders:[]};
 // Una surebet "anulada" no se gana ni se pierde: no aporta profit ni cuenta como dinero arriesgado
 // en ninguna estadística agregada (ROI, wagered, profit del mes, gráficos, etc).
-function betProfit(b){return(b.status==='won'||b.status==='lost')?(b.profit||0):0;}
+function betProfit(b){return b.status==='anulada'?0:(b.profit||0);}
 function betStake(b){return b.status==='anulada'?0:(b.totalStake||0);}
-function todayISO(){return new Date().toISOString().slice(0,10);}
 
 // ══════════════════════════════════════════
 //  CALC STATE
@@ -940,33 +981,21 @@ function renderResult(){
       <div class="pw"><div class="pl"><span>Suma prob. implícitas</span><span>${fmt(sumPct)} %</span></div><div class="pt"><div class="pf ${sumPct>100?'over':''}" style="width:${bW}%"></div></div></div>
     </div>
     <button class="btn-reg" id="regBtn" ${!isSurebet?'disabled':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>${isSurebet?'Registrar esta surebet':'Sin surebet — no disponible'}</button>`;
-  document.getElementById('regBtn').addEventListener('click',openSbRegModal);
+  document.getElementById('regBtn').addEventListener('click',registerBet);
 }
 
 function render(){renderOutcomes();renderResult();}
 
-function openSbRegModal(){
-  const res=calculate();if(!res||!res.isSurebet)return;
-  document.getElementById('sbr-event').value='';
-  document.getElementById('sbr-start').value=new Date().toISOString().slice(0,10);
-  document.getElementById('sbr-resolve').value='';
-  document.getElementById('sbRegModal').style.display='flex';
-}
 function registerBet(){
   const res=calculate();if(!res||!res.isSurebet)return;
-  const ev=document.getElementById('sbr-event').value.trim();
-  if(!ev){alert('Introduce el evento.');return;}
-  const startVal=document.getElementById('sbr-start').value||new Date().toISOString().slice(0,10);
-  const resolveVal=document.getElementById('sbr-resolve').value||'';
-  const bet={id:Date.now(),event:ev,date:startVal,resolveDate:resolveVal,profitPct:res.profitPct,profit:res.profit,
+  const ev=prompt('Nombre del evento:');if(!ev||!ev.trim())return;
+  const dateVal=new Date().toISOString().slice(0,10);
+  const bet={id:Date.now(),event:ev.trim(),date:dateVal,profitPct:res.profitPct,profit:res.profit,
     expectedProfit:res.profit,totalStake:res.actualTotal,minReturn:res.minReturn,status:'pending',
     legs:res.valid.map((o,i)=>({house:o.house||`Casa ${i+1}`,result:o.result||`Resultado ${i+1}`,odd:o.odd,stake:res.stakes[i],minReturn:res.returns[i]}))};
-  D.bets.unshift(bet);save();updateBadges();renderPendientes();
-  document.getElementById('sbRegModal').style.display='none';
-  alert(`✓ Surebet registrada en pendientes: ${ev}\nBeneficio esperado: +${fmt(res.profit)} €`);
+  D.bets.unshift(bet);save();updateBadges();
+  alert(`✓ Surebet registrada: ${ev}\nBeneficio esperado: +${fmt(res.profit)} €`);
 }
-document.getElementById('sbr-cancel').addEventListener('click',()=>{document.getElementById('sbRegModal').style.display='none';});
-document.getElementById('sbr-save').addEventListener('click',registerBet);
 
 // ══════════════════════════════════════════
 //  SUREBETS PAGE
@@ -999,7 +1028,7 @@ function renderSurebets(filter=''){
       b.legs.map((l,li)=>`<div class="leg${winnerIdx===li?' leg-winner':''}"><span class="lh">${esc(l.house)}</span><span class="lr">${esc(l.result)}</span><span class="lo">${fmt(l.odd||0)}</span><span class="lk">${fmt(l.stake||0)} €</span><span class="lm">${fmt(l.minReturn||0)} €</span><button class="win-btn${winnerIdx===li?' selected':''}" data-wbid="${b.id}" data-wleg="${li}" title="Marcar como ganadora">${winnerIdx===li?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Ganó`:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Ganó`}</button></div>`).join('')+
       (winnerIdx>=0&&!isVoid?`<div class="real-profit-row"><span class="real-profit-label">✓ Ganó ${esc(b.legs[winnerIdx].house)} — Profit real</span><span class="real-profit-val">+${fmt(realProfit)} €</span></div>`:'')
     : `<div style="padding:8px 15px;font-size:12px;color:var(--faint)">Sin desglose de patas (surebet pre-cargada)</div>`;
-    return`<div class="bi"><div class="bih"><div><div class="bie">${esc(b.event)}</div><div class="bid">${fmtDate(b.date)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}</div></div><div class="bim"><span class="pp2 ${pctCls}">${pctLabel}</span><span class="sb2 ${sCls}">${sLabel}</span><select class="ss" data-sid="${b.id}"><option value="pending" ${b.status==='pending'?'selected':''}>Pendiente</option><option value="won" ${b.status==='won'?'selected':''}>Ganada</option><option value="lost" ${b.status==='lost'?'selected':''}>Perdida</option><option value="anulada" ${b.status==='anulada'?'selected':''}>Anulada</option></select><button class="bd2" data-bid="${b.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div><div class="bl">${legsHtml}</div><div class="bf"><span class="bfl">Invertido: ${fmt(b.totalStake||0)} € · Ret. mín.: ${fmt(b.minReturn||0)} €</span><span class="bfr ${isVoid?'neu':(displayProfit>=0?'pos':'neg')}">${displayProfit>=0?'+':''}${fmt(displayProfit)} €</span></div></div>`;
+    return`<div class="bi"><div class="bih"><div><div class="bie">${esc(b.event)}</div><div class="bid">${fmtDate(b.date)}</div></div><div class="bim"><span class="pp2 ${pctCls}">${pctLabel}</span><span class="sb2 ${sCls}">${sLabel}</span><select class="ss" data-sid="${b.id}"><option value="pending" ${b.status==='pending'?'selected':''}>Pendiente</option><option value="won" ${b.status==='won'?'selected':''}>Ganada</option><option value="lost" ${b.status==='lost'?'selected':''}>Perdida</option><option value="anulada" ${b.status==='anulada'?'selected':''}>Anulada</option></select><button class="bd2" data-bid="${b.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div><div class="bl">${legsHtml}</div><div class="bf"><span class="bfl">Invertido: ${fmt(b.totalStake||0)} € · Ret. mín.: ${fmt(b.minReturn||0)} €</span><span class="bfr ${isVoid?'neu':(displayProfit>=0?'pos':'neg')}">${displayProfit>=0?'+':''}${fmt(displayProfit)} €</span></div></div>`;
   }).join('');
 }
 
@@ -1013,34 +1042,21 @@ function typePill(t){
 }
 function renderNormals(filter=''){
   const items=D.normals.filter(n=>!filter||n.event.toLowerCase().includes(filter.toLowerCase()));
-  const pendCount=D.normals.filter(n=>n.status==='pending').length;
+  const totProfit=D.normals.reduce((a,n)=>a+(n.profit||0),0);
   const freebets=D.normals.filter(n=>n.type==='Freebet');
   const fbProfit=freebets.reduce((a,n)=>a+(n.profit||0),0);
-  const normProfit=D.normals.filter(n=>n.type!=='Freebet').reduce((a,n)=>a+(n.profit||0),0);
+  const normProfit=D.normals.filter(n=>n.type==='Normal').reduce((a,n)=>a+(n.profit||0),0);
   document.getElementById('nbStats').innerHTML=`
     <div class="sc"><div class="sl2">Total entradas</div><div class="sv2">${D.normals.length}</div></div>
-    <div class="sc"><div class="sl2">Pendientes</div><div class="sv2 yel">${pendCount}</div></div>
+    <div class="sc"><div class="sl2">Freebets</div><div class="sv2 yel">${freebets.length}</div></div>
     <div class="sc"><div class="sl2">Profit normales</div><div class="sv2 ${normProfit>=0?'pos':'neg'}">${normProfit>=0?'+':''}${fmt(normProfit)} €</div></div>
     <div class="sc"><div class="sl2">Profit freebets</div><div class="sv2 ${fbProfit>=0?'pos':'neg'}">${fbProfit>=0?'+':''}${fmt(fbProfit)} €</div></div>`;
   const list=document.getElementById('nbList');
   if(!items.length){list.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>No hay apuestas registradas.</p></div></div>`;return;}
   list.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">`+items.map(n=>{
-    const hasStatus=!!n.status;
-    const isPending=n.status==='pending';
-    const sLabel={pending:'Pendiente',won:'Ganada',lost:'Perdida',anulada:'Anulada'}[n.status]||'';
-    const sCls={pending:'sp',won:'sw',lost:'sl3',anulada:'sa'}[n.status]||'';
-    const oddStakeLine=n.odd?`<div class="ni2-note">Cuota ${fmt(n.odd)} · Invertido ${fmt(n.stake||0)} €</div>`:'';
-    let pnlHtml;
-    if(isPending){
-      const win=n.potentialWin!=null?n.potentialWin:+(((n.stake||0)*((n.odd||1)-1)).toFixed(2));
-      const loss=n.potentialLoss!=null?n.potentialLoss:(n.type==='Freebet'?0:-(n.stake||0));
-      pnlHtml=`<div class="pend-preview">Si gana: <span class="pend-preview-pos">+${fmt(win)} €</span><br>Si pierde: <span class="pend-preview-neg">${fmt(loss)} €</span></div>`;
-    }else{
-      const p=n.profit||0,s=p>0?'+':'',pCls=p>0?'pos':p<0?'neg':'zer';
-      pnlHtml=`<div class="ni2-pnl ${pCls}">${s}${fmt(p)} €</div>`;
-    }
-    const statusSelect=hasStatus?`<select class="ns" data-nid="${n.id}"><option value="pending" ${n.status==='pending'?'selected':''}>Pendiente</option><option value="won" ${n.status==='won'?'selected':''}>Ganada</option><option value="lost" ${n.status==='lost'?'selected':''}>Perdida</option><option value="anulada" ${n.status==='anulada'?'selected':''}>Anulada</option></select>`:'';
-    return`<div class="ni2"><div class="ni2-left"><div class="ni2-ev">${esc(n.event)}</div><div class="ni2-meta"><span>${fmtDate(n.date)}</span>${typePill(n.type)}${hasStatus?`<span class="sb2 ${sCls}">${sLabel}</span>`:''}</div>${oddStakeLine}${n.notes?`<div class="ni2-note">${esc(n.notes)}</div>`:''}</div><div class="ni2-right">${statusSelect}${pnlHtml}</div><button class="bd2" data-nid="${n.id}" style="margin-top:2px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div>`;
+    const s=n.profit>0?'+':n.profit<0?'':n.profit===0?'':'';
+    const pCls=n.profit>0?'pos':n.profit<0?'neg':'zer';
+    return`<div class="ni2"><div class="ni2-left"><div class="ni2-ev">${esc(n.event)}</div><div class="ni2-meta"><span>${fmtDate(n.date)}</span>${typePill(n.type)}</div>${n.notes?`<div class="ni2-note">${esc(n.notes)}</div>`:''}</div><div class="ni2-right"><div class="ni2-pnl ${pCls}">${s}${fmt(n.profit)} €</div></div><button class="bd2" data-nid="${n.id}" style="margin-top:2px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div>`;
   }).join('')+`</div>`;
 }
 
@@ -1050,8 +1066,8 @@ function renderNormals(filter=''){
 function renderProfit(){
   // Combine all entries with dates
   const all=[];
-  D.bets.forEach(b=>{const rd=b.resolveDate||b.date;if(rd&&b.profit!==undefined)all.push({date:rd,profit:betProfit(b),cat:'surebet'})});
-  D.normals.forEach(n=>{const rd=n.resolveDate||n.date;if(rd&&n.profit!==undefined&&n.profit!==0)all.push({date:rd,profit:n.profit,cat:n.type==='Freebet'?'freebet':'normal'})});
+  D.bets.forEach(b=>{if(b.date&&b.profit!==undefined)all.push({date:b.date,profit:betProfit(b),cat:'surebet'})});
+  D.normals.forEach(n=>{if(n.date&&n.profit!==undefined&&n.profit!==0)all.push({date:n.date,profit:n.profit,cat:n.type==='Freebet'?'freebet':'normal'})});
 
   // Group by month
   const months={};
@@ -1127,9 +1143,7 @@ document.getElementById('sbSearch').addEventListener('input',e=>renderSurebets(e
 document.getElementById('sbList').addEventListener('change',e=>{
   const sel=e.target.closest('[data-sid]');if(!sel)return;
   const b=D.bets.find(x=>x.id===+sel.dataset.sid);if(!b)return;
-  b.status=sel.value;
-  if(b.status!=='pending'&&!b.resolveDate)b.resolveDate=todayISO();
-  save();updateBadges();renderSurebets(document.getElementById('sbSearch').value);renderProfit();
+  b.status=sel.value;save();updateBadges();renderSurebets(document.getElementById('sbSearch').value);renderProfit();
 });
 document.getElementById('sbList').addEventListener('click',e=>{
   // Winner leg selection
@@ -1309,70 +1323,31 @@ document.getElementById('jsonImportBtn').addEventListener('click',()=>{
 // Normales page events
 document.getElementById('nbSearch').addEventListener('input',e=>renderNormals(e.target.value));
 document.getElementById('nbList').addEventListener('click',e=>{
-  const btn=e.target.closest('.bd2[data-nid]');if(!btn)return;
+  const btn=e.target.closest('[data-nid]');if(!btn)return;
   if(!confirm('¿Eliminar esta entrada?'))return;
   D.normals=D.normals.filter(n=>n.id!==+btn.dataset.nid);save();updateBadges();
   renderNormals(document.getElementById('nbSearch').value);renderProfit();
 });
-document.getElementById('nbList').addEventListener('change',e=>{
-  const sel=e.target.closest('.ns[data-nid]');if(!sel)return;
-  const n=D.normals.find(x=>x.id===+sel.dataset.nid);if(!n)return;
-  resolveNormal(n,sel.value);
-  save();updateBadges();renderNormals(document.getElementById('nbSearch').value);renderProfit();renderPendientes();
-});
 
 // Add normal modal
 const modal=document.getElementById('addModal');
-function updateNormalPreview(){
-  const type=document.getElementById('m-type').value;
-  const odd=parseFloat(document.getElementById('m-odd').value)||0;
-  const stake=parseFloat(document.getElementById('m-stake').value)||0;
-  document.getElementById('m-stake-label').textContent=type==='Freebet'?'Importe de la freebet (€)':'Dinero invertido (€)';
-  const preview=document.getElementById('m-preview');
-  if(odd>1&&stake>0){
-    const win=stake*(odd-1);
-    const loss=type==='Freebet'?0:-stake;
-    document.getElementById('m-preview-win').textContent=`+${fmt(win)} €`;
-    document.getElementById('m-preview-loss').textContent=`${fmt(loss)} €`;
-    preview.style.display='flex';
-  } else preview.style.display='none';
-}
-['m-type','m-odd','m-stake'].forEach(id=>document.getElementById(id).addEventListener('input',updateNormalPreview));
 document.getElementById('nbAddBtn').addEventListener('click',()=>{
-  ['m-event','m-odd','m-stake','m-notes','m-resolve'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('m-type').value='Normal';
-  document.getElementById('m-date').value=todayISO();
-  updateNormalPreview();
+  document.getElementById('m-date').value=new Date().toISOString().slice(0,10);
   modal.style.display='flex';
 });
 document.getElementById('m-cancel').addEventListener('click',()=>{modal.style.display='none';});
 document.getElementById('m-save').addEventListener('click',()=>{
   const ev=document.getElementById('m-event').value.trim();
   if(!ev){alert('Introduce el evento.');return;}
-  const type=document.getElementById('m-type').value;
-  const odd=parseFloat(document.getElementById('m-odd').value)||0;
-  const stake=parseFloat(document.getElementById('m-stake').value)||0;
-  if(!(odd>1)){alert('Introduce una cuota válida (mayor que 1).');return;}
-  if(!(stake>0)){alert('Introduce el dinero invertido.');return;}
-  const n={id:Date.now(),event:ev,type,odd,stake,
-    potentialWin:+(stake*(odd-1)).toFixed(2),potentialLoss:type==='Freebet'?0:-stake,
-    status:'pending',
-    date:document.getElementById('m-date').value||todayISO(),
-    resolveDate:document.getElementById('m-resolve').value||'',
+  const n={id:Date.now(),event:ev,type:document.getElementById('m-type').value,
+    profit:parseFloat(document.getElementById('m-profit').value)||0,
+    date:document.getElementById('m-date').value,
     notes:document.getElementById('m-notes').value.trim()};
   D.normals.unshift(n);save();updateBadges();
-  renderNormals(document.getElementById('nbSearch').value);renderProfit();renderPendientes();
+  renderNormals(document.getElementById('nbSearch').value);renderProfit();
   modal.style.display='none';
+  ['m-event','m-profit','m-notes'].forEach(id=>document.getElementById(id).value='');
 });
-
-// Resuelve una apuesta normal/freebet/combi (usada desde Normales y desde Pendientes)
-function resolveNormal(n,status){
-  n.status=status;
-  if(!n.resolveDate)n.resolveDate=todayISO();
-  if(status==='won')n.profit=n.potentialWin!=null?n.potentialWin:+(((n.stake||0)*((n.odd||1)-1)).toFixed(2));
-  else if(status==='lost')n.profit=n.potentialLoss!=null?n.potentialLoss:(n.type==='Freebet'?0:-(n.stake||0));
-  else n.profit=0; // anulada o vuelta a pendiente
-}
 
 // ══════════════════════════════════════════
 //  HELPERS shared by new sections
@@ -1390,65 +1365,38 @@ function emptyStateHtml(msg){
 //  PENDIENTES PAGE
 // ══════════════════════════════════════════
 function renderPendientes(){
-  const pendSB=D.bets.filter(b=>b.status==='pending').map(b=>({kind:'sb',item:b}));
-  const pendNM=D.normals.filter(n=>n.status==='pending').map(n=>({kind:'nm',item:n}));
-  const pend=[...pendSB,...pendNM].sort((a,b)=>(b.item.date||'').localeCompare(a.item.date||''));
-  const totalExpected=pendSB.reduce((a,x)=>a+(x.item.profit||0),0)+pendNM.reduce((a,x)=>a+(x.item.potentialWin!=null?x.item.potentialWin:0),0);
-  const totalStake=pendSB.reduce((a,x)=>a+(x.item.totalStake||0),0)+pendNM.reduce((a,x)=>a+(x.item.stake||0),0);
-  const totalMinRet=pendSB.reduce((a,x)=>a+(x.item.minReturn||0),0);
+  const pend=D.bets.filter(b=>b.status==='pending').sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const totalExpected=pend.reduce((a,b)=>a+(b.profit||0),0);
+  const totalStake=pend.reduce((a,b)=>a+(b.totalStake||0),0);
+  const totalMinRet=pend.reduce((a,b)=>a+(b.minReturn||0),0);
   document.getElementById('pendStats').innerHTML=`
     <div class="sc"><div class="sl2">Pendientes</div><div class="sv2 yel">${pend.length}</div></div>
     <div class="sc"><div class="sl2">Beneficio esperado</div><div class="sv2 ${totalExpected>=0?'pos':'neg'}">${totalExpected>=0?'+':''}${fmt(totalExpected)} €</div></div>
     <div class="sc"><div class="sl2">Invertido</div><div class="sv2">${fmt(totalStake)} €</div></div>
     <div class="sc"><div class="sl2">Retorno mín. total</div><div class="sv2">${fmt(totalMinRet)} €</div></div>`;
   const list=document.getElementById('pendList');
-  if(!pend.length){list.innerHTML=emptyStateHtml('No tienes apuestas pendientes ahora mismo.');return;}
-  list.innerHTML=pend.map(({kind,item})=>{
-    if(kind==='sb'){
-      const b=item;
-      const legsInfo=b.legs&&b.legs.length?b.legs.map(l=>`${esc(l.house)} @ ${fmt(l.odd||0)}`).join(' · '):'Sin desglose de patas';
-      return`<div class="pend-item">
-        <div class="pend-left">
-          <div class="pend-ev">${esc(b.event)} <span class="type-badge-kind">Surebet</span></div>
-          <div class="pend-meta"><span>${fmtDate(b.date)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}</span><span>${esc(legsInfo)}</span>${b.totalStake?`<span>Invertido: ${fmt(b.totalStake)} €</span>`:''}</div>
-        </div>
-        <div class="pend-right">
-          <div class="pend-profit">+${fmt(b.profit||0)} €</div>
-          <button class="btn-reject" data-pid="${b.id}" data-kind="sb" data-action="lost">Perdida</button>
-          <button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada" title="No cuenta como ganada ni perdida">Anular</button>
-          <button class="btn-accept" data-pid="${b.id}" data-kind="sb" data-action="won"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Aceptar</button>
-        </div>
-      </div>`;
-    }
-    const n=item;
-    const win=n.potentialWin!=null?n.potentialWin:+(((n.stake||0)*((n.odd||1)-1)).toFixed(2));
-    const loss=n.potentialLoss!=null?n.potentialLoss:(n.type==='Freebet'?0:-(n.stake||0));
+  if(!pend.length){list.innerHTML=emptyStateHtml('No tienes surebets pendientes ahora mismo.');return;}
+  list.innerHTML=pend.map(b=>{
+    const legsInfo=b.legs&&b.legs.length?b.legs.map(l=>`${esc(l.house)} @ ${fmt(l.odd||0)}`).join(' · '):'Sin desglose de patas';
     return`<div class="pend-item">
       <div class="pend-left">
-        <div class="pend-ev">${esc(n.event)} ${typePill(n.type)}</div>
-        <div class="pend-meta"><span>${fmtDate(n.date)}${n.resolveDate?' → '+fmtDate(n.resolveDate):''}</span><span>Cuota ${fmt(n.odd||0)}</span><span>Invertido: ${fmt(n.stake||0)} €</span></div>
+        <div class="pend-ev">${esc(b.event)}</div>
+        <div class="pend-meta"><span>${fmtDate(b.date)}</span><span>${esc(legsInfo)}</span>${b.totalStake?`<span>Invertido: ${fmt(b.totalStake)} €</span>`:''}</div>
       </div>
       <div class="pend-right">
-        <div class="pend-preview">Si gana: <span class="pend-preview-pos">+${fmt(win)} €</span><br>Si pierde: <span class="pend-preview-neg">${fmt(loss)} €</span></div>
-        <button class="btn-reject" data-pid="${n.id}" data-kind="nm" data-action="lost">Perdida</button>
-        <button class="btn-void" data-pid="${n.id}" data-kind="nm" data-action="anulada" title="No cuenta como ganada ni perdida">Anular</button>
-        <button class="btn-accept" data-pid="${n.id}" data-kind="nm" data-action="won"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Aceptar</button>
+        <div class="pend-profit">+${fmt(b.profit||0)} €</div>
+        <button class="btn-reject" data-pid="${b.id}" data-action="lost">Perdida</button>
+        <button class="btn-void" data-pid="${b.id}" data-action="anulada" title="No cuenta como ganada ni perdida">Anular</button>
+        <button class="btn-accept" data-pid="${b.id}" data-action="won"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Aceptar</button>
       </div>
     </div>`;
   }).join('');
 }
 document.getElementById('pendList').addEventListener('click',e=>{
   const btn=e.target.closest('[data-pid]');if(!btn)return;
-  if(btn.dataset.kind==='nm'){
-    const n=D.normals.find(x=>x.id===+btn.dataset.pid);if(!n)return;
-    resolveNormal(n,btn.dataset.action);
-    save();updateBadges();renderPendientes();renderNormals(document.getElementById('nbSearch').value);renderProfit();
-    return;
-  }
   const bet=D.bets.find(b=>b.id===+btn.dataset.pid);if(!bet)return;
   bet.status=btn.dataset.action;
-  if(bet.status!=='pending'&&!bet.resolveDate)bet.resolveDate=todayISO();
-  save();updateBadges();renderPendientes();renderSurebets(document.getElementById('sbSearch').value);renderProfit();
+  save();updateBadges();renderPendientes();renderProfit();
 });
 
 // ══════════════════════════════════════════
@@ -1518,6 +1466,127 @@ document.getElementById('casasList').addEventListener('click',e=>{
   if(!confirm('¿Eliminar esta casa de apuestas?'))return;
   D.casas=D.casas.filter(c=>c.id!==+delBtn.dataset.cid);save();updateBadges();
   renderCasas(document.getElementById('casasSearch').value);
+});
+
+// ══════════════════════════════════════════
+//  NOTAS — Carpetas + notas estilo iPhone
+// ══════════════════════════════════════════
+let notasSelFolder='all', notasSort='date', editingNoteId=null;
+
+function renderNotasFolders(){
+  const wrap=document.getElementById('notasFolderList');
+  html_folders:{
+    let html=`<div class="nf-item ${notasSelFolder==='all'?'active':''}" data-fid="all"><span class="nfn">Todas</span><span class="nfc">${D.notes.length}</span></div>`;
+    html+=`<div class="nf-item ${notasSelFolder==='none'?'active':''}" data-fid="none"><span class="nfn">Sin carpeta</span><span class="nfc">${D.notes.filter(n=>!n.folderId).length}</span></div>`;
+    html+=D.notesFolders.map(f=>{
+      const c=D.notes.filter(n=>n.folderId===f.id).length;
+      return `<div class="nf-item ${notasSelFolder===f.id?'active':''}" data-fid="${f.id}">
+        <span class="nfn">${esc(f.name)}</span><span class="nfc">${c}</span>
+        <svg class="nfdel" data-fdel="${f.id}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+      </div>`;
+    }).join('');
+    wrap.innerHTML=html;
+  }
+}
+
+function notasFolderName(id){
+  if(!id)return 'Sin carpeta';
+  const f=D.notesFolders.find(f=>f.id===id);
+  return f?f.name:'Sin carpeta';
+}
+
+function renderNotas(filter=''){
+  renderNotasFolders();
+  let items=D.notes.filter(n=>{
+    if(notasSelFolder==='none'&&n.folderId)return false;
+    if(notasSelFolder!=='all'&&notasSelFolder!=='none'&&n.folderId!==notasSelFolder)return false;
+    if(filter&&!(`${n.title} ${n.content}`.toLowerCase().includes(filter.toLowerCase())))return false;
+    return true;
+  });
+  items=[...items].sort((a,b)=>notasSort==='name'?a.title.localeCompare(b.title,'es',{sensitivity:'base'}):(b.updatedAt||0)-(a.updatedAt||0));
+  document.getElementById('notasSortBtn').textContent=notasSort==='name'?'A–Z':'Fecha';
+  const list=document.getElementById('notasList');
+  if(!items.length){list.innerHTML=emptyStateHtml(D.notes.length?'No hay notas que coincidan.':'No tienes notas todavía.');return;}
+  list.innerHTML=items.map(n=>{
+    const d=n.updatedAt?new Date(n.updatedAt):null;
+    const dStr=d?d.toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'}):'';
+    return `<div class="note-card" data-nid="${n.id}">
+      <div class="note-title">${esc(n.title)||'(Sin título)'}</div>
+      <div class="note-snippet">${esc((n.content||'').slice(0,180))}</div>
+      <div class="note-meta"><span>${esc(notasFolderName(n.folderId))}</span><span>${dStr}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function fillNoteFolderSelect(sel){
+  const s=document.getElementById('note-folder');
+  s.innerHTML=`<option value="">Sin carpeta</option>`+D.notesFolders.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join('');
+  s.value=sel?String(sel):'';
+}
+
+const noteModal=document.getElementById('noteModal');
+function openNoteModal(id){
+  editingNoteId=id||null;
+  const n=id?D.notes.find(x=>x.id===id):null;
+  document.getElementById('noteModalTitle').textContent=n?'Editar nota':'Nueva nota';
+  document.getElementById('note-title').value=n?n.title:'';
+  document.getElementById('note-content').value=n?n.content:'';
+  const defFolder=n?n.folderId:(notasSelFolder!=='all'&&notasSelFolder!=='none'?notasSelFolder:'');
+  fillNoteFolderSelect(defFolder);
+  noteModal.style.display='flex';
+  setTimeout(()=>document.getElementById('note-title').focus(),30);
+}
+document.getElementById('notasAddBtn').addEventListener('click',()=>openNoteModal());
+document.getElementById('note-cancel').addEventListener('click',()=>{noteModal.style.display='none';editingNoteId=null;});
+document.getElementById('note-save').addEventListener('click',()=>{
+  const title=document.getElementById('note-title').value.trim();
+  const content=document.getElementById('note-content').value.trim();
+  if(!title&&!content){alert('Escribe al menos un título o contenido.');return;}
+  const fv=document.getElementById('note-folder').value;
+  const folderId=fv?+fv:null;
+  const now=Date.now();
+  if(editingNoteId){
+    const n=D.notes.find(x=>x.id===editingNoteId);
+    if(n){n.title=title||'(Sin título)';n.content=content;n.folderId=folderId;n.updatedAt=now;}
+  }else{
+    D.notes.unshift({id:now,title:title||'(Sin título)',content,folderId,createdAt:now,updatedAt:now});
+  }
+  save();
+  renderNotas(document.getElementById('notasSearch').value);
+  noteModal.style.display='none';editingNoteId=null;
+});
+document.getElementById('notasSearch').addEventListener('input',e=>renderNotas(e.target.value));
+document.getElementById('notasSortBtn').addEventListener('click',()=>{
+  notasSort=notasSort==='date'?'name':'date';
+  renderNotas(document.getElementById('notasSearch').value);
+});
+document.getElementById('notasList').addEventListener('click',e=>{
+  const card=e.target.closest('[data-nid]');if(!card)return;
+  openNoteModal(+card.dataset.nid);
+});
+document.getElementById('notaFolderAddBtn').addEventListener('click',()=>{
+  const name=prompt('Nombre de la carpeta:');
+  if(!name||!name.trim())return;
+  D.notesFolders.push({id:Date.now(),name:name.trim()});
+  save();
+  renderNotas(document.getElementById('notasSearch').value);
+});
+document.getElementById('notasFolderList').addEventListener('click',e=>{
+  const delBtn=e.target.closest('[data-fdel]');
+  if(delBtn){
+    if(!confirm('¿Eliminar esta carpeta? Las notas pasarán a "Sin carpeta".'))return;
+    const fid=+delBtn.dataset.fdel;
+    D.notesFolders=D.notesFolders.filter(f=>f.id!==fid);
+    D.notes.forEach(n=>{if(n.folderId===fid)n.folderId=null;});
+    if(notasSelFolder===fid)notasSelFolder='all';
+    save();
+    renderNotas(document.getElementById('notasSearch').value);
+    return;
+  }
+  const item=e.target.closest('[data-fid]');if(!item)return;
+  const fid=item.dataset.fid;
+  notasSelFolder=(fid==='all'||fid==='none')?fid:+fid;
+  renderNotas(document.getElementById('notasSearch').value);
 });
 
 // ══════════════════════════════════════════
@@ -1799,9 +1868,9 @@ function computeStats(){
   const lostFB=freebets.filter(n=>(n.profit||0)<0).length;
   const winRateFreebets=(wonFB+lostFB)>0?(wonFB/(wonFB+lostFB)*100):null;
 
-  // ROI: SOLO apuestas a mano ya resueltas — surebets con % de ROI conocido (excluye importadas sin profitPct,
-  // excluye normales/freebets por completo, y excluye pendientes/anuladas)
-  const roiBets=D.bets.filter(b=>(b.status==='won'||b.status==='lost')&&typeof b.profitPct==='number');
+  // ROI: SOLO apuestas a mano — surebets con % de ROI conocido (excluye importadas sin profitPct,
+  // excluye normales/freebets por completo, y excluye anuladas)
+  const roiBets=D.bets.filter(b=>b.status!=='anulada'&&typeof b.profitPct==='number');
   const roiWagered=roiBets.reduce((a,b)=>a+(b.totalStake||0),0);
   const roiProfit=roiBets.reduce((a,b)=>a+(b.profit||0),0);
   const roi=roiWagered>0?(roiProfit/roiWagered*100):null;
@@ -1862,8 +1931,8 @@ const MES_ES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto',
 function computeDayTotals(year,month){
   const ym=`${year}-${String(month+1).padStart(2,'0')}`;
   const dayTotals={};
-  D.bets.forEach(b=>{const rd=b.resolveDate||b.date;if(rd&&rd.startsWith(ym)){const d=+rd.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+betProfit(b);}});
-  D.normals.forEach(n=>{const rd=n.resolveDate||n.date;if(rd&&rd.startsWith(ym)){const d=+rd.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+(n.profit||0);}});
+  D.bets.forEach(b=>{if(b.date&&b.date.startsWith(ym)){const d=+b.date.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+betProfit(b);}});
+  D.normals.forEach(n=>{if(n.date&&n.date.startsWith(ym)){const d=+n.date.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+(n.profit||0);}});
   return dayTotals;
 }
 function renderCalendar(){
@@ -1909,8 +1978,8 @@ const MONTH_SHORT_ES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct
 function dLabel(dateStr){const dt=new Date(dateStr);return`${dt.getUTCDate()} ${MONTH_SHORT_ES[dt.getUTCMonth()]}`;}
 function renderPerfChart(){
   const entries=[];
-  D.bets.forEach(b=>{const rd=b.resolveDate||b.date;if(rd)entries.push({date:rd,profit:betProfit(b),expected:b.status==='anulada'?0:((b.expectedProfit!=null?b.expectedProfit:b.profit)||0),isBet:true});});
-  D.normals.forEach(n=>{const rd=n.resolveDate||n.date;if(rd)entries.push({date:rd,profit:n.profit||0,expected:n.profit||0,isBet:false});});
+  D.bets.forEach(b=>{if(b.date)entries.push({date:b.date,profit:betProfit(b),expected:b.status==='anulada'?0:((b.expectedProfit!=null?b.expectedProfit:b.profit)||0),isBet:true});});
+  D.normals.forEach(n=>{if(n.date)entries.push({date:n.date,profit:n.profit||0,expected:n.profit||0,isBet:false});});
   const wrap=document.getElementById('perfChartWrap');
   if(!entries.length){
     wrap.innerHTML='<div class="perf-chart-empty">Aún no hay datos suficientes para mostrar el rendimiento.</div>';
@@ -1983,12 +2052,13 @@ const pgMeta={
   surebets:{title:'Mis surebets',sub:'Historial completo con retorno mínimo'},
   normales:{title:'Normales & Freebets',sub:'Apuestas estándar y freebets por tipo y fecha'},
   profit:{title:'Profit',sub:'Rendimiento por mes y total acumulado'},
-  pendientes:{title:'Pendientes',sub:'Apuestas a la espera de resultado'},
+  pendientes:{title:'Pendientes',sub:'Surebets a la espera de resultado'},
   casas:{title:'Casas de apuestas',sub:'Casas registradas y dinero depositado en cada una'},
+  notas:{title:'Notas',sub:'Tus notas organizadas en carpetas'},
   perfil:{title:'Perfil',sub:'Tus estadísticas y rendimiento personal'},
   calculadoras:{title:'Calculadoras',sub:'Kelly, No-Vig, Hedge, Free Bet y Hold'},
 };
-const ALL_PAGES=['calc','surebets','normales','profit','pendientes','casas','perfil','calculadoras'];
+const ALL_PAGES=['calc','surebets','normales','profit','pendientes','casas','notas','perfil','calculadoras'];
 document.querySelectorAll('.ni[data-page]').forEach(item=>{
   item.addEventListener('click',()=>{
     const page=item.dataset.page;
@@ -2006,6 +2076,7 @@ document.querySelectorAll('.ni[data-page]').forEach(item=>{
     else if(page==='profit')renderProfit();
     else if(page==='pendientes')renderPendientes();
     else if(page==='casas')renderCasas();
+    else if(page==='notas')renderNotas();
     else if(page==='perfil')renderPerfil();
     else if(page==='calculadoras')renderCalcTab(document.querySelector('.calc-tab.active')?.dataset.calc||'kelly');
     if(window.innerWidth<600)closeSB();
@@ -2015,7 +2086,7 @@ document.querySelectorAll('.ni[data-page]').forEach(item=>{
 function updateBadges(){
   document.getElementById('sbCount').textContent=D.bets.length;
   document.getElementById('nbCount').textContent=D.normals.length;
-  document.getElementById('pendCount').textContent=D.bets.filter(b=>b.status==='pending').length+D.normals.filter(n=>n.status==='pending').length;
+  document.getElementById('pendCount').textContent=D.bets.filter(b=>b.status==='pending').length;
   document.getElementById('casasCount').textContent=D.casas.length;
 }
 
@@ -2099,16 +2170,20 @@ function emailToPath(email) {
       if (!Array.isArray(D.bets)) D.bets = [];
       if (!Array.isArray(D.normals)) D.normals = [];
       if (!Array.isArray(D.casas)) D.casas = [];
+      if (!Array.isArray(D.notes)) D.notes = [];
+      if (!Array.isArray(D.notesFolders)) D.notesFolders = [];
     } else {
       let migrated = null;
       try {
         const raw = localStorage.getItem(LOCAL_STORE_KEY);
         if (raw) migrated = JSON.parse(raw);
       } catch (e) {}
-      D = migrated || { bets: [], normals: [], casas: [] };
+      D = migrated || { bets: [], normals: [], casas: [], notes: [], notesFolders: [] };
       if (!Array.isArray(D.bets)) D.bets = [];
       if (!Array.isArray(D.normals)) D.normals = [];
       if (!Array.isArray(D.casas)) D.casas = [];
+      if (!Array.isArray(D.notes)) D.notes = [];
+      if (!Array.isArray(D.notesFolders)) D.notesFolders = [];
       await setDoc(docRef, D);
     }
 
@@ -2123,6 +2198,8 @@ function emailToPath(email) {
       if (!Array.isArray(D.bets)) D.bets = [];
       if (!Array.isArray(D.normals)) D.normals = [];
       if (!Array.isArray(D.casas)) D.casas = [];
+      if (!Array.isArray(D.notes)) D.notes = [];
+      if (!Array.isArray(D.notesFolders)) D.notesFolders = [];
       refreshCurrentView();
     });
 
@@ -2139,6 +2216,7 @@ function emailToPath(email) {
     else if (activePage === 'profit') renderProfit();
     else if (activePage === 'pendientes') renderPendientes();
     else if (activePage === 'casas') renderCasas(document.getElementById('casasSearch')?.value || '');
+    else if (activePage === 'notas') renderNotas(document.getElementById('notasSearch')?.value || '');
     else if (activePage === 'perfil') renderPerfil();
   }
 
