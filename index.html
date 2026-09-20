@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Calculadora Surebets</title>
+<title>Surebets Calculator</title>
 <style>
 :root{
   --bg:#0d1117;--surface:#161b22;--raised:#1c2330;--inp:#1a2233;
@@ -363,6 +363,10 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
 .pend-preview-neg{color:var(--red);font-weight:700}
 .type-badge-kind{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;
   background:rgba(125,143,168,.14);color:var(--muted);border:1px solid rgba(125,143,168,.3)}
+.cat-chip{padding:6px 13px;border-radius:99px;font-size:12.5px;font-weight:600;color:var(--muted);
+  background:var(--surface);border:1px solid var(--border);cursor:pointer;user-select:none;transition:all var(--t)}
+.cat-chip:hover{color:var(--text);border-color:var(--focus)}
+.cat-chip.active{background:var(--gdim);color:var(--green);border-color:rgba(0,217,126,.4)}
 .btn-accept{display:flex;align-items:center;gap:5px;padding:7px 13px;border-radius:7px;
   background:var(--gdim);border:1px solid rgba(0,217,126,.4);color:var(--green);
   font-size:12.5px;font-weight:600;transition:all var(--t);white-space:nowrap}
@@ -570,6 +574,10 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
       Notas
     </div>
+    <div class="ni" data-page="categorias">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24H4a1 1 0 0 0-1 1v5.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.82 0l4.59-4.59a2 2 0 0 0 .01-2.82z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>
+      Categorías
+    </div>
     <div class="ni" data-page="profit">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
       Profit
@@ -720,6 +728,34 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
       </div>
     </div>
 
+    <!-- ═══ CATEGORIAS PAGE ═══ -->
+    <div id="page-categorias" class="fw" style="display:none">
+      <div class="notas-layout">
+        <div class="notas-folders">
+          <div class="notas-folders-head">
+            <span>Categorías</span>
+            <button id="catAddBtn" title="Nueva categoría">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <div class="nf-list" id="catList"></div>
+        </div>
+        <div class="notas-main">
+          <div class="tb">
+            <div class="cat-chip active" data-typef="all">Todos</div>
+            <div class="cat-chip" data-typef="surebet">Surebets</div>
+            <div class="cat-chip" data-typef="normal">Normales</div>
+            <div class="cat-chip" data-typef="freebet">Freebets</div>
+            <button class="btn-s" id="catAddBetBtn" style="margin-left:auto">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Añadir apuesta
+            </button>
+          </div>
+          <div class="nlist" id="catItemsList"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ═══ PERFIL PAGE ═══ -->
     <div id="page-perfil" class="fw" style="display:none">
       <div class="card profile-card">
@@ -827,7 +863,7 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
 <!-- ══ ADD NORMAL/FREEBET MODAL ══ -->
 <div id="addModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:420px;margin:16px">
-    <div style="font-size:15px;font-weight:700;margin-bottom:16px">Añadir apuesta normal / freebet</div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px" id="addModalTitle">Añadir apuesta normal / freebet</div>
     <div style="display:flex;flex-direction:column;gap:11px">
       <div><label class="fl">Evento</label><input type="text" id="m-event" placeholder="España vs Portugal"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -850,6 +886,7 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
         <div><label class="fl">Se resuelve (aprox)</label><input type="date" id="m-resolve"></div>
       </div>
       <div><label class="fl">Notas (opcional)</label><input type="text" id="m-notes" placeholder="Cuota boosted…"></div>
+      <div><label class="fl">Categoría (opcional)</label><select id="m-category"><option value="">Sin categoría</option></select></div>
     </div>
     <div style="display:flex;gap:9px;margin-top:18px">
       <button class="btn-s" id="m-cancel" style="flex:1">Cancelar</button>
@@ -862,13 +899,14 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
 <!-- ══ REGISTRAR SUREBET MODAL ══ -->
 <div id="sbRegModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:420px;margin:16px">
-    <div style="font-size:15px;font-weight:700;margin-bottom:16px">Registrar surebet</div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px" id="sbRegModalTitle">Registrar surebet</div>
     <div style="display:flex;flex-direction:column;gap:11px">
       <div><label class="fl">Evento</label><input type="text" id="sbr-event" placeholder="España vs Portugal"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label class="fl">Empieza</label><input type="date" id="sbr-start"></div>
         <div><label class="fl">Se resuelve (aprox)</label><input type="date" id="sbr-resolve"></div>
       </div>
+      <div><label class="fl">Categoría (opcional)</label><select id="sbr-category"><option value="">Sin categoría</option></select></div>
     </div>
     <div style="display:flex;gap:9px;margin-top:18px">
       <button class="btn-s" id="sbr-cancel" style="flex:1">Cancelar</button>
@@ -947,7 +985,7 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
 // ══════════════════════════════════════════
 function save(){return window.__fsSave ? window.__fsSave() : Promise.resolve();}
 
-let D = {bets:[],normals:[],casas:[],notes:[],notesFolders:[]};
+let D = {bets:[],normals:[],casas:[],notes:[],notesFolders:[],categories:[]};
 // Una surebet "anulada" no se gana ni se pierde: no aporta profit ni cuenta como dinero arriesgado
 // en ninguna estadística agregada (ROI, wagered, profit del mes, gráficos, etc).
 function betProfit(b){return(b.status==='won'||b.status==='lost')?(b.profit||0):0;}
@@ -964,6 +1002,7 @@ function roundStep(v,s){if(!s||!isFinite(s)||s<=0)return v;const f=1/s;return pa
 function applyRound(v){if(roundMode==='exact')return v;const s=roundMode==='custom'?customStep:parseFloat(roundMode);return roundStep(v,s)}
 function fmt(n,d=2){return Number(n).toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d})}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function catName(id){if(!id)return'';const c=D.categories.find(x=>x.id===id);return c?c.name:'';}
 function fmtDate(d){if(!d)return '';const p=d.split('-');return`${p[2]}/${p[1]}/${p[0]}`}
 function sign(n){return n>0?'+':n<0?'':'';}
 
@@ -1032,11 +1071,27 @@ function renderResult(){
 
 function render(){renderOutcomes();renderResult();}
 
+let editingSbId=null;
 function openSbRegModal(){
   const res=calculate();if(!res||!res.isSurebet)return;
+  editingSbId=null;
+  document.getElementById('sbRegModalTitle').textContent='Registrar surebet';
+  document.getElementById('sbr-save').textContent='Registrar en pendientes';
   document.getElementById('sbr-event').value='';
   document.getElementById('sbr-start').value=new Date().toISOString().slice(0,10);
   document.getElementById('sbr-resolve').value='';
+  fillCategorySelect(document.getElementById('sbr-category'),null);
+  document.getElementById('sbRegModal').style.display='flex';
+}
+function openSbEditModal(id){
+  const b=D.bets.find(x=>x.id===id);if(!b)return;
+  editingSbId=id;
+  document.getElementById('sbRegModalTitle').textContent='Editar surebet';
+  document.getElementById('sbr-save').textContent='Guardar cambios';
+  document.getElementById('sbr-event').value=b.event;
+  document.getElementById('sbr-start').value=b.date||'';
+  document.getElementById('sbr-resolve').value=b.resolveDate||'';
+  fillCategorySelect(document.getElementById('sbr-category'),b.categoryId);
   document.getElementById('sbRegModal').style.display='flex';
 }
 function registerBet(){
@@ -1045,15 +1100,34 @@ function registerBet(){
   if(!ev){alert('Introduce el evento.');return;}
   const startVal=document.getElementById('sbr-start').value||new Date().toISOString().slice(0,10);
   const resolveVal=document.getElementById('sbr-resolve').value||'';
+  const catVal=document.getElementById('sbr-category').value;
   const bet={id:Date.now(),event:ev,date:startVal,resolveDate:resolveVal,profitPct:res.profitPct,profit:res.profit,
     expectedProfit:res.profit,totalStake:res.actualTotal,minReturn:res.minReturn,status:'pending',
+    categoryId:catVal?+catVal:null,
     legs:res.valid.map((o,i)=>({house:o.house||`Casa ${i+1}`,result:o.result||`Resultado ${i+1}`,odd:o.odd,stake:res.stakes[i],minReturn:res.returns[i]}))};
   D.bets.unshift(bet);save();updateBadges();renderPendientes();
   document.getElementById('sbRegModal').style.display='none';
   alert(`✓ Surebet registrada en pendientes: ${ev}\nBeneficio esperado: +${fmt(res.profit)} €`);
 }
-document.getElementById('sbr-cancel').addEventListener('click',()=>{document.getElementById('sbRegModal').style.display='none';});
-document.getElementById('sbr-save').addEventListener('click',registerBet);
+document.getElementById('sbr-cancel').addEventListener('click',()=>{document.getElementById('sbRegModal').style.display='none';editingSbId=null;});
+document.getElementById('sbr-save').addEventListener('click',()=>{
+  if(editingSbId){
+    const b=D.bets.find(x=>x.id===editingSbId);if(!b){editingSbId=null;return;}
+    const ev=document.getElementById('sbr-event').value.trim();
+    if(!ev){alert('Introduce el evento.');return;}
+    b.event=ev;
+    b.date=document.getElementById('sbr-start').value||b.date;
+    b.resolveDate=document.getElementById('sbr-resolve').value||'';
+    const catVal=document.getElementById('sbr-category').value;
+    b.categoryId=catVal?+catVal:null;
+    save();updateBadges();
+    renderSurebets(document.getElementById('sbSearch').value);renderProfit();renderPendientes();
+    if(document.getElementById('page-categorias').style.display!=='none')renderCategorias();
+    document.getElementById('sbRegModal').style.display='none';editingSbId=null;
+    return;
+  }
+  registerBet();
+});
 
 // ══════════════════════════════════════════
 //  SUREBETS PAGE
@@ -1086,7 +1160,7 @@ function renderSurebets(filter=''){
       b.legs.map((l,li)=>`<div class="leg${winnerIdx===li?' leg-winner':''}"><span class="lh">${esc(l.house)}</span><span class="lr">${esc(l.result)}</span><span class="lo">${fmt(l.odd||0)}</span><span class="lk">${fmt(l.stake||0)} €</span><span class="lm">${fmt(l.minReturn||0)} €</span><button class="win-btn${winnerIdx===li?' selected':''}" data-wbid="${b.id}" data-wleg="${li}" title="Marcar como ganadora">${winnerIdx===li?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Ganó`:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Ganó`}</button></div>`).join('')+
       (winnerIdx>=0&&!isVoid?`<div class="real-profit-row"><span class="real-profit-label">✓ Ganó ${esc(b.legs[winnerIdx].house)} — Profit real</span><span class="real-profit-val">+${fmt(realProfit)} €</span></div>`:'')
     : `<div style="padding:8px 15px;font-size:12px;color:var(--faint)">Sin desglose de patas (surebet pre-cargada)</div>`;
-    return`<div class="bi"><div class="bih"><div><div class="bie">${esc(b.event)}</div><div class="bid">${fmtDate(b.date)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}</div></div><div class="bim"><span class="pp2 ${pctCls}">${pctLabel}</span><span class="sb2 ${sCls}">${sLabel}</span><select class="ss" data-sid="${b.id}"><option value="pending" ${b.status==='pending'?'selected':''}>Pendiente</option><option value="won" ${b.status==='won'?'selected':''}>Ganada</option><option value="lost" ${b.status==='lost'?'selected':''}>Perdida</option><option value="anulada" ${b.status==='anulada'?'selected':''}>Anulada</option></select><button class="bd2" data-bid="${b.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div><div class="bl">${legsHtml}</div><div class="bf"><span class="bfl">Invertido: ${fmt(b.totalStake||0)} € · Ret. mín.: ${fmt(b.minReturn||0)} €</span><span class="bfr ${isVoid?'neu':(displayProfit>=0?'pos':'neg')}">${displayProfit>=0?'+':''}${fmt(displayProfit)} €</span></div></div>`;
+    return`<div class="bi"><div class="bih"><div><div class="bie">${esc(b.event)}</div><div class="bid">${fmtDate(b.date)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}${b.categoryId?` · <span class="type-badge-kind">${esc(catName(b.categoryId))}</span>`:''}</div></div><div class="bim"><span class="pp2 ${pctCls}">${pctLabel}</span><span class="sb2 ${sCls}">${sLabel}</span><select class="ss" data-sid="${b.id}"><option value="pending" ${b.status==='pending'?'selected':''}>Pendiente</option><option value="won" ${b.status==='won'?'selected':''}>Ganada</option><option value="lost" ${b.status==='lost'?'selected':''}>Perdida</option><option value="anulada" ${b.status==='anulada'?'selected':''}>Anulada</option></select><button class="bd2" data-edit-bid="${b.id}" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button><button class="bd2" data-bid="${b.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div><div class="bl">${legsHtml}</div><div class="bf"><span class="bfl">Invertido: ${fmt(b.totalStake||0)} € · Ret. mín.: ${fmt(b.minReturn||0)} €</span><span class="bfr ${isVoid?'neu':(displayProfit>=0?'pos':'neg')}">${displayProfit>=0?'+':''}${fmt(displayProfit)} €</span></div></div>`;
   }).join('');
 }
 
@@ -1127,7 +1201,7 @@ function renderNormals(filter=''){
       pnlHtml=`<div class="ni2-pnl ${pCls}">${s}${fmt(p)} €</div>`;
     }
     const statusSelect=hasStatus?`<select class="ns" data-nid="${n.id}"><option value="pending" ${n.status==='pending'?'selected':''}>Pendiente</option><option value="won" ${n.status==='won'?'selected':''}>Ganada</option><option value="lost" ${n.status==='lost'?'selected':''}>Perdida</option><option value="anulada" ${n.status==='anulada'?'selected':''}>Anulada</option></select>`:'';
-    return`<div class="ni2"><div class="ni2-left"><div class="ni2-ev">${esc(n.event)}</div><div class="ni2-meta"><span>${fmtDate(n.date)}</span>${typePill(n.type)}${hasStatus?`<span class="sb2 ${sCls}">${sLabel}</span>`:''}</div>${oddStakeLine}${n.notes?`<div class="ni2-note">${esc(n.notes)}</div>`:''}</div><div class="ni2-right">${statusSelect}${pnlHtml}</div><button class="bd2" data-nid="${n.id}" style="margin-top:2px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div>`;
+    return`<div class="ni2"><div class="ni2-left"><div class="ni2-ev">${esc(n.event)}</div><div class="ni2-meta"><span>${fmtDate(n.date)}</span>${typePill(n.type)}${hasStatus?`<span class="sb2 ${sCls}">${sLabel}</span>`:''}${n.categoryId?`<span class="type-badge-kind">${esc(catName(n.categoryId))}</span>`:''}</div>${oddStakeLine}${n.notes?`<div class="ni2-note">${esc(n.notes)}</div>`:''}</div><div class="ni2-right">${statusSelect}${pnlHtml}</div><div style="display:flex;gap:4px;margin-top:2px"><button class="bd2" data-edit-nid="${n.id}" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button><button class="bd2" data-nid="${n.id}" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div>`;
   }).join('')+`</div>`;
 }
 
@@ -1235,6 +1309,9 @@ document.getElementById('sbList').addEventListener('click',e=>{
     save();renderSurebets(document.getElementById('sbSearch').value);renderProfit();
     return;
   }
+  // Editar
+  const editBtn=e.target.closest('[data-edit-bid]');
+  if(editBtn){openSbEditModal(+editBtn.dataset.editBid);return;}
   // Delete button
   const btn=e.target.closest('[data-bid]');if(!btn)return;
   if(!confirm('¿Eliminar esta surebet?'))return;
@@ -1396,6 +1473,8 @@ document.getElementById('jsonImportBtn').addEventListener('click',()=>{
 // Normales page events
 document.getElementById('nbSearch').addEventListener('input',e=>renderNormals(e.target.value));
 document.getElementById('nbList').addEventListener('click',e=>{
+  const editBtn=e.target.closest('[data-edit-nid]');
+  if(editBtn){openNormalModal(+editBtn.dataset.editNid);return;}
   const btn=e.target.closest('.bd2[data-nid]');if(!btn)return;
   if(!confirm('¿Eliminar esta entrada?'))return;
   D.normals=D.normals.filter(n=>n.id!==+btn.dataset.nid);save();updateBadges();
@@ -1408,8 +1487,13 @@ document.getElementById('nbList').addEventListener('change',e=>{
   save();updateBadges();renderNormals(document.getElementById('nbSearch').value);renderProfit();renderPendientes();
 });
 
-// Add normal modal
+// Add/edit normal modal
 const modal=document.getElementById('addModal');
+let editingNormalId=null, presetCategoryForNewBet=null;
+function fillCategorySelect(sel,selectedId){
+  sel.innerHTML=`<option value="">Sin categoría</option>`+D.categories.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  sel.value=selectedId?String(selectedId):'';
+}
 function updateNormalPreview(){
   const type=document.getElementById('m-type').value;
   const odd=parseFloat(document.getElementById('m-odd').value)||0;
@@ -1425,14 +1509,25 @@ function updateNormalPreview(){
   } else preview.style.display='none';
 }
 ['m-type','m-odd','m-stake'].forEach(id=>document.getElementById(id).addEventListener('input',updateNormalPreview));
-document.getElementById('nbAddBtn').addEventListener('click',()=>{
-  ['m-event','m-odd','m-stake','m-notes','m-resolve'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('m-type').value='Normal';
-  document.getElementById('m-date').value=todayISO();
+function openNormalModal(id){
+  editingNormalId=id||null;
+  const n=id?D.normals.find(x=>x.id===id):null;
+  document.getElementById('addModalTitle').textContent=n?'Editar apuesta':'Añadir apuesta normal / freebet';
+  document.getElementById('m-save').textContent=n?'Guardar cambios':'Guardar en pendientes';
+  document.getElementById('m-event').value=n?n.event:'';
+  document.getElementById('m-type').value=n?n.type:'Normal';
+  document.getElementById('m-odd').value=n?n.odd:'';
+  document.getElementById('m-stake').value=n?n.stake:'';
+  document.getElementById('m-notes').value=n?(n.notes||''):'';
+  document.getElementById('m-date').value=n?n.date:todayISO();
+  document.getElementById('m-resolve').value=n?(n.resolveDate||''):'';
+  fillCategorySelect(document.getElementById('m-category'),n?n.categoryId:presetCategoryForNewBet);
+  presetCategoryForNewBet=null;
   updateNormalPreview();
   modal.style.display='flex';
-});
-document.getElementById('m-cancel').addEventListener('click',()=>{modal.style.display='none';});
+}
+document.getElementById('nbAddBtn').addEventListener('click',()=>openNormalModal());
+document.getElementById('m-cancel').addEventListener('click',()=>{modal.style.display='none';editingNormalId=null;});
 document.getElementById('m-save').addEventListener('click',()=>{
   const ev=document.getElementById('m-event').value.trim();
   if(!ev){alert('Introduce el evento.');return;}
@@ -1441,15 +1536,32 @@ document.getElementById('m-save').addEventListener('click',()=>{
   const stake=parseFloat(document.getElementById('m-stake').value)||0;
   if(!(odd>1)){alert('Introduce una cuota válida (mayor que 1).');return;}
   if(!(stake>0)){alert('Introduce el dinero invertido.');return;}
-  const n={id:Date.now(),event:ev,type,odd,stake,
-    potentialWin:+(stake*(odd-1)).toFixed(2),potentialLoss:type==='Freebet'?0:-stake,
-    status:'pending',
-    date:document.getElementById('m-date').value||todayISO(),
-    resolveDate:document.getElementById('m-resolve').value||'',
-    notes:document.getElementById('m-notes').value.trim()};
-  D.normals.unshift(n);save();updateBadges();
+  const catVal=document.getElementById('m-category').value;
+  const categoryId=catVal?+catVal:null;
+  const potentialWin=+(stake*(odd-1)).toFixed(2), potentialLoss=type==='Freebet'?0:-stake;
+  if(editingNormalId){
+    const n=D.normals.find(x=>x.id===editingNormalId);
+    if(n){
+      n.event=ev;n.type=type;n.odd=odd;n.stake=stake;n.potentialWin=potentialWin;n.potentialLoss=potentialLoss;
+      n.date=document.getElementById('m-date').value||todayISO();
+      n.resolveDate=document.getElementById('m-resolve').value||'';
+      n.notes=document.getElementById('m-notes').value.trim();
+      n.categoryId=categoryId;
+      if(n.status==='won'||n.status==='lost')resolveNormal(n,n.status);
+    }
+  }else{
+    D.normals.unshift({id:Date.now(),event:ev,type,odd,stake,
+      potentialWin,potentialLoss,
+      status:'pending',
+      date:document.getElementById('m-date').value||todayISO(),
+      resolveDate:document.getElementById('m-resolve').value||'',
+      notes:document.getElementById('m-notes').value.trim(),
+      categoryId});
+  }
+  save();updateBadges();
   renderNormals(document.getElementById('nbSearch').value);renderProfit();renderPendientes();
-  modal.style.display='none';
+  if(document.getElementById('page-categorias').style.display!=='none')renderCategorias();
+  modal.style.display='none';editingNormalId=null;
 });
 
 // Resuelve una apuesta normal/freebet/combi (usada desde Normales y desde Pendientes)
@@ -1764,6 +1876,103 @@ document.getElementById('notasFolderList').addEventListener('click',e=>{
   const fid=item.dataset.fid;
   notasSelFolder=(fid==='all'||fid==='none')?fid:+fid;
   renderNotas(document.getElementById('notasSearch').value);
+});
+
+// ══════════════════════════════════════════
+//  CATEGORIAS — categorías compartidas por surebets/normales/freebets
+// ══════════════════════════════════════════
+let catSelId='all', catTypeFilter='all';
+function renderCatSidebar(){
+  const countFor=cid=>D.bets.filter(b=>b.categoryId===cid).length+D.normals.filter(n=>n.categoryId===cid).length;
+  let html=`<div class="nf-item ${catSelId==='all'?'active':''}" data-cfid="all"><span class="nfn">Todas</span><span class="nfc">${D.bets.length+D.normals.length}</span></div>`;
+  html+=`<div class="nf-item ${catSelId==='none'?'active':''}" data-cfid="none"><span class="nfn">Sin categoría</span><span class="nfc">${D.bets.filter(b=>!b.categoryId).length+D.normals.filter(n=>!n.categoryId).length}</span></div>`;
+  html+=D.categories.map(c=>`<div class="nf-item ${catSelId===c.id?'active':''}" data-cfid="${c.id}">
+    <span class="nfn">${esc(c.name)}</span><span class="nfc">${countFor(c.id)}</span>
+    <svg class="nfdel" data-catdel="${c.id}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+  </div>`).join('');
+  document.getElementById('catList').innerHTML=html;
+}
+function renderCategorias(){
+  renderCatSidebar();
+  let items=[...D.bets.map(b=>({kind:'sb',item:b})),...D.normals.map(n=>({kind:'nm',item:n}))];
+  items=items.filter(({kind,item})=>{
+    const cid=item.categoryId||null;
+    if(catSelId==='none'&&cid)return false;
+    if(catSelId!=='all'&&catSelId!=='none'&&cid!==catSelId)return false;
+    if(catTypeFilter==='surebet'&&kind!=='sb')return false;
+    if(catTypeFilter==='normal'&&(kind!=='nm'||item.type==='Freebet'))return false;
+    if(catTypeFilter==='freebet'&&(kind!=='nm'||item.type!=='Freebet'))return false;
+    return true;
+  });
+  items.sort((a,b)=>(b.item.date||'').localeCompare(a.item.date||''));
+  const list=document.getElementById('catItemsList');
+  if(!items.length){list.innerHTML=emptyStateHtml('No hay apuestas en esta vista.');return;}
+  const sMap={pending:['Pendiente','sp'],won:['Ganada','sw'],lost:['Perdida','sl3'],anulada:['Anulada','sa']};
+  list.innerHTML=items.map(({kind,item})=>{
+    const isSb=kind==='sb';
+    const [sLabel,sCls]=sMap[item.status]||['',''];
+    const p=isSb?((item.status==='won'||item.status==='lost')?(item.profit||0):0):(item.profit||0);
+    const pCls=item.status==='pending'?'zer':(p>0?'pos':p<0?'neg':'zer');
+    const typeTag=isSb?`<span class="type-badge-kind">Surebet</span>`:typePill(item.type);
+    const editAttr=isSb?`data-edit-bid="${item.id}"`:`data-edit-nid="${item.id}"`;
+    const delAttr=isSb?`data-catdel-bid="${item.id}"`:`data-catdel-nid="${item.id}"`;
+    return`<div class="ni2"><div class="ni2-left"><div class="ni2-ev">${esc(item.event)} ${typeTag}</div><div class="ni2-meta"><span>${fmtDate(item.date)}</span>${sLabel?`<span class="sb2 ${sCls}">${sLabel}</span>`:''}</div></div><div class="ni2-right"><div class="ni2-pnl ${pCls}">${item.status==='pending'?'Pendiente':(p>0?'+':'')+fmt(p)+' €'}</div></div><div style="display:flex;gap:4px;margin-top:2px"><button class="bd2" ${editAttr} title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button><button class="bd2" ${delAttr} title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div>`;
+  }).join('');
+}
+document.getElementById('catAddBtn').addEventListener('click',()=>{
+  const name=prompt('Nombre de la categoría:');
+  if(!name||!name.trim())return;
+  D.categories.push({id:Date.now(),name:name.trim()});
+  save();renderCategorias();
+});
+document.getElementById('catList').addEventListener('click',e=>{
+  const delBtn=e.target.closest('[data-catdel]');
+  if(delBtn){
+    if(!confirm('¿Eliminar esta categoría? Las apuestas pasarán a "Sin categoría".'))return;
+    const cid=+delBtn.dataset.catdel;
+    D.categories=D.categories.filter(c=>c.id!==cid);
+    D.bets.forEach(b=>{if(b.categoryId===cid)b.categoryId=null;});
+    D.normals.forEach(n=>{if(n.categoryId===cid)n.categoryId=null;});
+    if(catSelId===cid)catSelId='all';
+    save();renderCategorias();
+    return;
+  }
+  const item=e.target.closest('[data-cfid]');if(!item)return;
+  const v=item.dataset.cfid;
+  catSelId=(v==='all'||v==='none')?v:+v;
+  renderCategorias();
+});
+document.querySelectorAll('#page-categorias .cat-chip').forEach(chip=>{
+  chip.addEventListener('click',()=>{
+    document.querySelectorAll('#page-categorias .cat-chip').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+    catTypeFilter=chip.dataset.typef;
+    renderCategorias();
+  });
+});
+document.getElementById('catAddBetBtn').addEventListener('click',()=>{
+  presetCategoryForNewBet=(catSelId!=='all'&&catSelId!=='none')?catSelId:null;
+  openNormalModal();
+});
+document.getElementById('catItemsList').addEventListener('click',e=>{
+  const editNid=e.target.closest('[data-edit-nid]');
+  if(editNid){openNormalModal(+editNid.dataset.editNid);return;}
+  const editBid=e.target.closest('[data-edit-bid]');
+  if(editBid){openSbEditModal(+editBid.dataset.editBid);return;}
+  const delNid=e.target.closest('[data-catdel-nid]');
+  if(delNid){
+    if(!confirm('¿Eliminar esta entrada?'))return;
+    D.normals=D.normals.filter(n=>n.id!==+delNid.dataset.catdelNid);save();updateBadges();
+    renderCategorias();renderProfit();
+    return;
+  }
+  const delBid=e.target.closest('[data-catdel-bid]');
+  if(delBid){
+    if(!confirm('¿Eliminar esta surebet?'))return;
+    D.bets=D.bets.filter(b=>b.id!==+delBid.dataset.catdelBid);save();updateBadges();
+    renderCategorias();renderProfit();
+    return;
+  }
 });
 
 // ══════════════════════════════════════════
@@ -2232,10 +2441,11 @@ const pgMeta={
   pendientes:{title:'Pendientes',sub:'Apuestas a la espera de resultado'},
   casas:{title:'Casas de apuestas',sub:'Casas registradas y dinero depositado en cada una'},
   notas:{title:'Notas',sub:'Tus notas organizadas en carpetas'},
+  categorias:{title:'Categorías',sub:'Organiza tus apuestas en categorías propias'},
   perfil:{title:'Perfil',sub:'Tus estadísticas y rendimiento personal'},
   calculadoras:{title:'Calculadoras',sub:'Kelly, No-Vig, Hedge, Free Bet y Hold'},
 };
-const ALL_PAGES=['calc','surebets','normales','profit','pendientes','casas','notas','perfil','calculadoras'];
+const ALL_PAGES=['calc','surebets','normales','profit','pendientes','casas','notas','categorias','perfil','calculadoras'];
 document.querySelectorAll('.ni[data-page]').forEach(item=>{
   item.addEventListener('click',()=>{
     const page=item.dataset.page;
@@ -2254,6 +2464,7 @@ document.querySelectorAll('.ni[data-page]').forEach(item=>{
     else if(page==='pendientes')renderPendientes();
     else if(page==='casas')renderCasas();
     else if(page==='notas')renderNotas();
+    else if(page==='categorias')renderCategorias();
     else if(page==='perfil')renderPerfil();
     else if(page==='calculadoras')renderCalcTab(document.querySelector('.calc-tab.active')?.dataset.calc||'kelly');
     if(window.innerWidth<600)closeSB();
@@ -2349,18 +2560,20 @@ function emailToPath(email) {
       if (!Array.isArray(D.casas)) D.casas = [];
       if (!Array.isArray(D.notes)) D.notes = [];
       if (!Array.isArray(D.notesFolders)) D.notesFolders = [];
+      if (!Array.isArray(D.categories)) D.categories = [];
     } else {
       let migrated = null;
       try {
         const raw = localStorage.getItem(LOCAL_STORE_KEY);
         if (raw) migrated = JSON.parse(raw);
       } catch (e) {}
-      D = migrated || { bets: [], normals: [], casas: [], notes: [], notesFolders: [] };
+      D = migrated || { bets: [], normals: [], casas: [], notes: [], notesFolders: [], categories: [] };
       if (!Array.isArray(D.bets)) D.bets = [];
       if (!Array.isArray(D.normals)) D.normals = [];
       if (!Array.isArray(D.casas)) D.casas = [];
       if (!Array.isArray(D.notes)) D.notes = [];
       if (!Array.isArray(D.notesFolders)) D.notesFolders = [];
+      if (!Array.isArray(D.categories)) D.categories = [];
       await setDoc(docRef, D);
     }
 
@@ -2377,6 +2590,7 @@ function emailToPath(email) {
       if (!Array.isArray(D.casas)) D.casas = [];
       if (!Array.isArray(D.notes)) D.notes = [];
       if (!Array.isArray(D.notesFolders)) D.notesFolders = [];
+      if (!Array.isArray(D.categories)) D.categories = [];
       refreshCurrentView();
     });
 
@@ -2394,6 +2608,7 @@ function emailToPath(email) {
     else if (activePage === 'pendientes') renderPendientes();
     else if (activePage === 'casas') renderCasas(document.getElementById('casasSearch')?.value || '');
     else if (activePage === 'notas') renderNotas(document.getElementById('notasSearch')?.value || '');
+    else if (activePage === 'categorias') renderCategorias();
     else if (activePage === 'perfil') renderPerfil();
   }
 
