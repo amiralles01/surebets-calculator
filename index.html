@@ -291,6 +291,9 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
 .nf-item:hover .nfmove{display:block}
 .nf-item .nfmove:hover{color:var(--green)}
 .notas-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;min-height:0}
+.cat-sel-bar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cat-sel-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#catAddSubBtn:disabled{opacity:.45;cursor:not-allowed}
 .nlist{display:flex;flex-direction:column;gap:8px;overflow-y:auto}
 .note-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;cursor:pointer;transition:border-color var(--t);display:flex;gap:10px;align-items:flex-start}
 .note-card:hover{border-color:var(--focus)}
@@ -872,6 +875,13 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
           <div class="tr-hint">Drag a category onto another to nest it, or use ✎ to move it.</div>
         </div>
         <div class="notas-main">
+          <div class="cat-sel-bar" id="catSelBar">
+            <span class="cat-sel-name" id="catSelName">All</span>
+            <button class="btn-s" id="catAddSubBtn" title="Add folder inside this category">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add folder
+            </button>
+          </div>
           <div class="tb">
             <div class="cat-chip active" data-typef="all">All</div>
             <div class="cat-chip" data-typef="surebet">Surebets</div>
@@ -1198,6 +1208,15 @@ function refreshBookmakerList(){
   const dl=document.getElementById('bookmakerList');
   if(dl)dl.innerHTML=bookmakerNames().map(n=>`<option value="${esc(n)}"></option>`).join('');
 }
+// Builds <option> markup for a bookmaker <select>: known bookmakers first, plus the
+// row's current value even if it isn't in the list yet, so nothing gets silently lost.
+function houseOptionsHtml(current,placeholder){
+  const names=bookmakerNames();
+  if(current&&!names.some(n=>bkKey(n)===bkKey(current)))names.unshift(current);
+  let html=`<option value="">${esc(placeholder||'Choose bookmaker…')}</option>`;
+  html+=names.map(n=>`<option value="${esc(n)}"${bkKey(n)===bkKey(current)?' selected':''}>${esc(n)}</option>`).join('');
+  return html;
+}
 
 function calculate(){
   const valid=outcomes.filter(o=>o.odd>1);
@@ -1231,7 +1250,7 @@ function renderOutcomes(){
   outcomes.forEach((o,idx)=>{
     const row=document.createElement('div');row.className='or';
     row.innerHTML=`
-      <input type="text" placeholder="Bookmaker ${idx+1}" value="${esc(o.house)}" data-field="house" data-id="${o.id}">
+      <select data-field="house" data-id="${o.id}">${houseOptionsHtml(o.house,`Bookmaker ${idx+1}`)}</select>
       <input type="text" placeholder="Outcome" value="${esc(o.result)}" data-field="result" data-id="${o.id}">
       <input type="number" class="oi${lit?' lit':''}" placeholder="1.00" value="${o.odd>0?o.odd:''}" data-field="odd" data-id="${o.id}" min="1.01" step="0.01">
       <input type="number" class="msi" placeholder="Auto" title="Manual stake for this outcome (optional). If filled in, the rest is split using the remaining budget." value="${o.manualStake>0?o.manualStake:''}" data-field="manualStake" data-id="${o.id}" min="0" step="0.01">
@@ -1418,6 +1437,7 @@ function renderNormals(filter=''){
 // ══════════════════════════════════════════
 //  PROFIT PAGE
 // ══════════════════════════════════════════
+const MONTH_NAMES_EN=['January','February','March','April','May','June','July','August','September','October','November','December'];
 function renderProfit(){
   // Combine all entries with dates
   const all=[];
@@ -1465,15 +1485,17 @@ function renderProfit(){
 // ══════════════════════════════════════════
 //  EVENTS
 // ══════════════════════════════════════════
-document.getElementById('outcomesList').addEventListener('input',e=>{
-  const el=e.target,id=+el.dataset.id,field=el.dataset.field;
+function handleOutcomeFieldChange(el){
+  const id=+el.dataset.id,field=el.dataset.field;
   if(!id||!field)return;const o=outcomes.find(x=>x.id===id);if(!o)return;
   if(field==='odd')o.odd=parseFloat(el.value)||0;
   else if(field==='manualStake')o.manualStake=el.value===''?null:(parseFloat(el.value)||0);
   else o[field]=el.value;
   renderResult();
   const res=calculate();document.querySelectorAll('.oi').forEach(i=>i.classList.toggle('lit',!!(res&&res.isSurebet)));
-});
+}
+document.getElementById('outcomesList').addEventListener('input',e=>handleOutcomeFieldChange(e.target));
+document.getElementById('outcomesList').addEventListener('change',e=>{if(e.target.tagName==='SELECT')handleOutcomeFieldChange(e.target);});
 document.getElementById('outcomesList').addEventListener('click',e=>{
   const btn=e.target.closest('.bd');if(!btn||outcomes.length<=2)return;
   outcomes=outcomes.filter(o=>o.id!==+btn.dataset.id);render();
@@ -2257,6 +2279,11 @@ function renderCatSidebar(){
 }
 function renderCategorias(){
   renderCatSidebar();
+  const selName=document.getElementById('catSelName');
+  const addSubBtn=document.getElementById('catAddSubBtn');
+  if(catSelId==='all'){selName.textContent='All';addSubBtn.disabled=true;addSubBtn.title='Select a category to add a folder inside it';}
+  else if(catSelId==='none'){selName.textContent='No category';addSubBtn.disabled=true;addSubBtn.title='Select a category to add a folder inside it';}
+  else{const c=D.categories.find(x=>x.id===catSelId);selName.textContent=c?c.name:'All';addSubBtn.disabled=!c;addSubBtn.title='Add folder inside this category';}
   let items=[...D.bets.map(b=>({kind:'sb',item:b})),...D.normals.map(n=>({kind:'nm',item:n}))];
   items=items.filter(({kind,item})=>{
     const cid=item.categoryId||null;
@@ -2282,12 +2309,19 @@ function renderCategorias(){
     return`<div class="ni2"><div class="ni2-left"><div class="ni2-ev">${esc(item.event)} ${typeTag}</div><div class="ni2-meta"><span>${fmtDate(item.date)}</span>${sLabel?`<span class="sb2 ${sCls}">${sLabel}</span>`:''}</div></div><div class="ni2-right"><div class="ni2-pnl ${pCls}">${item.status==='pending'?'Pending':(p>0?'+':'')+fmt(p)+' €'}</div></div><div style="display:flex;gap:4px;margin-top:2px"><button class="bd2" ${editAttr} title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button><button class="bd2" ${delAttr} title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div>`;
   }).join('');
 }
-document.getElementById('catAddBtn').addEventListener('click',()=>{
+function addCategory(parentId){
   const name=prompt('Category name:');
   if(!name||!name.trim())return;
-  const parentId=(catSelId!=='all'&&catSelId!=='none')?catSelId:null;
   D.categories.push({id:Date.now(),name:name.trim(),parentId});
   save();renderCategorias();
+}
+document.getElementById('catAddBtn').addEventListener('click',()=>{
+  const parentId=(catSelId!=='all'&&catSelId!=='none')?catSelId:null;
+  addCategory(parentId);
+});
+document.getElementById('catAddSubBtn').addEventListener('click',()=>{
+  if(catSelId==='all'||catSelId==='none')return;
+  addCategory(catSelId);
 });
 document.getElementById('catList').addEventListener('click',e=>{
   const moveBtn=e.target.closest('[data-catmove]');
