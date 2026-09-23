@@ -214,6 +214,27 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
   color:var(--faint);border:1px solid transparent;transition:all var(--t);flex-shrink:0}
 .bd2:hover{background:var(--rdim);color:var(--red);border-color:rgba(255,95,95,.3)}
 .bd2 svg{width:12px;height:12px}
+
+/* ── HIDE / SHOW HIDDEN ── */
+.hidebtn{width:26px;height:26px;display:grid;place-items:center;border-radius:5px;
+  color:var(--faint);border:1px solid transparent;transition:all var(--t);flex-shrink:0}
+.hidebtn:hover{background:var(--ydim);color:var(--yellow);border-color:rgba(240,180,41,.3)}
+.hidebtn svg{width:13px;height:13px}
+.hidebtn.sm{width:24px;height:24px}
+.hidebtn.sm svg{width:12px;height:12px}
+.show-hidden-btn{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:7px 12px;
+  border-radius:8px;border:1px dashed var(--border);background:transparent;color:var(--muted);
+  font-size:12.5px;font-weight:500;transition:all var(--t)}
+.show-hidden-btn:hover{border-color:var(--focus);color:var(--text)}
+.show-hidden-btn.active{border-color:var(--yellow);color:var(--yellow);background:var(--ydim)}
+.show-hidden-btn svg{width:13px;height:13px}
+.hidden-list{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+.hidden-row{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:8px 12px;border-radius:8px;background:var(--raised);border:1px solid var(--border);
+  font-size:12.5px;color:var(--muted)}
+.unhidebtn{padding:4px 11px;border-radius:6px;border:1px solid var(--border);
+  background:var(--inp);color:var(--text);font-size:11.5px;font-weight:600;flex-shrink:0}
+.unhidebtn:hover{border-color:var(--green);color:var(--green)}
 .bl{padding:0}
 .leg{display:grid;grid-template-columns:1fr 1fr auto auto auto auto;
   gap:5px 10px;padding:8px 15px;border-bottom:1px solid var(--border);
@@ -1161,7 +1182,7 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
 // ══════════════════════════════════════════
 function save(){return window.__fsSave ? window.__fsSave() : Promise.resolve();}
 
-let D = {bets:[],normals:[],casas:[],notes:[],notesFolders:[],categories:[]};
+let D = {bets:[],normals:[],casas:[],notes:[],notesFolders:[],categories:[],hidden:{}};
 // A "void" surebet neither wins nor loses: it contributes no profit and doesn't count as money
 // at risk in any aggregate stat (ROI, wagered, monthly profit, charts, etc).
 function betProfit(b){return(b.status==='won'||b.status==='lost')?(b.profit||0):0;}
@@ -1180,6 +1201,29 @@ function fmt(n,d=2){return Number(n).toLocaleString('en-US',{minimumFractionDigi
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function catName(id){if(!id)return'';const c=D.categories.find(x=>x.id===id);return c?c.name:'';}
 function fmtDate(d){if(!d)return '';const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}
+
+// ══════════════════════════════════════════
+//  HIDE / SHOW HIDDEN — generic, works the same across every list page.
+//  D.hidden is a map of arbitrary string keys ("sb:12", "nm:7", "casa:3",
+//  "note:9", "month:2026-01"…) to `true`. Once hidden, an item stays hidden
+//  until the user explicitly unhides it from that page's "Show hidden" panel.
+// ══════════════════════════════════════════
+function isHidden(key){return !!(D.hidden&&D.hidden[key]);}
+function hideItem(key){if(!D.hidden)D.hidden={};D.hidden[key]=true;save();}
+function unhideItem(key){if(D.hidden)delete D.hidden[key];save();}
+function hideBtnHtml(key,small){return `<button class="hidebtn${small?' sm':''}" data-hidekey="${esc(key)}" title="Hide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.83 21.83 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.82 21.82 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>`;}
+// Renders the collapsed "Show hidden (N)" toggle, or — once expanded — the toggle
+// plus a small panel listing each hidden item with an Unhide button.
+function hiddenPanelHtml(pageKey,hiddenEntries){
+  if(!hiddenEntries.length)return '';
+  const open=!!showHiddenFor[pageKey];
+  let html=`<button class="show-hidden-btn${open?' active':''}" data-showhidden="${pageKey}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>${open?'Hide list':'Show hidden'} (${hiddenEntries.length})</button>`;
+  if(open){
+    html+=`<div class="hidden-list">`+hiddenEntries.map(h=>`<div class="hidden-row"><span>${esc(h.label)}</span><button class="unhidebtn" data-unhidekey="${esc(h.key)}">Unhide</button></div>`).join('')+`</div>`;
+  }
+  return html;
+}
+let showHiddenFor={sb:false,nb:false,pend:false,casas:false,notas:false,cat:false,profit:false};
 function sign(n){return n>0?'+':n<0?'':'';}
 // Shared kick-off date+time helpers, used by pending/history/modals
 function fmtWhen(date,time){if(!date)return '';return fmtDate(date)+(time?` · ${time}`:'');}
@@ -1370,8 +1414,10 @@ function renderSurebets(filter=''){
     <div class="sc"><div class="sl2">Pending</div><div class="sv2 yel">${D.bets.filter(b=>b.status==='pending').length}</div></div>
     <div class="sc"><div class="sl2">Surebet profit</div><div class="sv2 ${wonProfit>=0?'pos':'neg'}">${wonProfit>=0?'+':''}${fmt(wonProfit)} €</div></div>`;
   const list=document.getElementById('sbList');
-  if(!bets.length){list.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>No surebets registered yet.</p></div></div>`;return;}
-  list.innerHTML=bets.map(b=>{
+  const visible=bets.filter(b=>!isHidden('sb:'+b.id));
+  const hidden=bets.filter(b=>isHidden('sb:'+b.id));
+  if(!visible.length&&!hidden.length){list.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>No surebets registered yet.</p></div></div>`;return;}
+  list.innerHTML=visible.map(b=>{
     const isVoid=b.status==='anulada';
     const s=b.profitPct>=0?'+':'';
     const sLabel={pending:'Pending',won:'Won',lost:'Lost',anulada:'Void'}[b.status]||b.status;
@@ -1388,8 +1434,8 @@ function renderSurebets(filter=''){
       b.legs.map((l,li)=>`<div class="leg${winnerIdx===li?' leg-winner':''}"><span class="lh">${esc(l.house)}</span><span class="lr">${esc(l.result)}</span><span class="lo">${fmt(l.odd||0)}</span><span class="lk">${fmt(l.stake||0)} €</span><span class="lm">${fmt(l.minReturn||0)} €</span><button class="win-btn${winnerIdx===li?' selected':''}" data-wbid="${b.id}" data-wleg="${li}" title="Mark as the winning outcome">${winnerIdx===li?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Won`:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Won`}</button></div>`).join('')+
       (winnerIdx>=0&&!isVoid?`<div class="real-profit-row"><span class="real-profit-label">✓ ${esc(b.legs[winnerIdx].house)} won — real profit</span><span class="real-profit-val">+${fmt(realProfit)} €</span></div>`:'')
     : `<div style="padding:8px 15px;font-size:12px;color:var(--faint)">No leg breakdown (pre-loaded surebet)</div>`;
-    return`<div class="bi"><div class="bih"><div><div class="bie">${esc(b.event)}</div><div class="bid">${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}${b.categoryId?` · <span class="type-badge-kind">${esc(catName(b.categoryId))}</span>`:''}</div></div><div class="bim"><span class="pp2 ${pctCls}">${pctLabel}</span><span class="sb2 ${sCls}">${sLabel}</span><select class="ss" data-sid="${b.id}"><option value="pending" ${b.status==='pending'?'selected':''}>Pending</option><option value="won" ${b.status==='won'?'selected':''}>Won</option><option value="lost" ${b.status==='lost'?'selected':''}>Lost</option><option value="anulada" ${b.status==='anulada'?'selected':''}>Void</option></select><button class="bd2" data-edit-bid="${b.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button><button class="bd2" data-bid="${b.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div><div class="bl">${legsHtml}</div><div class="bf"><span class="bfl">Staked: ${fmt(b.totalStake||0)} € · Min. return: ${fmt(b.minReturn||0)} €</span><span class="bfr ${isVoid?'neu':(displayProfit>=0?'pos':'neg')}">${displayProfit>=0?'+':''}${fmt(displayProfit)} €</span></div></div>`;
-  }).join('');
+    return`<div class="bi"><div class="bih"><div><div class="bie">${esc(b.event)}</div><div class="bid">${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}${b.categoryId?` · <span class="type-badge-kind">${esc(catName(b.categoryId))}</span>`:''}</div></div><div class="bim"><span class="pp2 ${pctCls}">${pctLabel}</span><span class="sb2 ${sCls}">${sLabel}</span><select class="ss" data-sid="${b.id}"><option value="pending" ${b.status==='pending'?'selected':''}>Pending</option><option value="won" ${b.status==='won'?'selected':''}>Won</option><option value="lost" ${b.status==='lost'?'selected':''}>Lost</option><option value="anulada" ${b.status==='anulada'?'selected':''}>Void</option></select><button class="bd2" data-edit-bid="${b.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>${hideBtnHtml('sb:'+b.id)}<button class="bd2" data-bid="${b.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div><div class="bl">${legsHtml}</div><div class="bf"><span class="bfl">Staked: ${fmt(b.totalStake||0)} € · Min. return: ${fmt(b.minReturn||0)} €</span><span class="bfr ${isVoid?'neu':(displayProfit>=0?'pos':'neg')}">${displayProfit>=0?'+':''}${fmt(displayProfit)} €</span></div></div>`;
+  }).join('')+hiddenPanelHtml('sb',hidden.map(b=>({key:'sb:'+b.id,label:b.event||'(No event)'})));
 }
 
 // ══════════════════════════════════════════
@@ -1413,8 +1459,10 @@ function renderNormals(filter=''){
     <div class="sc"><div class="sl2">Normal bet profit</div><div class="sv2 ${normProfit>=0?'pos':'neg'}">${normProfit>=0?'+':''}${fmt(normProfit)} €</div></div>
     <div class="sc"><div class="sl2">Freebet profit</div><div class="sv2 ${fbProfit>=0?'pos':'neg'}">${fbProfit>=0?'+':''}${fmt(fbProfit)} €</div></div>`;
   const list=document.getElementById('nbList');
-  if(!items.length){list.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>No bets registered yet.</p></div></div>`;return;}
-  list.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">`+items.map(n=>{
+  const visible=items.filter(n=>!isHidden('nm:'+n.id));
+  const hidden=items.filter(n=>isHidden('nm:'+n.id));
+  if(!visible.length&&!hidden.length){list.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>No bets registered yet.</p></div></div>`;return;}
+  list.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">`+visible.map(n=>{
     const hasStatus=!!n.status;
     const isPending=n.status==='pending';
     const sLabel={pending:'Pending',won:'Won',lost:'Lost',anulada:'Void'}[n.status]||'';
@@ -1430,8 +1478,8 @@ function renderNormals(filter=''){
       pnlHtml=`<div class="ni2-pnl ${pCls}">${s}${fmt(p)} €</div>`;
     }
     const statusSelect=hasStatus?`<select class="ns" data-nid="${n.id}"><option value="pending" ${n.status==='pending'?'selected':''}>Pending</option><option value="won" ${n.status==='won'?'selected':''}>Won</option><option value="lost" ${n.status==='lost'?'selected':''}>Lost</option><option value="anulada" ${n.status==='anulada'?'selected':''}>Void</option></select>`:'';
-    return`<div class="ni2"><div class="ni2-left"><div class="ni2-ev">${esc(n.event)}${n.house?` <span style="font-weight:500;color:var(--faint);font-size:12px">· ${esc(n.house)}</span>`:''}</div><div class="ni2-meta"><span>${fmtWhen(n.date,n.time)}</span>${typePill(n.type)}${hasStatus?`<span class="sb2 ${sCls}">${sLabel}</span>`:''}${n.categoryId?`<span class="type-badge-kind">${esc(catName(n.categoryId))}</span>`:''}</div>${oddStakeLine}${n.notes?`<div class="ni2-note">${esc(n.notes)}</div>`:''}</div><div class="ni2-right">${statusSelect}${pnlHtml}</div><div style="display:flex;gap:4px;margin-top:2px"><button class="bd2" data-edit-nid="${n.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button><button class="bd2" data-nid="${n.id}" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div>`;
-  }).join('')+`</div>`;
+    return`<div class="ni2"><div class="ni2-left"><div class="ni2-ev">${esc(n.event)}${n.house?` <span style="font-weight:500;color:var(--faint);font-size:12px">· ${esc(n.house)}</span>`:''}</div><div class="ni2-meta"><span>${fmtWhen(n.date,n.time)}</span>${typePill(n.type)}${hasStatus?`<span class="sb2 ${sCls}">${sLabel}</span>`:''}${n.categoryId?`<span class="type-badge-kind">${esc(catName(n.categoryId))}</span>`:''}</div>${oddStakeLine}${n.notes?`<div class="ni2-note">${esc(n.notes)}</div>`:''}</div><div class="ni2-right">${statusSelect}${pnlHtml}</div><div style="display:flex;gap:4px;margin-top:2px"><button class="bd2" data-edit-nid="${n.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>${hideBtnHtml('nm:'+n.id)}<button class="bd2" data-nid="${n.id}" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div>`;
+  }).join('')+`</div>`+hiddenPanelHtml('nb',hidden.map(n=>({key:'nm:'+n.id,label:n.event||'(No event)'})));
 }
 
 // ══════════════════════════════════════════
@@ -1471,15 +1519,18 @@ function renderProfit(){
       </div>
     </div>`;
 
-  document.getElementById('monthList').innerHTML=keys.reverse().map(k=>{
+  const visibleKeys=keys.filter(k=>!isHidden('month:'+k)).reverse();
+  const hiddenKeys=keys.filter(k=>isHidden('month:'+k)).reverse();
+
+  document.getElementById('monthList').innerHTML=visibleKeys.map(k=>{
     const m=months[k];const tot=m.surebet+m.normal+m.freebet;
     return`<div class="month-card">
-      <div class="mc-head"><span class="mc-month">${mName(k)}</span><span class="mc-total ${tot>=0?'pos':'neg'}">${tot>=0?'+':''}${fmt(tot)} €</span></div>
+      <div class="mc-head"><span class="mc-month">${mName(k)}</span><div style="display:flex;align-items:center;gap:6px"><span class="mc-total ${tot>=0?'pos':'neg'}">${tot>=0?'+':''}${fmt(tot)} €</span>${hideBtnHtml('month:'+k)}</div></div>
       ${m.surebet!==0?`<div class="mc-row"><span class="mc-cat">Surebets</span><span class="mc-val ${m.surebet>=0?'pos':'neg'}">${m.surebet>=0?'+':''}${fmt(m.surebet)} €</span></div>`:''}
       ${m.normal!==0?`<div class="mc-row"><span class="mc-cat">Normal</span><span class="mc-val ${m.normal>=0?'pos':'neg'}">${m.normal>=0?'+':''}${fmt(m.normal)} €</span></div>`:''}
       ${m.freebet!==0?`<div class="mc-row"><span class="mc-cat">Freebets</span><span class="mc-val ${m.freebet>=0?'pos':'neg'}">${m.freebet>=0?'+':''}${fmt(m.freebet)} €</span></div>`:''}
     </div>`;
-  }).join('');
+  }).join('') + hiddenPanelHtml('profit',hiddenKeys.map(k=>({key:'month:'+k,label:mName(k)})));
 }
 
 // ══════════════════════════════════════════
@@ -1837,8 +1888,10 @@ function renderPendientes(){
     <div class="sc"><div class="sl2">Staked</div><div class="sv2">${fmt(totalStake)} €</div></div>
     <div class="sc"><div class="sl2">Total min. return</div><div class="sv2">${fmt(totalMinRet)} €</div></div>`;
   const list=document.getElementById('pendList');
-  if(!pend.length){list.innerHTML=emptyStateHtml('You have no pending bets right now.');return;}
-  list.innerHTML=pend.map(({kind,item})=>{
+  const visible=pend.filter(({kind,item})=>!isHidden((kind==='sb'?'sb:':'nm:')+item.id));
+  const hidden=pend.filter(({kind,item})=>isHidden((kind==='sb'?'sb:':'nm:')+item.id));
+  if(!visible.length&&!hidden.length){list.innerHTML=emptyStateHtml('You have no pending bets right now.');return;}
+  list.innerHTML=visible.map(({kind,item})=>{
     if(kind==='sb'){
       const b=item;
       const hasLegs=!!(b.legs&&b.legs.length);
@@ -1857,7 +1910,7 @@ function renderPendientes(){
             <div class="pend-ev">${esc(b.event)} <span class="type-badge-kind">Surebet</span></div>
             <div class="pend-meta"><span>${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}</span>${b.totalStake?`<span>Staked: ${fmt(b.totalStake)} €</span>`:''}</div>
           </div>
-          <button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada" title="Doesn't count as won or lost">Void</button>
+          <div style="display:flex;align-items:center;gap:6px"><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada" title="Doesn't count as won or lost">Void</button>${hideBtnHtml('sb:'+b.id,true)}</div>
         </div>
         ${hasLegs?legsHtml:`<div class="pend-hint">No leg breakdown. <button class="btn-accept" data-pid="${b.id}" data-kind="sb" data-action="won"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Accept</button></div>`}
         ${hasLegs?`<div class="pend-hint">Tap the outcome that happened — it's accepted <b>immediately</b>.</div>`:''}
@@ -1876,9 +1929,10 @@ function renderPendientes(){
         <button class="btn-reject" data-pid="${n.id}" data-kind="nm" data-action="lost">Lost</button>
         <button class="btn-void" data-pid="${n.id}" data-kind="nm" data-action="anulada" title="Doesn't count as won or lost">Void</button>
         <button class="btn-accept" data-pid="${n.id}" data-kind="nm" data-action="won"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Accept</button>
+        ${hideBtnHtml('nm:'+n.id,true)}
       </div>
     </div>`;
-  }).join('');
+  }).join('')+hiddenPanelHtml('pend',hidden.map(({kind,item})=>({key:(kind==='sb'?'sb:':'nm:')+item.id,label:item.event||'(No event)'})));
 }
 document.getElementById('pendList').addEventListener('click',e=>{
   const winLegBtn=e.target.closest('[data-pwinbid]');
@@ -1934,8 +1988,10 @@ function renderCasas(filter=''){
     <div class="sc"><div class="sl2">Pending to receive</div><div class="sv2 ${totalPending>0?'yel':''}">${fmt(totalPending)} €</div></div>
     <div class="sc"><div class="sl2">Top bookmaker</div><div class="sv2" style="font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${top?esc(top.name):'—'}</div></div>`;
   const list=document.getElementById('casasList');
-  if(!items.length){list.innerHTML=emptyStateHtml(D.casas.length?'No bookmakers match your search.':'You have no bookmakers tracked yet.');return;}
-  const sorted=[...items].sort((a,b)=>(b.amount||0)-(a.amount||0));
+  const visible=items.filter(c=>!isHidden('casa:'+c.id));
+  const hidden=items.filter(c=>isHidden('casa:'+c.id));
+  if(!visible.length&&!hidden.length){list.innerHTML=emptyStateHtml(D.casas.length?'No bookmakers match your search.':'You have no bookmakers tracked yet.');return;}
+  const sorted=[...visible].sort((a,b)=>(b.amount||0)-(a.amount||0));
   list.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px">`+sorted.map(c=>{
     const amt=c.amount||0,pCls=amt>0?'pos':'zer';
     const pend=c.pendingTransfer||0;
@@ -1979,11 +2035,12 @@ function renderCasas(filter=''){
         <button class="bk-btn${mode==='pending'?' on':''}" data-bk-toggle="pending" data-cid="${c.id}">Pending transfer</button>
         <div class="bk-spacer"></div>
         <button class="bk-btn" data-edit-cid="${c.id}">Edit</button>
+        ${hideBtnHtml('casa:'+c.id)}
         <button class="bk-btn" data-cid="${c.id}">Delete</button>
       </div>
       ${panelHtml}
     </div>`;
-  }).join('')+`</div>`;
+  }).join('')+`</div>`+hiddenPanelHtml('casas',hidden.map(c=>({key:'casa:'+c.id,label:c.name||'(Unnamed)'})));
 }
 
 const casaModal=document.getElementById('addCasaModal');
@@ -2146,8 +2203,10 @@ function renderNotas(filter=''){
   items=[...items].sort((a,b)=>notasSort==='name'?a.title.localeCompare(b.title,'es',{sensitivity:'base'}):(b.updatedAt||0)-(a.updatedAt||0));
   document.getElementById('notasSortBtn').textContent=notasSort==='name'?'A–Z':'Date';
   const list=document.getElementById('notasList');
-  if(!items.length){list.innerHTML=emptyStateHtml(D.notes.length?'No notes match your search.':'You have no notes yet.');return;}
-  list.innerHTML=items.map(n=>{
+  const visible=items.filter(n=>!isHidden('note:'+n.id));
+  const hidden=items.filter(n=>isHidden('note:'+n.id));
+  if(!visible.length&&!hidden.length){list.innerHTML=emptyStateHtml(D.notes.length?'No notes match your search.':'You have no notes yet.');return;}
+  list.innerHTML=visible.map(n=>{
     const d=n.updatedAt?new Date(n.updatedAt):null;
     const dStr=d?d.toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'}):'';
     return `<div class="note-card ${n.completed?'completed':''}" data-nid="${n.id}">
@@ -2157,8 +2216,9 @@ function renderNotas(filter=''){
         <div class="note-snippet">${esc((n.content||'').slice(0,180))}</div>
         <div class="note-meta"><span>${esc(notasFolderName(n.folderId))}</span><span>${dStr}</span></div>
       </div>
+      ${hideBtnHtml('note:'+n.id,true)}
     </div>`;
-  }).join('');
+  }).join('')+hiddenPanelHtml('notas',hidden.map(n=>({key:'note:'+n.id,label:n.title||'(Untitled)'})));
 }
 
 function fillNoteFolderSelect(sel){
@@ -2206,6 +2266,7 @@ document.getElementById('notasSortBtn').addEventListener('click',()=>{
   renderNotas(document.getElementById('notasSearch').value);
 });
 document.getElementById('notasList').addEventListener('click',e=>{
+  if(e.target.closest('[data-hidekey]')||e.target.closest('[data-unhidekey]'))return;
   const chk=e.target.closest('[data-check]');
   if(chk){
     const n=D.notes.find(x=>x.id===+chk.dataset.check);
@@ -2296,9 +2357,11 @@ function renderCategorias(){
   });
   items.sort((a,b)=>(b.item.date||'').localeCompare(a.item.date||''));
   const list=document.getElementById('catItemsList');
-  if(!items.length){list.innerHTML=emptyStateHtml('No hay apuestas en esta vista.');return;}
+  const visible=items.filter(({kind,item})=>!isHidden((kind==='sb'?'sb:':'nm:')+item.id));
+  const hidden=items.filter(({kind,item})=>isHidden((kind==='sb'?'sb:':'nm:')+item.id));
+  if(!visible.length&&!hidden.length){list.innerHTML=emptyStateHtml('No hay apuestas en esta vista.');return;}
   const sMap={pending:['Pending','sp'],won:['Won','sw'],lost:['Lost','sl3'],anulada:['Void','sa']};
-  list.innerHTML=items.map(({kind,item})=>{
+  list.innerHTML=visible.map(({kind,item})=>{
     const isSb=kind==='sb';
     const [sLabel,sCls]=sMap[item.status]||['',''];
     const p=isSb?((item.status==='won'||item.status==='lost')?(item.profit||0):0):(item.profit||0);
@@ -2306,8 +2369,9 @@ function renderCategorias(){
     const typeTag=isSb?`<span class="type-badge-kind">Surebet</span>`:typePill(item.type);
     const editAttr=isSb?`data-edit-bid="${item.id}"`:`data-edit-nid="${item.id}"`;
     const delAttr=isSb?`data-catdel-bid="${item.id}"`:`data-catdel-nid="${item.id}"`;
-    return`<div class="ni2"><div class="ni2-left"><div class="ni2-ev">${esc(item.event)} ${typeTag}</div><div class="ni2-meta"><span>${fmtDate(item.date)}</span>${sLabel?`<span class="sb2 ${sCls}">${sLabel}</span>`:''}</div></div><div class="ni2-right"><div class="ni2-pnl ${pCls}">${item.status==='pending'?'Pending':(p>0?'+':'')+fmt(p)+' €'}</div></div><div style="display:flex;gap:4px;margin-top:2px"><button class="bd2" ${editAttr} title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button><button class="bd2" ${delAttr} title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div>`;
-  }).join('');
+    const hkey=(isSb?'sb:':'nm:')+item.id;
+    return`<div class="ni2"><div class="ni2-left"><div class="ni2-ev">${esc(item.event)} ${typeTag}</div><div class="ni2-meta"><span>${fmtDate(item.date)}</span>${sLabel?`<span class="sb2 ${sCls}">${sLabel}</span>`:''}</div></div><div class="ni2-right"><div class="ni2-pnl ${pCls}">${item.status==='pending'?'Pending':(p>0?'+':'')+fmt(p)+' €'}</div></div><div style="display:flex;gap:4px;margin-top:2px"><button class="bd2" ${editAttr} title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>${hideBtnHtml(hkey)}<button class="bd2" ${delAttr} title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div>`;
+  }).join('')+hiddenPanelHtml('cat',hidden.map(({kind,item})=>({key:(kind==='sb'?'sb:':'nm:')+item.id,label:item.event||'(No event)'})));
 }
 function addCategory(parentId){
   const name=prompt('Category name:');
@@ -3007,6 +3071,31 @@ function updateBadges(){
   document.getElementById('casasCount').textContent=D.casas.length;
 }
 
+// Re-renders whichever page is currently on screen. Used after hide/unhide actions,
+// which can be triggered from several different pages.
+function rerenderActivePage(){
+  const activePage=document.querySelector('.ni.active')?.dataset.page||'calc';
+  if(activePage==='calc')render();
+  else if(activePage==='surebets')renderSurebets(document.getElementById('sbSearch')?.value||'');
+  else if(activePage==='normales')renderNormals(document.getElementById('nbSearch')?.value||'');
+  else if(activePage==='profit')renderProfit();
+  else if(activePage==='pendientes')renderPendientes();
+  else if(activePage==='casas')renderCasas(document.getElementById('casasSearch')?.value||'');
+  else if(activePage==='notas')renderNotas(document.getElementById('notasSearch')?.value||'');
+  else if(activePage==='categorias')renderCategorias();
+  else if(activePage==='perfil')renderPerfil();
+}
+// One delegated listener covers hide / unhide / "show hidden" toggles on every page,
+// since the buttons all share the same data-hidekey / data-unhidekey / data-showhidden markers.
+document.addEventListener('click',e=>{
+  const hb=e.target.closest('[data-hidekey]');
+  if(hb){hideItem(hb.dataset.hidekey);rerenderActivePage();return;}
+  const ub=e.target.closest('[data-unhidekey]');
+  if(ub){unhideItem(ub.dataset.unhidekey);rerenderActivePage();return;}
+  const sb2=e.target.closest('[data-showhidden]');
+  if(sb2){const k=sb2.dataset.showhidden;showHiddenFor[k]=!showHiddenFor[k];rerenderActivePage();return;}
+});
+
 // ── Mobile sidebar ──
 const sidebar=document.getElementById('sidebar');
 const overlay=document.getElementById('sbOverlay');
@@ -3090,19 +3179,21 @@ function emailToPath(email) {
       if (!Array.isArray(D.notes)) D.notes = [];
       if (!Array.isArray(D.notesFolders)) D.notesFolders = [];
       if (!Array.isArray(D.categories)) D.categories = [];
+      if (!D.hidden || typeof D.hidden !== 'object') D.hidden = {};
     } else {
       let migrated = null;
       try {
         const raw = localStorage.getItem(LOCAL_STORE_KEY);
         if (raw) migrated = JSON.parse(raw);
       } catch (e) {}
-      D = migrated || { bets: [], normals: [], casas: [], notes: [], notesFolders: [], categories: [] };
+      D = migrated || { bets: [], normals: [], casas: [], notes: [], notesFolders: [], categories: [], hidden: {} };
       if (!Array.isArray(D.bets)) D.bets = [];
       if (!Array.isArray(D.normals)) D.normals = [];
       if (!Array.isArray(D.casas)) D.casas = [];
       if (!Array.isArray(D.notes)) D.notes = [];
       if (!Array.isArray(D.notesFolders)) D.notesFolders = [];
       if (!Array.isArray(D.categories)) D.categories = [];
+      if (!D.hidden || typeof D.hidden !== 'object') D.hidden = {};
       await setDoc(docRef, D);
     }
 
@@ -3120,6 +3211,7 @@ function emailToPath(email) {
       if (!Array.isArray(D.notes)) D.notes = [];
       if (!Array.isArray(D.notesFolders)) D.notesFolders = [];
       if (!Array.isArray(D.categories)) D.categories = [];
+      if (!D.hidden || typeof D.hidden !== 'object') D.hidden = {};
       refreshCurrentView();
     });
 
