@@ -1501,10 +1501,12 @@ function renderProfit(){
   });
 
   const keys=Object.keys(months).sort();
-  const totalAll=Object.values(months).reduce((a,m)=>a+m.surebet+m.normal+m.freebet,0);
-  const totalSB=D.bets.reduce((a,b)=>a+betProfit(b),0);
-  const totalNorm=D.normals.filter(n=>n.type==='Normal').reduce((a,n)=>a+(n.profit||0),0);
-  const totalFB=D.normals.filter(n=>n.type==='Freebet').reduce((a,n)=>a+(n.profit||0),0);
+  const visibleKeys=keys.filter(k=>!isHidden('month:'+k));
+  const hiddenKeys=keys.filter(k=>isHidden('month:'+k));
+  const totalAll=visibleKeys.reduce((a,k)=>a+months[k].surebet+months[k].normal+months[k].freebet,0);
+  const totalSB=visibleKeys.reduce((a,k)=>a+months[k].surebet,0);
+  const totalNorm=visibleKeys.reduce((a,k)=>a+months[k].normal,0);
+  const totalFB=visibleKeys.reduce((a,k)=>a+months[k].freebet,0);
 
   function mName(k){const[y,mo]=k.split('-');return `${MONTH_NAMES_EN[+mo-1]} ${y}`;}
 
@@ -1519,10 +1521,10 @@ function renderProfit(){
       </div>
     </div>`;
 
-  const visibleKeys=keys.filter(k=>!isHidden('month:'+k)).reverse();
-  const hiddenKeys=keys.filter(k=>isHidden('month:'+k)).reverse();
+  const visibleKeysDesc=[...visibleKeys].reverse();
+  const hiddenKeysDesc=[...hiddenKeys].reverse();
 
-  document.getElementById('monthList').innerHTML=visibleKeys.map(k=>{
+  document.getElementById('monthList').innerHTML=visibleKeysDesc.map(k=>{
     const m=months[k];const tot=m.surebet+m.normal+m.freebet;
     return`<div class="month-card">
       <div class="mc-head"><span class="mc-month">${mName(k)}</span><div style="display:flex;align-items:center;gap:6px"><span class="mc-total ${tot>=0?'pos':'neg'}">${tot>=0?'+':''}${fmt(tot)} €</span>${hideBtnHtml('month:'+k)}</div></div>
@@ -1530,7 +1532,7 @@ function renderProfit(){
       ${m.normal!==0?`<div class="mc-row"><span class="mc-cat">Normal</span><span class="mc-val ${m.normal>=0?'pos':'neg'}">${m.normal>=0?'+':''}${fmt(m.normal)} €</span></div>`:''}
       ${m.freebet!==0?`<div class="mc-row"><span class="mc-cat">Freebets</span><span class="mc-val ${m.freebet>=0?'pos':'neg'}">${m.freebet>=0?'+':''}${fmt(m.freebet)} €</span></div>`:''}
     </div>`;
-  }).join('') + hiddenPanelHtml('profit',hiddenKeys.map(k=>({key:'month:'+k,label:mName(k)})));
+  }).join('') + hiddenPanelHtml('profit',hiddenKeysDesc.map(k=>({key:'month:'+k,label:mName(k)})));
 }
 
 // ══════════════════════════════════════════
