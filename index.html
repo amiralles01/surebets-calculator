@@ -1381,7 +1381,7 @@ function renderResult(){
       <div class="sr"><span class="sl">Profit</span><span class="sv ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span></div>
       <div class="pw"><div class="pl"><span>Sum of implied probabilities</span><span>${fmt(sumPct)} %</span></div><div class="pt"><div class="pf ${sumPct>100?'over':''}" style="width:${bW}%"></div></div></div>
     </div>
-    <button class="btn-reg" id="regBtn" ${!isSurebet?'disabled':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>${isSurebet?'Register this surebet':'No surebet — unavailable'}</button>`;
+    <button class="btn-reg" id="regBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>${isSurebet?'Register this surebet':'Register anyway (negative ROI)'}</button>`;
   document.getElementById('regBtn').addEventListener('click',openSbRegModal);
 }
 
@@ -1395,7 +1395,7 @@ function renderSbrLegs(legs){
 }
 function readSbrHouses(){return [...document.querySelectorAll('#sbr-legs input[data-legi]')].map(i=>i.value.trim());}
 function openSbRegModal(){
-  const res=calculate();if(!res||!res.isSurebet)return;
+  const res=calculate();if(!res)return;
   editingSbId=null;
   refreshBookmakerList();
   document.getElementById('sbRegModalTitle').textContent='Register surebet';
@@ -1421,7 +1421,7 @@ function openSbEditModal(id){
   document.getElementById('sbRegModal').style.display='flex';
 }
 function registerBet(){
-  const res=calculate();if(!res||!res.isSurebet)return;
+  const res=calculate();if(!res)return;
   const ev=document.getElementById('sbr-event').value.trim();
   if(!ev){alert('Please enter the event.');return;}
   const startVal=document.getElementById('sbr-start').value||new Date().toISOString().slice(0,10);
