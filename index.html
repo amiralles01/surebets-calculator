@@ -1125,6 +1125,20 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
   </div>
 </div>
 
+<!-- ══ CASH OUT MODAL ══ -->
+<div id="cashoutModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
+  <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:380px;margin:16px">
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px">Cash out</div>
+    <div id="co-info" style="font-size:12px;color:var(--muted,#888);margin-bottom:14px"></div>
+    <div><label class="fl">Amount received (€)</label><input type="number" id="co-amount" step="0.01" min="0" placeholder="0.00"></div>
+    <div id="co-preview" style="margin-top:12px;font-size:13px"></div>
+    <div style="display:flex;gap:9px;margin-top:18px">
+      <button class="btn-s" id="co-cancel" style="flex:1">Cancel</button>
+      <button class="btn-reg" id="co-save" style="flex:2">Confirm cash out</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ ADD/EDIT BOOKMAKER MODAL ══ -->
 <datalist id="bookmakerList"></datalist>
 <div id="addCasaModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
@@ -1957,6 +1971,8 @@ document.getElementById('m-save').addEventListener('click',()=>{
 function resolveNormal(n,status){
   n.status=status;
   if(!n.resolveDate)n.resolveDate=todayISO();
+  if(n.cashOut!=null&&(status==='won'||status==='lost'))return; // cashed out: keep manual profit
+  if(status==='pending'||status==='anulada')delete n.cashOut;
   if(status==='won')n.profit=n.potentialWin!=null?n.potentialWin:+(((n.stake||0)*((n.odd||1)-1)).toFixed(2));
   else if(status==='lost')n.profit=n.potentialLoss!=null?n.potentialLoss:(n.type==='Freebet'?0:-(n.stake||0));
   else n.profit=0; // anulada o vuelta a pendiente
@@ -2038,7 +2054,7 @@ function renderPendientes(){
             <div class="pend-ev">${esc(b.event)} <span class="type-badge-kind">Surebet</span></div>
             <div class="pend-meta"><span>${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}</span>${b.totalStake?`<span>Staked: ${fmt(b.totalStake)} €</span>`:''}</div>
           </div>
-          <div style="display:flex;align-items:center;gap:6px"><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada" title="Doesn't count as won or lost">Void</button>${hideBtnHtml('sb:'+b.id,true)}</div>
+          <div style="display:flex;align-items:center;gap:6px"><button class="btn-void" data-cashout="sb:${b.id}" title="Close early for a manual amount">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada" title="Doesn't count as won or lost">Void</button>${hideBtnHtml('sb:'+b.id,true)}</div>
         </div>
         ${hasLegs?legsHtml:`<div class="pend-hint">No leg breakdown. <button class="btn-accept" data-pid="${b.id}" data-kind="sb" data-action="won"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Accept</button></div>`}
         ${hasLegs?`<div class="pend-hint">Tap the outcome that happened — it's accepted <b>immediately</b>.</div>`:''}
@@ -2054,6 +2070,7 @@ function renderPendientes(){
       </div>
       <div class="pend-right">
         <div class="pend-preview">If it wins: <span class="pend-preview-pos">+${fmt(win)} €</span><br>If it loses: <span class="pend-preview-neg">${fmt(loss)} €</span></div>
+        <button class="btn-void" data-cashout="nm:${n.id}" title="Close early for a manual amount">Cash out</button>
         <button class="btn-reject" data-pid="${n.id}" data-kind="nm" data-action="lost">Lost</button>
         <button class="btn-void" data-pid="${n.id}" data-kind="nm" data-action="anulada" title="Doesn't count as won or lost">Void</button>
         <button class="btn-accept" data-pid="${n.id}" data-kind="nm" data-action="won"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Accept</button>
@@ -2062,7 +2079,48 @@ function renderPendientes(){
     </div>`;
   }).join('')+hiddenPanelHtml('pend',hidden.map(({kind,item})=>({key:pendKey(kind,item),label:kind==='wd'?('Withdrawal – '+(item.casaName||'')):(item.event||'(No event)')})));
 }
+let cashoutTarget=null;
+function cashoutStake(t){
+  if(t.kind==='sb')return t.item.totalStake||0;
+  return t.item.type==='Freebet'?0:(t.item.stake||0); // freebet stake is not real money
+}
+function updateCashoutPreview(){
+  if(!cashoutTarget)return;
+  const amt=parseFloat(document.getElementById('co-amount').value);
+  const el=document.getElementById('co-preview');
+  if(isNaN(amt)){el.innerHTML='';return;}
+  const p=amt-cashoutStake(cashoutTarget);
+  el.innerHTML=`Resulting profit: <b class="${p>=0?'pos':'neg'}">${p>=0?'+':''}${fmt(p)} €</b>`;
+}
+function openCashoutModal(kind,id){
+  const item=kind==='sb'?D.bets.find(x=>x.id===id):D.normals.find(x=>x.id===id);
+  if(!item)return;
+  cashoutTarget={kind,item};
+  const st=cashoutStake(cashoutTarget);
+  document.getElementById('co-info').textContent=`${item.event||''} · ${kind==='nm'&&item.type==='Freebet'?'Freebet (stake not counted)':'Staked: '+fmt(st)+' €'}`;
+  document.getElementById('co-amount').value='';
+  document.getElementById('co-preview').innerHTML='';
+  document.getElementById('cashoutModal').style.display='flex';
+  document.getElementById('co-amount').focus();
+}
+document.getElementById('co-amount').addEventListener('input',updateCashoutPreview);
+document.getElementById('co-cancel').addEventListener('click',()=>{document.getElementById('cashoutModal').style.display='none';cashoutTarget=null;});
+document.getElementById('co-save').addEventListener('click',()=>{
+  if(!cashoutTarget)return;
+  const amt=parseFloat(document.getElementById('co-amount').value);
+  if(isNaN(amt)||amt<0){alert('Enter the amount received (0 or more).');return;}
+  const {kind,item}=cashoutTarget;
+  const profit=+(amt-cashoutStake(cashoutTarget)).toFixed(2);
+  item.cashOut=amt;
+  item.profit=profit;
+  item.status=profit>=0?'won':'lost';
+  if(!item.resolveDate)item.resolveDate=todayISO();
+  document.getElementById('cashoutModal').style.display='none';cashoutTarget=null;
+  save();updateBadges();renderPendientes();renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);renderProfit();
+});
 document.getElementById('pendList').addEventListener('click',e=>{
+  const coBtn=e.target.closest('[data-cashout]');
+  if(coBtn){const [k,i]=coBtn.dataset.cashout.split(':');openCashoutModal(k,+i);return;}
   const winLegBtn=e.target.closest('[data-pwinbid]');
   if(winLegBtn){
     const bid=+winLegBtn.dataset.pwinbid,li=+winLegBtn.dataset.pwinleg;
