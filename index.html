@@ -111,6 +111,23 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .toast button{background:none;border:none;color:var(--green);font-weight:650;cursor:pointer;font-family:inherit;font-size:12.5px;padding:0}
 @media(max-width:900px){.nbt-wrap{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
+/* ── PENDING DAY FILTER ── */
+.fw{min-width:0}
+.pend-days{min-width:0;max-width:100%;display:flex;gap:6px;align-items:center;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+.pd-chip{display:flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;border:1px solid var(--border);background:var(--surface);
+  color:var(--muted);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all var(--t)}
+.pd-chip:hover{color:var(--text)}
+.pd-chip .pd-n{font-size:10.5px;background:var(--raised);border-radius:999px;padding:0 6px;color:var(--faint)}
+.pd-chip.active{background:var(--gdim);border-color:rgba(0,217,126,.35);color:var(--green)}
+.pd-chip.active .pd-n{background:rgba(0,217,126,.18);color:var(--green)}
+.pd-chip.od{color:var(--red)} .pd-chip.od.active{background:var(--rdim);border-color:rgba(255,95,95,.4)}
+.pd-pick{position:relative;flex-shrink:0}
+.pd-pick input{width:138px;padding:5px 9px!important;font-size:12px!important;border-radius:999px!important}
+.pend-day-h{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin:6px 2px 0}
+.pend-day-h::after{content:'';flex:1;height:1px;background:var(--border)}
+.pend-day-h .pd-n{font-weight:600;color:var(--faint)}
+.pend-day-h.od{color:var(--red)}
+
 /* ── CARD ── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
 .ch{padding:13px 17px;border-bottom:1px solid var(--border);
@@ -958,6 +975,7 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
 
     <!-- ═══ PENDIENTES PAGE ═══ -->
     <div id="page-pendientes" class="fw" style="display:none">
+      <div class="pend-days" id="pendDays"></div>
       <div class="stats" id="pendStats"></div>
       <div id="pendList"></div>
     </div>
@@ -2126,16 +2144,69 @@ function pendKey(kind,item){
   if(kind==='nm')return 'nm:'+item.id;
   return 'wd:'+item.cid+':'+item.hid;
 }
+let pendDayFilter='all'; // 'all' | 'overdue' | 'nodate' | 'YYYY-MM-DD'
+function localISO(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function shiftedISO(n){const d=new Date();d.setDate(d.getDate()+n);return localISO(d);}
+function pendDayLabel(iso){
+  if(!iso)return 'No date';
+  if(iso===shiftedISO(0))return 'Today';
+  if(iso===shiftedISO(1))return 'Tomorrow';
+  if(iso===shiftedISO(-1))return 'Yesterday';
+  const d=new Date(iso+'T00:00:00');
+  if(isNaN(d))return iso;
+  const o={weekday:'short',day:'numeric',month:'short'};
+  if(d.getFullYear()!==new Date().getFullYear())o.year='numeric';
+  return d.toLocaleDateString('en-GB',o);
+}
+function pendMatchesDay(date){
+  if(pendDayFilter==='all')return true;
+  if(pendDayFilter==='overdue')return !!date&&date<shiftedISO(0);
+  if(pendDayFilter==='nodate')return !date;
+  return date===pendDayFilter;
+}
+function renderPendDays(allVisible){
+  const today=shiftedISO(0);
+  const counts={};let overdue=0,nodate=0;
+  allVisible.forEach(({item})=>{const d=item.date||'';if(!d)nodate++;else if(d<today)overdue++;else counts[d]=(counts[d]||0)+1;});
+  const chip=(key,label,n,extra='')=>`<button class="pd-chip ${extra}${pendDayFilter===key?' active':''}" data-pday="${key}">${label}${n!=null?` <span class="pd-n">${n}</span>`:''}</button>`;
+  let html=chip('all','All',allVisible.length);
+  if(overdue)html+=chip('overdue','Overdue',overdue,'od');
+  if(!counts[today])html+=chip(today,'Today',0);
+  Object.keys(counts).sort().forEach(d=>{html+=chip(d,pendDayLabel(d),counts[d]);});
+  if(nodate)html+=chip('nodate','No date',nodate);
+  const isCustom=/^\d{4}-\d{2}-\d{2}$/.test(pendDayFilter)&&pendDayFilter!==today&&!counts[pendDayFilter];
+  if(isCustom)html+=chip(pendDayFilter,pendDayLabel(pendDayFilter),0);
+  html+=`<label class="pd-pick" title="Pick any day"><input type="date" id="pendDayPick" value="${/^\d{4}-\d{2}-\d{2}$/.test(pendDayFilter)?pendDayFilter:''}"></label>`;
+  document.getElementById('pendDays').innerHTML=html;
+}
+function pendDayHeader(list,idx){
+  const d=list[idx].item.date||'';
+  if(idx>0&&(list[idx-1].item.date||'')===d)return '';
+  const n=list.filter(x=>(x.item.date||'')===d).length;
+  const od=d&&d<shiftedISO(0);
+  return `<div class="pend-day-h${od?' od':''}">${pendDayLabel(d)}${od?' · overdue':''} <span class="pd-n">${n}</span></div>`;
+}
+document.getElementById('pendDays').addEventListener('click',e=>{
+  const c=e.target.closest('[data-pday]');if(!c)return;
+  pendDayFilter=c.dataset.pday;renderPendientes();
+});
+document.getElementById('pendDays').addEventListener('change',e=>{
+  if(e.target.id!=='pendDayPick')return;
+  pendDayFilter=e.target.value||'all';renderPendientes();
+});
 function renderPendientes(){
   const pendSBAll=D.bets.filter(b=>b.status==='pending').map(b=>({kind:'sb',item:b}));
   const pendNMAll=D.normals.filter(n=>n.status==='pending').map(n=>({kind:'nm',item:n}));
   const pendWDAll=[];
   D.casas.forEach(c=>{(c.history||[]).forEach(h=>{if(h.type==='wd'&&h.status==='pending')pendWDAll.push({kind:'wd',item:{cid:c.id,hid:h.id,casaName:c.name,amount:h.amount,date:h.date}});});});
-  const pend=[...pendSBAll,...pendNMAll,...pendWDAll].sort((a,b)=>(b.item.date||'').localeCompare(a.item.date||''));
-  const pendSB=visibleBets().filter(b=>b.status==='pending');
-  const pendNM=visibleNormals().filter(n=>n.status==='pending');
+  const dKey=x=>(x.item.date||'9999-99-99')+' '+(x.item.time||'99:99');
+  const pendAll=[...pendSBAll,...pendNMAll,...pendWDAll].sort((a,b)=>dKey(a).localeCompare(dKey(b)));
+  renderPendDays(pendAll.filter(({kind,item})=>!isHidden(pendKey(kind,item))));
+  const pend=pendAll.filter(({item})=>pendMatchesDay(item.date||''));
+  const pendSB=visibleBets().filter(b=>b.status==='pending'&&pendMatchesDay(b.date||''));
+  const pendNM=visibleNormals().filter(n=>n.status==='pending'&&pendMatchesDay(n.date||''));
   const pendWD=[];
-  visibleCasas().forEach(c=>{(c.history||[]).forEach(h=>{if(h.type==='wd'&&h.status==='pending'&&!isHidden('wd:'+c.id+':'+h.id))pendWD.push(h);});});
+  visibleCasas().forEach(c=>{(c.history||[]).forEach(h=>{if(h.type==='wd'&&h.status==='pending'&&!isHidden('wd:'+c.id+':'+h.id)&&pendMatchesDay(h.date||''))pendWD.push(h);});});
   const totalExpected=pendSB.reduce((a,x)=>a+(x.profit||0),0)+pendNM.reduce((a,x)=>a+(x.potentialWin!=null?x.potentialWin:0),0);
   const totalStake=pendSB.reduce((a,x)=>a+(x.totalStake||0),0)+pendNM.reduce((a,x)=>a+(x.stake||0),0);
   const totalMinRet=pendSB.reduce((a,x)=>a+(x.minReturn||0),0);
@@ -2147,8 +2218,8 @@ function renderPendientes(){
   const list=document.getElementById('pendList');
   const visible=pend.filter(({kind,item})=>!isHidden(pendKey(kind,item)));
   const hidden=pend.filter(({kind,item})=>isHidden(pendKey(kind,item)));
-  if(!visible.length&&!hidden.length){list.innerHTML=emptyStateHtml('You have no pending bets right now.');return;}
-  list.innerHTML=visible.map(({kind,item})=>{
+  if(!visible.length&&!hidden.length){list.innerHTML=emptyStateHtml(pendDayFilter==='all'?'You have no pending bets right now.':`No pending bets for ${pendDayFilter==='overdue'?'past days':pendDayFilter==='nodate'?'bets without a date':pendDayLabel(pendDayFilter).toLowerCase()==='today'?'today':pendDayLabel(pendDayFilter)}.`);return;}
+  list.innerHTML=visible.map(({kind,item},idx)=>pendDayHeader(visible,idx)+(()=>{
     if(kind==='wd'){
       const w=item;
       return`<div class="pend-item wd">
@@ -2205,7 +2276,7 @@ function renderPendientes(){
         ${hideBtnHtml('nm:'+n.id,true)}
       </div>
     </div>`;
-  }).join('')+hiddenPanelHtml('pend',hidden.map(({kind,item})=>({key:pendKey(kind,item),label:kind==='wd'?('Withdrawal – '+(item.casaName||'')):(item.event||'(No event)')})));
+  })()).join('')+hiddenPanelHtml('pend',hidden.map(({kind,item})=>({key:pendKey(kind,item),label:kind==='wd'?('Withdrawal – '+(item.casaName||'')):(item.event||'(No event)')})));
 }
 let cashoutTarget=null;
 function cashoutStake(t){
