@@ -62,6 +62,55 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .pb{flex:1;overflow-y:auto;padding:20px 24px;display:grid;
   grid-template-columns:1fr 345px;gap:16px;align-content:start}
 
+/* ── UNIFIED NEW BET ── */
+.ph{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.ph-new{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:1px solid rgba(0,217,126,.35);
+  background:var(--gdim);color:var(--green);font-size:12.5px;font-weight:650;font-family:inherit;cursor:pointer;white-space:nowrap;transition:background var(--t),border-color var(--t)}
+.ph-new:hover{background:rgba(0,217,126,.2);border-color:var(--green)}
+.ph-new svg{width:14px;height:14px}
+.nbt-wrap{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.nbt{--ac:var(--green);--acd:var(--gdim);display:flex;align-items:center;gap:11px;padding:11px 13px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--r);cursor:pointer;text-align:left;color:var(--text);font-family:inherit;
+  transition:border-color var(--t),background var(--t);min-width:0;position:relative}
+.nbt[data-bt="Normal"]{--ac:var(--blue);--acd:var(--bdim)}
+.nbt[data-bt="Freebet"]{--ac:var(--yellow);--acd:var(--ydim)}
+.nbt[data-bt="Combi"]{--ac:var(--purple);--acd:var(--pdim)}
+.nbt:hover{border-color:var(--ac)}
+.nbt-ic{width:34px;height:34px;border-radius:9px;background:var(--raised);display:grid;place-items:center;flex-shrink:0;color:var(--muted);transition:background var(--t),color var(--t)}
+.nbt-ic svg{width:18px;height:18px}
+.nbt-tx{min-width:0;display:flex;flex-direction:column}
+.nbt-t{font-size:13.5px;font-weight:650;line-height:1.25}
+.nbt-d{font-size:11px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nbt.active{border-color:var(--ac);background:var(--acd)}
+.nbt.active .nbt-ic{background:var(--ac);color:var(--bg)}
+.nbt.active .nbt-t{color:var(--ac)}
+.nf-grid{display:flex;flex-direction:column;gap:12px}
+.nf-sels{display:flex;flex-direction:column;gap:7px}
+.nf-sel{display:grid;grid-template-columns:1fr 90px 30px;gap:7px;align-items:center}
+.nf-sel .bd2{width:30px;height:30px}
+.nf-hint{font-size:11.5px;color:var(--faint)}
+.nf-combo{display:flex;justify-content:space-between;align-items:center;background:var(--raised);border-radius:7px;padding:8px 11px;font-size:12.5px}
+.nf-combo b{font-family:var(--mono);color:var(--purple)}
+.nf-hero{--ac:var(--blue)}
+.nf-hero.fb{--ac:var(--yellow)} .nf-hero.cb{--ac:var(--purple)}
+.nf-hero .nf-kind{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:650;letter-spacing:.3px;text-transform:uppercase;color:var(--ac);margin-bottom:10px}
+.nf-actions{display:flex;gap:9px}
+.nf-actions .btn-s{justify-content:center}
+.seg{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.seg-b{display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);
+  color:var(--muted);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all var(--t)}
+.seg-b:hover{color:var(--text)}
+.seg-b.active{background:var(--gdim);border-color:rgba(0,217,126,.35);color:var(--green)}
+.seg-b.active .nb{background:var(--gdim);border-color:rgba(0,217,126,.3);color:var(--green)}
+.seg-b .nb{margin-left:2px}
+.seg .ph-new{margin-left:auto}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:var(--raised);border:1px solid var(--border);
+  border-left:3px solid var(--green);color:var(--text);padding:10px 14px;border-radius:9px;font-size:13px;z-index:500;opacity:0;pointer-events:none;
+  transition:opacity .2s ease,transform .2s ease;display:flex;align-items:center;gap:12px;box-shadow:0 8px 30px rgba(0,0,0,.4);max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.toast button{background:none;border:none;color:var(--green);font-weight:650;cursor:pointer;font-family:inherit;font-size:12.5px;padding:0}
+@media(max-width:900px){.nbt-wrap{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
 /* ── CARD ── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
 .ch{padding:13px 17px;border-bottom:1px solid var(--border);
@@ -493,6 +542,11 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
 @media(max-width:900px){
   .pb{grid-template-columns:1fr;padding:13px}
   .rp2{order:-1}
+  .nbt-wrap{order:-2}
+  .nbt-d{display:none}
+  .nbt{padding:9px 10px;gap:8px}
+  .nbt-ic{width:28px;height:28px}
+  .ph-new span{display:none}
   .stats{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:600px){
@@ -519,6 +573,13 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(61,
   .cal-amt{font-size:8px}
   .pend-item{flex-direction:column;align-items:stretch}
   .pend-right{justify-content:space-between}
+  .pend-right{flex-wrap:wrap;justify-content:flex-start}
+  .pend-right .pend-preview{flex-basis:100%}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sc{min-width:0}
+  .sc .sv2{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #nfResult{order:1}
+  #nfHelp{display:none}
   .perf-head{flex-direction:column}
   .perf-exp-boxes{width:100%}
   .perf-exp-box{flex:1}
@@ -706,18 +767,13 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
   </div>
   <nav class="nav">
     <div class="ni active" data-page="calc">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
-      Calculator
-    </div>
-    <div class="ni" data-page="surebets">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-      My surebets
-      <span class="nb" id="sbCount">0</span>
-    </div>
-    <div class="ni" data-page="normales">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-      Normal &amp; freebets
-      <span class="nb" id="nbCount">0</span>
+      New bet
+    </div>
+    <div class="ni" data-page="bets">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      My bets
+      <span class="nb" id="betsCount">0</span>
     </div>
     <div class="ni" data-page="pendientes">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -759,16 +815,50 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
 <!-- ══ MAIN ══ -->
 <div class="main">
   <div class="ph">
-    <div class="ph-title" id="pgTitle">Calculator</div>
-    <div class="ph-sub" id="pgSub">Calculate stakes and surebets instantly</div>
+    <div style="min-width:0">
+      <div class="ph-title" id="pgTitle">New bet</div>
+      <div class="ph-sub" id="pgSub">Surebets, normal bets, freebets and combis — all from one place</div>
+    </div>
+    <button class="ph-new" id="phNewBet" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>New bet</span></button>
   </div>
 
   <div class="pb" id="pgBody">
 
     <!-- ═══ CALC PAGE ═══ -->
     <div id="page-calc" style="display:contents">
+      <div class="nbt-wrap" id="nbTypes">
+        <button class="nbt active" data-bt="Surebet"><span class="nbt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span><span class="nbt-tx"><span class="nbt-t">Surebet</span><span class="nbt-d">Arbitrage across bookmakers</span></span></button>
+        <button class="nbt" data-bt="Normal"><span class="nbt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg></span><span class="nbt-tx"><span class="nbt-t">Normal</span><span class="nbt-d">Single bet, own money</span></span></button>
+        <button class="nbt" data-bt="Freebet"><span class="nbt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></span><span class="nbt-tx"><span class="nbt-t">Freebet</span><span class="nbt-d">Bonus bet, stake not returned</span></span></button>
+        <button class="nbt" data-bt="Combi"><span class="nbt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span><span class="nbt-tx"><span class="nbt-t">Combi</span><span class="nbt-d">Accumulator of selections</span></span></button>
+      </div>
       <div style="display:flex;flex-direction:column;gap:13px">
-        <div class="card">
+        <div class="card" id="nfCard" style="display:none">
+          <div class="ch"><span class="ct" id="nfTitle">Bet details</span><span style="font-size:11.5px;color:var(--faint)" id="nfHelp"></span></div>
+          <div class="cb nf-grid">
+            <div><label class="fl">Event</label><input type="text" id="nf-event" placeholder="Spain vs Portugal" autocomplete="off"></div>
+            <div class="two-col">
+              <div><label class="fl">Bookmaker</label><input type="text" id="nf-house" list="bookmakerList" placeholder="Bet365, Bwin, Winamax…" autocomplete="off"></div>
+              <div><label class="fl">Category (optional)</label><select id="nf-category"><option value="">No category</option></select></div>
+            </div>
+            <div id="nf-sels-wrap" style="display:none">
+              <label class="fl">Selections</label>
+              <div class="nf-sels" id="nf-sels"></div>
+              <button class="ba" id="nf-addsel" style="margin-top:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add selection</button>
+              <div class="nf-combo" id="nf-combo" style="margin-top:8px;display:none"><span>Combined odds</span><b id="nf-combo-odd">–</b></div>
+            </div>
+            <div class="two-col">
+              <div><label class="fl" id="nf-odd-label">Odds</label><input type="number" id="nf-odd" placeholder="1.80" step="0.01" min="1.01"></div>
+              <div><label class="fl" id="nf-stake-label">Amount staked (€)</label><input type="number" id="nf-stake" placeholder="20" step="0.01" min="0"></div>
+            </div>
+            <div class="two-col">
+              <div><label class="fl">Kick-off date</label><input type="date" id="nf-date"></div>
+              <div><label class="fl">Kick-off time</label><input type="time" id="nf-time"></div>
+            </div>
+            <div><label class="fl">Notes (optional)</label><input type="text" id="nf-notes" placeholder="Boosted odds, promo…" autocomplete="off"></div>
+          </div>
+        </div>
+        <div class="card" id="sbCalcCard">
           <div class="ch"><span class="ct">Odds &amp; stake split</span></div>
           <div class="cb">
             <div style="margin-bottom:16px">
@@ -807,10 +897,18 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
         </div>
       </div>
       <div class="rp2" id="resultPanel"></div>
+      <div class="rp2" id="nfResult" style="display:none"></div>
     </div>
 
+    <!-- ═══ MY BETS (surebets + normal/freebet/combi) ═══ -->
+    <div id="page-bets" class="fw" style="display:none">
+      <div class="seg" id="betsTabs">
+        <button class="seg-b active" data-bview="surebets"><svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Surebets <span class="nb" id="sbCount">0</span></button>
+        <button class="seg-b" data-bview="normales"><svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>Normal, freebets &amp; combis <span class="nb" id="nbCount">0</span></button>
+        <button class="ph-new" id="betsNewBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>New bet</span></button>
+      </div>
     <!-- ═══ SUREBETS PAGE ═══ -->
-    <div id="page-surebets" class="fw" style="display:none">
+    <div id="page-surebets" class="fw">
       <div class="stats" id="sbStats"></div>
       <div class="tb">
         <input type="text" id="sbSearch" placeholder="Search event or bookmaker…">
@@ -828,10 +926,6 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
       <div class="stats" id="nbStats"></div>
       <div class="tb">
         <input type="text" id="nbSearch" placeholder="Search event…">
-        <button class="btn-s" id="nbAddBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add
-        </button>
         <button class="btn-s" id="nbExport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
         <button class="btn-s" id="nbImport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import</button>
         <input type="file" id="nbFile" accept=".json" style="display:none">
@@ -839,6 +933,7 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
       </div>
       <div id="nbList"></div>
     </div>
+    </div><!-- /page-bets -->
 
     <!-- ═══ PROFIT PAGE ═══ -->
     <div id="page-profit" class="fw" style="display:none">
@@ -1071,10 +1166,12 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
 </div>
 </div>
 
-<!-- ══ ADD NORMAL/FREEBET MODAL ══ -->
+<div class="toast" id="toast"><span id="toastMsg"></span><button id="toastAct"></button></div>
+
+<!-- ══ EDIT NORMAL/FREEBET/COMBI MODAL ══ -->
 <div id="addModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
   <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:440px;margin:16px">
-    <div style="font-size:15px;font-weight:700;margin-bottom:16px" id="addModalTitle">Add normal bet / freebet</div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px" id="addModalTitle">Edit bet</div>
     <div style="display:flex;flex-direction:column;gap:11px">
       <div><label class="fl">Event</label><input type="text" id="m-event" placeholder="Spain vs Portugal"></div>
       <div><label class="fl">Bookmaker</label><input type="text" id="m-house" list="bookmakerList" placeholder="Bet365, Bwin, Winamax…" autocomplete="off"></div>
@@ -1425,7 +1522,7 @@ function openSbRegModal(){
   renderSbrLegs(res.valid.map(o=>({house:o.house,result:o.result,odd:o.odd})));
   document.getElementById('sbr-start').value=new Date().toISOString().slice(0,10);
   document.getElementById('sbr-time').value='';
-  fillCategorySelect(document.getElementById('sbr-category'),null);
+  fillCategorySelect(document.getElementById('sbr-category'),newBetCat);
   document.getElementById('sbRegModal').style.display='flex';
 }
 function openSbEditModal(id){
@@ -1455,7 +1552,8 @@ function registerBet(){
     legs:res.valid.map((o,i)=>({house:houses[i]||o.house||`Bookmaker ${i+1}`,result:o.result||`Outcome ${i+1}`,odd:o.odd,stake:res.stakes[i],minReturn:res.returns[i]}))};
   D.bets.unshift(bet);save();updateBadges();renderPendientes();
   document.getElementById('sbRegModal').style.display='none';
-  alert(`✓ Surebet registered in pending: ${ev}\nExpected profit: +${fmt(res.profit)} €`);
+  newBetCat=null;
+  toast(`Surebet saved to pending · ${res.profit>=0?'+':''}${fmt(res.profit)} €`,'View pending',()=>navTo('pendientes'));
 }
 document.getElementById('sbr-cancel').addEventListener('click',()=>{document.getElementById('sbRegModal').style.display='none';editingSbId=null;});
 document.getElementById('sbr-save').addEventListener('click',()=>{
@@ -1564,7 +1662,7 @@ function renderNormals(filter=''){
     const isPending=n.status==='pending';
     const sLabel={pending:'Pending',won:'Won',lost:'Lost',anulada:'Void'}[n.status]||'';
     const sCls={pending:'sp',won:'sw',lost:'sl3',anulada:'sa'}[n.status]||'';
-    const oddStakeLine=n.odd?`<div class="ni2-note">Odds ${fmt(n.odd)} · Staked ${fmt(n.stake||0)} €</div>`:'';
+    const oddStakeLine=n.odd?`<div class="ni2-note">Odds ${fmt(n.odd)} · Staked ${fmt(n.stake||0)} €${n.selections&&n.selections.length?' · '+n.selections.map(x=>esc(x.name||'?')+' @ '+fmt(x.odd||0)).join(' + '):''}</div>`:'';
     let pnlHtml;
     if(isPending){
       const win=n.potentialWin!=null?n.potentialWin:+(((n.stake||0)*((n.odd||1)-1)).toFixed(2));
@@ -1935,11 +2033,15 @@ function updateNormalPreview(){
 }
 ['m-type','m-odd','m-stake'].forEach(id=>document.getElementById(id).addEventListener('input',updateNormalPreview));
 function openNormalModal(id){
+  if(!id){goNewBet(null,presetCategoryForNewBet);presetCategoryForNewBet=null;return;} // creation lives in the unified New bet page
   editingNormalId=id||null;
   const n=id?D.normals.find(x=>x.id===id):null;
   document.getElementById('addModalTitle').textContent=n?'Edit bet':'Add normal bet / freebet';
   document.getElementById('m-save').textContent=n?'Save changes':'Save to pending';
   document.getElementById('m-event').value=n?(n.event||''):'';
+  refreshBookmakerList();
+  document.getElementById('m-house').value=n?(n.house||''):'';
+  document.getElementById('m-time').value=n?(n.time||''):'';
   document.getElementById('m-type').value=n?(n.type||'Normal'):'Normal';
   document.getElementById('m-odd').value=(n&&n.odd!=null)?n.odd:'';
   document.getElementById('m-stake').value=(n&&n.stake!=null)?n.stake:'';
@@ -1950,7 +2052,6 @@ function openNormalModal(id){
   updateNormalPreview();
   modal.style.display='flex';
 }
-document.getElementById('nbAddBtn').addEventListener('click',()=>openNormalModal());
 document.getElementById('m-cancel').addEventListener('click',()=>{modal.style.display='none';editingNormalId=null;});
 document.getElementById('m-save').addEventListener('click',()=>{
   const ev=document.getElementById('m-event').value.trim();
@@ -1970,6 +2071,8 @@ document.getElementById('m-save').addEventListener('click',()=>{
         n.potentialLoss=n.type==='Freebet'?0:-n.stake;
       }
       n.date=document.getElementById('m-date').value||n.date||todayISO();
+      n.time=document.getElementById('m-time').value||'';
+      n.house=document.getElementById('m-house').value.trim();
       n.notes=document.getElementById('m-notes').value.trim();
       n.categoryId=categoryId;
       if(n.status==='won'||n.status==='lost')resolveNormal(n,n.status);
@@ -3342,26 +3445,183 @@ function renderPerfil(){
 }
 
 // ══════════════════════════════════════════
+//  UNIFIED NEW BET  (Surebet · Normal · Freebet · Combi)
+// ══════════════════════════════════════════
+let newBetType='Surebet', newBetCat=null, nfSels=[];
+let toastTimer=null;
+function toast(msg,actLabel,actFn){
+  const t=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  const b=document.getElementById('toastAct');
+  if(actLabel){b.style.display='';b.textContent=actLabel;b.onclick=()=>{t.classList.remove('show');actFn&&actFn();};}
+  else b.style.display='none';
+  t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),4200);
+}
+const NF_META={
+  Normal:{title:'Normal bet',help:'Your own money on a single outcome',stake:'Amount staked (€)',cls:''},
+  Freebet:{title:'Freebet',help:'Stake is not returned — only net winnings count',stake:'Freebet amount (€)',cls:'fb'},
+  Combi:{title:'Combi / accumulator',help:'Add selections or type the total odds',stake:'Amount staked (€)',cls:'cb'}
+};
+function setBetType(type){
+  newBetType=type||newBetType;
+  document.querySelectorAll('#nbTypes .nbt').forEach(b=>b.classList.toggle('active',b.dataset.bt===newBetType));
+  const isSb=newBetType==='Surebet';
+  document.getElementById('sbCalcCard').style.display=isSb?'':'none';
+  document.getElementById('resultPanel').style.display=isSb?'':'none';
+  document.getElementById('nfCard').style.display=isSb?'none':'';
+  document.getElementById('nfResult').style.display=isSb?'none':'';
+  if(isSb){render();return;}
+  const m=NF_META[newBetType];
+  document.getElementById('nfTitle').textContent=m.title;
+  document.getElementById('nfHelp').textContent=m.help;
+  document.getElementById('nf-stake-label').textContent=m.stake;
+  document.getElementById('nf-sels-wrap').style.display=newBetType==='Combi'?'':'none';
+  if(newBetType==='Combi'&&!nfSels.length){nfSels=[{name:'',odd:''},{name:'',odd:''}];}
+  refreshBookmakerList();
+  const catSel=document.getElementById('nf-category');
+  const keepCat=newBetCat!=null?newBetCat:(catSel.value?+catSel.value:null);
+  fillCategorySelect(catSel,keepCat);
+  if(!document.getElementById('nf-date').value)document.getElementById('nf-date').value=todayISO();
+  renderNfSels();renderNfResult();
+}
+function nfComboOdd(){
+  const v=nfSels.map(x=>parseFloat(x.odd)).filter(o=>o>1);
+  return v.length?v.reduce((a,o)=>a*o,1):null;
+}
+function renderNfSels(){
+  if(newBetType!=='Combi')return;
+  document.getElementById('nf-sels').innerHTML=nfSels.map((x,i)=>`<div class="nf-sel"><input type="text" data-seln="${i}" placeholder="Selection ${i+1}" value="${esc(x.name||'')}" autocomplete="off"><input type="number" step="0.01" min="1.01" data-selo="${i}" placeholder="Odds" value="${x.odd!==''&&x.odd!=null?x.odd:''}"><button class="bd2" data-seldel="${i}" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('');
+  syncComboOdd();
+}
+function syncComboOdd(){
+  const co=nfComboOdd(),box=document.getElementById('nf-combo'),oddEl=document.getElementById('nf-odd');
+  if(newBetType==='Combi'&&co){
+    box.style.display='flex';document.getElementById('nf-combo-odd').textContent=fmt(co);
+    oddEl.value=+co.toFixed(3);oddEl.readOnly=true;document.getElementById('nf-odd-label').textContent='Total odds (auto)';
+  }else{
+    box.style.display='none';oddEl.readOnly=false;
+    document.getElementById('nf-odd-label').textContent=newBetType==='Combi'?'Total odds':'Odds';
+  }
+}
+function renderNfResult(){
+  if(newBetType==='Surebet')return;
+  const odd=parseFloat(document.getElementById('nf-odd').value)||0;
+  const stake=parseFloat(document.getElementById('nf-stake').value)||0;
+  const isFb=newBetType==='Freebet';
+  const ok=odd>1&&stake>0;
+  const win=ok?stake*(odd-1):0, loss=isFb?0:-stake, ret=ok?(isFb?win:stake*odd):0;
+  const prob=odd>1?100/odd:0;
+  const m=NF_META[newBetType];
+  const extra=isFb
+    ?`<div class="sr"><span class="sl">Freebet conversion if it wins</span><span class="sv">${ok?fmt((odd-1)*100):'–'} %</span></div>
+      <div class="sr"><span class="sl">Expected value (fair odds)</span><span class="sv pos">${ok?'+'+fmt(win/odd):'–'} €</span></div>`
+    :`<div class="sr"><span class="sl">Total return if it wins</span><span class="sv">${ok?fmt(ret):'–'} €</span></div>
+      <div class="sr"><span class="sl">ROI if it wins</span><span class="sv pos">${ok?'+'+fmt((odd-1)*100):'–'} %</span></div>`;
+  document.getElementById('nfResult').innerHTML=`
+    <div class="card ph2 nf-hero ${m.cls}">
+      <div class="nf-kind">${typePill(newBetType)}</div>
+      <div class="pp ${ok?'pos':''}">${ok?'+'+fmt(win):fmt(0)} €</div>
+      <div class="ps">${ok?'Net profit if it wins':'Enter odds and stake to see the result'}</div>
+    </div>
+    <div class="card">
+      <div class="sr"><span class="sl">${isFb?'Freebet value':'Stake'}</span><span class="sv">${fmt(stake)} €</span></div>
+      <div class="sr"><span class="sl">Odds</span><span class="sv">${odd>1?fmt(odd):'–'}</span></div>
+      <div class="sr"><span class="sl">Implied probability</span><span class="sv">${odd>1?fmt(prob):'–'} %</span></div>
+      ${extra}
+      <div class="sr"><span class="sl">If it loses</span><span class="sv ${loss<0?'neg':''}">${fmt(loss)} €</span></div>
+    </div>
+    <button class="btn-reg" id="nfSave" ${ok?'':'disabled'}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>Save to pending</button>
+    <div class="nf-actions"><button class="btn-s" id="nfReset" style="flex:1">Clear form</button></div>`;
+  document.getElementById('nfSave').addEventListener('click',saveNewNormal);
+  document.getElementById('nfReset').addEventListener('click',resetNfForm);
+}
+function resetNfForm(){
+  ['nf-event','nf-odd','nf-stake','nf-notes','nf-time'].forEach(id=>document.getElementById(id).value='');
+  nfSels=newBetType==='Combi'?[{name:'',odd:''},{name:'',odd:''}]:[];
+  renderNfSels();syncComboOdd();renderNfResult();
+}
+function saveNewNormal(){
+  const ev=document.getElementById('nf-event').value.trim();
+  const odd=parseFloat(document.getElementById('nf-odd').value);
+  const stake=parseFloat(document.getElementById('nf-stake').value);
+  if(!ev){alert('Please enter the event.');document.getElementById('nf-event').focus();return;}
+  if(!(odd>1)){alert('Enter a valid odds value (greater than 1).');return;}
+  if(!(stake>0)){alert('Enter the amount staked.');return;}
+  const type=newBetType;
+  const catVal=document.getElementById('nf-category').value;
+  const sels=type==='Combi'?nfSels.filter(x=>(x.name||'').trim()||parseFloat(x.odd)>1).map(x=>({name:(x.name||'').trim(),odd:parseFloat(x.odd)||null})):[];
+  const bet={id:Date.now(),event:ev,type,odd:+odd.toFixed(3),stake,
+    house:document.getElementById('nf-house').value.trim(),
+    potentialWin:+(stake*(odd-1)).toFixed(2),potentialLoss:type==='Freebet'?0:-stake,
+    status:'pending',
+    date:document.getElementById('nf-date').value||todayISO(),
+    time:document.getElementById('nf-time').value||'',
+    resolveDate:'',
+    notes:document.getElementById('nf-notes').value.trim(),
+    categoryId:catVal?+catVal:null};
+  if(sels.length)bet.selections=sels;
+  D.normals.unshift(bet);
+  save();updateBadges();renderPendientes();renderNormals(document.getElementById('nbSearch').value);renderProfit();
+  newBetCat=null;
+  resetNfForm();
+  toast(`${type} saved to pending · +${fmt(bet.potentialWin)} € if it wins`,'View pending',()=>navTo('pendientes'));
+}
+// open the New bet page (optionally on a type and with a category preselected)
+function goNewBet(type,catId){
+  if(catId!=null)newBetCat=catId;
+  navTo('calc');
+  setBetType(type||newBetType);
+}
+document.getElementById('nbTypes').addEventListener('click',e=>{
+  const b=e.target.closest('.nbt');if(!b)return;setBetType(b.dataset.bt);
+});
+['nf-odd','nf-stake'].forEach(id=>document.getElementById(id).addEventListener('input',renderNfResult));
+document.getElementById('nf-addsel').addEventListener('click',()=>{nfSels.push({name:'',odd:''});renderNfSels();renderNfResult();
+  const inp=document.querySelector(`#nf-sels [data-seln="${nfSels.length-1}"]`);inp&&inp.focus();});
+document.getElementById('nf-sels').addEventListener('input',e=>{
+  const n=e.target.dataset.seln,o=e.target.dataset.selo;
+  if(n!=null)nfSels[+n].name=e.target.value;
+  if(o!=null){nfSels[+o].odd=e.target.value;syncComboOdd();renderNfResult();}
+});
+document.getElementById('nf-sels').addEventListener('click',e=>{
+  const d=e.target.closest('[data-seldel]');if(!d)return;
+  nfSels.splice(+d.dataset.seldel,1);renderNfSels();renderNfResult();
+});
+document.getElementById('phNewBet').addEventListener('click',()=>goNewBet());
+document.getElementById('betsNewBtn').addEventListener('click',()=>{
+  const v=document.querySelector('#betsTabs .seg-b.active')?.dataset.bview;
+  goNewBet(v==='surebets'?'Surebet':(newBetType==='Surebet'?'Normal':newBetType));
+});
+// My bets sub-tabs
+function setBetsView(v){
+  document.querySelectorAll('#betsTabs .seg-b').forEach(b=>b.classList.toggle('active',b.dataset.bview===v));
+  document.getElementById('page-surebets').style.display=v==='surebets'?'flex':'none';
+  document.getElementById('page-normales').style.display=v==='normales'?'flex':'none';
+  if(v==='surebets')renderSurebets(document.getElementById('sbSearch').value);else renderNormals(document.getElementById('nbSearch').value);
+}
+document.getElementById('betsTabs').addEventListener('click',e=>{const b=e.target.closest('.seg-b');if(b)setBetsView(b.dataset.bview);});
+
+// ══════════════════════════════════════════
 //  NAV
 // ══════════════════════════════════════════
 const pgMeta={
-  calc:{title:'Calculadora',sub:'Calcula stakes y surebets al instante'},
-  surebets:{title:'My surebets',sub:'Full history with minimum return'},
-  normales:{title:'Normal & Freebets',sub:'Standard bets and freebets by type and date'},
+  calc:{title:'New bet',sub:'Surebets, normal bets, freebets and combis — all from one place'},
+  bets:{title:'My bets',sub:'Every bet you have registered, by type'},
   poker:{title:'Poker',sub:'Your poker results: just + or − each session'},
-  profit:{title:'Profit',sub:'Rendimiento por mes y total acumulado'},
-  pendientes:{title:'Pendientes',sub:'Apuestas a la espera de resultado'},
-  casas:{title:'Casas de apuestas',sub:'Casas registradas y dinero depositado en cada una'},
+  profit:{title:'Profit',sub:'Monthly performance and running total'},
+  pendientes:{title:'Pending',sub:'Bets waiting for a result'},
+  casas:{title:'Bookmakers',sub:'Registered bookmakers and the money in each one'},
   notas:{title:'Notes',sub:'Your notes organized into folders'},
   categorias:{title:'Categories',sub:'Organize your bets into your own categories'},
   perfil:{title:'Profile',sub:'Your personal stats and performance'},
-  calculadoras:{title:'Calculadoras',sub:'Kelly, No-Vig, Hedge, Free Bet y Hold'},
+  calculadoras:{title:'Calculators',sub:'Kelly, No-Vig, Hedge, Free Bet and Hold'},
 };
-const ALL_PAGES=['calc','surebets','normales','profit','pendientes','casas','poker','notas','categorias','perfil','calculadoras'];
-document.querySelectorAll('.ni[data-page]').forEach(item=>{
-  item.addEventListener('click',()=>{
-    const page=item.dataset.page;
-    document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));item.classList.add('active');
+const ALL_PAGES=['calc','bets','profit','pendientes','casas','poker','notas','categorias','perfil','calculadoras'];
+function navTo(page){
+    if(page==='surebets'||page==='normales'){const v=page;page='bets';setTimeout(()=>setBetsView(v));}
+    const item=document.querySelector(`.ni[data-page="${page}"]`);
+    document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));if(item)item.classList.add('active');
+    document.getElementById('phNewBet').style.display=(page==='calc'||page==='bets')?'none':'';
     ALL_PAGES.forEach(p=>{
       const el=document.getElementById('page-'+p);if(el)el.style.display='none';
     });
@@ -3369,9 +3629,8 @@ document.querySelectorAll('.ni[data-page]').forEach(item=>{
     if(target)target.style.display=page==='calc'?'contents':'flex';
     document.getElementById('pgTitle').textContent=pgMeta[page].title;
     document.getElementById('pgSub').textContent=pgMeta[page].sub;
-    if(page==='calc')render();
-    else if(page==='surebets')renderSurebets();
-    else if(page==='normales')renderNormals();
+    if(page==='calc')setBetType(newBetType);
+    else if(page==='bets'){renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);}
     else if(page==='profit')renderProfit();
     else if(page==='pendientes')renderPendientes();
     else if(page==='casas')renderCasas();
@@ -3381,12 +3640,13 @@ document.querySelectorAll('.ni[data-page]').forEach(item=>{
     else if(page==='perfil')renderPerfil();
     else if(page==='calculadoras')renderCalcTab(document.querySelector('.calc-tab.active')?.dataset.calc||'kelly');
     if(window.innerWidth<600)closeSB();
-  });
-});
+}
+document.querySelectorAll('.ni[data-page]').forEach(item=>item.addEventListener('click',()=>navTo(item.dataset.page)));
 
 function updateBadges(){
   document.getElementById('sbCount').textContent=visibleBets().length;
   document.getElementById('nbCount').textContent=visibleNormals().length;
+  document.getElementById('betsCount').textContent=visibleBets().length+visibleNormals().length;
   let pendWDCount=0;
   visibleCasas().forEach(c=>{(c.history||[]).forEach(h=>{if(h.type==='wd'&&h.status==='pending'&&!isHidden('wd:'+c.id+':'+h.id))pendWDCount++;});});
   document.getElementById('pendCount').textContent=visibleBets().filter(b=>b.status==='pending').length+visibleNormals().filter(n=>n.status==='pending').length+pendWDCount;
@@ -3397,9 +3657,8 @@ function updateBadges(){
 // which can be triggered from several different pages.
 function rerenderActivePage(){
   const activePage=document.querySelector('.ni.active')?.dataset.page||'calc';
-  if(activePage==='calc')render();
-  else if(activePage==='surebets')renderSurebets(document.getElementById('sbSearch')?.value||'');
-  else if(activePage==='normales')renderNormals(document.getElementById('nbSearch')?.value||'');
+  if(activePage==='calc'){if(newBetType==='Surebet')render();else renderNfResult();}
+  else if(activePage==='bets'){renderSurebets(document.getElementById('sbSearch')?.value||'');renderNormals(document.getElementById('nbSearch')?.value||'');}
   else if(activePage==='profit')renderProfit();
   else if(activePage==='pendientes')renderPendientes();
   else if(activePage==='casas')renderCasas(document.getElementById('casasSearch')?.value||'');
@@ -3553,9 +3812,8 @@ function emailToPath(email) {
   function refreshCurrentView() {
     updateBadges();
     const activePage = document.querySelector('.ni.active')?.dataset.page || 'calc';
-    if (activePage === 'calc') render();
-    else if (activePage === 'surebets') renderSurebets(document.getElementById('sbSearch')?.value || '');
-    else if (activePage === 'normales') renderNormals(document.getElementById('nbSearch')?.value || '');
+    if (activePage === 'calc') { if (newBetType === 'Surebet') render(); else renderNfResult(); }
+    else if (activePage === 'bets') { renderSurebets(document.getElementById('sbSearch')?.value || ''); renderNormals(document.getElementById('nbSearch')?.value || ''); }
     else if (activePage === 'profit') renderProfit();
     else if (activePage === 'pendientes') renderPendientes();
     else if (activePage === 'casas') renderCasas(document.getElementById('casasSearch')?.value || '');
