@@ -2,8 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Surebet Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Surebets</title>
+<meta name="theme-color" content="#0E1118">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#0d1117;--surface:#161b22;--raised:#1c2330;--inp:#1a2233;
@@ -748,14 +752,514 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
   .bk-actions{padding:8px 12px}
   .sbr-leg{grid-template-columns:1fr}
 }
+
+/* ═════════════════════════════════════════════════════════════
+   DESIGN SYSTEM v2 — "Matchday ledger"
+   Night ground · one floodlight accent for actions · money colours
+   only for money · scoreboard numerals (Archivo, condensed width)
+   ═════════════════════════════════════════════════════════════ */
+:root{
+  --bg:#0E1118;--surface:#151A23;--raised:#1C222D;--inp:#10141C;
+  --border:#232A36;--border2:#303847;--focus:#8E95FF;
+  --accent:#8E95FF;--accent-hi:#A7ACFF;--adim:rgba(142,149,255,.13);--aline:rgba(142,149,255,.4);--aink:#0B0D14;
+  --green:#3DD39B;--gdim:rgba(61,211,155,.12);--gglow:rgba(61,211,155,.16);
+  --red:#FF6B76;--rdim:rgba(255,107,118,.11);
+  --yellow:#F2B544;--ydim:rgba(242,181,68,.12);
+  --blue:#3CCBE0;--bdim:rgba(60,203,224,.12);
+  --cyan:#3CCBE0;--cdim:rgba(60,203,224,.12);
+  --purple:#C895FF;--pdim:rgba(200,149,255,.13);
+  --text:#E9EDF4;--muted:#97A1B4;--faint:#687286;
+  --r:14px;--r-sm:10px;--sw:236px;
+  --font:'Archivo',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --t:.16s cubic-bezier(.2,.7,.3,1);
+  --shadow-lg:0 24px 60px -12px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03);
+}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--font);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;background:var(--bg)}
+::selection{background:var(--adim)}
+*{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px;border:3px solid var(--bg)}
+::-webkit-scrollbar-track{background:transparent}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none}
+
+/* ── Scoreboard numerals ── */
+.sv,.sv2,.pp,.bkst,.bkm,.bkr2,.pp2,.lo,.lk,.lm,.bfr,.ni2-pnl,.mc-total,.mc-val,.th-val,.th-sub-val,.statbox-val,
+.profit-mes-val,.perf-total-val,.perf-exp-val,.pend-preview,.pend-profit,.pl-nums,.bk-bal-val,.bk-hist-amt,.cal-amt,
+.cal-month-total,.oi,.msi,.ii,.real-profit-val,.nf-combo b,.stats2 .val,.sv-combo,.tr-count,.nb,.pd-n,.rpb,.nfc,.pl-profit{
+  font-family:var(--font);font-stretch:86%;font-variant-numeric:tabular-nums;letter-spacing:0}
+.pp,.th-val,.sv2,.profit-mes-val,.perf-total-val,.bk-bal-val,.ni2-pnl,.statbox-val,.mc-total{font-stretch:74%;letter-spacing:-.005em}
+
+/* ── Quiet, sentence-case labels ── */
+.fl,.cl,.sl2,.statbox-label,.th-label,.th-sub-label,.perf-total-label,.perf-exp-label,.profit-mes-label,.bk-chip-label,
+.notas-folders-head,.clv-head,.pend-day-h,.badge,.nf-hero .nf-kind,.cal-dow,.sb2,.type-pill,.type-badge-kind{text-transform:none;letter-spacing:0}
+
+/* ═════════ SHELL ═════════ */
+.app{height:100vh;height:100dvh}
+.sidebar{width:var(--sw);background:var(--bg);border-right:1px solid var(--border);padding:0}
+.sb-brand{display:flex;align-items:center;gap:11px;padding:20px 20px 14px}
+.sb-mark{width:32px;height:32px;flex-shrink:0;display:block}
+.sb-word{font-size:17px;font-weight:750;font-stretch:90%;letter-spacing:-.01em;line-height:1.1}
+.sb-word small{display:block;font-size:11.5px;font-weight:500;color:var(--faint);font-stretch:100%;letter-spacing:0;margin-top:2px}
+.nav{padding:4px 12px 12px;flex:1}
+.nav-group{font-size:11.5px;font-weight:600;color:var(--faint);padding:18px 10px 6px}
+.ni{gap:11px;padding:8px 10px;border-radius:10px;font-size:13.5px;font-weight:520;color:var(--muted);margin-bottom:1px}
+.ni svg{width:17px;height:17px;opacity:.8;transition:color var(--t),opacity var(--t)}
+.ni:hover{background:var(--surface);color:var(--text)}
+.ni:hover svg{opacity:1}
+.ni.active{background:var(--surface);color:var(--text);box-shadow:inset 0 0 0 1px var(--border)}
+.ni.active svg{color:var(--accent);opacity:1}
+.ni.active::before{left:-12px;top:9px;bottom:9px;width:3px;border-radius:0 3px 3px 0;background:var(--accent)}
+.nb{background:transparent;border:none;color:var(--faint);font-size:11.5px;font-weight:600;padding:1px 7px;min-width:22px;border-radius:99px}
+.ni.active .nb{background:var(--adim);color:var(--accent);border:none}
+.ni.ni-primary{background:var(--accent);color:var(--aink);font-weight:650;padding:10px 12px;margin:2px 0 4px;box-shadow:none}
+.ni.ni-primary svg{color:var(--aink);opacity:1}
+.ni.ni-primary:hover{background:var(--accent-hi);color:var(--aink)}
+.ni.ni-primary.active::before{display:none}
+.ni.ni-primary.active{box-shadow:0 0 0 3px var(--adim)}
+.sb-account{margin:0 12px 14px;padding:10px 11px;border-radius:12px;background:var(--surface);border:1px solid var(--border)}
+.sb-account .profile-avatar,.sb-account .profile-avatar-fallback{width:32px;height:32px;font-size:13px}
+.profile-avatar-fallback{background:var(--adim);color:var(--accent);border:1px solid var(--aline)}
+.profile-name{font-size:13px;font-weight:650}
+.profile-sub{font-size:11.5px;color:var(--faint)}
+
+.main{background:var(--bg)}
+.ph{padding:24px max(28px,calc((100% - 1180px)/2)) 18px;border-bottom:1px solid var(--border);background:var(--bg);gap:16px}
+.ph-title{font-size:26px;font-weight:720;font-stretch:88%;letter-spacing:-.015em;line-height:1.1}
+.ph-sub{font-size:13px;color:var(--muted);margin-top:5px}
+.pb{padding:24px max(28px,calc((100% - 1180px)/2)) 48px;gap:18px;grid-template-columns:minmax(0,1fr) 360px}
+.fw{gap:16px}
+
+/* ═════════ BUTTONS ═════════ */
+.ph-new{background:var(--accent);color:var(--aink);border:none;border-radius:11px;padding:10px 16px;font-size:13.5px;font-weight:650;gap:7px}
+.ph-new:hover{background:var(--accent-hi);border:none}
+.ph-new svg{width:15px;height:15px}
+.btn-reg{background:var(--accent);color:var(--aink);border:none;border-radius:12px;padding:12px 16px;font-size:14px;font-weight:650;gap:8px}
+.btn-reg:hover{background:var(--accent-hi);box-shadow:none}
+.btn-reg:disabled{background:var(--raised);color:var(--faint);opacity:1}
+.btn-reg svg{width:15px;height:15px}
+.btn-s{background:var(--raised);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:8px 13px;font-size:13px;font-weight:550;gap:6px;min-height:36px}
+.btn-s:hover{border-color:var(--border2);background:#222936;color:var(--text)}
+.btn-s svg{width:14px;height:14px;color:var(--muted)}
+.btn-d{background:transparent;border:1px solid transparent;color:var(--red);border-radius:10px;padding:8px 12px;font-size:13px;font-weight:550;min-height:36px}
+.btn-d:hover{background:var(--rdim);border-color:transparent}
+.btn-accept{background:var(--green);border:none;color:#062A1B;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:650;min-height:36px}
+.btn-accept:hover{background:#5BE0AE;box-shadow:none}
+.btn-reject,.btn-void{background:transparent;border:1px solid var(--border2);color:var(--muted);border-radius:10px;padding:8px 12px;font-size:13px;font-weight:550;min-height:36px}
+.btn-reject:hover{border-color:rgba(255,107,118,.45);color:var(--red);background:var(--rdim)}
+.btn-void:hover{border-color:var(--border2);color:var(--text);background:var(--raised)}
+.icon-btn{border-radius:10px;border-color:var(--border);width:34px;height:34px}
+.icon-btn:hover{border-color:var(--border2);color:var(--text)}
+.bd,.bd2,.hidebtn{border-radius:8px;color:var(--faint)}
+.bd2,.hidebtn{width:30px;height:30px}
+.bd2 svg,.hidebtn svg{width:14px;height:14px}
+.bd2:hover{background:var(--raised);color:var(--text);border-color:var(--border)}
+.bd2[data-nid]:hover,.bd2[data-bid]:hover,.bd2[title="Delete"]:hover{background:var(--rdim);color:var(--red);border-color:transparent}
+.hidebtn:hover{background:var(--raised);color:var(--text);border-color:var(--border)}
+.ba{border-radius:10px;border:1px dashed var(--border2);color:var(--muted);padding:9px 12px;font-size:13px;justify-content:center;margin-top:8px}
+.ba:hover{border-color:var(--aline);color:var(--accent);background:var(--adim)}
+
+/* ═════════ CARDS & SURFACES ═════════ */
+.card{border-radius:var(--r);border-color:var(--border);background:var(--surface)}
+.ch{padding:15px 18px;border-bottom:1px solid var(--border);gap:12px}
+.ct{font-size:15px;font-weight:650}
+.cb{padding:18px}
+.empty{padding:44px 20px;color:var(--muted)}
+.empty svg{width:36px;height:36px;opacity:.5;color:var(--faint);margin-bottom:12px}
+.empty p{font-size:13.5px}
+
+/* ═════════ INPUTS ═════════ */
+.fl{font-size:12.5px;font-weight:550;color:var(--muted);margin-bottom:6px}
+input[type=number],input[type=text],input[type=date],input[type=time],select{
+  background-color:var(--inp);border:1px solid var(--border2);border-radius:10px;padding:9px 12px;font-size:14px;min-height:40px;color:var(--text)}
+input::placeholder,textarea::placeholder{color:var(--faint)}
+input:focus,select:focus,textarea:focus,input[type=date]:focus,input[type=time]:focus,.jsonbox:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--adim)}
+select{-webkit-appearance:none;appearance:none;padding-right:34px;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%2397A1B4' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center}
+.jsonbox{border-radius:10px;border-color:var(--border2);background:var(--inp)}
+.isuf{right:12px;color:var(--faint);font-size:13px}
+.ii{font-size:17px;font-weight:650}
+#sbSearch,#nbSearch,#casasSearch,#notasSearch{padding-left:36px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%23687286' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:12px center}
+input[type=checkbox]{accent-color:var(--accent)}
+
+/* ═════════ NEW BET ═════════ */
+.nbt-wrap{gap:10px}
+.nbt{--ac:var(--accent);--acd:var(--adim);padding:12px 14px;border-radius:var(--r);background:var(--surface);border-color:var(--border);gap:12px}
+.nbt[data-bt="Normal"]{--ac:var(--cyan);--acd:var(--cdim)}
+.nbt:hover{border-color:var(--border2);background:#181E28}
+.nbt-ic{width:36px;height:36px;border-radius:10px;background:var(--raised);color:var(--muted)}
+.nbt-t{font-size:14px;font-weight:650}
+.nbt-d{font-size:12px;color:var(--faint)}
+.nbt.active{border-color:var(--ac);background:linear-gradient(180deg,var(--acd),transparent 140%),var(--surface);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 12%,transparent)}
+.nbt.active .nbt-ic{background:var(--ac);color:var(--aink)}
+.nbt.active .nbt-t{color:var(--text)}
+.oh{margin-bottom:8px}
+.cl{font-size:12px;font-weight:550;color:var(--faint);padding:0 4px}
+.or{margin-bottom:8px;gap:8px}.oh{gap:8px}
+.oi{font-size:16px;font-weight:700}
+.oi.lit{border-color:var(--green);box-shadow:0 0 0 3px var(--gglow)}
+.msi{font-size:14px;color:var(--yellow)}
+.rs{margin-top:18px;padding-top:16px}
+.rh{font-size:12.5px;font-weight:600;color:var(--muted)}
+.rh svg{color:var(--faint)}
+.rp{gap:6px}
+.rpb{border-radius:99px;padding:5px 13px;font-size:12.5px;font-weight:600;background:var(--raised);border-color:var(--border)}
+.rpb:hover{border-color:var(--border2)}
+.rpb.active{background:var(--adim);border-color:var(--aline);color:var(--accent)}
+.nf-combo{border-radius:10px;padding:10px 12px}
+.nf-sel{grid-template-columns:1fr 96px 30px;gap:8px}
+
+/* Result as a betting slip — the one signature move */
+.rp2{gap:14px}
+.ph2{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px 22px 20px;text-align:left}
+.ph2::after{background:radial-gradient(130% 100% at 0% 0%,var(--gglow) 0%,transparent 60%)}
+.nf-hero.ph2::after{opacity:1;background:radial-gradient(130% 100% at 0% 0%,color-mix(in srgb,var(--ac) 16%,transparent) 0%,transparent 60%)}
+.rp2>.ph2{border-bottom:none;border-bottom-left-radius:6px;border-bottom-right-radius:6px;margin-bottom:-14px;padding-bottom:24px}
+.rp2>.ph2+.card{position:relative;overflow:visible;border-top:1.5px dashed var(--border2);border-top-left-radius:6px;border-top-right-radius:6px}
+.rp2>.ph2+.card::before,.rp2>.ph2+.card::after{content:'';position:absolute;top:-11px;width:22px;height:22px;border-radius:50%;
+  background:var(--bg);border:1px solid var(--border);z-index:2}
+.rp2>.ph2+.card::before{left:-12px;clip-path:inset(0 0 0 50%)}
+.rp2>.ph2+.card::after{right:-12px;clip-path:inset(0 50% 0 0)}
+.badge{padding:4px 10px;border-radius:99px;font-size:12px;font-weight:650;margin-bottom:12px;gap:5px}
+.bg{background:var(--gdim);border-color:rgba(61,211,155,.32);color:var(--green)}
+.br{background:var(--rdim);border-color:rgba(255,107,118,.3);color:var(--red)}
+.pp{font-size:58px;font-weight:760;line-height:.95;margin-bottom:8px}
+.ps{font-size:13px;color:var(--muted)}
+.bkr{padding:12px 18px;gap:12px}
+.bkn{font-size:14px;font-weight:650}
+.bks{font-size:12px;color:var(--faint);margin-top:2px}
+.bkst{font-size:17px;font-weight:700}
+.bkr2{font-size:12px;color:var(--muted)}
+.bkm{color:var(--muted);font-size:11.5px;font-weight:500}
+.sr{padding:10px 18px}
+.sl{font-size:13px;color:var(--muted)}
+.sv{font-size:14.5px;font-weight:650}
+.pw{padding:12px 18px 14px}
+.pl{font-size:12px;color:var(--muted);margin-bottom:6px}
+.pt{height:6px;background:var(--raised)}
+.nf-hero .nf-kind{margin-bottom:12px}
+.nf-actions .btn-s{flex:1;justify-content:center}
+
+/* ═════════ STATS ═════════ */
+.stats{gap:12px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px 14px;min-width:0}
+.sl2{font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:500}
+.sv2{font-size:30px;font-weight:720;line-height:1.05}
+
+/* ═════════ TOOLBARS & TABS ═════════ */
+.tb{gap:8px}
+.tb input[type=text]{max-width:300px}
+.tb .btn-d{margin-left:auto}
+.seg{gap:6px;padding:4px;background:var(--surface);border:1px solid var(--border);border-radius:13px;align-self:stretch}
+.seg-b{border:none;background:transparent;border-radius:10px;padding:8px 14px;font-size:13.5px;color:var(--muted)}
+.seg-b svg{opacity:.8}
+.seg-b:hover{color:var(--text);background:var(--raised)}
+.seg-b.active{background:var(--raised);color:var(--text);box-shadow:inset 0 0 0 1px var(--border2)}
+.seg-b.active svg{color:var(--accent);opacity:1}
+.seg-b.active .nb{background:var(--adim);color:var(--accent);border:none}
+.seg .ph-new{padding:8px 14px}
+.calc-tabs{gap:4px;padding:8px 10px 0}
+.calc-tab{border-radius:9px 9px 0 0;padding:10px 14px;font-size:13px;color:var(--muted)}
+.calc-tab.active{color:var(--text);background:transparent;border-bottom:2px solid var(--accent)}
+.cat-chip,.pd-chip{border-radius:99px;padding:7px 13px;font-size:13px;font-weight:600;background:var(--surface);border:1px solid var(--border);color:var(--muted)}
+.cat-chip:hover,.pd-chip:hover{border-color:var(--border2);color:var(--text)}
+.cat-chip.active,.pd-chip.active{background:var(--adim);border-color:var(--aline);color:var(--accent)}
+.pd-chip .pd-n{background:var(--raised);color:var(--muted);font-size:11.5px;padding:0 7px}
+.pd-chip.active .pd-n{background:rgba(142,149,255,.2);color:var(--accent)}
+.pd-chip.od{color:var(--red)}
+.pd-chip.od.active{background:var(--rdim);border-color:rgba(255,107,118,.4);color:var(--red)}
+.pd-chip.od.active .pd-n{background:rgba(255,107,118,.2);color:var(--red)}
+.pd-pick input{min-height:34px}
+.pend-days{gap:6px}
+
+/* ═════════ STATUS ═════════ */
+.sb2{padding:3px 9px;font-size:11.5px;font-weight:600}
+.sp{background:var(--ydim);color:var(--yellow);border-color:rgba(242,181,68,.3)}
+.sw{background:var(--gdim);color:var(--green);border-color:rgba(61,211,155,.3)}
+.sl3{background:var(--rdim);color:var(--red);border-color:rgba(255,107,118,.3)}
+.type-pill,.type-badge-kind{padding:3px 9px;font-size:11.5px;font-weight:600;border-radius:99px}
+.tp-normal{background:var(--cdim);color:var(--cyan);border-color:rgba(60,203,224,.28)}
+.tp-freebet{background:var(--ydim);color:var(--yellow);border-color:rgba(242,181,68,.3)}
+.tp-combi{background:var(--pdim);color:var(--purple);border-color:rgba(200,149,255,.3)}
+.type-badge-kind{background:var(--raised);color:var(--muted);border-color:var(--border2)}
+.ss,.ns{-webkit-appearance:none;appearance:none;border-radius:99px;padding:5px 28px 5px 12px;font-size:12.5px;font-weight:600;min-height:30px;
+  background-color:var(--raised);border:1px solid var(--border2);color:var(--text);background-position:right 10px center}
+.ss:has(option[value="pending"]:checked),.ns:has(option[value="pending"]:checked){color:var(--yellow);background-color:var(--ydim);border-color:rgba(242,181,68,.32)}
+.ss:has(option[value="won"]:checked),.ns:has(option[value="won"]:checked){color:var(--green);background-color:var(--gdim);border-color:rgba(61,211,155,.32)}
+.ss:has(option[value="lost"]:checked),.ns:has(option[value="lost"]:checked){color:var(--red);background-color:var(--rdim);border-color:rgba(255,107,118,.32)}
+.ss,.ns{width:auto}
+.ss option,.ns option{background:var(--surface);color:var(--text)}
+.bim:has(.ss) .sb2{display:none}
+.ni2:has(.ns) .ni2-meta .sb2{display:none}
+.pp2{white-space:nowrap;padding:3px 10px;font-size:13px;font-weight:700}
+.pp2.pos{background:var(--gdim);border-color:rgba(61,211,155,.28)}
+.pp2.neg{background:var(--rdim);border-color:rgba(255,107,118,.28)}
+
+/* ═════════ SUREBET LEDGER ═════════ */
+#sbList{display:flex;flex-direction:column;gap:12px}
+.bi,.ni2,.pend-item,.bk-card,.note-card{animation:none}
+.bi{border-radius:var(--r)}
+.bih{padding:14px 18px;border-bottom:1px solid var(--border);align-items:center}
+.bie{font-size:15px;font-weight:650;line-height:1.3}
+.bid{font-size:12.5px;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.bim{gap:8px}
+.leg-head{display:grid;grid-template-columns:1fr 1fr auto auto auto auto;gap:5px 14px;padding:9px 18px 7px;font-size:12px;color:var(--faint);border-bottom:1px solid var(--border)}
+.leg{padding:10px 18px;font-size:13.5px;gap:5px 14px}
+.lh{font-weight:650}
+.lo,.lk{font-size:14px}
+.lm{color:var(--muted);font-size:13px;font-weight:500}
+.win-btn{border-radius:99px;padding:4px 10px;font-size:12px;background:transparent;border-color:var(--border2);color:var(--muted)}
+.win-btn:hover,.win-btn.selected{background:var(--gdim);border-color:rgba(61,211,155,.45);color:var(--green)}
+.leg-winner{background:rgba(61,211,155,.05)}
+.bf{padding:11px 18px;background:rgba(255,255,255,.015);border-top:1px solid var(--border);font-size:13px}
+.bfr{font-size:15px}
+.real-profit-row{padding:9px 18px}
+
+/* ═════════ BETS (normal / freebet / combi) ═════════ */
+.ni2{border-radius:var(--r);padding:14px 16px;gap:8px 14px}
+.ni2-ev{font-size:15px;font-weight:650}
+.ni2-meta{font-size:12.5px;color:var(--muted);margin-top:4px;gap:6px 8px;align-items:center}
+.ni2-note{font-style:normal;background:transparent;border-left:none;padding:0;margin-top:6px;font-size:12.5px;color:var(--muted)}
+.ni2-pnl{font-size:22px;font-weight:720}
+.ni2-right{gap:7px}
+
+/* ═════════ PENDING ═════════ */
+#pendList{display:flex;flex-direction:column;gap:10px}
+.pend-item{border-radius:var(--r);border:1px solid var(--border);border-left:1px solid var(--border);box-shadow:inset 3px 0 0 var(--yellow);padding:14px 16px 14px 19px;gap:14px}
+.pend-item.wd{box-shadow:inset 3px 0 0 var(--cyan)}
+.pend-ev{font-size:15px;font-weight:650;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pend-meta{font-size:12.5px;color:var(--muted);margin-top:4px;gap:10px}
+.pend-preview{font-size:13px;line-height:1.55}
+.pend-right{gap:8px}
+.pend-legs{gap:10px;align-items:start}
+.pend-leg{border-radius:12px;border:1px solid var(--border2);background:var(--raised);padding:12px 36px 12px 14px}
+.pend-leg:hover{border-color:rgba(61,211,155,.55);background:#1E2531}
+.pl-house{font-size:14px}
+.pl-res{font-size:12.5px}
+.pl-nums{font-size:13px}
+.pl-radio{top:13px;right:13px;width:16px;height:16px;border-color:var(--border2)}
+.pend-hint{font-size:12.5px;color:var(--faint)}
+.pend-day-h{font-size:13px;font-weight:650;color:var(--text);margin:10px 2px 0}
+.pend-day-h .pd-n{color:var(--faint);font-weight:600}
+.pend-day-h.od{color:var(--red)}
+
+/* ═════════ PROFIT ═════════ */
+.total-hero{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:26px 26px 22px;text-align:left;position:relative;overflow:hidden}
+.total-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(90% 120% at 0% 0%,var(--gglow),transparent 55%);pointer-events:none}
+.th-label{font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:500}
+.th-val{font-size:72px;font-weight:760;line-height:.95}
+.th-sub{justify-content:flex-start;gap:10px;margin-top:20px;position:relative}
+.th-sub-item{text-align:left;background:var(--raised);border:1px solid var(--border);border-radius:11px;padding:9px 14px;min-width:110px}
+.th-sub-label{font-size:12px;color:var(--muted);margin-bottom:2px}
+.th-sub-val{font-size:18px;font-weight:700}
+#monthList{display:flex;flex-direction:column;gap:12px}
+.month-card{border-radius:var(--r)}
+.mc-head{padding:15px 18px}
+.mc-month{font-size:16px;font-weight:650}
+.mc-total{font-size:24px;font-weight:720}
+.mc-row{padding:10px 18px;font-size:13.5px}
+.mc-val{font-size:14.5px;font-weight:650}
+
+/* ═════════ PROFILE ═════════ */
+.profit-mes-box{background:var(--raised);border:1px solid var(--border);border-radius:12px;padding:18px 20px;text-align:left}
+.profit-mes-label{font-size:13px;color:var(--muted)}
+.profit-mes-val{font-size:44px;font-weight:760;line-height:1}
+.stats3{gap:10px}
+.statbox{border-radius:12px;padding:12px 14px;background:var(--raised)}
+.statbox-label{font-size:12px;color:var(--muted);font-weight:500}
+.statbox-val{font-size:24px;font-weight:720}
+.statrow{padding:11px 2px;font-size:13.5px}
+.clv-head{font-size:13px;font-weight:650;color:var(--text);margin:20px 0 10px;padding-top:16px}
+.stats2 .label{font-size:12.5px;color:var(--muted)}
+.stats2 .val{font-size:20px}
+.cal-wrap{margin-top:20px;padding-top:18px}
+.cal-month-label{font-size:15px;font-weight:650}
+.cal-month-total{font-size:17px}
+.cal-dow{font-size:11.5px;font-weight:600;color:var(--faint)}
+.cal-cell{border-radius:9px;background:var(--raised);border-color:transparent}
+.cal-cell.empty{background:transparent}
+.cal-cell.cal-pos{background:var(--gdim);border-color:rgba(61,211,155,.28)}
+.cal-cell.cal-neg{background:var(--rdim);border-color:rgba(255,107,118,.28)}
+.cal-daynum{font-size:11.5px}
+.cal-amt{font-size:11.5px}
+.cal-nav-btn{border-radius:10px;padding:7px 14px;font-size:13px;background:var(--raised)}
+.perf-total-label{font-size:13px;color:var(--muted)}
+.perf-total-val{font-size:34px;font-weight:720}
+.perf-exp-box{border-radius:12px;padding:9px 14px;gap:10px}
+.perf-exp-label{font-size:12px;color:var(--muted)}
+.perf-exp-val{font-size:16px}
+
+/* ═════════ BOOKMAKERS ═════════ */
+#casasList{display:flex;flex-direction:column;gap:12px}
+.bk-card{border-radius:var(--r)}
+.bk-main{padding:15px 18px;gap:14px}
+.bk-avatar{width:42px;height:42px;border-radius:12px;background:var(--raised);color:var(--text);border:1px solid var(--border2);font-size:17px}
+.bk-name{font-size:15px;font-weight:650}
+.bk-meta{font-size:12.5px;color:var(--muted);margin-top:3px}
+.bk-bal-val{font-size:26px;font-weight:720}
+.bk-actions{padding:10px 18px;background:rgba(255,255,255,.015);gap:6px}
+.bk-btn{border-radius:99px;padding:6px 13px;font-size:12.5px;font-weight:600;background:var(--raised);border-color:var(--border)}
+.bk-btn.on{box-shadow:0 0 0 3px var(--adim);border-color:var(--aline)}
+.bk-chip{border-radius:99px;padding:6px 12px;font-size:12.5px;background:var(--raised)}
+.bk-chip:hover{border-color:var(--aline);color:var(--accent);background:var(--adim)}
+.bk-panel{padding:14px 18px 16px}
+.bk-panel-title{font-size:13px;color:var(--muted)}
+.bk-hist-row{border-radius:10px;padding:9px 12px}
+
+/* ═════════ NOTES & CATEGORIES (tree) ═════════ */
+.notas-layout{gap:16px}
+.notas-folders{width:236px;border-radius:var(--r)}
+.notas-folders-head{padding:13px 14px;font-size:13px;font-weight:650;color:var(--text)}
+.notas-folders-head button{width:28px;height:28px;border-radius:8px;color:var(--muted)}
+.notas-folders-head button:hover{background:var(--raised);color:var(--accent)}
+.nf-list{padding:6px 8px}
+.nf-item,.tr-row{border-radius:9px;padding:7px 9px;font-size:13.5px}
+.nf-item.active,.tr-row.active{background:var(--raised);color:var(--text);box-shadow:inset 0 0 0 1px var(--border2)}
+.tr-row.active .tr-ico{color:var(--accent)}
+.nf-item.active .nfc,.tr-row.active .tr-count{background:var(--adim);color:var(--accent)}
+.tr-count,.nf-item .nfc{font-size:11.5px;padding:1px 7px}
+.tr-hint{font-size:11.5px;padding:10px 12px 12px}
+.cat-sel-name{font-size:16px;font-weight:650}
+.nlist{gap:10px}
+.note-card{border-radius:12px;padding:14px 16px}
+.note-card:hover{border-color:var(--border2)}
+.note-title{font-size:14.5px}
+.note-snippet{font-size:13px}
+.note-meta{font-size:12px}
+.note-check{border-radius:6px;border-color:var(--border2)}
+.note-card.completed .note-check{background:var(--adim);border-color:var(--accent);color:var(--accent)}
+.drop-hover{background:var(--adim)!important;color:var(--accent)!important;outline-color:var(--accent)}
+
+/* ═════════ MODALS → sheets ═════════ */
+.modal-ov{background:rgba(5,7,11,.66)!important;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.modal-inner{background:var(--surface)!important;border:1px solid var(--border)!important;border-radius:20px!important;padding:24px!important;box-shadow:var(--shadow-lg)}
+.modal-inner>div:first-child{font-size:18px!important;font-weight:700!important;letter-spacing:-.01em}
+.sbr-leg{background:var(--raised);border-radius:10px;padding:8px 8px 8px 12px}
+.sbr-leg-info{font-size:13px}
+.two-col{gap:12px}
+
+/* ═════════ TOAST ═════════ */
+.toast{border-radius:12px;border:1px solid var(--border2);border-left:3px solid var(--accent);background:var(--raised);padding:12px 16px;font-size:13.5px;box-shadow:var(--shadow-lg)}
+.toast button{color:var(--accent);font-size:13px}
+
+/* ═════════ AUTH ═════════ */
+#authScreen{background:radial-gradient(80% 60% at 50% 0%,rgba(142,149,255,.12),transparent 70%),var(--bg)}
+.auth-box{gap:14px;max-width:360px}
+.auth-mark{width:56px;height:56px;margin-bottom:6px}
+.auth-title{font-size:30px;font-weight:760;font-stretch:88%;letter-spacing:-.015em}
+.auth-sub{font-size:14px;color:var(--muted);margin:0 0 14px}
+.auth-btn{background:var(--text);color:#11141B;border:none;border-radius:12px;padding:13px 24px;font-size:15px;font-weight:650}
+.auth-btn:hover{background:#fff;border:none}
+
+/* ═════════ MOBILE TAB BAR ═════════ */
+.tabbar{display:none}
+@media(max-width:900px){
+  .pb{grid-template-columns:minmax(0,1fr);padding:18px 18px 40px}
+  .ph{padding:18px 18px 14px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:600px){
+  .sb-toggle{display:none!important}
+  .sidebar{width:280px;background:var(--surface);box-shadow:var(--shadow-lg);z-index:170;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+  .sb-overlay{z-index:165}
+  .sb-overlay.open{background:rgba(5,7,11,.6);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+  .ph{padding:14px 16px 12px;padding-top:max(14px,env(safe-area-inset-top))}
+  .ph-title{font-size:22px}
+  .ph-sub{font-size:12.5px;margin-top:3px}
+  .ph-new{display:none!important}
+  .pb{padding:14px 14px calc(96px + env(safe-area-inset-bottom));gap:12px}
+  .fw{gap:12px}
+  .stats{gap:8px}
+  .sc{padding:12px 13px}
+  .sv2{font-size:25px}
+  .sl2{font-size:12px}
+  .tabbar{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:150;
+    padding:6px 6px calc(6px + env(safe-area-inset-bottom));background:rgba(14,17,24,.9);
+    -webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px);border-top:1px solid var(--border)}
+  .tab{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px 0 4px;
+    color:var(--faint);font-size:11px;font-weight:600;border-radius:12px;-webkit-tap-highlight-color:transparent}
+  .tab svg{width:22px;height:22px}
+  .tab.active{color:var(--text)}
+  .tab.active svg{color:var(--accent)}
+  .tab-badge{position:absolute;top:2px;left:calc(50% + 6px);min-width:17px;height:17px;padding:0 5px;border-radius:99px;background:var(--yellow);
+    color:#241800;font-size:10.5px;font-weight:750;font-style:normal;display:grid;place-items:center;font-stretch:86%;font-variant-numeric:tabular-nums}
+  .tab-badge:empty,.tab-badge[data-n="0"]{display:none}
+  .tab-fab{width:46px;height:46px;border-radius:15px;background:var(--accent);color:var(--aink);display:grid;place-items:center;margin-top:-18px;
+    box-shadow:0 8px 22px -6px rgba(142,149,255,.55),0 0 0 4px var(--bg)}
+  .tab-fab svg{width:22px;height:22px;color:var(--aink)!important}
+  .tab.tab-new{color:var(--muted)}
+  .tab.tab-new.active{color:var(--text)}
+  .toast{bottom:calc(84px + env(safe-area-inset-bottom))}
+
+  /* New bet: compact type switcher */
+  .nbt-wrap{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .nbt{flex-direction:column;gap:6px;padding:10px 4px 9px;text-align:center;border-radius:12px}
+  .nbt-ic{width:32px;height:32px;border-radius:9px}
+  .nbt-ic svg{width:17px;height:17px}
+  .nbt-tx{align-items:center}
+  .nbt-t{font-size:12.5px}
+  .pp{font-size:50px}
+  .th-val{font-size:56px}
+  .total-hero{padding:22px 20px 18px}
+  .seg{padding:3px;border-radius:12px;flex-wrap:nowrap;overflow-x:auto}
+  .seg-b{padding:8px 11px;font-size:13px;white-space:nowrap;flex:1;justify-content:center}
+  .seg .ph-new{display:none!important}
+  .tb input[type=text]{max-width:none;flex:1 1 100%}
+  .tb .btn-d{margin-left:0}
+  .bih{flex-direction:column;align-items:stretch;gap:10px;padding:13px 14px}
+  .bim{flex-wrap:nowrap;align-items:center}
+  .bim .ss{margin-right:auto}
+  .leg-head{display:none}
+  .leg{grid-template-columns:minmax(0,1fr) auto auto auto;padding:10px 14px;align-items:center}
+  .lr{grid-column:1/-1;order:5;font-size:12.5px;margin-top:-3px}
+  #page-poker .bk-quick-row{grid-template-columns:1fr 1fr!important}
+  #page-poker .bk-quick-row>div:last-child{grid-column:1/-1}
+  .th-sub{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .th-sub-item{min-width:0;padding:8px 10px}
+  .th-sub-val{font-size:16px}
+  .bf{padding:10px 14px}
+  .ni2{padding:13px 14px}
+  .ni2-pnl{font-size:20px}
+  .pend-item{padding:13px 14px 13px 17px}
+  .pend-legs{grid-template-columns:1fr}
+  .notas-folders{width:100%;max-height:none}
+  .nf-list{max-height:180px}
+  .bk-main{padding:13px 14px}
+  .bk-bal-val{font-size:22px}
+  .bk-actions{padding:9px 14px}
+  .profit-mes-val{font-size:38px}
+  .statbox{padding:10px 11px}
+  .statbox-val{font-size:19px}
+  .statbox-label{font-size:11.5px;line-height:1.25}
+  .cal-cell{border-radius:7px}
+  .cal-dow{font-size:10.5px}
+  .cal-amt{font-size:9.5px;letter-spacing:-.2px}
+  .cal-daynum{font-size:10px}
+  .perf-total-val{font-size:30px}
+  .calc-tabs{padding:6px 6px 0}
+  /* modals become bottom sheets */
+  .modal-ov{align-items:flex-end!important}
+  .modal-inner{margin:0!important;max-width:100%!important;width:100%!important;border-radius:22px 22px 0 0!important;border-bottom:none!important;
+    padding:20px 18px calc(20px + env(safe-area-inset-bottom))!important;max-height:92vh;max-height:92dvh;animation:sheetIn .26s cubic-bezier(.2,.8,.25,1)}
+  .modal-inner::before{content:'';display:block;width:38px;height:4px;border-radius:99px;background:var(--border2);margin:-6px auto 14px}
+}
+@keyframes sheetIn{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
 </style>
 </head>
 <body>
 
 <div id="authScreen">
   <div class="auth-box">
+    <svg class="auth-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#8E95FF"/><line x1="10" y1="22.5" x2="22" y2="9.5" stroke="#0B0D14" stroke-width="2.6" stroke-linecap="round"/><circle cx="11" cy="11" r="3.3" fill="#0B0D14"/><circle cx="21" cy="21" r="3.1" fill="none" stroke="#0B0D14" stroke-width="2.4"/></svg>
     <div class="auth-title">Surebets</div>
-    <div class="auth-sub">Sign in to access your data</div>
+    <div class="auth-sub">Your bets, bookmakers and profit — synced across devices.</div>
     <button class="auth-btn" id="googleLoginBtn">
       <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
       Sign in with Google
@@ -775,21 +1279,13 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
 <div class="app">
 <!-- ══ SIDEBAR ══ -->
 <aside class="sidebar" id="sidebar">
-  <div class="sb-head">
-    <div class="profile-block">
-      <img class="profile-avatar" id="sbAvatar" src="" alt="" style="display:none">
-      <div class="profile-avatar-fallback" id="sbAvatarFallback">S</div>
-      <div class="profile-info">
-        <div class="profile-name" id="sbName">Surebets</div>
-        <div class="profile-sub" id="sbSub">Calculator &amp; tracker</div>
-      </div>
-    </div>
-  </div>
+  <div class="sb-brand"><svg class="sb-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#8E95FF"/><line x1="10" y1="22.5" x2="22" y2="9.5" stroke="#0B0D14" stroke-width="2.6" stroke-linecap="round"/><circle cx="11" cy="11" r="3.3" fill="#0B0D14"/><circle cx="21" cy="21" r="3.1" fill="none" stroke="#0B0D14" stroke-width="2.4"/></svg><div class="sb-word">Surebets<small>Bet tracker</small></div></div>
   <nav class="nav">
-    <div class="ni active" data-page="calc">
+    <div class="ni ni-primary active" data-page="calc">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
       New bet
     </div>
+    <div class="nav-group">Betting</div>
     <div class="ni" data-page="bets">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
       My bets
@@ -800,6 +1296,15 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
       Pending
       <span class="nb" id="pendCount">0</span>
     </div>
+    <div class="ni" data-page="categorias">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24H4a1 1 0 0 0-1 1v5.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.82 0l4.59-4.59a2 2 0 0 0 .01-2.82z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>
+      Categories
+    </div>
+    <div class="nav-group">Money</div>
+    <div class="ni" data-page="profit">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Profit
+    </div>
     <div class="ni" data-page="casas">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>
       Bookmakers
@@ -809,18 +1314,7 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C9 7 4 9.5 4 14a4 4 0 0 0 7 2.6c0 2-.6 3.4-2 5.4h6c-1.4-2-2-3.4-2-5.4A4 4 0 0 0 20 14c0-4.500-5-7-8-12z"/></svg>
       Poker
     </div>
-    <div class="ni" data-page="notas">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
-      Notes
-    </div>
-    <div class="ni" data-page="categorias">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24H4a1 1 0 0 0-1 1v5.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.82 0l4.59-4.59a2 2 0 0 0 .01-2.82z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>
-      Categories
-    </div>
-    <div class="ni" data-page="profit">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      Profit
-    </div>
+    <div class="nav-group">Workspace</div>
     <div class="ni" data-page="perfil">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Profile
@@ -829,7 +1323,21 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="10" y2="11"/><line x1="14" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="10" y2="15"/><line x1="14" y1="15" x2="16" y2="15"/><line x1="8" y1="19" x2="10" y2="19"/><line x1="14" y1="19" x2="16" y2="19"/></svg>
       Calculators
     </div>
+    <div class="ni" data-page="notas">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+      Notes
+    </div>
   </nav>
+  <div class="sb-account">
+    <div class="profile-block">
+      <img class="profile-avatar" id="sbAvatar" src="" alt="" style="display:none">
+      <div class="profile-avatar-fallback" id="sbAvatarFallback">S</div>
+      <div class="profile-info">
+        <div class="profile-name" id="sbName">Surebets</div>
+        <div class="profile-sub" id="sbSub">Synced with Google</div>
+      </div>
+    </div>
+  </div>
 </aside>
 
 <!-- ══ MAIN ══ -->
@@ -1092,7 +1600,7 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
             <div class="profile-avatar-fallback profile-avatar-fallback-lg" id="perfilAvatarFallback">S</div>
             <div class="profile-info">
               <div class="profile-name-lg" id="perfilName">User</div>
-              <div class="profile-sub">Personal Stats</div>
+              <div class="profile-sub">Personal stats</div>
             </div>
           </div>
           <button class="icon-btn" id="perfilShareBtn" title="Share">
@@ -1107,21 +1615,21 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
           <div class="stats3">
             <div class="statbox"><div class="statbox-label">ROI</div><div class="statbox-val" id="statROI">—</div></div>
             <div class="statbox"><div class="statbox-label">Wagered</div><div class="statbox-val neu" id="statWagered">—</div></div>
-            <div class="statbox"><div class="statbox-label">Win Rate Bets</div><div class="statbox-val neu" id="statWinRateBets">—</div></div>
+            <div class="statbox"><div class="statbox-label">Win rate · bets</div><div class="statbox-val neu" id="statWinRateBets">—</div></div>
           </div>
           <div class="stats3">
-            <div class="statbox"><div class="statbox-label">Win Rate Freebets</div><div class="statbox-val neu" id="statWinRateFB">—</div></div>
-            <div class="statbox"><div class="statbox-label">Surebet Profit</div><div class="statbox-val" id="statGanadoSB">—</div></div>
-            <div class="statbox"><div class="statbox-label">Freebet Profit</div><div class="statbox-val" id="statGanadoFB">—</div></div>
+            <div class="statbox"><div class="statbox-label">Win rate · freebets</div><div class="statbox-val neu" id="statWinRateFB">—</div></div>
+            <div class="statbox"><div class="statbox-label">Surebet profit</div><div class="statbox-val" id="statGanadoSB">—</div></div>
+            <div class="statbox"><div class="statbox-label">Freebet profit</div><div class="statbox-val" id="statGanadoFB">—</div></div>
           </div>
-          <div class="statrow"><span class="sl">Total Bets</span><span class="sv-combo" id="statTotalBets">0</span></div>
-          <div class="statrow"><span class="sl">Total Freebets</span><span class="sv-combo" id="statTotalFB">0</span></div>
-          <div class="statrow"><span class="sl">Average Bet</span><span class="sv-combo" id="statAvgBet">—</span></div>
-          <div class="statrow"><span class="sl">Average Freebet</span><span class="sv-combo" id="statAvgFreebet">—</span></div>
-          <div class="statrow"><span class="sl">Average Freebet Profit</span><span class="sv-combo" id="statAvgFreebetProfit">—</span></div>
+          <div class="statrow"><span class="sl">Total bets</span><span class="sv-combo" id="statTotalBets">0</span></div>
+          <div class="statrow"><span class="sl">Total freebets</span><span class="sv-combo" id="statTotalFB">0</span></div>
+          <div class="statrow"><span class="sl">Average bet</span><span class="sv-combo" id="statAvgBet">—</span></div>
+          <div class="statrow"><span class="sl">Average freebet</span><span class="sv-combo" id="statAvgFreebet">—</span></div>
+          <div class="statrow"><span class="sl">Average freebet profit</span><span class="sv-combo" id="statAvgFreebetProfit">—</span></div>
           <div class="clv-head">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-            Closing Line Value
+            Closing line value
           </div>
           <div class="stats2">
             <div><div class="label">Average CLV</div><div class="val" id="statAvgCLV">—</div></div>
@@ -1133,8 +1641,8 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
               <span class="cal-month-total" id="calMonthTotal"></span>
             </div>
             <div class="cal-dow-row">
-              <div class="cal-dow">MON</div><div class="cal-dow">TUE</div><div class="cal-dow">WED</div>
-              <div class="cal-dow">THU</div><div class="cal-dow">FRI</div><div class="cal-dow">SAT</div><div class="cal-dow">SUN</div>
+              <div class="cal-dow">Mon</div><div class="cal-dow">Tue</div><div class="cal-dow">Wed</div>
+              <div class="cal-dow">Thu</div><div class="cal-dow">Fri</div><div class="cal-dow">Sat</div><div class="cal-dow">Sun</div>
             </div>
             <div class="cal-days" id="calDays"></div>
             <div class="cal-footer">
@@ -1187,10 +1695,11 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
 </div>
 </div>
 
+<nav class="tabbar" id="tabbar" aria-label="Main"><button class="tab" data-tab="bets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg><span>Bets</span></button><button class="tab" data-tab="pendientes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg><span>Pending</span><i class="tab-badge" id="tabPendCount"></i></button><button class="tab tab-new active" data-tab="calc"><span class="tab-fab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span><span>New bet</span></button><button class="tab" data-tab="profit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Profit</span></button><button class="tab" data-tab="more"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></button></nav>
 <div class="toast" id="toast"><span id="toastMsg"></span><button id="toastAct"></button></div>
 
 <!-- ══ EDIT NORMAL/FREEBET/COMBI MODAL ══ -->
-<div id="addModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
+<div id="addModal" class="modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
   <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:440px;margin:16px">
     <div style="font-size:15px;font-weight:700;margin-bottom:16px" id="addModalTitle">Edit bet</div>
     <div style="display:flex;flex-direction:column;gap:11px">
@@ -1227,7 +1736,7 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
 </div>
 
 <!-- ══ REGISTER SUREBET MODAL ══ -->
-<div id="sbRegModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
+<div id="sbRegModal" class="modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
   <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:440px;margin:16px">
     <div style="font-size:15px;font-weight:700;margin-bottom:16px" id="sbRegModalTitle">Register surebet</div>
     <div style="display:flex;flex-direction:column;gap:11px">
@@ -1247,7 +1756,7 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
 </div>
 
 <!-- ══ CASH OUT MODAL ══ -->
-<div id="cashoutModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
+<div id="cashoutModal" class="modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
   <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:380px;margin:16px">
     <div style="font-size:15px;font-weight:700;margin-bottom:4px">Cash out</div>
     <div id="co-info" style="font-size:12px;color:var(--muted,#888);margin-bottom:14px"></div>
@@ -1262,7 +1771,7 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
 
 <!-- ══ ADD/EDIT BOOKMAKER MODAL ══ -->
 <datalist id="bookmakerList"></datalist>
-<div id="addCasaModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
+<div id="addCasaModal" class="modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
   <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:420px;margin:16px">
     <div style="font-size:15px;font-weight:700;margin-bottom:16px" id="casaModalTitle">Add bookmaker</div>
     <div style="display:flex;flex-direction:column;gap:11px">
@@ -1288,7 +1797,7 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
 </div>
 
 <!-- ══ FOLDER / CATEGORY (create/edit) ══ -->
-<div id="folderModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
+<div id="folderModal" class="modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
   <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:400px;margin:16px">
     <div style="font-size:15px;font-weight:700;margin-bottom:16px" id="folderModalTitle">New folder</div>
     <div style="display:flex;flex-direction:column;gap:11px">
@@ -1308,8 +1817,8 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
 </div>
 
 <!-- ══ NOTA (crear/editar) ══ -->
-<div id="noteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:520px;margin:16px">
+<div id="noteModal" class="modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
+  <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:520px;margin:16px">
     <div style="font-size:15px;font-weight:700;margin-bottom:16px" id="noteModalTitle">New note</div>
     <div style="display:flex;flex-direction:column;gap:11px">
       <div><label class="fl">Title</label><input type="text" id="note-title" placeholder="Note title"></div>
@@ -1327,8 +1836,8 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
 </div>
 
 <!-- ══ MOVE FOLDER / CATEGORY ══ -->
-<div id="moveModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:380px;margin:16px">
+<div id="moveModal" class="modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
+  <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:380px;margin:16px">
     <div style="font-size:15px;font-weight:700;margin-bottom:16px" id="moveModalTitle">Move folder</div>
     <div><label class="fl">New parent</label><select id="move-parent"></select></div>
     <div style="display:flex;gap:9px;margin-top:18px">
@@ -1339,8 +1848,8 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
 </div>
 
 <!-- ══ IMPORTAR JSON MANUALMENTE (pegar y guardar) ══ -->
-<div id="jsonImportModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:540px;margin:16px">
+<div id="jsonImportModal" class="modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
+  <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:540px;margin:16px">
     <div style="font-size:15px;font-weight:700;margin-bottom:6px">Manually import JSON</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">
       Paste your JSON here and it's injected directly into your account (saved the same way as the rest of the app). Accepts an object like <code style="background:var(--inp);padding:1px 5px;border-radius:4px;font-family:var(--mono)">{"bets":[...],"normals":[...]}</code> — you can include just one of the two keys — or a plain array of surebets.
@@ -1645,7 +2154,7 @@ function renderSurebets(filter=''){
     const hasPct=typeof displayProfitPct==='number'&&!isNaN(displayProfitPct);
     const pctCls=isVoid?'neu':(hasPct?(displayProfitPct>=0?'pos':'neg'):'neu');
     const pctLabel=hasPct?(displayProfitPct>=0?'+':'')+fmt(displayProfitPct)+' %':'—';
-    const legsHtml=hasLegs?`<div style="background:var(--raised);display:grid;grid-template-columns:1fr 1fr auto auto auto auto;gap:5px 10px;padding:5px 15px;font-size:10px;color:var(--faint)"><span>BOOKMAKER</span><span>OUTCOME</span><span style="text-align:right">ODDS</span><span style="text-align:right">STAKE</span><span style="text-align:right">RETURN</span><span></span></div>`+
+    const legsHtml=hasLegs?`<div class="leg-head"><span>Bookmaker</span><span>Outcome</span><span style="text-align:right">Odds</span><span style="text-align:right">Stake</span><span style="text-align:right">Return</span><span></span></div>`+
       b.legs.map((l,li)=>`<div class="leg${winnerIdx===li?' leg-winner':''}"><span class="lh">${esc(l.house)}</span><span class="lr">${esc(l.result)}</span><span class="lo">${fmt(l.odd||0)}</span><span class="lk">${fmt(l.stake||0)} €</span><span class="lm">${fmt(l.minReturn||0)} €</span><button class="win-btn${winnerIdx===li?' selected':''}" data-wbid="${b.id}" data-wleg="${li}" title="Mark as the winning outcome">${winnerIdx===li?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Won`:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Won`}</button></div>`).join('')+
       (winnerIdx>=0&&!isVoid?`<div class="real-profit-row"><span class="real-profit-label">✓ ${esc(b.legs[winnerIdx].house)} won — real profit</span><span class="real-profit-val">+${fmt(realProfit)} €</span></div>`:'')
     : `<div style="padding:8px 15px;font-size:12px;color:var(--faint)">No leg breakdown (pre-loaded surebet)</div>`;
@@ -3301,11 +3810,11 @@ function setProfileUI(user){
       else{av.style.display='none';fb.style.display='flex';fb.textContent=initial;}
     }
   });
-  const sbSub=document.getElementById('sbSub');if(sbSub)sbSub.textContent=user.email||'Calculadora & registro';
+  const sbSub=document.getElementById('sbSub');if(sbSub)sbSub.textContent=user.email||'Bet tracker';
 }
 function clearProfileUI(){
   const nm=document.getElementById('sbName');if(nm)nm.textContent='Surebets';
-  const sbSub=document.getElementById('sbSub');if(sbSub)sbSub.textContent='Calculadora & registro';
+  const sbSub=document.getElementById('sbSub');if(sbSub)sbSub.textContent='Bet tracker';
   const av=document.getElementById('sbAvatar');if(av)av.style.display='none';
   const fb=document.getElementById('sbAvatarFallback');if(fb){fb.style.display='flex';fb.textContent='S';}
 }
@@ -3696,6 +4205,8 @@ function navTo(page){
     const item=document.querySelector(`.ni[data-page="${page}"]`);
     document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));if(item)item.classList.add('active');
     document.getElementById('phNewBet').style.display=(page==='calc'||page==='bets')?'none':'';
+    const tabPages=['bets','pendientes','calc','profit'];
+    document.querySelectorAll('#tabbar .tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===(tabPages.includes(page)?page:'more')));
     ALL_PAGES.forEach(p=>{
       const el=document.getElementById('page-'+p);if(el)el.style.display='none';
     });
@@ -3725,6 +4236,7 @@ function updateBadges(){
   visibleCasas().forEach(c=>{(c.history||[]).forEach(h=>{if(h.type==='wd'&&h.status==='pending'&&!isHidden('wd:'+c.id+':'+h.id))pendWDCount++;});});
   document.getElementById('pendCount').textContent=visibleBets().filter(b=>b.status==='pending').length+visibleNormals().filter(n=>n.status==='pending').length+pendWDCount;
   document.getElementById('casasCount').textContent=visibleCasas().length;
+  const tpc=document.getElementById('tabPendCount');if(tpc){const n=document.getElementById('pendCount').textContent;tpc.textContent=n;tpc.dataset.n=n;}
 }
 
 // Re-renders whichever page is currently on screen. Used after hide/unhide actions,
@@ -3761,6 +4273,12 @@ function openSB(){sidebar.classList.add('open');overlay.classList.add('open')}
 function closeSB(){sidebar.classList.remove('open');overlay.classList.remove('open')}
 document.getElementById('sbToggle').addEventListener('click',()=>sidebar.classList.contains('open')?closeSB():openSB());
 overlay.addEventListener('click',closeSB);
+document.getElementById('tabbar').addEventListener('click',e=>{
+  const t=e.target.closest('.tab');if(!t)return;
+  if(t.dataset.tab==='more'){sidebar.classList.contains('open')?closeSB():openSB();return;}
+  navTo(t.dataset.tab);
+  document.getElementById('pgBody').scrollTop=0;
+});
 
 // ══════════════════════════════════════════
 //  FIREBASE — Auth + Firestore sync
