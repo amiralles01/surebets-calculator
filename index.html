@@ -1251,6 +1251,10 @@ input[type=checkbox]{accent-color:var(--accent)}
 @keyframes sheetIn{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
+.pend-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pend-tools .seg{align-self:auto}
+.pend-house-sel{width:auto!important;min-width:180px;border-radius:12px!important}
+@media(max-width:600px){.pend-tools{gap:8px}.pend-tools .seg{flex:1 1 100%;flex-wrap:nowrap}.pend-tools .seg-b{flex:1;justify-content:center}.pend-house-sel{flex:1 1 100%;min-width:0}}
 </style>
 </head>
 <body>
@@ -1366,7 +1370,7 @@ input[type=checkbox]{accent-color:var(--accent)}
           <div class="cb nf-grid">
             <div><label class="fl">Event</label><input type="text" id="nf-event" placeholder="Spain vs Portugal" autocomplete="off"></div>
             <div class="two-col">
-              <div><label class="fl">Bookmaker</label><input type="text" id="nf-house" list="bookmakerList" placeholder="Bet365, Bwin, Winamax…" autocomplete="off"></div>
+              <div><label class="fl">Bookmaker</label><select id="nf-house"><option value="">Choose bookmaker…</option></select></div>
               <div><label class="fl">Category (optional)</label><select id="nf-category"><option value="">No category</option></select></div>
             </div>
             <div id="nf-sels-wrap" style="display:none">
@@ -1486,6 +1490,7 @@ input[type=checkbox]{accent-color:var(--accent)}
 
     <!-- ═══ PENDIENTES PAGE ═══ -->
     <div id="page-pendientes" class="fw" style="display:none">
+      <div class="pend-tools" id="pendTools"></div>
       <div class="pend-days" id="pendDays"></div>
       <div class="stats" id="pendStats"></div>
       <div id="pendList"></div>
@@ -1704,7 +1709,7 @@ input[type=checkbox]{accent-color:var(--accent)}
     <div style="font-size:15px;font-weight:700;margin-bottom:16px" id="addModalTitle">Edit bet</div>
     <div style="display:flex;flex-direction:column;gap:11px">
       <div><label class="fl">Event</label><input type="text" id="m-event" placeholder="Spain vs Portugal"></div>
-      <div><label class="fl">Bookmaker</label><input type="text" id="m-house" list="bookmakerList" placeholder="Bet365, Bwin, Winamax…" autocomplete="off"></div>
+      <div><label class="fl">Bookmaker</label><select id="m-house"><option value="">Choose bookmaker…</option></select></div>
       <div class="two-col">
         <div><label class="fl">Type</label>
           <select id="m-type">
@@ -1958,10 +1963,18 @@ function refreshBookmakerList(){
 }
 // Builds <option> markup for a bookmaker <select>: known bookmakers first, plus the
 // row's current value even if it isn't in the list yet, so nothing gets silently lost.
+// Bookmakers registered in the Bookmakers page — the only ones selectable on bets
+function trackedBookmakers(){
+  const m=new Map();
+  D.casas.forEach(c=>{const n=(c.name||'').trim();if(n&&!m.has(bkKey(n)))m.set(bkKey(n),n);});
+  return [...m.values()].sort((a,b)=>a.localeCompare(b,'en',{sensitivity:'base'}));
+}
 function houseOptionsHtml(current,placeholder){
-  const names=bookmakerNames();
-  if(current&&!names.some(n=>bkKey(n)===bkKey(current)))names.unshift(current);
+  if(current&&isPlaceholderHouse(current))current='';
+  const names=trackedBookmakers();
+  if(!names.length&&!current)return `<option value="">No bookmakers yet — add them in Bookmakers</option>`;
   let html=`<option value="">${esc(placeholder||'Choose bookmaker…')}</option>`;
+  if(current&&!names.some(n=>bkKey(n)===bkKey(current)))html+=`<option value="${esc(current)}" selected>${esc(current)} (not in Bookmakers)</option>`;
   html+=names.map(n=>`<option value="${esc(n)}"${bkKey(n)===bkKey(current)?' selected':''}>${esc(n)}</option>`).join('');
   return html;
 }
@@ -2036,12 +2049,12 @@ function renderSbrLegs(legs,editable){
   const wrap=document.getElementById('sbr-legs');
   document.getElementById('sbr-legs-wrap').style.display=legs.length?'block':'none';
   if(editable){
-    wrap.innerHTML=legs.map((l,i)=>`<div class="sbr-leg edit"><div class="sbr-leg-info"><b>${esc(l.result||`Outcome ${i+1}`)}</b></div><input type="text" list="bookmakerList" data-legi="${i}" placeholder="Bookmaker ${i+1}" value="${esc(l.house||'')}" autocomplete="off"><input type="number" step="0.01" min="1.01" data-legodd="${i}" placeholder="Odds" value="${l.odd!=null?l.odd:''}"><input type="number" step="0.01" min="0" data-legstake="${i}" placeholder="Stake €" value="${l.stake!=null?l.stake:''}"></div>`).join('');
+    wrap.innerHTML=legs.map((l,i)=>`<div class="sbr-leg edit"><div class="sbr-leg-info"><b>${esc(l.result||`Outcome ${i+1}`)}</b></div><select data-legi="${i}">${houseOptionsHtml(l.house||'',`Bookmaker ${i+1}`)}</select><input type="number" step="0.01" min="1.01" data-legodd="${i}" placeholder="Odds" value="${l.odd!=null?l.odd:''}"><input type="number" step="0.01" min="0" data-legstake="${i}" placeholder="Stake €" value="${l.stake!=null?l.stake:''}"></div>`).join('');
     return;
   }
-  wrap.innerHTML=legs.map((l,i)=>`<div class="sbr-leg"><div class="sbr-leg-info"><b>${esc(l.result||`Outcome ${i+1}`)}</b> @ ${fmt(l.odd||0)}</div><input type="text" list="bookmakerList" data-legi="${i}" placeholder="Bookmaker ${i+1}" value="${esc(l.house||'')}" autocomplete="off"></div>`).join('');
+  wrap.innerHTML=legs.map((l,i)=>`<div class="sbr-leg"><div class="sbr-leg-info"><b>${esc(l.result||`Outcome ${i+1}`)}</b> @ ${fmt(l.odd||0)}</div><select data-legi="${i}">${houseOptionsHtml(l.house||'',`Bookmaker ${i+1}`)}</select></div>`).join('');
 }
-function readSbrHouses(){return [...document.querySelectorAll('#sbr-legs input[data-legi]')].map(i=>i.value.trim());}
+function readSbrHouses(){return [...document.querySelectorAll('#sbr-legs [data-legi]')].map(i=>i.value.trim());}
 function openSbRegModal(){
   const res=calculate();if(!res)return;
   editingSbId=null;
@@ -2570,7 +2583,7 @@ function openNormalModal(id){
   document.getElementById('m-save').textContent=n?'Save changes':'Save to pending';
   document.getElementById('m-event').value=n?(n.event||''):'';
   refreshBookmakerList();
-  document.getElementById('m-house').value=n?(n.house||''):'';
+  document.getElementById('m-house').innerHTML=houseOptionsHtml(n?(n.house||''):'','Choose bookmaker…');
   document.getElementById('m-time').value=n?(n.time||''):'';
   document.getElementById('m-type').value=n?(n.type||'Normal'):'Normal';
   document.getElementById('m-odd').value=(n&&n.odd!=null)?n.odd:'';
@@ -2656,6 +2669,25 @@ function pendKey(kind,item){
   if(kind==='nm')return 'nm:'+item.id;
   return 'wd:'+item.cid+':'+item.hid;
 }
+let pendSort='day', pendHouse='all';
+function pendHouses(kind,item){
+  if(kind==='wd')return [item.casaName||''];
+  if(kind==='sb'){const hs=[...new Set((item.legs||[]).map(l=>(l.house||'').trim()).filter(Boolean))];return hs.length?hs:[''];}
+  return [(item.house||'').trim()];
+}
+function pendMatchesHouse(kind,item){return pendHouse==='all'||pendHouses(kind,item).some(h=>bkKey(h)===bkKey(pendHouse));}
+function renderPendTools(allVisible){
+  const names=new Map();
+  allVisible.forEach(({kind,item})=>pendHouses(kind,item).forEach(h=>{if(h&&!names.has(bkKey(h)))names.set(bkKey(h),h);}));
+  trackedBookmakers().forEach(h=>{if(!names.has(bkKey(h)))names.set(bkKey(h),h);});
+  const list=[...names.values()].sort((a,b)=>a.localeCompare(b,'en',{sensitivity:'base'}));
+  if(pendHouse!=='all'&&!list.some(h=>bkKey(h)===bkKey(pendHouse)))pendHouse='all';
+  document.getElementById('pendTools').innerHTML=`
+    <div class="seg pend-sort"><button class="seg-b${pendSort==='day'?' active':''}" data-psort="day">By day</button><button class="seg-b${pendSort==='house'?' active':''}" data-psort="house">By bookmaker</button></div>
+    <select id="pendHouseSel" class="pend-house-sel"><option value="all">All bookmakers</option>${list.map(h=>`<option value="${esc(h)}"${bkKey(h)===bkKey(pendHouse)?' selected':''}>${esc(h)}</option>`).join('')}</select>`;
+}
+document.getElementById('pendTools').addEventListener('click',e=>{const b=e.target.closest('[data-psort]');if(!b)return;pendSort=b.dataset.psort;renderPendientes();});
+document.getElementById('pendTools').addEventListener('change',e=>{if(e.target.id!=='pendHouseSel')return;pendHouse=e.target.value;renderPendientes();});
 let pendDayFilter='all'; // 'all' | 'overdue' | 'nodate' | 'YYYY-MM-DD'
 function localISO(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function shiftedISO(n){const d=new Date();d.setDate(d.getDate()+n);return localISO(d);}
@@ -2713,12 +2745,13 @@ function renderPendientes(){
   D.casas.forEach(c=>{(c.history||[]).forEach(h=>{if(h.type==='wd'&&h.status==='pending')pendWDAll.push({kind:'wd',item:{cid:c.id,hid:h.id,casaName:c.name,amount:h.amount,date:h.date}});});});
   const dKey=x=>(x.item.date||'9999-99-99')+' '+(x.item.time||'99:99');
   const pendAll=[...pendSBAll,...pendNMAll,...pendWDAll].sort((a,b)=>dKey(a).localeCompare(dKey(b)));
-  renderPendDays(pendAll.filter(({kind,item})=>!isHidden(pendKey(kind,item))));
-  const pend=pendAll.filter(({item})=>pendMatchesDay(item.date||''));
-  const pendSB=visibleBets().filter(b=>b.status==='pending'&&pendMatchesDay(b.date||''));
-  const pendNM=visibleNormals().filter(n=>n.status==='pending'&&pendMatchesDay(n.date||''));
+  renderPendTools(pendAll.filter(({kind,item})=>!isHidden(pendKey(kind,item))));
+  renderPendDays(pendAll.filter(({kind,item})=>!isHidden(pendKey(kind,item))&&pendMatchesHouse(kind,item)));
+  const pend=pendAll.filter(({kind,item})=>pendMatchesDay(item.date||'')&&pendMatchesHouse(kind,item));
+  const pendSB=visibleBets().filter(b=>b.status==='pending'&&pendMatchesDay(b.date||'')&&pendMatchesHouse('sb',b));
+  const pendNM=visibleNormals().filter(n=>n.status==='pending'&&pendMatchesDay(n.date||'')&&pendMatchesHouse('nm',n));
   const pendWD=[];
-  visibleCasas().forEach(c=>{(c.history||[]).forEach(h=>{if(h.type==='wd'&&h.status==='pending'&&!isHidden('wd:'+c.id+':'+h.id)&&pendMatchesDay(h.date||''))pendWD.push(h);});});
+  visibleCasas().forEach(c=>{(c.history||[]).forEach(h=>{if(h.type==='wd'&&h.status==='pending'&&!isHidden('wd:'+c.id+':'+h.id)&&pendMatchesDay(h.date||'')&&pendMatchesHouse('wd',{casaName:c.name}))pendWD.push(h);});});
   const totalExpected=pendSB.reduce((a,x)=>a+(x.profit||0),0)+pendNM.reduce((a,x)=>a+(x.potentialWin!=null?x.potentialWin:0),0);
   const totalStake=pendSB.reduce((a,x)=>a+(x.totalStake||0),0)+pendNM.reduce((a,x)=>a+(x.stake||0),0);
   const totalMinRet=pendSB.reduce((a,x)=>a+(x.minReturn||0),0);
@@ -2728,10 +2761,24 @@ function renderPendientes(){
     <div class="sc"><div class="sl2">Staked</div><div class="sv2">${fmt(totalStake)} €</div></div>
     <div class="sc"><div class="sl2">Total min. return</div><div class="sv2">${fmt(totalMinRet)} €</div></div>`;
   const list=document.getElementById('pendList');
-  const visible=pend.filter(({kind,item})=>!isHidden(pendKey(kind,item)));
+  let visible=pend.filter(({kind,item})=>!isHidden(pendKey(kind,item)));
   const hidden=pend.filter(({kind,item})=>isHidden(pendKey(kind,item)));
+  if(pendSort==='house'){
+    // one group per bookmaker; a surebet shows under each bookmaker it uses
+    const ex=[];
+    visible.forEach(x=>pendHouses(x.kind,x.item).forEach(h=>{if(pendHouse==='all'||bkKey(h)===bkKey(pendHouse))ex.push({...x,grp:h});}));
+    ex.sort((a,b)=>(!a.grp)-(!b.grp)||a.grp.localeCompare(b.grp,'en',{sensitivity:'base'})||dKey(a).localeCompare(dKey(b)));
+    visible=ex;
+  }
+  const groupHeader=(lst,idx)=>{
+    if(pendSort!=='house')return pendDayHeader(lst,idx);
+    const g=lst[idx].grp;if(idx>0&&lst[idx-1].grp===g)return '';
+    const grp=lst.filter(x=>x.grp===g);
+    const exp=grp.reduce((a,{kind,item})=>a+(kind==='sb'?(item.profit||0):kind==='nm'?(item.potentialWin||0):0),0);
+    return `<div class="pend-day-h">${g?esc(g):'No bookmaker'} <span class="pd-n">${grp.length} · ${exp>=0?'+':''}${fmt(exp)} €</span></div>`;
+  };
   if(!visible.length&&!hidden.length){list.innerHTML=emptyStateHtml(pendDayFilter==='all'?'You have no pending bets right now.':`No pending bets for ${pendDayFilter==='overdue'?'past days':pendDayFilter==='nodate'?'bets without a date':pendDayLabel(pendDayFilter).toLowerCase()==='today'?'today':pendDayLabel(pendDayFilter)}.`);return;}
-  list.innerHTML=visible.map(({kind,item},idx)=>pendDayHeader(visible,idx)+(()=>{
+  list.innerHTML=visible.map(({kind,item},idx)=>groupHeader(visible,idx)+(()=>{
     if(kind==='wd'){
       const w=item;
       return`<div class="pend-item wd">
@@ -4061,6 +4108,7 @@ function setBetType(type){
   document.getElementById('nf-sels-wrap').style.display=newBetType==='Combi'?'':'none';
   if(newBetType==='Combi'&&!nfSels.length){nfSels=[{name:'',odd:''},{name:'',odd:''}];}
   refreshBookmakerList();
+  const nfH=document.getElementById('nf-house');nfH.innerHTML=houseOptionsHtml(nfH.value,'Choose bookmaker…');
   const catSel=document.getElementById('nf-category');
   const keepCat=newBetCat!=null?newBetCat:(catSel.value?+catSel.value:null);
   fillCategorySelect(catSel,keepCat);
