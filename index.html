@@ -1255,6 +1255,12 @@ input[type=checkbox]{accent-color:var(--accent)}
 .pend-tools .seg{align-self:auto}
 .pend-house-sel{width:auto!important;min-width:180px;border-radius:12px!important}
 @media(max-width:600px){.pend-tools{gap:8px}.pend-tools .seg{flex:1 1 100%;flex-wrap:nowrap}.pend-tools .seg-b{flex:1;justify-content:center}.pend-house-sel{flex:1 1 100%;min-width:0}}
+.pend-meta{align-items:center}
+.pend-item.sb{flex-wrap:nowrap}
+.pend-legs{grid-auto-rows:min-content;align-content:start}
+.pend-house{display:inline-flex;align-items:center;gap:5px;padding:2px 9px 2px 7px;border-radius:99px;background:var(--adim);color:var(--accent);font-weight:600;font-size:12px;border:1px solid var(--aline)}
+.pend-house svg{width:12px;height:12px}
+.pend-house.none{background:var(--raised);color:var(--faint);border-color:var(--border2)}
 </style>
 </head>
 <body>
@@ -2675,6 +2681,7 @@ function pendHouses(kind,item){
   if(kind==='sb'){const hs=[...new Set((item.legs||[]).map(l=>(l.house||'').trim()).filter(Boolean))];return hs.length?hs:[''];}
   return [(item.house||'').trim()];
 }
+function pendHouseChip(names){const hs=(names||[]).map(h=>(h||'').trim()).filter(h=>h&&!isPlaceholderHouse(h));return `<span class="pend-house${hs.length?'':' none'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="21" x2="21" y2="21"/><line x1="6" y1="17" x2="6" y2="11"/><line x1="12" y1="17" x2="12" y2="11"/><line x1="18" y1="17" x2="18" y2="11"/><polygon points="12 3 20 8 4 8"/></svg>${hs.length?hs.map(esc).join(' · '):'No bookmaker'}</span>`;}
 function pendMatchesHouse(kind,item){return pendHouse==='all'||pendHouses(kind,item).some(h=>bkKey(h)===bkKey(pendHouse));}
 function renderPendTools(allVisible){
   const names=new Map();
@@ -2785,7 +2792,7 @@ function renderPendientes(){
         <div class="pend-top">
           <div>
             <div class="pend-ev">Withdrawal – ${esc(w.casaName)} <span class="type-badge-kind">Bookmaker</span></div>
-            <div class="pend-meta"><span>${fmtDate(w.date)}</span><span>Amount: ${fmt(w.amount)} €</span></div>
+            <div class="pend-meta">${pendHouseChip([w.casaName])}<span>${fmtDate(w.date)}</span><span>Amount: ${fmt(w.amount)} €</span></div>
           </div>
           <div style="display:flex;align-items:center;gap:6px">
             <button class="btn-accept" data-confirm-wd="${w.cid}:${w.hid}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Confirm received</button>
@@ -2810,7 +2817,7 @@ function renderPendientes(){
         <div class="pend-top">
           <div>
             <div class="pend-ev">${esc(b.event)} <span class="type-badge-kind">Surebet</span></div>
-            <div class="pend-meta"><span>${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}</span>${b.totalStake?`<span>Staked: ${fmt(b.totalStake)} €</span>`:''}</div>
+            <div class="pend-meta">${pendHouseChip([...new Set((b.legs||[]).map(l=>l.house))])}<span>${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}</span>${b.totalStake?`<span>Staked: ${fmt(b.totalStake)} €</span>`:''}</div>
           </div>
           <div style="display:flex;align-items:center;gap:6px"><button class="btn-void" data-cashout="sb:${b.id}" title="Close early for a manual amount">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada" title="Doesn't count as won or lost">Void</button>${hideBtnHtml('sb:'+b.id,true)}</div>
         </div>
@@ -2824,7 +2831,7 @@ function renderPendientes(){
     return`<div class="pend-item">
       <div class="pend-left">
         <div class="pend-ev">${esc(n.event)} ${typePill(n.type)}</div>
-        <div class="pend-meta"><span>${fmtWhen(n.date,n.time)}${n.resolveDate?' → '+fmtDate(n.resolveDate):''}</span><span>Odds ${fmt(n.odd||0)}</span><span>Staked: ${fmt(n.stake||0)} €</span></div>
+        <div class="pend-meta">${pendHouseChip([n.house])}<span>${fmtWhen(n.date,n.time)}${n.resolveDate?' → '+fmtDate(n.resolveDate):''}</span><span>Odds ${fmt(n.odd||0)}</span><span>Staked: ${fmt(n.stake||0)} €</span></div>
       </div>
       <div class="pend-right">
         <div class="pend-preview">If it wins: <span class="pend-preview-pos">+${fmt(win)} €</span><br>If it loses: <span class="pend-preview-neg">${fmt(loss)} €</span></div>
