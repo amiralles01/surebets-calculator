@@ -1445,6 +1445,7 @@ input[type=checkbox]{accent-color:var(--accent)}
         <button class="seg-b" data-bview="normales"><svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>Normal, freebets &amp; combis <span class="nb" id="nbCount">0</span></button>
         <button class="ph-new" id="betsNewBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>New bet</span></button>
       </div>
+      <div class="pend-days" id="betsDays"></div>
     <!-- ═══ SUREBETS PAGE ═══ -->
     <div id="page-surebets" class="fw">
       <div class="stats" id="sbStats"></div>
@@ -2146,9 +2147,37 @@ document.getElementById('sbr-save').addEventListener('click',()=>{
 // ══════════════════════════════════════════
 //  SUREBETS PAGE
 // ══════════════════════════════════════════
+// ── My bets: filter by day ──
+let betsDay='all'; // 'all' | 'today' | 'yesterday' | 'week' | 'YYYY-MM-DD'
+function betsDayMatch(d){
+  if(betsDay==='all')return true;
+  d=d||'';
+  if(betsDay==='today')return d===shiftedISO(0);
+  if(betsDay==='yesterday')return d===shiftedISO(-1);
+  if(betsDay==='week')return d>=shiftedISO(-6)&&d<=shiftedISO(0);
+  return d===betsDay;
+}
+function betsDayLabel(){
+  return {today:'today',yesterday:'yesterday',week:'the last 7 days'}[betsDay]||pendDayLabel(betsDay);
+}
+function renderBetsDays(){
+  const el=document.getElementById('betsDays');if(!el)return;
+  const sb=document.querySelector('#betsTabs .seg-b.active')?.dataset.bview!=='normales';
+  const src=sb?visibleBets():visibleNormals();
+  const cnt=k=>{const keep=betsDay;betsDay=k;const n=src.filter(x=>betsDayMatch(x.date)).length;betsDay=keep;return n;};
+  const chip=(k,l)=>`<button class="pd-chip${betsDay===k?' active':''}" data-bday="${k}">${l} <span class="pd-n">${cnt(k)}</span></button>`;
+  const custom=/^\d{4}-\d{2}-\d{2}$/.test(betsDay);
+  el.innerHTML=chip('all','All')+chip('today','Today')+chip('yesterday','Yesterday')+chip('week','Last 7 days')+
+    (custom?chip(betsDay,pendDayLabel(betsDay)):'')+
+    `<label class="pd-pick" title="Pick any day"><input type="date" id="betsDayPick" value="${custom?betsDay:''}"></label>`;
+}
+function rerenderBets(){renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);}
+document.getElementById('betsDays').addEventListener('click',e=>{const c=e.target.closest('[data-bday]');if(!c)return;betsDay=c.dataset.bday;rerenderBets();});
+document.getElementById('betsDays').addEventListener('change',e=>{if(e.target.id!=='betsDayPick')return;betsDay=e.target.value||'all';rerenderBets();});
 function renderSurebets(filter=''){
-  const bets=D.bets.filter(b=>!filter||b.event.toLowerCase().includes(filter.toLowerCase())||b.legs.some(l=>l.house&&l.house.toLowerCase().includes(filter.toLowerCase())));
-  const vBets=visibleBets();
+  const bets=D.bets.filter(b=>betsDayMatch(b.date)).filter(b=>!filter||b.event.toLowerCase().includes(filter.toLowerCase())||b.legs.some(l=>l.house&&l.house.toLowerCase().includes(filter.toLowerCase())));
+  const vBets=visibleBets().filter(b=>betsDayMatch(b.date));
+  renderBetsDays();
   const won=vBets.filter(b=>b.status==='won'),lost=vBets.filter(b=>b.status==='lost');
   const wonProfit=won.reduce((a,b)=>a+(b.profit||0),0);
   document.getElementById('sbStats').innerHTML=`
@@ -2159,7 +2188,7 @@ function renderSurebets(filter=''){
   const list=document.getElementById('sbList');
   const visible=bets.filter(b=>!isHidden('sb:'+b.id));
   const hidden=bets.filter(b=>isHidden('sb:'+b.id));
-  if(!visible.length&&!hidden.length){list.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>No surebets registered yet.</p></div></div>`;return;}
+  if(!visible.length&&!hidden.length){list.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>${betsDay==='all'?'No surebets registered yet.':'No surebets for '+betsDayLabel()+'.'}</p></div></div>`;return;}
   list.innerHTML=visible.map(b=>{
     const isVoid=b.status==='anulada';
     const s=b.profitPct>=0?'+':'';
@@ -2191,8 +2220,9 @@ function typePill(t){
 }
 function houseTag(h){return h?`<span>${esc(h)}</span>`:'';}
 function renderNormals(filter=''){
-  const items=D.normals.filter(n=>!filter||n.event.toLowerCase().includes(filter.toLowerCase()));
-  const vNorm=visibleNormals();
+  const items=D.normals.filter(n=>betsDayMatch(n.date)).filter(n=>!filter||n.event.toLowerCase().includes(filter.toLowerCase()));
+  const vNorm=visibleNormals().filter(n=>betsDayMatch(n.date));
+  renderBetsDays();
   const pendCount=vNorm.filter(n=>n.status==='pending').length;
   const freebets=vNorm.filter(n=>n.type==='Freebet');
   const fbProfit=freebets.reduce((a,n)=>a+(n.profit||0),0);
@@ -2205,7 +2235,7 @@ function renderNormals(filter=''){
   const list=document.getElementById('nbList');
   const visible=items.filter(n=>!isHidden('nm:'+n.id));
   const hidden=items.filter(n=>isHidden('nm:'+n.id));
-  if(!visible.length&&!hidden.length){list.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>No bets registered yet.</p></div></div>`;return;}
+  if(!visible.length&&!hidden.length){list.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>${betsDay==='all'?'No bets registered yet.':'No bets for '+betsDayLabel()+'.'}</p></div></div>`;return;}
   list.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">`+visible.map(n=>{
     const hasStatus=!!n.status;
     const isPending=n.status==='pending';
