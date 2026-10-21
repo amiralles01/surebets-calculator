@@ -1607,6 +1607,16 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 
 #phNewBet{display:none!important}
 
+#casasStats{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+#casasStats .sv2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk-bal-sub{font-size:12px;color:var(--muted);text-align:right;margin-top:-2px}
+.bk-bal-val.neg{color:var(--red)}
+.bk-money{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:4px 18px;padding:0 18px 14px}
+.bk-money div{display:flex;flex-direction:column;gap:1px}
+.bk-money span{font-size:12px;color:var(--muted)}
+.bk-money b{font-size:15px;font-weight:600}
+.bk-money b.pos{color:var(--green)}.bk-money b.neg{color:var(--red)}.bk-money b.yel{color:var(--yellow)}
+@media(max-width:600px){.bk-money{grid-template-columns:1fr 1fr;padding:0 14px 12px}}
 </style>
 </head>
 <body>
@@ -3153,12 +3163,16 @@ function renderPendientes(){
     ex.sort((a,b)=>(!a.grp)-(!b.grp)||a.grp.localeCompare(b.grp,'en',{sensitivity:'base'})||dKey(a).localeCompare(dKey(b)));
     visible=ex;
   }
+  const pendLedger=bookmakerLedger();
   const groupHeader=(lst,idx)=>{
     if(pendSort!=='house')return pendDayHeader(lst,idx);
     const g=lst[idx].grp;if(idx>0&&lst[idx-1].grp===g)return '';
     const grp=lst.filter(x=>x.grp===g);
     const exp=grp.reduce((a,{kind,item})=>a+(kind==='sb'?(item.profit||0):kind==='nm'?(item.potentialWin||0):0),0);
-    return `<div class="pend-day-h">${g?esc(g):'No bookmaker'} <span class="pd-n">${grp.length} · ${exp>=0?'+':''}${fmt(exp)} €</span></div>`;
+    const casa=g?D.casas.find(c=>bkKey(c.name||'')===bkKey(g)):null;
+    const mny=casa?casaMoney(casa,pendLedger):null;
+    const inPlayG=g?(pendLedger.get(bkKey(g))||{inPlay:0}).inPlay:0;
+    return `<div class="pend-day-h">${g?esc(g):'No bookmaker'} <span class="pd-n">${grp.length} · ${exp>=0?'+':''}${fmt(exp)} € expected · ${fmt(inPlayG)} € in play${mny?` · balance ${fmt(mny.balance)} €`:''}</span></div>`;
   };
   if(!visible.length&&!hidden.length){list.innerHTML=emptyStateHtml(pendDayFilter==='all'?'You have no pending bets right now.':`No pending bets for ${pendDayFilter==='overdue'?'past days':pendDayFilter==='nodate'?'bets without a date':pendDayLabel(pendDayFilter).toLowerCase()==='today'?'today':pendDayLabel(pendDayFilter)}.`);return;}
   list.innerHTML=visible.map(({kind,item},idx)=>groupHeader(visible,idx)+(()=>{
@@ -3350,6 +3364,35 @@ document.getElementById('pokerList').addEventListener('click',e=>{
   save();renderPoker();
 });
 
+// ── Bookmaker balances: net deposits + settled results − money in pending bets ──
+function bookmakerLedger(){
+  const m=new Map();
+  const g=h=>{const k=bkKey((h||'').trim());if(!k)return null;if(!m.has(k))m.set(k,{settled:0,inPlay:0,open:0});return m.get(k);};
+  visibleNormals().forEach(n=>{
+    const e=g(n.house);if(!e)return;
+    if(n.status==='pending'){e.inPlay+=n.type==='Freebet'?0:(n.stake||0);e.open++;}
+    else if(n.status==='won'||n.status==='lost')e.settled+=n.profit||0;
+  });
+  visibleBets().forEach(b=>{
+    const legs=b.legs||[];if(!legs.length)return;
+    if(b.status==='pending'){legs.forEach(l=>{const e=g(l.house);if(e){e.inPlay+=l.stake||0;e.open++;}});return;}
+    if(b.status!=='won'&&b.status!=='lost')return;
+    const w=b.winnerLeg;
+    if(b.cashOut==null&&w!=null&&legs[w]){
+      legs.forEach((l,i)=>{const e=g(l.house);if(e)e.settled+=i===w?((l.minReturn!=null?l.minReturn:(l.odd||0)*(l.stake||0))-(l.stake||0)):-(l.stake||0);});
+    }else{ // cash out / legacy without a winning leg: split the result by stake
+      const tot=legs.reduce((a,l)=>a+(l.stake||0),0)||legs.length;
+      legs.forEach(l=>{const e=g(l.house);if(e)e.settled+=(b.profit||0)*((l.stake||(tot===legs.length?1:0))/tot);});
+    }
+  });
+  return m;
+}
+function casaMoney(c,ledger){
+  const e=(ledger||bookmakerLedger()).get(bkKey(c.name||''))||{settled:0,inPlay:0,open:0};
+  const deposited=c.amount||0, adj=c.balAdj||0;
+  const balance=+(deposited+e.settled+adj-e.inPlay).toFixed(2);
+  return {deposited,settled:+e.settled.toFixed(2),inPlay:+e.inPlay.toFixed(2),open:e.open,adj,balance};
+}
 function renderCasas(filter=''){
   renderBkProfileTabs();
   const byProfile=c=>bkProfileSel==='all'?true:(bkProfileSel==='none'?!c.profileId:c.profileId===bkProfileSel);
@@ -3359,19 +3402,22 @@ function renderCasas(filter=''){
   const avg=vCasas.length?total/vCasas.length:0;
   const top=vCasas.reduce((best,c)=>(!best||(c.amount||0)>(best.amount||0))?c:best,null);
   const totalPending=vCasas.reduce((a,c)=>a+(c.pendingTransfer||0),0);
+  const ledger=bookmakerLedger();
+  const totBal=vCasas.reduce((a,c)=>a+casaMoney(c,ledger).balance,0), totPlay=vCasas.reduce((a,c)=>a+casaMoney(c,ledger).inPlay,0);
   document.getElementById('casasStats').innerHTML=`
+    <div class="sc"><div class="sl2">Balance available</div><div class="sv2 ${totBal>=0?'pos':'neg'}">${fmt(totBal)} €</div></div>
+    <div class="sc"><div class="sl2">In pending bets</div><div class="sv2 ${totPlay>0?'yel':''}">${fmt(totPlay)} €</div></div>
     <div class="sc"><div class="sl2">Bookmakers tracked</div><div class="sv2">${vCasas.length}</div></div>
-    <div class="sc"><div class="sl2">Total deposited</div><div class="sv2 pos">${fmt(total)} €</div></div>
-    <div class="sc"><div class="sl2">Average per bookmaker</div><div class="sv2">${fmt(avg)} €</div></div>
+    <div class="sc"><div class="sl2">Total deposited</div><div class="sv2">${fmt(total)} €</div></div>
     <div class="sc"><div class="sl2">Pending to receive</div><div class="sv2 ${totalPending>0?'yel':''}">${fmt(totalPending)} €</div></div>
     <div class="sc"><div class="sl2">Top bookmaker</div><div class="sv2" style="font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${top?esc(top.name):'—'}</div></div>`;
   const list=document.getElementById('casasList');
   const visible=items.filter(c=>!isHidden('casa:'+c.id));
   const hidden=items.filter(c=>isHidden('casa:'+c.id));
   if(!visible.length&&!hidden.length){list.innerHTML=emptyStateHtml(D.casas.length?'No bookmakers match this view.':'You have no bookmakers tracked yet.');return;}
-  const sorted=[...visible].sort((a,b)=>(b.amount||0)-(a.amount||0));
+  const sorted=[...visible].sort((a,b)=>casaMoney(b,ledger).balance-casaMoney(a,ledger).balance);
   list.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px">`+sorted.map(c=>{
-    const amt=c.amount||0,pCls=amt>0?'pos':'zer';
+    const mny=casaMoney(c,ledger),amt=mny.balance,pCls=amt>0?'pos':amt<0?'neg':'zer';
     const pend=c.pendingTransfer||0;
     const pendWdCount=(c.history||[]).filter(h=>h.type==='wd'&&h.status==='pending').length;
     const metaBits=[];
@@ -3403,6 +3449,16 @@ function renderCasas(filter=''){
           ${pend>0?`<button class="btn-s" data-bk-clear-pending="${c.id}" style="width:auto;padding:9px 16px">Mark as received</button>`:''}
         </div>
       </div>`;
+    }else if(mode==='bal'){
+      panelHtml=`<div class="bk-panel">
+        <div class="bk-panel-title">Real balance you see in ${esc(c.name)} right now (without the money in pending bets)</div>
+        <div class="bk-panel-row">
+          <div class="iw"><input type="number" class="ii" id="bk-panel-amount" value="${amt}" step="0.01"><span class="isuf">€</span></div>
+          <button class="btn-reg" data-bk-apply="${c.id}" data-bk-mode="bal" style="width:auto;padding:9px 16px">Save</button>
+          ${mny.adj?`<button class="btn-s" data-bk-clear-adj="${c.id}" style="width:auto;padding:9px 16px">Remove adjustment</button>`:''}
+        </div>
+        <div class="bk-hist-empty" style="margin-top:8px">The difference is kept as an adjustment; future bets keep updating the balance on top of it.</div>
+      </div>`;
     }else if(mode==='hist'){
       const hist=(c.history||[]).slice().sort((a,b)=>(b.id||0)-(a.id||0));
       panelHtml=`<div class="bk-panel">
@@ -3426,13 +3482,20 @@ function renderCasas(filter=''){
           <div class="bk-name">${esc(c.name)}</div>
           ${metaBits.length?`<div class="bk-meta">${metaBits.join(' · ')}</div>`:''}
         </div>
-        <div class="bk-bal"><div class="bk-bal-val ${pCls}">${fmt(amt)} €</div></div>
+        <div class="bk-bal"><div class="bk-bal-val ${pCls}">${fmt(amt)} €</div><div class="bk-bal-sub">balance</div></div>
+      </div>
+      <div class="bk-money">
+        <div><span>Deposited</span><b>${fmt(mny.deposited)} €</b></div>
+        <div><span>Bet results</span><b class="${mny.settled>0?'pos':mny.settled<0?'neg':''}">${mny.settled>0?'+':''}${fmt(mny.settled)} €</b></div>
+        <div><span>In pending bets${mny.open?` (${mny.open})`:''}</span><b class="${mny.inPlay>0?'yel':''}">${fmt(mny.inPlay)} €</b></div>
+        ${mny.adj?`<div><span>Manual adjustment</span><b>${mny.adj>0?'+':''}${fmt(mny.adj)} €</b></div>`:''}
       </div>
       <div class="bk-actions">
         <button class="bk-btn dep${mode==='dep'?' on':''}" data-bk-toggle="dep" data-cid="${c.id}">+ Deposit</button>
         <button class="bk-btn wd${mode==='wd'?' on':''}" data-bk-toggle="wd" data-cid="${c.id}">− Withdraw</button>
         <button class="bk-btn${mode==='pending'?' on':''}" data-bk-toggle="pending" data-cid="${c.id}">Pending transfer</button>
         <button class="bk-btn${mode==='hist'?' on':''}" data-bk-toggle="hist" data-cid="${c.id}">History</button>
+        <button class="bk-btn${mode==='bal'?' on':''}" data-bk-toggle="bal" data-cid="${c.id}">Set balance</button>
         <div class="bk-spacer"></div>
         <button class="bk-btn" data-edit-cid="${c.id}">Edit</button>
         ${hideBtnHtml('casa:'+c.id)}
@@ -3520,10 +3583,19 @@ document.getElementById('casasList').addEventListener('click',e=>{
       if(val>0)c.history.unshift({id:Date.now(),type:'wd',amount:val,date:new Date().toISOString().slice(0,10),status:'pending'});
     }
     else if(mode==='pending')c.pendingTransfer=val<0?0:val;
+    else if(mode==='bal'){
+      const raw=document.getElementById('bk-panel-amount').value;
+      if(raw.trim()!==''){const cur=casaMoney({...c,balAdj:0});c.balAdj=+(parseFloat(raw)-cur.balance).toFixed(2);}
+    }
     openBkPanel=null;
     save();updateBadges();
     renderCasas(document.getElementById('casasSearch').value);
     return;
+  }
+  const clearAdjBtn=e.target.closest('[data-bk-clear-adj]');
+  if(clearAdjBtn){
+    const c=D.casas.find(x=>x.id===+clearAdjBtn.dataset.bkClearAdj);if(!c)return;
+    c.balAdj=0;openBkPanel=null;save();renderCasas(document.getElementById('casasSearch').value);return;
   }
   const clearPendBtn=e.target.closest('[data-bk-clear-pending]');
   if(clearPendBtn){
