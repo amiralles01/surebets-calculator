@@ -1650,6 +1650,11 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 /* iOS zooms into any field under 16px on focus — keep fields at 16px on phones */
 @media(max-width:600px){input,select,textarea{font-size:16px!important}}
 html{-webkit-text-size-adjust:100%;touch-action:manipulation}
+
+.rep-wrap{grid-column:1/-1;display:flex;align-items:center;gap:10px}
+@media(max-width:600px){.rep-wrap{order:-2}}
+.rep-wrap .fl{margin:0;white-space:nowrap}
+.rep-wrap select{flex:1;min-width:0;text-overflow:ellipsis}
 </style>
 </head>
 <body>
@@ -1758,6 +1763,10 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 
     <!-- ═══ CALC PAGE ═══ -->
     <div id="page-calc" style="display:contents">
+      <div class="rep-wrap" id="repWrap" style="display:none">
+        <label class="fl" for="repSel">Start from</label>
+        <select id="repSel"></select>
+      </div>
       <div class="nbt-wrap" id="nbTypes">
         <button class="nbt active" data-bt="Surebet"><span class="nbt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span><span class="nbt-tx"><span class="nbt-t">Surebet</span><span class="nbt-d">Arbitrage across bookmakers</span></span></button>
         <button class="nbt" data-bt="Normal"><span class="nbt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg></span><span class="nbt-tx"><span class="nbt-t">Normal</span><span class="nbt-d">Single bet, own money</span></span></button>
@@ -2488,11 +2497,12 @@ function openSbRegModal(){
   refreshBookmakerList();
   document.getElementById('sbRegModalTitle').textContent='Register surebet';
   document.getElementById('sbr-save').textContent='Register in pending';
-  document.getElementById('sbr-event').value='';
+  const pf=sbPrefill;
+  document.getElementById('sbr-event').value=pf?pf.event||'':'';
   renderSbrLegs(res.valid.map(o=>({house:o.house,result:o.result,odd:o.odd})));
-  document.getElementById('sbr-start').value=new Date().toISOString().slice(0,10);
-  document.getElementById('sbr-time').value='';
-  fillCategorySelect(document.getElementById('sbr-category'),newBetCat);
+  document.getElementById('sbr-start').value=pf&&pf.date?pf.date:new Date().toISOString().slice(0,10);
+  document.getElementById('sbr-time').value=pf?hourOnly(pf.time):'';
+  fillCategorySelect(document.getElementById('sbr-category'),pf&&newBetCat==null?pf.categoryId:newBetCat);
   document.getElementById('sbRegModal').style.display='flex';
 }
 function openSbEditModal(id){
@@ -2522,7 +2532,7 @@ function registerBet(){
     legs:res.valid.map((o,i)=>({house:houses[i]||o.house||`Bookmaker ${i+1}`,result:o.result||`Outcome ${i+1}`,odd:o.odd,stake:res.stakes[i],minReturn:res.returns[i]}))};
   D.bets.unshift(bet);save();updateBadges();renderPendientes();
   document.getElementById('sbRegModal').style.display='none';
-  newBetCat=null;
+  newBetCat=null;sbPrefill=null;renderRepeatSel();
   toast(`Surebet saved to pending · ${res.profit>=0?'+':''}${fmt(res.profit)} €`,'View pending',()=>navTo('pendientes'));
 }
 document.getElementById('sbr-cancel').addEventListener('click',()=>{document.getElementById('sbRegModal').style.display='none';editingSbId=null;});
@@ -4277,6 +4287,53 @@ document.getElementById('psQuick').addEventListener('click',e=>{
   loadPresetIntoCalc(p);toast('Preset loaded — now pick the bookmakers');
 });
 
+
+// ── "Same as last bet": copy everything except the odds from the most recent bet
+let sbPrefill=null;
+function lastBet(){
+  let best=null;
+  (D.bets||[]).forEach(b=>{if(!best||b.id>best.b.id)best={kind:'sb',b};});
+  (D.normals||[]).forEach(n=>{if(!best||n.id>best.b.id)best={kind:'nm',b:n};});
+  return best;
+}
+function renderRepeatSel(){
+  const wrap=document.getElementById('repWrap'),sel=document.getElementById('repSel');if(!wrap)return;
+  const L=lastBet();
+  if(!L){wrap.style.display='none';return;}
+  wrap.style.display='';
+  const type=L.kind==='sb'?'Surebet':(L.b.type||'Normal');
+  const what=L.kind==='sb'?(L.b.legs||[]).map(l=>l.house).filter(Boolean).join(' / '):(L.b.house||'');
+  sel.innerHTML=`<option value="">New bet from scratch</option><option value="last">Same as last · ${esc(L.b.event||'(no event)')} · ${type}${what?' · '+esc(what):''} (odds blank)</option>`;
+  sel.value='';
+}
+function applyLastBet(){
+  const L=lastBet();if(!L)return;const b=L.b;
+  if(L.kind==='sb'){
+    outcomes=(b.legs||[]).map(l=>({id:nextId++,house:l.house||'',result:l.result||'',odd:0,manualStake:null}));
+    while(outcomes.length<2)outcomes.push({id:nextId++,house:'',result:'',odd:0,manualStake:null});
+    if(b.totalStake>0){totalInv=Math.round(b.totalStake*100)/100;document.getElementById('totalInv').value=totalInv;}
+    sbPrefill={event:b.event,date:b.date,time:b.time,categoryId:b.categoryId??null};
+    setBetType('Surebet');
+    setTimeout(()=>{const f=document.querySelector('#outcomesList .oi');if(f)f.focus();},50);
+  }else{
+    sbPrefill=null;
+    setBetType(b.type||'Normal');
+    const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v??'';};
+    set('nf-event',b.event);set('nf-stake',b.stake);set('nf-date',b.date||todayISO());set('nf-time',hourOnly(b.time));set('nf-notes',b.notes);set('nf-odd','');
+    const h=document.getElementById('nf-house');h.innerHTML=houseOptionsHtml(b.house||'','Choose bookmaker…');h.value=b.house||'';
+    fillCategorySelect(document.getElementById('nf-category'),b.categoryId??null);
+    if(b.type==='Combi'&&Array.isArray(b.selections)){nfSels=b.selections.map(x=>({name:x.name||'',odd:''}));renderNfSels();}
+    renderNfResult();
+    setTimeout(()=>{const f=document.querySelector(b.type==='Combi'?'#nf-sels [data-selo]':'#nf-odd');if(f)f.focus();},50);
+  }
+  document.getElementById('repSel').value='last';
+  toast('Copied from your last bet — just enter the odds');
+}
+document.getElementById('repSel').addEventListener('change',e=>{
+  if(e.target.value==='last')applyLastBet();
+  else{sbPrefill=null;}
+});
+
 // ══════════════════════════════════════════
 //  CALCULADORAS — Kelly · No-Vig · Hedge · Free Bet · Hold
 // ══════════════════════════════════════════
@@ -4759,6 +4816,7 @@ function setBetType(type){
   document.getElementById('resultPanel').style.display=isSb?'':'none';
   document.getElementById('nfCard').style.display=isSb?'none':'';
   document.getElementById('nfResult').style.display=isSb?'none':'';
+  renderRepeatSel();
   if(isSb){render();return;}
   const m=NF_META[newBetType];
   document.getElementById('nfTitle').textContent=m.title;
@@ -4853,7 +4911,7 @@ function saveNewNormal(){
   D.normals.unshift(bet);
   save();updateBadges();renderPendientes();renderNormals(document.getElementById('nbSearch').value);renderProfit();
   newBetCat=null;
-  resetNfForm();
+  resetNfForm();renderRepeatSel();
   toast(`${type} saved to pending · +${fmt(bet.potentialWin)} € if it wins`,'View pending',()=>navTo('pendientes'));
 }
 // open the New bet page (optionally on a type and with a category preselected)
