@@ -1348,7 +1348,7 @@ body{font-family:var(--font);font-size:14.5px;line-height:1.5;color:var(--text);
   .sb-account .profile-info{display:none}
   .main{min-height:0}
 }
-@media(min-width:601px) and (max-width:1100px){
+@media(min-width:601px) and (max-width:1440px){
   .sb-word small{display:none}
   .ni{padding:8px 8px;font-size:13.5px}
   .ni .nb{display:none}
@@ -1620,6 +1620,21 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .bk-money b{font-size:15px;font-weight:600}
 .bk-money b.pos{color:var(--green)}.bk-money b.neg{color:var(--red)}.bk-money b.yel{color:var(--yellow)}
 @media(max-width:600px){.bk-money{grid-template-columns:1fr 1fr;padding:0 14px 12px}}
+
+.ps-head,.ps-leg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,.9fr) 34px;gap:8px;align-items:center}
+.ps-head{font-size:11px;color:var(--faint);margin-bottom:6px}
+.ps-leg{margin-bottom:6px}.ps-leg .ps-ret{font-variant-numeric:tabular-nums;font-size:13px;color:var(--faint)}
+.ps-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}.ps-actions .ba{margin:0}
+.ps-sum{margin-top:12px;font-size:13px;display:flex;gap:14px;flex-wrap:wrap}.ps-sum b{font-variant-numeric:tabular-nums}
+.ps-card{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 15px}
+.ps-card+.ps-card{border-top:1px solid var(--border)}
+.ps-main{flex:1;min-width:180px}.ps-name{font-weight:650;font-size:14px}
+.ps-legs{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px}
+.ps-chip{font-size:12.5px;padding:3px 8px;border-radius:7px;background:var(--raised);border:1px solid var(--border);font-variant-numeric:tabular-nums}
+.ps-chip b{font-weight:700}.ps-meta{font-size:12px;color:var(--faint);margin-top:5px}
+.ps-btns{display:flex;gap:6px}
+.ps-hit{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:11px 14px;border-radius:12px;border:1.5px dashed var(--accent);background:var(--raised);font-size:13px;margin-bottom:12px}
+.ps-hit b{font-variant-numeric:tabular-nums}.ps-hit .btn-s{margin-left:auto}
 </style>
 </head>
 <body>
@@ -1691,6 +1706,11 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div class="ni" data-page="calculadoras">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="10" y2="11"/><line x1="14" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="10" y2="15"/><line x1="14" y1="15" x2="16" y2="15"/><line x1="8" y1="19" x2="10" y2="19"/><line x1="14" y1="19" x2="16" y2="19"/></svg>
       Calculators
+    </div>
+    <div class="ni" data-page="presets">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+      Presets
+      <span class="nb" id="presetsCount">0</span>
     </div>
     <div class="ni" data-page="notas">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
@@ -1895,6 +1915,29 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
         </button>
       </div>
       <div id="casasList"></div>
+    </div>
+
+    <!-- ═══ PRESETS PAGE ═══ -->
+    <div id="page-presets" class="fw" style="display:none">
+      <div class="card">
+        <div class="ch"><span class="ct" id="psFormTitle">New preset</span><span style="font-size:11.5px;color:var(--faint)">Odds you see often and the stakes you always use</span></div>
+        <div class="cb">
+          <div style="margin-bottom:12px"><label class="fl">Name (optional)</label><input type="text" id="ps-label" placeholder="E.g. Tennis 3.25 / 1.50" autocomplete="off"></div>
+          <div class="ps-head"><span>Odds</span><span>Stake (€)</span><span>Return</span><span></span></div>
+          <div id="psLegs"></div>
+          <div class="ps-actions">
+            <button class="ba" id="psAddLeg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add odds</button>
+            <button class="btn-s" id="psBalance" title="Keeps the first stake and adjusts the rest so every outcome returns the same">Equal return from 1st stake</button>
+          </div>
+          <div class="ps-sum" id="psSum"></div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn-reg" id="psSave" style="flex:1">Save preset</button>
+            <button class="btn-s" id="psCancel" style="display:none">Cancel</button>
+          </div>
+        </div>
+      </div>
+      <div class="tb"><input type="text" id="psSearch" placeholder="Search by odds or name… e.g. 3.25"></div>
+      <div id="psList"></div>
     </div>
 
     <!-- ═══ NOTAS PAGE ═══ -->
@@ -2245,7 +2288,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 // ══════════════════════════════════════════
 function save(){return window.__fsSave ? window.__fsSave() : Promise.resolve();}
 
-let D = {bets:[],normals:[],casas:[],notes:[],notesFolders:[],categories:[],hidden:{},bkProfiles:[],poker:[]};
+let D = {bets:[],normals:[],casas:[],notes:[],notesFolders:[],categories:[],hidden:{},bkProfiles:[],poker:[],presets:[]};
 // A "void" surebet neither wins nor loses: it contributes no profit and doesn't count as money
 // at risk in any aggregate stat (ROI, wagered, monthly profit, charts, etc).
 function betProfit(b){return(b.status==='won'||b.status==='lost')?(b.profit||0):0;}
@@ -2396,7 +2439,7 @@ function renderResult(){
     `<div class="badge br"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>No surebet</div>`;
   const bkHtml=valid.map((o,i)=>`<div class="bkr"><div><div class="bkn">${esc(o.house||`Bookmaker ${i+1}`)}</div><div class="bks">${esc(o.result||`Outcome ${i+1}`)} · Odds ${fmt(o.odd)}</div></div><div class="bkv"><div class="bkst">${fmt(stakes[i])} €${o.manualStake>0?' <span style="color:var(--yellow);font-size:10px;font-weight:600">MANUAL</span>':''}</div><div class="bkr2">return ${fmt(returns[i])} €</div><div class="bkm">min. ${fmt(returns[i])} €</div></div></div>`).join('');
   const bW=Math.min(sumPct/1.3,100);
-  panel.innerHTML=`
+  panel.innerHTML=`${presetHitHtml(valid,stakes)}
     <div class="card ph2 ${isSurebet?'sb':''}">${badgeHtml}<div class="pp ${profit>=0?'pos':'neg'}">${s}${fmt(profitPct)} %</div><div class="ps">Guaranteed profit: <span class="hi ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span></div></div>
     <div class="card">${bkHtml}
       <div class="sr"><span class="sl">Total stake</span><span class="sv">${fmt(actualTotal)} €</span></div>
@@ -2406,6 +2449,7 @@ function renderResult(){
     </div>
     <button class="btn-reg" id="regBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>${isSurebet?'Register this surebet':'Register anyway (negative ROI)'}</button>`;
   document.getElementById('regBtn').addEventListener('click',openSbRegModal);
+  wirePresetHit();
 }
 
 function render(){renderOutcomes();renderResult();}
@@ -4076,6 +4120,125 @@ setupFolderDragDrop('catList','[data-rootdrop="cat"]',()=>D.categories,(draggedI
   save();renderCategorias();
 });
 
+
+// ══════════════════════════════════════════
+//  PRESETS — saved odds → usual stakes
+// ══════════════════════════════════════════
+const r2=n=>Math.round(n*100)/100;
+function oddKey(o){return (Math.round(o*100)/100).toFixed(2);}
+function presetKey(odds){return odds.map(oddKey).sort().join('|');}
+function presetStats(p){
+  const tot=p.legs.reduce((a,l)=>a+(l.stake||0),0);
+  const rets=p.legs.map(l=>(l.stake||0)*(l.odd||0));
+  const minR=rets.length?Math.min(...rets):0, maxR=rets.length?Math.max(...rets):0;
+  return {tot,minR,maxR,profit:minR-tot,roi:tot>0?(minR-tot)/tot*100:0};
+}
+function findPreset(odds){
+  if(odds.length<2)return null;const k=presetKey(odds);
+  return (D.presets||[]).find(p=>presetKey(p.legs.map(l=>l.odd))===k)||null;
+}
+// map preset stakes onto a list of odds (order-independent)
+function presetStakesFor(p,odds){
+  const pool=p.legs.map(l=>({k:oddKey(l.odd),s:l.stake}));
+  return odds.map(o=>{const i=pool.findIndex(x=>x.k===oddKey(o));if(i<0)return null;const s=pool[i].s;pool.splice(i,1);return s;});
+}
+let presetHitCtx=null;
+function presetHitHtml(valid,stakes){
+  presetHitCtx=null;
+  const odds=valid.map(o=>o.odd);if(odds.length<2)return '';
+  const p=findPreset(odds);
+  if(p){
+    const ps=presetStakesFor(p,odds);
+    const applied=valid.every((o,i)=>o.manualStake>0&&Math.abs(o.manualStake-ps[i])<0.005);
+    presetHitCtx={mode:'apply',p,ps};
+    const st=presetStats(p);
+    return `<div class="ps-hit"><span>${applied?'✓ Preset applied':'Preset found'}${p.label?` · <b>${esc(p.label)}</b>`:''}: ${valid.map((o,i)=>`<b>${fmt(ps[i])} €</b> @ ${fmt(o.odd)}`).join(' · ')} → returns ${fmt(st.minR)} €</span>${applied?'':'<button class="btn-s" id="psApply">Apply stakes</button>'}</div>`;
+  }
+  presetHitCtx={mode:'save',odds,stakes:stakes.slice()};
+  return `<div style="display:flex;justify-content:flex-end;margin:0 0 10px"><button class="btn-s" id="psSaveFromCalc" title="Save these odds and stakes so they are suggested next time">Save odds & stakes as preset</button></div>`;
+}
+function wirePresetHit(){
+  const a=document.getElementById('psApply');
+  if(a)a.addEventListener('click',()=>{
+    const {ps}=presetHitCtx;let i=0;
+    outcomes.forEach(o=>{if(o.odd>1){o.manualStake=ps[i];i++;}});
+    totalInv=r2(ps.reduce((x,y)=>x+(y||0),0));document.getElementById('totalInv').value=totalInv;
+    render();toast('Preset stakes applied');
+  });
+  const b=document.getElementById('psSaveFromCalc');
+  if(b)b.addEventListener('click',()=>{
+    const {odds,stakes}=presetHitCtx;
+    D.presets.unshift({id:Date.now(),label:'',legs:odds.map((o,i)=>({odd:r2(o),stake:r2(stakes[i])})),createdAt:Date.now()});
+    save();updateBadges();renderResult();toast('Preset saved','View',()=>navTo('presets'));
+  });
+}
+
+let psForm=[{odd:'',stake:''},{odd:'',stake:''}], psEditId=null;
+function renderPsForm(){
+  document.getElementById('psLegs').innerHTML=psForm.map((l,i)=>{
+    const o=parseFloat(l.odd),s=parseFloat(l.stake);const ret=o>1&&s>0?fmt(o*s)+' €':'–';
+    return `<div class="ps-leg"><input type="number" step="0.01" min="1.01" placeholder="3.25" value="${l.odd}" data-psi="${i}" data-psf="odd"><input type="number" step="0.01" min="0" placeholder="30" value="${l.stake}" data-psi="${i}" data-psf="stake"><span class="ps-ret" id="psRet${i}">${ret}</span><button class="bd" data-psdel="${i}" ${psForm.length<=2?'disabled style="opacity:.3"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`;
+  }).join('');
+  renderPsSum();
+}
+function renderPsSum(){
+  psForm.forEach((l,i)=>{const o=parseFloat(l.odd),s=parseFloat(l.stake);const el=document.getElementById('psRet'+i);if(el)el.textContent=o>1&&s>0?fmt(o*s)+' €':'–';});
+  const legs=psForm.map(l=>({odd:parseFloat(l.odd),stake:parseFloat(l.stake)})).filter(l=>l.odd>1&&l.stake>0);
+  const el=document.getElementById('psSum');
+  if(legs.length<2){el.innerHTML='<span style="color:var(--faint)">Fill in at least two odds with their stakes.</span>';return;}
+  const st=presetStats({legs});const sg=st.profit>=0?'+':'';
+  const even=st.maxR-st.minR<0.5;
+  el.innerHTML=`<span>Total stake <b>${fmt(st.tot)} €</b></span><span>Min. return <b>${fmt(st.minR)} €</b></span><span>Profit <b class="${st.profit>=0?'pos':'neg'}">${sg}${fmt(st.profit)} € (${sg}${fmt(st.roi)} %)</b></span>${even?'':`<span style="color:var(--faint)">Returns differ by ${fmt(st.maxR-st.minR)} €</span>`}`;
+}
+function resetPsForm(){psForm=[{odd:'',stake:''},{odd:'',stake:''}];psEditId=null;document.getElementById('ps-label').value='';
+  document.getElementById('psFormTitle').textContent='New preset';document.getElementById('psSave').textContent='Save preset';document.getElementById('psCancel').style.display='none';renderPsForm();}
+function renderPresets(){
+  renderPsForm();
+  const q=(document.getElementById('psSearch').value||'').trim().toLowerCase().replace(',','.');
+  const list=(D.presets||[]).filter(p=>!q||(p.label||'').toLowerCase().includes(q)||p.legs.some(l=>oddKey(l.odd).startsWith(q)||String(l.odd).startsWith(q)));
+  const box=document.getElementById('psList');
+  if(!list.length){box.innerHTML=emptyStateHtml(D.presets.length?'No preset matches those odds.':'No presets yet. Save the odds you see often with the stakes you always use — New bet will suggest them automatically.');return;}
+  box.innerHTML='<div class="card">'+list.map(p=>{const st=presetStats(p);const sg=st.profit>=0?'+':'';
+    return `<div class="ps-card"><div class="ps-main"><div class="ps-name">${esc(p.label||p.legs.map(l=>fmt(l.odd)).join(' / '))}</div>
+      <div class="ps-legs">${p.legs.map(l=>`<span class="ps-chip">@ ${fmt(l.odd)} → <b>${fmt(l.stake)} €</b></span>`).join('')}</div>
+      <div class="ps-meta">Stake ${fmt(st.tot)} € · returns ${fmt(st.minR)} € · <span class="${st.profit>=0?'pos':'neg'}">${sg}${fmt(st.profit)} € (${sg}${fmt(st.roi)} %)</span></div></div>
+      <div class="ps-btns"><button class="btn-s" data-psuse="${p.id}">Use</button><button class="btn-s" data-psedit="${p.id}">Edit</button><button class="btn-s" data-psrm="${p.id}">Delete</button></div></div>`;}).join('')+'</div>';
+}
+document.getElementById('psLegs').addEventListener('input',e=>{const i=e.target.dataset.psi;if(i==null)return;psForm[+i][e.target.dataset.psf]=e.target.value;renderPsSum();});
+document.getElementById('psLegs').addEventListener('click',e=>{const b=e.target.closest('[data-psdel]');if(!b||psForm.length<=2)return;psForm.splice(+b.dataset.psdel,1);renderPsForm();});
+document.getElementById('psAddLeg').addEventListener('click',()=>{psForm.push({odd:'',stake:''});renderPsForm();});
+document.getElementById('psBalance').addEventListener('click',()=>{
+  const o0=parseFloat(psForm[0].odd),s0=parseFloat(psForm[0].stake);
+  if(!(o0>1&&s0>0)){toast('Fill in the first odds and stake first');return;}
+  const target=o0*s0;psForm.forEach((l,i)=>{if(i===0)return;const o=parseFloat(l.odd);if(o>1)l.stake=String(r2(target/o));});
+  renderPsForm();
+});
+document.getElementById('psCancel').addEventListener('click',resetPsForm);
+document.getElementById('psSave').addEventListener('click',()=>{
+  const legs=psForm.map(l=>({odd:r2(parseFloat(l.odd)),stake:r2(parseFloat(l.stake))})).filter(l=>l.odd>1&&l.stake>0);
+  if(legs.length<2){toast('Add at least two odds with a stake');return;}
+  const label=document.getElementById('ps-label').value.trim();
+  const dup=(D.presets||[]).find(p=>p.id!==psEditId&&presetKey(p.legs.map(l=>l.odd))===presetKey(legs.map(l=>l.odd)));
+  if(dup){D.presets=D.presets.filter(p=>p.id!==dup.id);}
+  if(psEditId){const p=D.presets.find(x=>x.id===psEditId);if(p){p.legs=legs;p.label=label;}}
+  else D.presets.unshift({id:Date.now(),label,legs,createdAt:Date.now()});
+  save();updateBadges();toast(dup?'Preset saved (replaced the one with the same odds)':'Preset saved');resetPsForm();renderPresets();
+});
+document.getElementById('psSearch').addEventListener('input',renderPresets);
+document.getElementById('psList').addEventListener('click',e=>{
+  const u=e.target.closest('[data-psuse]'),ed=e.target.closest('[data-psedit]'),rm=e.target.closest('[data-psrm]');
+  if(u){const p=D.presets.find(x=>x.id===+u.dataset.psuse);if(!p)return;
+    outcomes=p.legs.map((l,i)=>({id:nextId++,house:'',result:'',odd:l.odd,manualStake:l.stake}));
+    totalInv=r2(p.legs.reduce((a,l)=>a+l.stake,0));document.getElementById('totalInv').value=totalInv;
+    newBetType='Surebet';navTo('calc');toast('Preset loaded — pick the bookmakers');}
+  if(ed){const p=D.presets.find(x=>x.id===+ed.dataset.psedit);if(!p)return;psEditId=p.id;
+    psForm=p.legs.map(l=>({odd:String(l.odd),stake:String(l.stake)}));document.getElementById('ps-label').value=p.label||'';
+    document.getElementById('psFormTitle').textContent='Edit preset';document.getElementById('psSave').textContent='Save changes';document.getElementById('psCancel').style.display='';
+    renderPsForm();document.getElementById('pgBody').scrollTop=0;window.scrollTo(0,0);}
+  if(rm){const id=+rm.dataset.psrm;const idx=D.presets.findIndex(x=>x.id===id);if(idx<0)return;const [old]=D.presets.splice(idx,1);
+    save();updateBadges();renderPresets();toast('Preset deleted','Undo',()=>{D.presets.splice(idx,0,old);save();updateBadges();renderPresets();});}
+});
+
 // ══════════════════════════════════════════
 //  CALCULADORAS — Kelly · No-Vig · Hedge · Free Bet · Hold
 // ══════════════════════════════════════════
@@ -4704,8 +4867,9 @@ const pgMeta={
   categorias:{title:'Categories',sub:'Organize your bets into your own categories'},
   perfil:{title:'Profile',sub:'Your personal stats and performance'},
   calculadoras:{title:'Calculators',sub:'Kelly, No-Vig, Hedge, Free Bet and Hold'},
+  presets:{title:'Presets',sub:'Saved odds with your usual stakes — applied automatically in New bet'},
 };
-const ALL_PAGES=['calc','bets','profit','pendientes','casas','poker','notas','categorias','perfil','calculadoras'];
+const ALL_PAGES=['calc','bets','profit','pendientes','casas','poker','notas','categorias','perfil','calculadoras','presets'];
 function navTo(page){
     if(page==='surebets'||page==='normales'){const v=page;page='bets';setTimeout(()=>setBetsView(v));}
     const item=document.querySelector(`.ni[data-page="${page}"]`);
@@ -4729,6 +4893,7 @@ function navTo(page){
     else if(page==='notas')renderNotas();
     else if(page==='categorias')renderCategorias();
     else if(page==='perfil')renderPerfil();
+    else if(page==='presets')renderPresets();
     else if(page==='calculadoras')renderCalcTab(document.querySelector('.calc-tab.active')?.dataset.calc||'kelly');
     if(window.innerWidth<600)closeSB();
 }
@@ -4742,6 +4907,7 @@ function updateBadges(){
   visibleCasas().forEach(c=>{(c.history||[]).forEach(h=>{if(h.type==='wd'&&h.status==='pending'&&!isHidden('wd:'+c.id+':'+h.id))pendWDCount++;});});
   document.getElementById('pendCount').textContent=visibleBets().filter(b=>b.status==='pending').length+visibleNormals().filter(n=>n.status==='pending').length+pendWDCount;
   document.getElementById('casasCount').textContent=visibleCasas().length;
+  const psc=document.getElementById('presetsCount');if(psc)psc.textContent=(D.presets||[]).length;
   const tpc=document.getElementById('tabPendCount');if(tpc){const n=document.getElementById('pendCount').textContent;tpc.textContent=n;tpc.dataset.n=n;}
 }
 
@@ -4864,13 +5030,14 @@ function emailToPath(email) {
       if (!D.hidden || typeof D.hidden !== 'object') D.hidden = {};
       if (!Array.isArray(D.bkProfiles)) D.bkProfiles = [];
       if (!Array.isArray(D.poker)) D.poker = [];
+      if (!Array.isArray(D.presets)) D.presets = [];
     } else {
       let migrated = null;
       try {
         const raw = localStorage.getItem(LOCAL_STORE_KEY);
         if (raw) migrated = JSON.parse(raw);
       } catch (e) {}
-      D = migrated || { bets: [], normals: [], casas: [], notes: [], notesFolders: [], categories: [], hidden: {}, bkProfiles: [], poker: [] };
+      D = migrated || { bets: [], normals: [], casas: [], notes: [], notesFolders: [], categories: [], hidden: {}, bkProfiles: [], poker: [], presets: [] };
       if (!Array.isArray(D.bets)) D.bets = [];
       if (!Array.isArray(D.normals)) D.normals = [];
       if (!Array.isArray(D.casas)) D.casas = [];
@@ -4880,6 +5047,7 @@ function emailToPath(email) {
       if (!D.hidden || typeof D.hidden !== 'object') D.hidden = {};
       if (!Array.isArray(D.bkProfiles)) D.bkProfiles = [];
       if (!Array.isArray(D.poker)) D.poker = [];
+      if (!Array.isArray(D.presets)) D.presets = [];
       await setDoc(docRef, D);
     }
 
@@ -4900,6 +5068,7 @@ function emailToPath(email) {
       if (!D.hidden || typeof D.hidden !== 'object') D.hidden = {};
       if (!Array.isArray(D.bkProfiles)) D.bkProfiles = [];
       if (!Array.isArray(D.poker)) D.poker = [];
+      if (!Array.isArray(D.presets)) D.presets = [];
       refreshCurrentView();
     });
 
@@ -4919,6 +5088,7 @@ function emailToPath(email) {
     else if (activePage === 'notas') renderNotas(document.getElementById('notasSearch')?.value || '');
     else if (activePage === 'categorias') renderCategorias();
     else if (activePage === 'perfil') renderPerfil();
+    else if (activePage === 'presets') renderPresets();
   }
 
   window.__fsSave = async function () {
