@@ -1635,6 +1635,17 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .ps-btns{display:flex;gap:6px}
 .ps-hit{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:11px 14px;border-radius:12px;border:1.5px dashed var(--accent);background:var(--raised);font-size:13px;margin-bottom:12px}
 .ps-hit b{font-variant-numeric:tabular-nums}.ps-hit .btn-s{margin-left:auto}
+
+.ps-quick{margin:-4px 0 14px}
+.psq-h{display:flex;align-items:baseline;gap:8px;margin-bottom:7px;font-size:12px;font-weight:650}
+.psq-h small{font-weight:400;color:var(--faint);font-size:11.5px}
+.psq-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+.psq{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:8px 12px;border-radius:10px;border:1px solid var(--border2,var(--border));background:var(--raised);cursor:pointer;font-family:inherit;color:var(--text);text-align:left;transition:border-color .15s,transform .1s}
+.psq:hover{border-color:var(--accent)}.psq:active{transform:scale(.97)}
+.psq.on{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent)}
+.psq-n{font-size:11px;color:var(--faint);font-weight:600}
+.psq-o{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.psq-s{font-size:11.5px;color:var(--faint);font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -1770,7 +1781,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
             </div>
             <div class="two-col">
               <div><label class="fl">Kick-off date</label><input type="date" id="nf-date"></div>
-              <div><label class="fl">Kick-off time</label><input type="time" id="nf-time"></div>
+              <div><label class="fl">Kick-off hour</label><select id="nf-time" class="hour-sel"><option value="">--</option><option value="00:00">00h</option><option value="01:00">01h</option><option value="02:00">02h</option><option value="03:00">03h</option><option value="04:00">04h</option><option value="05:00">05h</option><option value="06:00">06h</option><option value="07:00">07h</option><option value="08:00">08h</option><option value="09:00">09h</option><option value="10:00">10h</option><option value="11:00">11h</option><option value="12:00">12h</option><option value="13:00">13h</option><option value="14:00">14h</option><option value="15:00">15h</option><option value="16:00">16h</option><option value="17:00">17h</option><option value="18:00">18h</option><option value="19:00">19h</option><option value="20:00">20h</option><option value="21:00">21h</option><option value="22:00">22h</option><option value="23:00">23h</option></select></div>
             </div>
             <div><label class="fl">Notes (optional)</label><input type="text" id="nf-notes" placeholder="Boosted odds, promo…" autocomplete="off"></div>
           </div>
@@ -1782,6 +1793,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
               <label class="fl">Total stake</label>
               <div class="iw"><input type="number" class="ii" id="totalInv" value="100" min="0" step="1"><span class="isuf">€</span></div>
             </div>
+            <div class="ps-quick" id="psQuick"></div>
             <div class="oh">
               <div class="cl">Bookmaker</div><div class="cl">Outcome</div>
               <div class="cl" style="text-align:right">Odds</div>
@@ -2136,7 +2148,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       </div>
       <div class="two-col">
         <div><label class="fl">Kick-off date</label><input type="date" id="m-date"></div>
-        <div><label class="fl">Kick-off time</label><input type="time" id="m-time"></div>
+        <div><label class="fl">Kick-off hour</label><select id="m-time" class="hour-sel"><option value="">--</option><option value="00:00">00h</option><option value="01:00">01h</option><option value="02:00">02h</option><option value="03:00">03h</option><option value="04:00">04h</option><option value="05:00">05h</option><option value="06:00">06h</option><option value="07:00">07h</option><option value="08:00">08h</option><option value="09:00">09h</option><option value="10:00">10h</option><option value="11:00">11h</option><option value="12:00">12h</option><option value="13:00">13h</option><option value="14:00">14h</option><option value="15:00">15h</option><option value="16:00">16h</option><option value="17:00">17h</option><option value="18:00">18h</option><option value="19:00">19h</option><option value="20:00">20h</option><option value="21:00">21h</option><option value="22:00">22h</option><option value="23:00">23h</option></select></div>
       </div>
       <div><label class="fl">Notes (optional)</label><input type="text" id="m-notes" placeholder="Boosted odds…"></div>
       <div><label class="fl">Category (optional)</label><select id="m-category"><option value="">No category</option></select></div>
@@ -2158,7 +2170,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <div id="sbr-legs-wrap"><label class="fl">Bookmakers</label><div class="sbr-legs" id="sbr-legs"></div></div>
       <div class="two-col">
         <div><label class="fl">Kick-off date</label><input type="date" id="sbr-start"></div>
-        <div><label class="fl">Kick-off time</label><input type="time" id="sbr-time"></div>
+        <div><label class="fl">Kick-off hour</label><select id="sbr-time" class="hour-sel"><option value="">--</option><option value="00:00">00h</option><option value="01:00">01h</option><option value="02:00">02h</option><option value="03:00">03h</option><option value="04:00">04h</option><option value="05:00">05h</option><option value="06:00">06h</option><option value="07:00">07h</option><option value="08:00">08h</option><option value="09:00">09h</option><option value="10:00">10h</option><option value="11:00">11h</option><option value="12:00">12h</option><option value="13:00">13h</option><option value="14:00">14h</option><option value="15:00">15h</option><option value="16:00">16h</option><option value="17:00">17h</option><option value="18:00">18h</option><option value="19:00">19h</option><option value="20:00">20h</option><option value="21:00">21h</option><option value="22:00">22h</option><option value="23:00">23h</option></select></div>
       </div>
       <div><label class="fl">Category (optional)</label><select id="sbr-category"><option value="">No category</option></select></div>
     </div>
@@ -2304,6 +2316,7 @@ let nextId=3,totalInv=100,roundMode='exact',customStep=0.1;
 function roundStep(v,s){if(!s||!isFinite(s)||s<=0)return v;const f=1/s;return parseFloat((Math.round(v*f)/f).toPrecision(12))}
 function applyRound(v){if(roundMode==='exact')return v;const s=roundMode==='custom'?customStep:parseFloat(roundMode);return roundStep(v,s)}
 function fmt(n,d=2){return Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d})}
+function hourOnly(t){return t&&/^\d{1,2}/.test(t)?String(parseInt(t,10)).padStart(2,'0')+':00':'';}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function catName(id){if(!id)return'';const c=D.categories.find(x=>x.id===id);return c?c.name:'';}
 function fmtDate(d){if(!d)return '';const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}
@@ -2452,7 +2465,7 @@ function renderResult(){
   wirePresetHit();
 }
 
-function render(){renderOutcomes();renderResult();}
+function render(){renderOutcomes();renderResult();renderPsQuick();}
 
 let editingSbId=null;
 function renderSbrLegs(legs,editable){
@@ -2487,7 +2500,7 @@ function openSbEditModal(id){
   document.getElementById('sbr-event').value=b.event||'';
   renderSbrLegs(b.legs||[],true);
   document.getElementById('sbr-start').value=b.date||'';
-  document.getElementById('sbr-time').value=b.time||'';
+  document.getElementById('sbr-time').value=hourOnly(b.time);
   fillCategorySelect(document.getElementById('sbr-category'),b.categoryId);
   document.getElementById('sbRegModal').style.display='flex';
 }
@@ -2765,7 +2778,7 @@ function handleOutcomeFieldChange(el){
   if(field==='odd')o.odd=parseFloat(el.value)||0;
   else if(field==='manualStake')o.manualStake=el.value===''?null:(parseFloat(el.value)||0);
   else o[field]=el.value;
-  renderResult();
+  renderResult();renderPsQuick();
   const res=calculate();document.querySelectorAll('.oi').forEach(i=>i.classList.toggle('lit',!!(res&&res.isSurebet)));
 }
 document.getElementById('outcomesList').addEventListener('input',e=>handleOutcomeFieldChange(e.target));
@@ -3023,7 +3036,7 @@ function openNormalModal(id){
   document.getElementById('m-event').value=n?(n.event||''):'';
   refreshBookmakerList();
   document.getElementById('m-house').innerHTML=houseOptionsHtml(n?(n.house||''):'','Choose bookmaker…');
-  document.getElementById('m-time').value=n?(n.time||''):'';
+  document.getElementById('m-time').value=n?hourOnly(n.time):'';
   document.getElementById('m-type').value=n?(n.type||'Normal'):'Normal';
   document.getElementById('m-odd').value=(n&&n.odd!=null)?n.odd:'';
   document.getElementById('m-stake').value=(n&&n.stake!=null)?n.stake:'';
@@ -4228,15 +4241,36 @@ document.getElementById('psSearch').addEventListener('input',renderPresets);
 document.getElementById('psList').addEventListener('click',e=>{
   const u=e.target.closest('[data-psuse]'),ed=e.target.closest('[data-psedit]'),rm=e.target.closest('[data-psrm]');
   if(u){const p=D.presets.find(x=>x.id===+u.dataset.psuse);if(!p)return;
-    outcomes=p.legs.map((l,i)=>({id:nextId++,house:'',result:'',odd:l.odd,manualStake:l.stake}));
-    totalInv=r2(p.legs.reduce((a,l)=>a+l.stake,0));document.getElementById('totalInv').value=totalInv;
-    newBetType='Surebet';navTo('calc');toast('Preset loaded — pick the bookmakers');}
+    newBetType='Surebet';navTo('calc');loadPresetIntoCalc(p);toast('Preset loaded — pick the bookmakers');}
   if(ed){const p=D.presets.find(x=>x.id===+ed.dataset.psedit);if(!p)return;psEditId=p.id;
     psForm=p.legs.map(l=>({odd:String(l.odd),stake:String(l.stake)}));document.getElementById('ps-label').value=p.label||'';
     document.getElementById('psFormTitle').textContent='Edit preset';document.getElementById('psSave').textContent='Save changes';document.getElementById('psCancel').style.display='';
     renderPsForm();document.getElementById('pgBody').scrollTop=0;window.scrollTo(0,0);}
   if(rm){const id=+rm.dataset.psrm;const idx=D.presets.findIndex(x=>x.id===id);if(idx<0)return;const [old]=D.presets.splice(idx,1);
     save();updateBadges();renderPresets();toast('Preset deleted','Undo',()=>{D.presets.splice(idx,0,old);save();updateBadges();renderPresets();});}
+});
+
+
+function renderPsQuick(){
+  const box=document.getElementById('psQuick');if(!box)return;
+  const ps=D.presets||[];
+  if(!ps.length){box.innerHTML='';box.style.display='none';return;}
+  box.style.display='';
+  const cur=presetKey(outcomes.filter(o=>o.odd>1).map(o=>o.odd));
+  box.innerHTML=`<div class="psq-h"><span>Presets</span><small>tap to load odds &amp; stakes</small></div><div class="psq-row">`+ps.map(p=>{
+    const on=presetKey(p.legs.map(l=>l.odd))===cur;
+    return `<button class="psq${on?' on':''}" data-psq="${p.id}">${p.label?`<span class="psq-n">${esc(p.label)}</span>`:''}<span class="psq-o">${p.legs.map(l=>fmt(l.odd)).join(' / ')}</span><span class="psq-s">${p.legs.map(l=>fmt(l.stake,l.stake%1?2:0)+'€').join(' · ')}</span></button>`;}).join('')+`</div>`;
+}
+function loadPresetIntoCalc(p){
+  const old=outcomes.slice();
+  outcomes=p.legs.map((l,i)=>({id:nextId++,house:old[i]?.house||'',result:old[i]?.result||'',odd:l.odd,manualStake:l.stake}));
+  totalInv=r2(p.legs.reduce((a,l)=>a+l.stake,0));document.getElementById('totalInv').value=totalInv;
+  render();
+}
+document.getElementById('psQuick').addEventListener('click',e=>{
+  const b=e.target.closest('[data-psq]');if(!b)return;
+  const p=(D.presets||[]).find(x=>x.id===+b.dataset.psq);if(!p)return;
+  loadPresetIntoCalc(p);toast('Preset loaded — now pick the bookmakers');
 });
 
 // ══════════════════════════════════════════
