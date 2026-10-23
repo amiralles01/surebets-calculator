@@ -1806,6 +1806,13 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .br-edit{margin-top:10px}
 .br-foot{margin-top:12px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:flex-end}
 .br-head .link-btn{font-size:12px}
+
+.oi-wrap{position:relative;min-width:0}.oi-wrap .oi{width:100%}
+.oi-frac{position:absolute;right:8px;top:-7px;font-size:10px;font-weight:700;line-height:1;padding:2px 5px;border-radius:5px;background:var(--surface);border:1px solid var(--border);color:var(--pitch,var(--accent));pointer-events:none}
+.oi-frac:empty{display:none}
+.frac-tag{font-size:10.5px;font-weight:700;padding:1px 5px;border-radius:5px;background:var(--raised);color:var(--pitch,var(--accent))}
+#sbCalcCard .or .oi-wrap{grid-column:auto}
+@media(max-width:600px){#sbCalcCard .or .oi-wrap{grid-column:2;grid-row:1}}
 </style>
 </head>
 <body>
@@ -2369,6 +2376,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
         <div><label class="fl">Awaiting transfer</label><div class="iw"><input type="number" class="ii" id="c-pending" placeholder="0" min="0" step="0.01"><span class="isuf">€</span></div></div>
       </div>
       <div><label class="fl">Notes (optional)</label><input type="text" id="c-notes" placeholder="Welcome bonus, verified account…"></div>
+      <label class="c-flow"><input type="checkbox" id="c-frac"><span><b>Pays with fractional odds</b><small>Bet365, William Hill… show 1.33 but pay 4/3 (1.3333). Turn on so returns match to the cent.</small></span></label>
       <label class="c-flow"><input type="checkbox" id="c-bank"><span><b>Bank account</b><small>Where you keep your winnings. Money moved here from a bookmaker is not counted twice; withdrawals ask whether they are an expense (lowers Profit) or personal use (doesn't).</small></span></label>
     </div>
     <div style="display:flex;gap:9px;margin-top:18px">
@@ -2570,6 +2578,29 @@ function roundStep(v,s){if(!s||!isFinite(s)||s<=0)return v;const f=1/s;return pa
 function applyRound(v){if(roundMode==='exact')return v;const s=roundMode==='custom'?customStep:parseFloat(roundMode);return roundStep(v,s)}
 // money is handled in cents, like the bookmakers do
 function cents(x){return Math.round((+x||0)*100+Number.EPSILON*100)/100+0;}
+// Some bookmakers (Bet365, William Hill…) price in fractions and show a cut-off decimal:
+// 4/3 is shown as 1.33 but pays 1.3333…, 4/7 as 1.57 but pays 1.5714…  We pay out with the real fraction.
+const FRACTION_LADDER=[[1,100],[1,66],[1,50],[1,40],[1,33],[1,28],[1,25],[1,22],[1,20],[1,18],[1,16],[1,14],[1,12],[1,11],[1,10],[1,9],[1,8],[2,15],[1,7],[2,13],[1,6],[2,11],[1,5],[2,9],[1,4],[2,7],[3,10],[1,3],[7,20],[4,11],[3,8],[2,5],[5,12],[4,9],[9,20],[1,2],[8,15],[4,7],[8,13],[5,8],[4,6],[8,11],[4,5],[5,6],[10,11],[20,21],[1,1],[21,20],[11,10],[6,5],[5,4],[11,8],[7,5],[6,4],[8,5],[13,8],[7,4],[9,5],[15,8],[2,1],[85,40],[9,4],[12,5],[5,2],[13,5],[11,4],[3,1],[10,3],[7,2],[4,1],[9,2],[5,1],[11,2],[6,1],[13,2],[7,1],[15,2],[8,1],[17,2],[9,1],[10,1],[11,1],[12,1],[14,1],[16,1],[18,1],[20,1],[25,1],[33,1],[40,1],[50,1],[66,1],[100,1]];
+function fractionFor(d){
+  d=Math.round((+d||0)*100)/100;let best=null;
+  for(const [p,q] of FRACTION_LADDER){
+    const v=1+p/q;if(Math.abs(v*100-Math.round(v*100))<1e-9)continue;      // already exact in 2 decimals
+    const cut=Math.floor(v*100+1e-9)/100,near=Math.round(v*100)/100;
+    const half=Math.abs(v*1000-Math.round(v*1000))<1e-9;                   // 1.625, 2.375…: only the cut-off display is unambiguous
+    const score=cut===d?2:(near===d&&!half)?1:0;                           // the cut-off display wins
+    if(score&&(!best||score>best.score))best={p,q,v,score};
+  }
+  return best;
+}
+const FRACTIONAL_DEFAULT=/bet\s?365|william\s?hill|paddy|sky\s?bet|ladbrokes|coral|betfair\s?sportsbook/i;
+function isFractionalHouse(house){
+  const c=(D.casas||[]).find(x=>bkKey(x.name||'')===bkKey(house||''));
+  if(c&&typeof c.fractional==='boolean')return c.fractional;
+  return FRACTIONAL_DEFAULT.test(house||'');
+}
+// the odds the bookmaker really pays with
+function payOdd(house,odd){if(!(odd>1)||!isFractionalHouse(house))return odd;const f=fractionFor(odd);return f?f.v:odd;}
+function fractionLabel(house,odd){if(!(odd>1)||!isFractionalHouse(house))return '';const f=fractionFor(odd);return f?(Math.floor(f.v*10000)/10000).toFixed(4).replace(/0+$/,''):'';}
 function fmt(n,d=2){return Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d})}
 function hourOnly(t){return t&&/^\d{1,2}/.test(t)?String(parseInt(t,10)).padStart(2,'0')+':00':'';}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
@@ -2729,7 +2760,8 @@ function houseOptionsHtml(current,placeholder){
 function calculate(){
   const valid=outcomes.filter(o=>o.odd>1);
   if(valid.length<2)return null;
-  const probs=valid.map(o=>1/o.odd),sumP=probs.reduce((a,b)=>a+b,0);
+  const po=valid.map(o=>payOdd(o.house,o.odd));
+  const probs=po.map(v=>1/v),sumP=probs.reduce((a,b)=>a+b,0);
   // Resultados con stake manual: se respeta el importe introducido tal cual.
   // El resto ("auto") se reparte proporcionalmente a su probabilidad implícita
   // usando el presupuesto que queda tras restar los stakes manuales.
@@ -2740,12 +2772,12 @@ function calculate(){
   const rounded=new Array(valid.length).fill(0);
   manualIdx.forEach(i=>{rounded[i]=cents(valid[i].manualStake)});
   if(autoIdx.length){
-    const autoP=autoIdx.map(i=>1/valid[i].odd),sumAutoP=autoP.reduce((a,b)=>a+b,0);
+    const autoP=autoIdx.map(i=>1/po[i]),sumAutoP=autoP.reduce((a,b)=>a+b,0);
     autoIdx.forEach((i,k)=>{rounded[i]=cents(applyRound((remaining*autoP[k])/sumAutoP))});
   }
   // stakes and payouts in whole cents, exactly what the bookmaker shows
   const actual=cents(rounded.reduce((a,b)=>a+b,0));
-  const returns=valid.map((o,i)=>cents(rounded[i]*o.odd));
+  const returns=valid.map((o,i)=>cents(rounded[i]*po[i]));
   const minRet=Math.min(...returns);
   const profit=cents(minRet-actual);
   return{valid,sumPct:sumP*100,isSurebet:sumP<1,stakes:rounded,returns,minReturn:minRet,actualTotal:actual,profit,profitPct:actual>0?(profit/actual)*100:0,hasManual:manualIdx.length>0};
@@ -2762,7 +2794,7 @@ function renderOutcomes(){
     row.innerHTML=`
       <select data-field="house" data-id="${o.id}">${houseOptionsHtml(o.house,`Bookmaker ${idx+1}`)}</select>
       <input type="text" placeholder="Outcome (optional) · e.g. Over" value="${esc(o.result)}" data-field="result" data-id="${o.id}">
-      <input type="number" class="oi${lit?' lit':''}" placeholder="1.00" value="${o.odd>0?o.odd:''}" data-field="odd" data-id="${o.id}" min="1.01" step="0.01">
+      <div class="oi-wrap"><input type="number" class="oi${lit?' lit':''}" placeholder="1.00" value="${o.odd>0?o.odd:''}" data-field="odd" data-id="${o.id}" min="1.01" step="0.01"><span class="oi-frac" data-frac="${o.id}">${fractionLabel(o.house,o.odd)}</span></div>
       <input type="number" class="msi${o.fromPreset?' pre':''}" placeholder="${stakeHint(o)}" title="Leave empty to split the total automatically, or type a fixed stake" value="${o.manualStake>0?o.manualStake:''}" data-field="manualStake" data-id="${o.id}" min="0" step="0.01">
       <button class="bd" data-id="${o.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`;
     list.appendChild(row);
@@ -2777,7 +2809,7 @@ function renderResult(){
   const s=profit>=0?'+':'';
   const badgeHtml=isSurebet?`<div class="badge bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Surebet</div>`:
     `<div class="badge br"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>No surebet</div>`;
-  const bkHtml=valid.map((o,i)=>`<div class="bkr"><div><div class="bkn">${esc(o.house||`Bookmaker ${i+1}`)}</div><div class="bks">${esc(o.result||`Outcome ${i+1}`)} · Odds ${fmt(o.odd)}</div></div><div class="bkv"><div class="bkst">${fmt(stakes[i])} €${o.manualStake>0?` <span style="color:var(--yellow);font-size:10px;font-weight:600">${o.fromPreset?'SAVED':'MANUAL'}</span>`:''}</div><div class="bkr2">return ${fmt(returns[i])} €</div><div class="bkm">min. ${fmt(returns[i])} €</div></div></div>`).join('');
+  const bkHtml=valid.map((o,i)=>`<div class="bkr"><div><div class="bkn">${esc(o.house||`Bookmaker ${i+1}`)}</div><div class="bks">${esc(o.result||`Outcome ${i+1}`)} · Odds ${fmt(o.odd)}${fractionLabel(o.house,o.odd)?` <span class="frac-tag" title="This bookmaker pays with the exact fraction behind the odds it shows">pays ${fractionLabel(o.house,o.odd)}</span>`:''}</div></div><div class="bkv"><div class="bkst">${fmt(stakes[i])} €${o.manualStake>0?` <span style="color:var(--yellow);font-size:10px;font-weight:600">${o.fromPreset?'SAVED':'MANUAL'}</span>`:''}</div><div class="bkr2">return ${fmt(returns[i])} €</div><div class="bkm">min. ${fmt(returns[i])} €</div></div></div>`).join('');
   const bW=Math.min(sumPct/1.3,100);
   panel.innerHTML=`
     <div class="card ph2 ${isSurebet?'sb':''}">${badgeHtml}<div class="pp ${profit>=0?'pos':'neg'}">${s}${fmt(profitPct)} %</div><div class="ps">Guaranteed profit: <span class="hi ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span></div></div>
@@ -2878,7 +2910,7 @@ document.getElementById('sbr-save').addEventListener('click',()=>{
       if(!isNaN(st)&&st>=0&&st!==l.stake){l.stake=st;legsChanged=true;}
     });
     if(legsChanged&&b.legs&&b.legs.length&&b.cashOut==null){
-      b.legs.forEach(l=>{l.minReturn=+((l.odd||0)*(l.stake||0)).toFixed(2);});
+      b.legs.forEach(l=>{l.minReturn=cents(payOdd(l.house,l.odd||0)*(l.stake||0));});
       b.totalStake=+b.legs.reduce((a,l)=>a+(l.stake||0),0).toFixed(2);
       b.minReturn=Math.min(...b.legs.map(l=>l.minReturn));
       const exp=+(b.minReturn-b.totalStake).toFixed(2);
@@ -3186,6 +3218,7 @@ function handleOutcomeFieldChange(el){
   if(field==='odd')o.odd=parseFloat(el.value)||0;
   else if(field==='manualStake'){o.manualStake=el.value===''?null:(parseFloat(el.value)||0);o.fromPreset=false;}
   else o[field]=el.value;
+  if(field==='odd'||field==='house'){const f=document.querySelector(`[data-frac="${id}"]`);if(f)f.textContent=fractionLabel(o.house,o.odd);}
   if(field==='odd'&&autoPreset())syncStakeInputs();
   renderResult();renderPsQuick();renderPsBanner();updateStakeHints();
   const res=calculate();document.querySelectorAll('.oi').forEach(i=>i.classList.toggle('lit',!!(res&&res.isSurebet)));
@@ -3471,7 +3504,7 @@ document.getElementById('m-save').addEventListener('click',()=>{
       if(!isNaN(oddIn)&&oddIn>0)n.odd=oddIn;
       if(!isNaN(stakeIn)&&stakeIn>0)n.stake=stakeIn;
       if(n.odd>1&&n.stake>0){
-        n.potentialWin=+(n.stake*(n.odd-1)).toFixed(2);
+        n.potentialWin=cents(n.stake*(payOdd(n.house,n.odd)-1));
         n.potentialLoss=n.type==='Freebet'?0:-n.stake;
       }
       n.date=document.getElementById('m-date').value||n.date||todayISO();
@@ -3486,7 +3519,7 @@ document.getElementById('m-save').addEventListener('click',()=>{
     if(!(oddIn>1)){alert('Enter a valid odds value (greater than 1).');return;}
     if(!(stakeIn>0)){alert('Introduce el dinero invertido.');return;}
     D.normals.unshift({id:Date.now(),event:ev,type,odd:oddIn,stake:stakeIn,
-      potentialWin:+(stakeIn*(oddIn-1)).toFixed(2),potentialLoss:type==='Freebet'?0:-stakeIn,
+      potentialWin:cents(stakeIn*(payOdd(document.getElementById('m-house')?.value,oddIn)-1)),potentialLoss:type==='Freebet'?0:-stakeIn,
       status:'pending',
       date:document.getElementById('m-date').value||todayISO(),
       resolveDate:'',
@@ -3978,6 +4011,8 @@ function openCasaModal(editId){
   document.getElementById('c-amount').value=(c&&c.amount!=null)?c.amount:'';
   document.getElementById('c-notes').value=c?(c.notes||''):'';
   document.getElementById('c-bank').checked=isBank(c);
+  document.getElementById('c-frac').checked=c?isFractionalHouse(c.name):false;
+  document.getElementById('c-name').oninput=e=>{if(!editingCasaId)document.getElementById('c-frac').checked=FRACTIONAL_DEFAULT.test(e.target.value);};
   fillProfileSelect(document.getElementById('c-profile'),c?c.profileId:(bkProfileSel!=='all'&&bkProfileSel!=='none'&&bkProfileSel!=='unused'?bkProfileSel:null));
   casaModal.style.display='flex';
   setTimeout(()=>document.getElementById('c-name').focus(),30);
@@ -4005,9 +4040,10 @@ document.getElementById('c-save').addEventListener('click',()=>{
   if(editingCasaId){
     const c=D.casas.find(x=>x.id===editingCasaId);
     if(c){c.name=name;c.amount=amount;c.notes=notes;c.profileId=profileId;
-      if(bank)c.kind='bank';else delete c.kind;}
+      if(bank)c.kind='bank';else delete c.kind;
+      c.fractional=document.getElementById('c-frac').checked;}
   }else{
-    D.casas.unshift({id:Date.now(),name,amount,notes,profileId,...(bank?{kind:'bank'}:{}),pendingTransfer:0,history:amount>0?[{id:Date.now()+1,type:'dep',amount,date:new Date().toISOString().slice(0,10),init:true}]:[]});
+    D.casas.unshift({id:Date.now(),name,amount,notes,profileId,...(bank?{kind:'bank'}:{}),fractional:document.getElementById('c-frac').checked,pendingTransfer:0,history:amount>0?[{id:Date.now()+1,type:'dep',amount,date:new Date().toISOString().slice(0,10),init:true}]:[]});
   }
   save();updateBadges();
   renderCasas(document.getElementById('casasSearch').value);
@@ -5657,7 +5693,7 @@ function saveNewNormal(){
   const sels=type==='Combi'?nfSels.filter(x=>(x.name||'').trim()||parseFloat(x.odd)>1).map(x=>({name:(x.name||'').trim(),odd:parseFloat(x.odd)||null})):[];
   const bet={id:Date.now(),event:ev,type,odd:+odd.toFixed(3),stake,
     house:document.getElementById('nf-house').value.trim(),
-    potentialWin:+(stake*(odd-1)).toFixed(2),potentialLoss:type==='Freebet'?0:-stake,
+    potentialWin:cents(stake*((type==='Combi'?odd:payOdd(document.getElementById('nf-house').value,odd))-1)),potentialLoss:type==='Freebet'?0:-stake,
     status:'pending',
     date:document.getElementById('nf-date').value||todayISO(),
     time:document.getElementById('nf-time').value||'',
