@@ -1651,10 +1651,6 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 @media(max-width:600px){input,select,textarea{font-size:16px!important}}
 html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 
-.rep-wrap{grid-column:1/-1;display:flex;align-items:center;gap:10px}
-@media(max-width:600px){.rep-wrap{order:-2}}
-.rep-wrap .fl{margin:0;white-space:nowrap}
-.rep-wrap select{flex:1;min-width:0;text-overflow:ellipsis}
 
 .sb-twin{display:inline-flex;align-items:baseline;gap:1px;margin-right:7px;padding:2px 7px;border-radius:6px;background:var(--ball,#F4C53D);color:#1a1a1a;font-weight:800;font-size:12.5px;font-variant-numeric:tabular-nums;vertical-align:1px}
 .sb-twin small{font-size:10px;font-weight:600;opacity:.65}
@@ -1691,6 +1687,82 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .tg-btns{display:flex;gap:6px;align-items:center}.tg-btns .btn-reg{margin:0}
 .tg-help{font-size:12.5px;color:var(--faint);line-height:1.55;margin-top:10px}.tg-cfg{margin-bottom:6px}
 .tg-empty{font-size:13px;color:var(--faint);padding:4px 0}
+
+/* ── New bet · surebet flow ── */
+.sbx-h{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border)}
+.sbx-h .ct{display:flex;align-items:center;gap:8px}
+.sbx-tools{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
+.tool{position:relative;display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 11px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--text);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;transition:border-color .15s,background .15s}
+.tool svg{width:14px;height:14px;opacity:.75}
+.tool:hover:not(:disabled){border-color:var(--pitch,var(--accent));background:var(--raised)}
+.tool:disabled{opacity:.4;cursor:default}
+.tool-dot{display:none;position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:#2fb36b;box-shadow:0 0 0 2px var(--surface)}
+.tool.live .tool-dot{display:block}
+.sbx-sec{display:flex;align-items:center;gap:8px;font-family:var(--display,inherit);font-size:13px;font-weight:700;letter-spacing:-.01em;margin:4px 0 10px}
+.sbx-sec:not(.first){margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.sbx-sec small{font-family:var(--font,inherit);font-weight:400;font-size:11.5px;color:var(--faint);margin-left:auto}
+.sbx-n{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--pitch,var(--accent));color:#fff;font-size:11px;font-weight:700}
+.q-grid{border-bottom:none;padding-bottom:0;margin-bottom:0}
+.stake-row{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+.stake-tot{width:150px}.stake-rnd{flex:1;min-width:220px}.stake-rnd .rp{margin:0}
+.ps-quick{margin:14px 0 0}
+.psq-empty{font-size:12px;color:var(--faint);line-height:1.5}
+#psBanner:empty{display:none}
+.ps-hit{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:9px 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--ball,#F4C53D) 65%,transparent);background:color-mix(in srgb,var(--ball,#F4C53D) 14%,var(--surface));font-size:13px}
+.ps-hit.off{border-style:dashed;background:var(--raised)}
+.ps-hit .link-btn{margin-left:auto}
+.ps-bolt{font-size:14px}
+.msi.pre{background:color-mix(in srgb,var(--ball,#F4C53D) 16%,var(--surface));border-color:color-mix(in srgb,var(--ball,#F4C53D) 70%,transparent);font-weight:700}
+.msi::placeholder{color:var(--faint);opacity:.85}
+.link-btn{background:none;border:none;padding:0;font:inherit;font-size:12.5px;font-weight:600;color:var(--pitch,var(--accent));cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+#resultPanel>.link-btn{display:block;margin:10px auto 0}
+/* Telegram queue */
+.tg-card .cb{padding-top:6px;padding-bottom:10px}
+.tg-count{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--ball,#F4C53D);color:#1a1a1a;font-size:11.5px;font-weight:800}
+.tg-status{margin-left:auto;font-size:11.5px;color:var(--faint);display:flex;align-items:center;gap:6px}
+.tg-status i{width:7px;height:7px;border-radius:50%;background:#2fb36b;animation:tgp 1.6s infinite}
+.tg-status.err{color:var(--red)}
+@keyframes tgp{50%{opacity:.35}}
+.tg-it{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--border)}
+.tg-it:first-child{border-top:none}
+.tg-main{flex:1;min-width:0}
+.tg-ev{font-weight:650;font-size:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tg-roi{font-size:11.5px;font-weight:700;padding:1px 6px;border-radius:6px;background:var(--raised)}
+.tg-mk{font-size:12.5px;color:var(--faint);margin-top:2px}
+.tg-legs{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.tg-leg{font-size:12.5px;padding:3px 8px;border-radius:7px;background:var(--raised);border:1px solid var(--border)}
+.tg-leg b{font-variant-numeric:tabular-nums;margin-left:2px}
+.tg-pre{font-size:12px;font-weight:700;padding:3px 8px;border-radius:7px;background:color-mix(in srgb,var(--ball,#F4C53D) 22%,var(--surface))}
+.tg-raw{font-size:12px;color:var(--faint)}
+.tg-btns{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.tg-btns .btn-reg{width:auto;margin:0;padding:8px 16px;font-size:13px}
+.tg-x{width:30px;height:30px;border-radius:8px;border:none;background:none;color:var(--faint);cursor:pointer;font-size:13px}
+.tg-x:hover{background:var(--raised);color:var(--text)}
+.tg-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-top:10px;border-top:1px solid var(--border)}
+.tg-it.bad{opacity:.65}
+@media(max-width:600px){
+  .sbx-h{padding:12px 14px;flex-wrap:wrap}
+  .tool span{display:none}.tool{width:36px;padding:0;justify-content:center}.tool svg{width:16px;height:16px;opacity:.85}
+  .sbx-sec small.kbd-hint{display:none}
+  .stake-tot{width:100%}.stake-rnd{min-width:0;width:100%}
+  .tg-it{flex-wrap:wrap}.tg-btns{width:100%}.tg-btns .btn-reg{flex:1}
+  #page-calc .rp2{order:3}
+}
+
+.ps-hit>span:nth-child(2){flex:1;min-width:0}
+.stake-row{align-items:flex-start}
+@media(max-width:600px){
+  /* one line per outcome: bookmaker · odds · stake, outcome name underneath */
+  #sbCalcCard .oh,#sbCalcCard .or{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr) minmax(0,1fr) 28px;column-gap:6px}
+  #sbCalcCard .oh .cl:nth-child(2){display:none}
+  #sbCalcCard .or{row-gap:5px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  #sbCalcCard .or select{grid-column:1;grid-row:1}
+  #sbCalcCard .or .oi{grid-column:2;grid-row:1}
+  #sbCalcCard .or .msi{grid-column:3;grid-row:1}
+  #sbCalcCard .or .bd{grid-column:4;grid-row:1}
+  #sbCalcCard .or input[data-field="result"]{grid-column:1/4;grid-row:2;height:34px;padding-top:4px;padding-bottom:4px;background:var(--raised)}
+  .ps-hit{font-size:12.5px}
+}
 </style>
 </head>
 <body>
@@ -1799,10 +1871,6 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 
     <!-- ═══ CALC PAGE ═══ -->
     <div id="page-calc" style="display:contents">
-      <div class="rep-wrap" id="repWrap" style="display:none">
-        <label class="fl" for="repSel">Start from</label>
-        <select id="repSel"></select>
-      </div>
       <div class="nbt-wrap" id="nbTypes">
         <button class="nbt active" data-bt="Surebet"><span class="nbt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span><span class="nbt-tx"><span class="nbt-t">Surebet</span><span class="nbt-d">Arbitrage across bookmakers</span></span></button>
         <button class="nbt" data-bt="Normal"><span class="nbt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg></span><span class="nbt-tx"><span class="nbt-t">Normal</span><span class="nbt-d">Single bet, own money</span></span></button>
@@ -1836,50 +1904,59 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
           </div>
         </div>
         <div class="card tg-card" id="tgCard" style="display:none"></div>
-        <div class="card" id="sbCalcCard">
-          <div class="ch"><span class="ct">Odds &amp; stake split</span><button class="btn-s" id="tgSetBtn" title="Forward surebets from Telegram and they appear here ready to register">Telegram</button><button class="btn-s" id="qPasteBtn" title="Paste the text of a surebet and fill bookmakers and odds automatically">Paste surebet</button></div>
+        <div class="card sbx" id="sbCalcCard">
+          <div class="sbx-h">
+            <span class="ct">Surebet</span>
+            <div class="sbx-tools">
+              <button class="tool" id="repBtn" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg><span>Same as last</span></button>
+              <button class="tool" id="qPasteBtn" title="Paste the text of a surebet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg><span>Paste</span></button>
+              <button class="tool" id="tgSetBtn" title="Telegram inbox settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg><span>Telegram</span><i class="tool-dot"></i></button>
+            </div>
+          </div>
           <div class="cb">
-            <div class="q-paste" id="qPasteWrap" style="display:none"><textarea id="qPaste" rows="3" placeholder="Paste here the surebet text (e.g. from your finder or Telegram). Bookmakers you have registered and their odds are detected automatically."></textarea></div>
+            <div class="q-paste" id="qPasteWrap" style="display:none"><textarea id="qPaste" rows="3" placeholder="Paste the surebet text here — your bookmakers and their odds are detected automatically."></textarea></div>
+
+            <div class="sbx-sec first"><span class="sbx-n">1</span>Match<small>stays filled after each registration</small></div>
             <div class="q-grid">
               <div class="q-ev"><label class="fl">Event</label><input type="text" id="q-event" list="q-evlist" placeholder="Real Madrid vs Barcelona" autocomplete="off"><datalist id="q-evlist"></datalist></div>
-              <div class="q-mk"><label class="fl">Market / line</label><input type="text" id="q-market" placeholder="Optional · e.g. Vinicius 1.5+ shots" autocomplete="off"></div>
+              <div class="q-mk"><label class="fl">Market / line</label><input type="text" id="q-market" placeholder="Optional · Vinicius 1.5+ shots" autocomplete="off"></div>
               <div><label class="fl">Date</label><input type="date" id="q-date"></div>
               <div><label class="fl">Ends ~</label><select id="q-hour" class="hour-sel"><option value="">--</option><option value="00:00">00h</option><option value="01:00">01h</option><option value="02:00">02h</option><option value="03:00">03h</option><option value="04:00">04h</option><option value="05:00">05h</option><option value="06:00">06h</option><option value="07:00">07h</option><option value="08:00">08h</option><option value="09:00">09h</option><option value="10:00">10h</option><option value="11:00">11h</option><option value="12:00">12h</option><option value="13:00">13h</option><option value="14:00">14h</option><option value="15:00">15h</option><option value="16:00">16h</option><option value="17:00">17h</option><option value="18:00">18h</option><option value="19:00">19h</option><option value="20:00">20h</option><option value="21:00">21h</option><option value="22:00">22h</option><option value="23:00">23h</option></select></div>
               <div><label class="fl">Category</label><select id="q-cat"><option value="">No category</option></select></div>
             </div>
-            <div style="margin-bottom:16px">
-              <label class="fl">Total stake</label>
-              <div class="iw"><input type="number" class="ii" id="totalInv" value="100" min="0" step="1"><span class="isuf">€</span></div>
-            </div>
-            <div class="ps-quick" id="psQuick"></div>
+
+            <div class="sbx-sec"><span class="sbx-n">2</span>Odds<small class="kbd-hint">Enter on the last odds registers it</small></div>
+            <div id="psBanner"></div>
             <div class="oh">
               <div class="cl">Bookmaker</div><div class="cl">Outcome</div>
               <div class="cl" style="text-align:right">Odds</div>
-              <div class="cl" style="text-align:right">Manual stake</div><div></div>
+              <div class="cl" style="text-align:right">Stake</div><div></div>
             </div>
             <div id="outcomesList"></div>
             <button class="ba" id="addBtn">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Add outcome
             </button>
-            <div class="rs">
-              <div class="rh">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                Stake rounding
-              </div>
-              <div class="rp" id="roundPills">
-                <button class="rpb active" data-mode="exact">Exact</button>
-                <button class="rpb" data-mode="1">×1</button>
-                <button class="rpb" data-mode="0.5">×0.50</button>
-                <button class="rpb" data-mode="0.25">×0.25</button>
-                <button class="rpb" data-mode="custom">Custom…</button>
-              </div>
-              <div class="cr" id="customRow" style="display:none">
-                <span>Multiples of</span>
-                <input type="number" id="customStep" value="0.1" min="0.01" step="0.01">
-                <span>€</span>
+
+            <div class="sbx-sec"><span class="sbx-n">3</span>Stake</div>
+            <div class="stake-row">
+              <div class="stake-tot"><label class="fl">Total</label><div class="iw"><input type="number" class="ii" id="totalInv" value="100" min="0" step="1"><span class="isuf">€</span></div></div>
+              <div class="stake-rnd"><label class="fl">Rounding</label>
+                <div class="rp" id="roundPills">
+                  <button class="rpb active" data-mode="exact">Exact</button>
+                  <button class="rpb" data-mode="1">1 €</button>
+                  <button class="rpb" data-mode="0.5">0.50</button>
+                  <button class="rpb" data-mode="0.25">0.25</button>
+                  <button class="rpb" data-mode="custom">Custom</button>
+                </div>
               </div>
             </div>
+            <div class="cr" id="customRow" style="display:none">
+              <span>Multiples of</span>
+              <input type="number" id="customStep" value="0.1" min="0.01" step="0.01">
+              <span>€</span>
+            </div>
+            <div class="ps-quick" id="psQuick"></div>
           </div>
         </div>
       </div>
@@ -2490,13 +2567,14 @@ function renderOutcomes(){
   const list=document.getElementById('outcomesList');
   list.innerHTML='';
   const res=calculate();const lit=!!(res&&res.isSurebet);
+  stakeHintMap=res?new Map(res.valid.map((o,i)=>[o.id,res.stakes[i]])):new Map();
   outcomes.forEach((o,idx)=>{
     const row=document.createElement('div');row.className='or';
     row.innerHTML=`
       <select data-field="house" data-id="${o.id}">${houseOptionsHtml(o.house,`Bookmaker ${idx+1}`)}</select>
-      <input type="text" placeholder="Outcome" value="${esc(o.result)}" data-field="result" data-id="${o.id}">
+      <input type="text" placeholder="Outcome (optional) · e.g. Over" value="${esc(o.result)}" data-field="result" data-id="${o.id}">
       <input type="number" class="oi${lit?' lit':''}" placeholder="1.00" value="${o.odd>0?o.odd:''}" data-field="odd" data-id="${o.id}" min="1.01" step="0.01">
-      <input type="number" class="msi" placeholder="Auto" title="Manual stake for this outcome (optional). If filled in, the rest is split using the remaining budget." value="${o.manualStake>0?o.manualStake:''}" data-field="manualStake" data-id="${o.id}" min="0" step="0.01">
+      <input type="number" class="msi${o.fromPreset?' pre':''}" placeholder="${stakeHint(o)}" title="Leave empty to split the total automatically, or type a fixed stake" value="${o.manualStake>0?o.manualStake:''}" data-field="manualStake" data-id="${o.id}" min="0" step="0.01">
       <button class="bd" data-id="${o.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`;
     list.appendChild(row);
   });
@@ -2510,9 +2588,9 @@ function renderResult(){
   const s=profit>=0?'+':'';
   const badgeHtml=isSurebet?`<div class="badge bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Surebet</div>`:
     `<div class="badge br"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>No surebet</div>`;
-  const bkHtml=valid.map((o,i)=>`<div class="bkr"><div><div class="bkn">${esc(o.house||`Bookmaker ${i+1}`)}</div><div class="bks">${esc(o.result||`Outcome ${i+1}`)} · Odds ${fmt(o.odd)}</div></div><div class="bkv"><div class="bkst">${fmt(stakes[i])} €${o.manualStake>0?' <span style="color:var(--yellow);font-size:10px;font-weight:600">MANUAL</span>':''}</div><div class="bkr2">return ${fmt(returns[i])} €</div><div class="bkm">min. ${fmt(returns[i])} €</div></div></div>`).join('');
+  const bkHtml=valid.map((o,i)=>`<div class="bkr"><div><div class="bkn">${esc(o.house||`Bookmaker ${i+1}`)}</div><div class="bks">${esc(o.result||`Outcome ${i+1}`)} · Odds ${fmt(o.odd)}</div></div><div class="bkv"><div class="bkst">${fmt(stakes[i])} €${o.manualStake>0?` <span style="color:var(--yellow);font-size:10px;font-weight:600">${o.fromPreset?'SAVED':'MANUAL'}</span>`:''}</div><div class="bkr2">return ${fmt(returns[i])} €</div><div class="bkm">min. ${fmt(returns[i])} €</div></div></div>`).join('');
   const bW=Math.min(sumPct/1.3,100);
-  panel.innerHTML=`${presetHitHtml(valid,stakes)}
+  panel.innerHTML=`
     <div class="card ph2 ${isSurebet?'sb':''}">${badgeHtml}<div class="pp ${profit>=0?'pos':'neg'}">${s}${fmt(profitPct)} %</div><div class="ps">Guaranteed profit: <span class="hi ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span></div></div>
     <div class="card">${bkHtml}
       <div class="sr"><span class="sl">Total stake</span><span class="sv">${fmt(actualTotal)} €</span></div>
@@ -2520,7 +2598,8 @@ function renderResult(){
       <div class="sr"><span class="sl">Profit</span><span class="sv ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span></div>
       <div class="pw"><div class="pl"><span>Sum of implied probabilities</span><span>${fmt(sumPct)} %</span></div><div class="pt"><div class="pf ${sumPct>100?'over':''}" style="width:${bW}%"></div></div></div>
     </div>
-    <button class="btn-reg" id="regBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>${isSurebet?'Register':'Register anyway (negative ROI)'} <kbd class="kbd">Enter</kbd></button>`;
+    <button class="btn-reg" id="regBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>${isSurebet?'Register':'Register anyway (negative ROI)'} <kbd class="kbd">Enter</kbd></button>
+    ${presetHitHtml(valid,stakes)}`;
   document.getElementById('regBtn').addEventListener('click',quickRegister);
   const qb=document.getElementById('qBar');
   if(qb){qb.innerHTML=`<div class="q-bar-info"><b class="${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</b><span>${valid.map((o,i)=>fmt(stakes[i])+'€').join(' / ')}</span></div><button class="btn-reg" id="qBarBtn">Register</button>`;
@@ -2528,7 +2607,7 @@ function renderResult(){
   wirePresetHit();
 }
 
-function render(){renderOutcomes();renderResult();renderPsQuick();}
+function render(){autoPreset();renderOutcomes();renderResult();renderPsQuick();renderPsBanner();}
 
 let editingSbId=null;
 function renderSbrLegs(legs,editable){
@@ -2845,9 +2924,10 @@ function handleOutcomeFieldChange(el){
   const id=+el.dataset.id,field=el.dataset.field;
   if(!id||!field)return;const o=outcomes.find(x=>x.id===id);if(!o)return;
   if(field==='odd')o.odd=parseFloat(el.value)||0;
-  else if(field==='manualStake')o.manualStake=el.value===''?null:(parseFloat(el.value)||0);
+  else if(field==='manualStake'){o.manualStake=el.value===''?null:(parseFloat(el.value)||0);o.fromPreset=false;}
   else o[field]=el.value;
-  renderResult();renderPsQuick();
+  if(field==='odd'&&autoPreset())syncStakeInputs();
+  renderResult();renderPsQuick();renderPsBanner();updateStakeHints();
   const res=calculate();document.querySelectorAll('.oi').forEach(i=>i.classList.toggle('lit',!!(res&&res.isSurebet)));
 }
 document.getElementById('outcomesList').addEventListener('input',e=>handleOutcomeFieldChange(e.target));
@@ -4243,33 +4323,79 @@ function presetStakesFor(p,odds){
   return odds.map(o=>{const i=pool.findIndex(x=>x.k===oddKey(o));if(i<0)return null;const s=pool[i].s;pool.splice(i,1);return s;});
 }
 let presetHitCtx=null;
+
+// ── Saved stakes applied by themselves: when the odds typed match a preset, its stakes are filled in.
+let psSkipKey=null,psBaseTotal=null,stakeHintMap=new Map();
+function clearPresetStakes(){
+  if(outcomes.some(o=>o.fromPreset)&&psBaseTotal!=null)setTotal(psBaseTotal);
+  outcomes.forEach(o=>{if(o.fromPreset){o.manualStake=null;o.fromPreset=false;}});
+  psBaseTotal=null;psSkipKey=null;
+}
+function setTotal(v){totalInv=v;const el=document.getElementById('totalInv');if(el)el.value=v;}
+function autoPreset(){
+  const valid=outcomes.filter(o=>o.odd>1);
+  const key=valid.length>=2?presetKey(valid.map(o=>o.odd)):'';
+  const using=outcomes.some(o=>o.fromPreset);
+  const p=key&&key!==psSkipKey?findPreset(valid.map(o=>o.odd)):null;
+  if(p&&!valid.some(o=>o.manualStake>0&&!o.fromPreset)){
+    const ps=presetStakesFor(p,valid.map(o=>o.odd));
+    if(!using)psBaseTotal=totalInv;
+    let changed=false;
+    valid.forEach((o,i)=>{if(o.manualStake!==ps[i]||!o.fromPreset)changed=true;o.manualStake=ps[i];o.fromPreset=true;});
+    outcomes.forEach(o=>{if(!(o.odd>1)&&o.fromPreset){o.manualStake=null;o.fromPreset=false;}});
+    setTotal(r2(ps.reduce((a,v)=>a+(v||0),0)));
+    return changed;
+  }
+  if(using&&!p){
+    outcomes.forEach(o=>{if(o.fromPreset){o.manualStake=null;o.fromPreset=false;}});
+    if(psBaseTotal!=null){setTotal(psBaseTotal);psBaseTotal=null;}
+    return true;
+  }
+  return false;
+}
+function activePreset(){
+  const valid=outcomes.filter(o=>o.odd>1);
+  if(valid.length<2||!valid.every(o=>o.fromPreset))return null;
+  return findPreset(valid.map(o=>o.odd));
+}
+function renderPsBanner(){
+  const box=document.getElementById('psBanner');if(!box)return;
+  const valid=outcomes.filter(o=>o.odd>1);
+  const p=activePreset();
+  if(p){const ps=presetStakesFor(p,valid.map(o=>o.odd));const ret=Math.min(...valid.map((o,i)=>o.odd*ps[i]));
+    box.innerHTML=`<div class="ps-hit"><span class="ps-bolt">⚡</span><span>Saved stakes${p.label?` <b>${esc(p.label)}</b>`:''} applied · ${ps.map(v=>`<b>${fmt(v)} €</b>`).join(' / ')} → ${fmt(ret)} €</span><button class="link-btn" id="psSkip">Don't use</button></div>`;
+    document.getElementById('psSkip').onclick=()=>{psSkipKey=presetKey(valid.map(o=>o.odd));autoPreset();render();};
+    return;}
+  const key=valid.length>=2?presetKey(valid.map(o=>o.odd)):'';
+  if(key&&key===psSkipKey&&findPreset(valid.map(o=>o.odd))){
+    box.innerHTML=`<div class="ps-hit off"><span class="ps-bolt">⚡</span><span>You have saved stakes for these odds</span><button class="link-btn" id="psUse">Use them</button></div>`;
+    document.getElementById('psUse').onclick=()=>{psSkipKey=null;outcomes.forEach(o=>{if(!o.fromPreset)o.manualStake=null;});render();};
+    return;}
+  box.innerHTML='';
+}
+function stakeHint(o){const v=stakeHintMap.get(o.id);return v!=null&&!(o.manualStake>0)?fmt(v):'Auto';}
+function updateStakeHints(){
+  const res=calculate();stakeHintMap=res?new Map(res.valid.map((o,i)=>[o.id,res.stakes[i]])):new Map();
+  document.querySelectorAll('#outcomesList .msi').forEach(inp=>{const o=outcomes.find(x=>x.id===+inp.dataset.id);if(o)inp.placeholder=stakeHint(o);});
+}
+function syncStakeInputs(){
+  document.querySelectorAll('#outcomesList .msi').forEach(inp=>{const o=outcomes.find(x=>x.id===+inp.dataset.id);if(!o)return;
+    inp.value=o.manualStake>0?o.manualStake:'';inp.classList.toggle('pre',!!o.fromPreset);});
+}
 function presetHitHtml(valid,stakes){
   presetHitCtx=null;
-  const odds=valid.map(o=>o.odd);if(odds.length<2)return '';
-  const p=findPreset(odds);
-  if(p){
-    const ps=presetStakesFor(p,odds);
-    const applied=valid.every((o,i)=>o.manualStake>0&&Math.abs(o.manualStake-ps[i])<0.005);
-    presetHitCtx={mode:'apply',p,ps};
-    const st=presetStats(p);
-    return `<div class="ps-hit"><span>${applied?'✓ Preset applied':'Preset found'}${p.label?` · <b>${esc(p.label)}</b>`:''}: ${valid.map((o,i)=>`<b>${fmt(ps[i])} €</b> @ ${fmt(o.odd)}`).join(' · ')} → returns ${fmt(st.minR)} €</span>${applied?'':'<button class="btn-s" id="psApply">Apply stakes</button>'}</div>`;
-  }
-  presetHitCtx={mode:'save',odds,stakes:stakes.slice()};
-  return `<div style="display:flex;justify-content:flex-end;margin:0 0 10px"><button class="btn-s" id="psSaveFromCalc" title="Save these odds and stakes so they are suggested next time">Save odds & stakes as preset</button></div>`;
+  const odds=valid.map(o=>o.odd);
+  if(odds.length<2||findPreset(odds))return '';
+  presetHitCtx={odds,stakes:stakes.slice()};
+  return `<button class="link-btn" id="psSaveFromCalc" title="Next time these odds appear, these stakes are filled in automatically">☆ Save these stakes for these odds</button>`;
 }
 function wirePresetHit(){
-  const a=document.getElementById('psApply');
-  if(a)a.addEventListener('click',()=>{
-    const {ps}=presetHitCtx;let i=0;
-    outcomes.forEach(o=>{if(o.odd>1){o.manualStake=ps[i];i++;}});
-    totalInv=r2(ps.reduce((x,y)=>x+(y||0),0));document.getElementById('totalInv').value=totalInv;
-    render();toast('Preset stakes applied');
-  });
   const b=document.getElementById('psSaveFromCalc');
   if(b)b.addEventListener('click',()=>{
     const {odds,stakes}=presetHitCtx;
     D.presets.unshift({id:Date.now(),label:'',legs:odds.map((o,i)=>({odd:r2(o),stake:r2(stakes[i])})),createdAt:Date.now()});
-    save();updateBadges();renderResult();toast('Preset saved','View',()=>navTo('presets'));
+    outcomes.forEach(o=>{if(o.odd>1)o.fromPreset=false;});
+    save();updateBadges();render();toast('Saved — these stakes will be filled in automatically next time','Presets',()=>navTo('presets'));
   });
 }
 
@@ -4341,23 +4467,22 @@ document.getElementById('psList').addEventListener('click',e=>{
 function renderPsQuick(){
   const box=document.getElementById('psQuick');if(!box)return;
   const ps=D.presets||[];
-  if(!ps.length){box.innerHTML='';box.style.display='none';return;}
-  box.style.display='';
+  if(!ps.length){box.innerHTML=`<div class="psq-empty">Tip: after a calculation, "☆ Save these stakes" remembers them — next time those odds appear the stakes fill in by themselves.</div>`;return;}
   const cur=presetKey(outcomes.filter(o=>o.odd>1).map(o=>o.odd));
-  box.innerHTML=`<div class="psq-h"><span>Presets</span><small>tap to load odds &amp; stakes</small></div><div class="psq-row">`+ps.map(p=>{
+  box.innerHTML=`<div class="psq-h"><span>Saved stakes</span><small>tap to load · applied automatically when the odds match</small></div><div class="psq-row">`+ps.map(p=>{
     const on=presetKey(p.legs.map(l=>l.odd))===cur;
     return `<button class="psq${on?' on':''}" data-psq="${p.id}">${p.label?`<span class="psq-n">${esc(p.label)}</span>`:''}<span class="psq-o">${p.legs.map(l=>fmt(l.odd)).join(' / ')}</span><span class="psq-s">${p.legs.map(l=>fmt(l.stake,l.stake%1?2:0)+'€').join(' · ')}</span></button>`;}).join('')+`</div>`;
 }
 function loadPresetIntoCalc(p){
   const old=outcomes.slice();
-  outcomes=p.legs.map((l,i)=>({id:nextId++,house:old[i]?.house||'',result:old[i]?.result||'',odd:l.odd,manualStake:l.stake}));
-  totalInv=r2(p.legs.reduce((a,l)=>a+l.stake,0));document.getElementById('totalInv').value=totalInv;
+  clearPresetStakes();
+  outcomes=p.legs.map((l,i)=>({id:nextId++,house:old[i]?.house||'',result:old[i]?.result||'',odd:l.odd,manualStake:null}));
   render();
 }
 document.getElementById('psQuick').addEventListener('click',e=>{
   const b=e.target.closest('[data-psq]');if(!b)return;
   const p=(D.presets||[]).find(x=>x.id===+b.dataset.psq);if(!p)return;
-  loadPresetIntoCalc(p);toast('Preset loaded — now pick the bookmakers');
+  loadPresetIntoCalc(p);toast('Odds and stakes loaded — pick the bookmakers');
 });
 
 
@@ -4389,18 +4514,17 @@ function lastBet(){
   return best;
 }
 function renderRepeatSel(){
-  const wrap=document.getElementById('repWrap'),sel=document.getElementById('repSel');if(!wrap)return;
+  const btn=document.getElementById('repBtn');if(!btn)return;
   const L=lastBet();
-  if(!L){wrap.style.display='none';return;}
-  wrap.style.display='';
-  const type=L.kind==='sb'?'Surebet':(L.b.type||'Normal');
+  btn.disabled=!L;
+  if(!L){btn.title='No bets yet';return;}
   const what=L.kind==='sb'?(L.b.legs||[]).map(l=>l.house).filter(Boolean).join(' / '):(L.b.house||'');
-  sel.innerHTML=`<option value="">New bet from scratch</option><option value="last">Same as last · ${esc(L.b.event||'(no event)')} · ${type}${what?' · '+esc(what):''} (odds blank)</option>`;
-  sel.value='';
+  btn.title=`Copy everything from your last bet except the odds:\n${L.b.event||'(no event)'}${L.b.market?' · '+L.b.market:''}${what?' · '+what:''}`;
 }
 function applyLastBet(){
   const L=lastBet();if(!L)return;const b=L.b;
   if(L.kind==='sb'){
+    clearPresetStakes();
     outcomes=(b.legs||[]).map(l=>({id:nextId++,house:l.house||'',result:l.result||'',odd:0,manualStake:null}));
     while(outcomes.length<2)outcomes.push({id:nextId++,house:'',result:'',odd:0,manualStake:null});
     if(b.totalStake>0){totalInv=Math.round(b.totalStake*100)/100;document.getElementById('totalInv').value=totalInv;}
@@ -4421,13 +4545,9 @@ function applyLastBet(){
     renderNfResult();
     setTimeout(()=>{const f=document.querySelector(b.type==='Combi'?'#nf-sels [data-selo]':'#nf-odd');if(f)f.focus();},50);
   }
-  document.getElementById('repSel').value='last';
   toast('Copied from your last bet — just enter the odds');
 }
-document.getElementById('repSel').addEventListener('change',e=>{
-  if(e.target.value==='last')applyLastBet();
-  else{sbPrefill=null;}
-});
+document.getElementById('repBtn').addEventListener('click',applyLastBet);
 
 
 // ══════════════════════════════════════════
@@ -4440,21 +4560,29 @@ function fillQuickDefaults(){
   if(dl){const seen=new Set();const evs=[];[...D.bets,...D.normals].sort((a,b)=>b.id-a.id).forEach(b=>{const e=(b.event||'').trim();if(e&&!seen.has(e.toLowerCase())&&evs.length<30){seen.add(e.toLowerCase());evs.push(e);}});
     dl.innerHTML=evs.map(e=>`<option value="${esc(e)}">`).join('');}
 }
-function quickRegister(){
-  const res=calculate();if(!res)return;
-  const evEl=document.getElementById('q-event');const ev=evEl.value.trim();
-  if(!ev){evEl.focus();evEl.classList.add('q-need');setTimeout(()=>evEl.classList.remove('q-need'),1200);toast('Write the event first');return;}
+function registerCurrent(){
+  const res=calculate();if(!res)return null;
+  const ev=document.getElementById('q-event').value.trim();if(!ev)return null;
   const catVal=document.getElementById('q-cat').value;
-  const bet={id:Date.now(),event:ev,market:document.getElementById('q-market').value.trim(),
+  const bet={id:Date.now()+Math.floor(Math.random()*1000),event:ev,market:document.getElementById('q-market').value.trim(),
     date:document.getElementById('q-date').value||todayISO(),time:document.getElementById('q-hour').value||'',resolveDate:'',
     profitPct:res.profitPct,profit:res.profit,expectedProfit:res.profit,totalStake:res.actualTotal,minReturn:res.minReturn,status:'pending',
     categoryId:catVal?+catVal:null,
     legs:res.valid.map((o,i)=>({house:o.house||`Bookmaker ${i+1}`,result:o.result||`Outcome ${i+1}`,odd:o.odd,stake:res.stakes[i],minReturn:res.returns[i]}))};
-  D.bets.unshift(bet);save();updateBadges();
-  // keep event, market, bookmakers, outcomes, hour & category — only clear the odds
-  outcomes.forEach(o=>{o.odd=0;o.manualStake=null;});
-  newBetCat=null;sbPrefill=null;
-  render();renderRepeatSel();fillQuickDefaults();
+  D.bets.unshift(bet);
+  // keep event, market, bookmakers, outcomes, hour & category — only clear odds (and stakes that came from a preset)
+  const wasPreset=outcomes.some(o=>o.fromPreset);
+  outcomes.forEach(o=>{o.odd=0;if(o.fromPreset||wasPreset){o.manualStake=null;o.fromPreset=false;}});
+  if(wasPreset&&psBaseTotal!=null){setTotal(psBaseTotal);psBaseTotal=null;}
+  psSkipKey=null;newBetCat=null;sbPrefill=null;
+  return {bet,res};
+}
+function quickRegister(){
+  if(!calculate())return;
+  const evEl=document.getElementById('q-event');
+  if(!evEl.value.trim()){evEl.focus();evEl.classList.add('q-need');setTimeout(()=>evEl.classList.remove('q-need'),1200);toast('Write the event first');return;}
+  const r=registerCurrent();if(!r)return;const {bet,res}=r;
+  save();updateBadges();render();renderRepeatSel();fillQuickDefaults();
   setTimeout(()=>{const f=document.querySelector('#outcomesList .oi');if(f)f.focus();},30);
   const n=D.bets.filter(b=>b.status==='pending'&&evKey(b)===evKey(bet)).length;
   toast(`Saved${n>1?` · #${n} on this match`:''} · ${res.profit>=0?'+':''}${fmt(res.profit)} €`,'Undo',()=>{
@@ -4475,23 +4603,52 @@ document.getElementById('outcomesList').addEventListener('keydown',e=>{
 }));
 // Paste parser: finds your registered bookmakers and the first odds after each one
 function parseSurebetText(txt){
+  txt=String(txt||'');
   const names=trackedBookmakers().slice().sort((a,b)=>b.length-a.length);
   const low=txt.toLowerCase();const hits=[];
-  names.forEach(n=>{let k=0;const nl=n.toLowerCase();while((k=low.indexOf(nl,k))>=0){if(!hits.some(h=>k>=h.pos&&k<h.pos+h.len))hits.push({name:n,pos:k,len:nl.length});k+=nl.length;}});
+  names.forEach(n=>{let k=0;const nl=n.toLowerCase();while((k=low.indexOf(nl,k))>=0){if(!hits.some(h=>k<h.pos+h.len&&h.pos<k+nl.length))hits.push({name:n,pos:k,len:nl.length});k+=nl.length;}});
   hits.sort((a,b)=>a.pos-b.pos);
-  const legs=[];
-  hits.forEach((h,i)=>{const end=i+1<hits.length?hits[i+1].pos:txt.length;
-    const seg=txt.slice(h.pos+h.len,end);
-    const m=[...seg.matchAll(/(?<![\d.,])(\d{1,3}[.,]\d{1,3})(?![\d.,]*%)/g)].map(x=>parseFloat(x[1].replace(',','.'))).find(v=>v>1&&v<1000);
-    if(m)legs.push({house:h.name,odd:m});});
-  let ev='';const line=txt.split(/\n/).map(l=>l.trim()).find(l=>/\S+\s+(vs\.?|v|-|–)\s+\S+/i.test(l)&&!/^\d/.test(l));
-  if(line)ev=line.replace(/^[^\p{L}\d]+/u,'').replace(/\s{2,}/g,' ').trim().slice(0,80);
-  let market='';
+  // numbers after each bookmaker, labelled as stake (€, "stake", "apuesta"…) or odds (@, "cuota", "odds"…)
+  const legsC=hits.map((h,i)=>{
+    let seg=txt.slice(h.pos+h.len,i+1<hits.length?hits[i+1].pos:txt.length);
+    if(i===hits.length-1)seg=seg.split('\n').slice(0,3).join('\n');
+    const toks=[];const re=/\d+(?:[.,]\d+)?/g;let m,lastEnd=0;
+    while((m=re.exec(seg))){
+      const raw=m[0],at=m.index,end=at+raw.length;
+      const prev=seg[at-1]||'',next=seg[end]||'';
+      const after=seg.slice(end,end+6).toLowerCase();
+      const suf=(after.match(/^\s*(€|eur|uds|ud\b|u\b)/)||[''])[0].length;
+      // the text that belongs to this number only (a "€" right after the previous number is that number's)
+      const before=seg.slice(Math.max(lastEnd,at-14),at).toLowerCase();
+      lastEnd=end+suf;
+      if(/[:\/]/.test(prev)||/[:\/]/.test(next))continue;               // 21:00, 23/10
+      if(/^\s*%/.test(after))continue;                                   // ROI / profit %
+      const stake=suf>0||/(€|stake|apuesta|apostar|importe|monto|bet|invertir)\s*:?\s*$/.test(before);
+      const odd=/(@|cuota|odds?|c:|x)\s*:?\s*$/.test(before);
+      toks.push({v:parseFloat(raw.replace(',','.')),dec:/[.,]/.test(raw),stake,odd});
+    }
+    const pool=toks.filter(t=>!t.stake&&t.v>1&&t.v<=200);
+    const strong=pool.filter(t=>t.odd);
+    let c=(strong.length?strong:(pool.some(t=>t.dec)?pool.filter(t=>t.dec):pool)).map(t=>t.v);
+    const st=toks.find(t=>t.stake);
+    return {house:h.name,cands:[...new Set(c)].slice(0,5),stake:st?st.v:null};
+  }).filter(l=>l.cands.length);
+  // pick the odds combination that looks like a surebet (sum of 1/odds just under 1)
+  let best=null;
+  const walk=(i,acc,sum)=>{
+    if(i===legsC.length){const sc=Math.abs(sum-0.975)+(sum>1.1?5:0);if(!best||sc<best.sc)best={sc,acc:acc.slice()};return;}
+    for(const v of legsC[i].cands){acc.push(v);walk(i+1,acc,sum+1/v);acc.pop();}
+  };
+  if(legsC.length>=2&&legsC.length<=6)walk(0,[],0);
+  const legs=best?legsC.map((l,i)=>({house:l.house,odd:best.acc[i],stake:l.stake})):[];
   const lines=txt.split(/\n/).map(l=>l.replace(/^[^\p{L}\d]+/u,'').trim()).filter(Boolean);
-  const low2=names.map(n=>n.toLowerCase());
-  const mk=lines.find(l=>l!==ev&&/\p{L}{2}/u.test(l)&&!low2.some(n=>l.toLowerCase().includes(n))&&!/^(roi|profit|beneficio|surebet|arbitra|%|\d)/i.test(l)&&!/\d+[.,]\d+\s*%/.test(l));
-  if(mk)market=mk.slice(0,80);
-  return {legs,ev,market};
+  const evLine=lines.find(l=>/\S+\s+(vs\.?|v|-|–)\s+\S+/i.test(l)&&!/^\d/.test(l)&&!names.some(n=>l.toLowerCase().includes(n.toLowerCase())));
+  let ev=evLine||'';
+  const pre=ev.match(/^[^:]{1,25}:\s*(.+\s(vs\.?|v|-|–)\s.+)$/i);if(pre)ev=pre[1];          // "Liga: A vs B"
+  ev=ev.replace(/\s*[·|,(-]?\s*\d{1,2}[:.h]\d{2}\)?\s*$/i,'').replace(/\s{2,}/g,' ').trim().slice(0,80); // trailing time
+  const lowNames=names.map(n=>n.toLowerCase());
+  const mk=lines.find(l=>l!==evLine&&/\p{L}{2}/u.test(l)&&!lowNames.some(n=>l.toLowerCase().includes(n))&&!/^(roi|profit|beneficio|ganancia|surebet|arbitra|stake|apuesta|%|\d)/i.test(l)&&!/^total\s*[:\d€]/i.test(l)&&!/\d+[.,]?\d*\s*%/.test(l));
+  return {legs,ev,market:mk?mk.slice(0,80):''};
 }
 document.getElementById('qPasteBtn').addEventListener('click',()=>{
   const w=document.getElementById('qPasteWrap');const show=w.style.display==='none';w.style.display=show?'':'none';
@@ -4499,10 +4656,12 @@ document.getElementById('qPasteBtn').addEventListener('click',()=>{
     if(navigator.clipboard&&navigator.clipboard.readText){navigator.clipboard.readText().then(x=>{if(x&&!t.value){t.value=x;t.dispatchEvent(new Event('input'));}}).catch(()=>{});}}
 });
 document.getElementById('qPaste').addEventListener('input',e=>{
-  const {legs,ev}=parseSurebetText(e.target.value);
+  const {legs,ev,market}=parseSurebetText(e.target.value);
   if(legs.length<2){if(e.target.value.trim())toast('Could not find 2 of your bookmakers with odds in that text');return;}
+  clearPresetStakes();
   outcomes=legs.map((l,i)=>({id:nextId++,house:l.house,result:outcomes[i]?.result||'',odd:l.odd,manualStake:null}));
-  const evEl=document.getElementById('q-event');if(ev&&!evEl.value.trim())evEl.value=ev;
+  const evEl=document.getElementById('q-event');if(ev)evEl.value=ev;
+  const mkEl=document.getElementById('q-market');if(market)mkEl.value=market;
   render();document.getElementById('qPasteWrap').style.display='none';
   toast(`Detected ${legs.map(l=>l.house+' @'+fmt(l.odd)).join(' · ')}`);
   setTimeout(()=>document.getElementById('q-event').value.trim()?document.getElementById('regBtn')?.focus():document.getElementById('q-event').focus(),30);
@@ -4543,49 +4702,72 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)tgPoll();}
 function renderTgCard(){
   const card=document.getElementById('tgCard');if(!card)return;
   const tok=tgToken();const items=(D.tgInbox||[]);
-  if(!tok&&!tgOpenCfg){card.style.display='none';return;}
+  const tb=document.getElementById('tgSetBtn');if(tb)tb.classList.toggle('live',!!tok&&!tgLastErr);
+  if((!tok||!items.length)&&!tgOpenCfg&&!tgLastErr){card.style.display='none';return;}
   card.style.display='';
-  let html=`<div class="ch"><span class="ct">Telegram inbox${items.length?` <span class="nb" style="margin-left:6px">${items.length}</span>`:''}</span>
-    <span style="font-size:11.5px;color:${tgLastErr?'var(--red)':'var(--faint)'}">${tgLastErr?esc(tgLastErr):tok?'Listening — forward surebets to your bot':''}</span></div><div class="cb">`;
+  let html=`<div class="sbx-h"><span class="ct">${tgOpenCfg?'Telegram':'From Telegram'}${items.length&&!tgOpenCfg?` <span class="tg-count">${items.length}</span>`:''}</span>
+    <span class="tg-status${tgLastErr?' err':''}">${tgLastErr?esc(tgLastErr):tok?'<i></i>listening':''}</span></div><div class="cb">`;
   if(tgOpenCfg||!tok){
     html+=`<div class="tg-cfg"><label class="fl">Bot token (from @BotFather)</label>
-      <div style="display:flex;gap:8px"><input type="password" id="tgTok" placeholder="123456789:AA…" value="${esc(tok)}" autocomplete="off" style="flex:1;min-width:0"><button class="btn-reg" id="tgTokSave" style="width:auto;padding:9px 16px">Save</button>${tok?'<button class="btn-s" id="tgTokDel">Disconnect</button>':''}</div>
-      <p class="tg-help">1) In Telegram open <b>@BotFather</b> → <b>/newbot</b> → copy the token here. Use a <b>new</b> bot, not the one that sends your surebets.<br>2) Forward surebet messages to that bot's chat (or add it as admin of a channel and forward them there).<br>3) Keep this app open: they appear here in a few seconds, ready to register. The token stays only on this device.</p></div>`;
+      <div style="display:flex;gap:8px"><input type="password" id="tgTok" placeholder="123456789:AA…" value="${esc(tok)}" autocomplete="off" style="flex:1;min-width:0"><button class="btn-reg" id="tgTokSave" style="width:auto;padding:9px 16px;margin:0">Save</button>${tok?'<button class="btn-s" id="tgTokDel">Disconnect</button>':''}</div>
+      <p class="tg-help">Forward surebets to your bot and they land here ready to register. The token is kept only on this device.</p></div>`;
   }
-  if(tok&&!items.length&&!tgOpenCfg)html+=`<div class="tg-empty">Nothing waiting. Forward a surebet to your bot and it shows up here.</div>`;
-  html+=items.map(it=>{
-    const p=parseSurebetText(it.text);const ok=p.legs.length>=2;
-    const sum=ok?p.legs.reduce((a,l)=>a+1/l.odd,0):0;const roi=ok?(1/sum-1)*100:0;
-    return `<div class="tg-it${ok?'':' bad'}">
-      <div class="tg-main"><div class="tg-ev">${esc(p.ev||'(no event detected)')}${ok?` <span class="tg-roi ${roi>=0?'pos':'neg'}">${roi>=0?'+':''}${fmt(roi)} %</span>`:''}</div>
-      ${p.market?`<div class="tg-mk">${esc(p.market)}</div>`:''}
-      <div class="tg-legs">${ok?p.legs.map(l=>`<span class="ps-chip">${esc(l.house)} <b>@${fmt(l.odd)}</b></span>`).join(''):`<span style="color:var(--faint);font-size:12px">Couldn't find 2 of your bookmakers with odds — ${esc(it.text.slice(0,90))}…</span>`}</div></div>
-      <div class="tg-btns">${ok?`<button class="btn-s" data-tgload="${it.uid}">Edit</button><button class="btn-reg" data-tgreg="${it.uid}" style="width:auto;padding:8px 14px">Register</button>`:''}<button class="btn-s" data-tgdel="${it.uid}" title="Discard">✕</button></div></div>`;
-  }).join('');
-  if(items.length>1)html+=`<div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn-s" id="tgClear">Discard all</button></div>`;
+  if(!tgOpenCfg){
+    const parsed=items.map(it=>({it,p:parseSurebetText(it.text)}));
+    const okCount=parsed.filter(x=>x.p.legs.length>=2).length;
+    html+=parsed.map(({it,p})=>{
+      const ok=p.legs.length>=2;
+      const sum=ok?p.legs.reduce((a,l)=>a+1/l.odd,0):0;const roi=ok?(1/sum-1)*100:0;
+      const pr=ok?findPreset(p.legs.map(l=>l.odd)):null;
+      return `<div class="tg-it${ok?'':' bad'}">
+        <div class="tg-main">
+          <div class="tg-ev">${esc(p.ev||'(no event)')}${ok?`<span class="tg-roi ${roi>=0?'pos':'neg'}">${roi>=0?'+':''}${fmt(roi)}%</span>`:''}</div>
+          ${p.market?`<div class="tg-mk">${esc(p.market)}</div>`:''}
+          <div class="tg-legs">${ok?p.legs.map(l=>`<span class="tg-leg">${esc(l.house)} <b>${fmt(l.odd)}</b></span>`).join('')+(pr?`<span class="tg-pre" title="Your saved stakes will be used">⚡ ${pr.legs.map(l=>fmt(l.stake,l.stake%1?2:0)).join('/')} €</span>`:''):`<span class="tg-raw">Bookmakers not recognised · ${esc(it.text.slice(0,70))}…</span>`}</div>
+        </div>
+        <div class="tg-btns">${ok?`<button class="btn-s" data-tgload="${it.uid}">Edit</button><button class="btn-reg" data-tgreg="${it.uid}">Register</button>`:''}<button class="tg-x" data-tgdel="${it.uid}" title="Discard">✕</button></div></div>`;
+    }).join('');
+    if(items.length>1)html+=`<div class="tg-foot"><button class="link-btn" id="tgClear">Discard all</button>${okCount>1?`<button class="btn-s" id="tgRegAll">Register all ${okCount}</button>`:''}</div>`;
+  }
   card.innerHTML=html+'</div>';
 }
-function tgLoad(uid){
+function tgLoad(uid,quiet){
   const it=D.tgInbox.find(x=>x.uid===uid);if(!it)return false;
   const p=parseSurebetText(it.text);if(p.legs.length<2)return false;
-  outcomes=p.legs.map((l,i)=>({id:nextId++,house:l.house,result:'',odd:l.odd,manualStake:null}));
+  clearPresetStakes();
+  outcomes=p.legs.map(l=>({id:nextId++,house:l.house,result:'',odd:l.odd,manualStake:null}));
   if(p.ev)document.getElementById('q-event').value=p.ev;
   document.getElementById('q-market').value=p.market||'';
   if(!document.getElementById('q-date').value)document.getElementById('q-date').value=todayISO();
   if(newBetType!=='Surebet')setBetType('Surebet');
-  D.tgInbox=D.tgInbox.filter(x=>x.uid!==uid);save();
-  render();renderTgCard();return true;
+  D.tgInbox=D.tgInbox.filter(x=>x.uid!==uid);
+  if(quiet){autoPreset();return true;}
+  save();render();renderTgCard();return true;
 }
 document.getElementById('tgCard').addEventListener('click',e=>{
   const t=e.target;
   if(t.closest('#tgTokSave')){const v=document.getElementById('tgTok').value.trim();if(!/^\d+:[\w-]{20,}$/.test(v)){toast('That does not look like a bot token');return;}
     tgSetToken(v);tgSetOffset(0);tgOpenCfg=false;tgLastErr='';renderTgCard();tgStart();toast('Telegram connected — forward a surebet to your bot');return;}
   if(t.closest('#tgTokDel')){tgSetToken('');clearInterval(tgTimer);tgOpenCfg=false;renderTgCard();return;}
+  if(t.closest('#tgRegAll')){tgRegisterAll();return;}
   if(t.closest('#tgClear')){const old=D.tgInbox.slice();D.tgInbox=[];save();renderTgCard();toast('Inbox cleared','Undo',()=>{D.tgInbox=old;save();renderTgCard();});return;}
   const del=t.closest('[data-tgdel]');if(del){D.tgInbox=D.tgInbox.filter(x=>x.uid!==+del.dataset.tgdel);save();renderTgCard();return;}
   const ld=t.closest('[data-tgload]');if(ld){if(tgLoad(+ld.dataset.tgload)){document.getElementById('sbCalcCard').scrollIntoView({behavior:'smooth',block:'start'});toast('Loaded — check it and press Register');}return;}
-  const rg=t.closest('[data-tgreg]');if(rg){if(tgLoad(+rg.dataset.tgreg))quickRegister();return;}
+  const rg=t.closest('[data-tgreg]');if(rg){if(tgLoad(+rg.dataset.tgreg))quickRegister();renderTgCard();return;}
 });
+function tgRegisterAll(){
+  const ids=D.tgInbox.slice().reverse().map(x=>x.uid);const made=[];let noEv=0;
+  ids.forEach(uid=>{
+    const it=D.tgInbox.find(x=>x.uid===uid);if(!it)return;const p=parseSurebetText(it.text);
+    if(p.legs.length<2)return;
+    if(!p.ev&&!document.getElementById('q-event').value.trim()){noEv++;return;}
+    tgLoad(uid,true);const r=registerCurrent();if(r)made.push(r.bet);
+  });
+  save();updateBadges();render();renderRepeatSel();renderTgCard();
+  const tot=made.reduce((a,b)=>a+(b.profit||0),0);
+  toast(`Registered ${made.length}${noEv?` · ${noEv} skipped (no event)`:''} · ${tot>=0?'+':''}${fmt(tot)} €`,'Undo',()=>{
+    const ids=new Set(made.map(b=>b.id));D.bets=D.bets.filter(b=>!ids.has(b.id));save();updateBadges();render();toast('Undone');});
+}
 document.getElementById('tgSetBtn').addEventListener('click',()=>{tgOpenCfg=!tgOpenCfg;renderTgCard();if(tgOpenCfg)setTimeout(()=>document.getElementById('tgTok')?.focus(),30);});
 
 // ══════════════════════════════════════════
