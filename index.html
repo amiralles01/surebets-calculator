@@ -1799,6 +1799,13 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .br-note{margin-top:8px;font-size:12px;color:var(--faint)}
 .bk-money small.bk-dir:not(.pos):not(.neg){color:var(--faint);font-weight:500}
 .br-row b{font-variant-numeric:normal;font-family:var(--display,inherit);font-weight:700}
+
+.br-start{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-top:6px}
+.br-start>div{flex:1;min-width:160px}.br-start .btn-reg,.br-start .btn-s{width:auto;margin:0;padding:10px 16px}
+.br-sub{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);font-size:13px}.br-sub small{color:var(--faint)}
+.br-edit{margin-top:10px}
+.br-foot{margin-top:12px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:flex-end}
+.br-head .link-btn{font-size:12px}
 </style>
 </head>
 <body>
@@ -2539,9 +2546,15 @@ function bankrollSummary(){
 function costEntries(){const out=[];visibleCasas().forEach(c=>out.push(...costCharges(c)));return out;}
 function activeCosts(c){const ym=todayLocalISO().slice(0,7);return (c.costs||[]).filter(k=>!k.until||k.until>=ym);}
 function adjEntries(){
-  const out=[];visibleCasas().forEach(c=>(c.adjLog||[]).forEach(a=>{if(a.delta)out.push({date:a.date,profit:a.delta,casa:c.name});}));
+  const out=[];visibleCasas().forEach(c=>(c.adjLog||[]).forEach(a=>{if(a.delta)out.push({id:a.id||0,date:a.date,profit:a.delta,casa:c.name});}));
   return out;
 }
+function trackInfo(){return D.track&&D.track.from?D.track:null;}
+// only what happens inside the tracking window counts
+function trackedAdj(){const t=trackInfo();return t?adjEntries().filter(a=>a.date>=t.from&&a.id>=t.setAt):[];}
+function trackedExpenses(){const t=trackInfo();return t?expenseEntries().filter(a=>a.date>=t.from):[];}
+function trackedCosts(){const t=trackInfo();return t?costEntries().filter(a=>a.date>=t.from):[];}
+function bankrollSnapshot(){const b=bankrollSummary();return {b0:+(b.bankroll+b.inTransit).toFixed(2),put0:+b.putIn.toFixed(2),drawn0:+b.drawn.toFixed(2)};}
 function betProfit(b){return(b.status==='won'||b.status==='lost')?(b.profit||0):0;}
 function betStake(b){return b.status==='anulada'?0:(b.totalStake||0);}
 function todayISO(){return new Date().toISOString().slice(0,10);}
@@ -3041,15 +3054,68 @@ document.getElementById('pr-7').addEventListener('click',()=>{
 });
 document.getElementById('pr-clear').addEventListener('click',()=>setProfitRange('',''));
 
+function bankrollCardHtml(all){
+  const t=trackInfo();const today=todayLocalISO();
+  const sg=v=>(v>=0?'+':'')+fmt(v)+' €';
+  if(!t)return `<div class="br-card" id="brCard">
+      <div class="br-head"><b>Count your whole bankroll</b><span>Right now Profit counts bet results only, day by day. Pick a day and, from then on, it also counts balance corrections (Set balance), expenses paid from your bank and monthly costs — and you can check it against the money you really have. Everything before that day stays exactly as it is.</span></div>
+      <div class="br-start"><div><label class="fl">Start counting from</label><input type="date" id="brFrom" value="${today}" max="${today}"></div><button class="btn-reg" id="brStart">Start</button></div>
+      <div class="br-foot"><button class="link-btn" id="brBackup">Download a full backup (JSON)</button></div>
+    </div>`;
+  const pre=all.filter(e=>e.date<t.from&&!isHidden('month:'+e.date.slice(0,7))).reduce((a,e)=>a+e.profit,0);
+  const since=all.filter(e=>e.date>=t.from&&!isHidden('month:'+e.date.slice(0,7)));
+  const cat=c=>since.filter(e=>e.cat===c).reduce((a,e)=>a+e.profit,0);
+  const bets=cat('surebet')+cat('normal')+cat('freebet'),corr=cat('adjust'),exp=cat('expense'),cost=cat('cost');
+  const sinceSum=since.reduce((a,e)=>a+e.profit,0),total=pre+sinceSum;
+  const br=bankrollSummary();const now=br.bankroll+br.inTransit;
+  const drawn=br.drawn-(t.drawn0||0),putIn=br.putIn-(t.put0||0),change=now-(t.b0||0)+drawn-putIn;
+  const dayBefore=(()=>{const d=new Date(t.from+'T12:00:00');d.setDate(d.getDate()-1);return isoLocal(d);})();
+  const started=new Date(t.setAt);
+  return `<div class="br-card" id="brCard">
+      <div class="br-head"><b>Your profit, step by step</b><span>Bankroll counted since ${fmtDate(t.from)} · <button class="link-btn" id="brEdit">change</button></span></div>
+      <div class="br-row"><span>Until ${fmtDate(dayBefore)} <small>bet results only, as before</small></span><b>${sg(pre)}</b></div>
+      <div class="br-row"><span>Since ${fmtDate(t.from)}
+        <small>bets ${sg(bets)}${corr?` · balance corrections ${sg(corr)}`:''}${exp?` · bank expenses ${sg(exp)}`:''}${cost?` · monthly costs ${sg(cost)}`:''}</small></span><b>${sg(sinceSum)}</b></div>
+      <div class="br-row br-tot"><span>= Total profit</span><b class="${total>=0?'pos':'neg'}">${sg(total)}</b></div>
+      <div class="br-sub"><b>Your money since you started</b> <small>(${started.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})} ${started.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})})</small></div>
+      <div class="br-row"><span>Bankroll now <small>all bookmakers + bank, including money in pending bets</small></span><b>${fmt(now)} €</b></div>
+      <div class="br-row"><span>− Bankroll when you started</span><b>${fmt(t.b0||0)} €</b></div>
+      ${Math.abs(drawn)>=0.005?`<div class="br-row"><span>+ Taken out for personal use <small>doesn't lower your profit</small></span><b>${fmt(drawn)} €</b></div>`:''}
+      ${Math.abs(putIn)>=0.005?`<div class="br-row"><span>− New money you put in</span><b>${fmt(putIn)} €</b></div>`:''}
+      <div class="br-row br-tot"><span>= What your bankroll earned</span><b class="${change>=0?'pos':'neg'}">${sg(change)}</b></div>
+      <div class="br-note">Bets dated before ${fmtDate(t.from)} that were settled later count above in "Until", but move the bankroll here — small differences come from that. Monthly costs are paid outside the bankroll.</div>
+      <div class="br-edit" id="brEditBox" style="display:none">
+        <div class="br-start"><div><label class="fl">Count from</label><input type="date" id="brFrom" value="${t.from}" max="${today}"></div><button class="btn-reg" id="brStart">Save</button><button class="btn-s" id="brReset" title="Take today's bankroll as the new starting point">Restart from now</button><button class="btn-s" id="brStop">Stop counting</button></div>
+      </div>
+      <div class="br-foot"><button class="link-btn" id="brBackup">Download a full backup (JSON)</button></div>
+    </div>`;
+}
+document.getElementById('totalHero').addEventListener('click',e=>{
+  const t=e.target;
+  if(t.closest('#brEdit')){const b=document.getElementById('brEditBox');b.style.display=b.style.display==='none'?'':'none';return;}
+  if(t.closest('#brStart')){
+    const from=document.getElementById('brFrom').value||todayLocalISO();
+    if(from>todayLocalISO()){toast('Pick today or a day in the past');return;}
+    const was=trackInfo();
+    D.track=was?{...was,from}:{from,setAt:Date.now(),...bankrollSnapshot()};
+    save();renderProfit();toast(was?`Now counting from ${fmtDate(from)}`:`Counting your whole bankroll from ${fmtDate(from)}`);return;
+  }
+  if(t.closest('#brReset')){const from=document.getElementById('brFrom').value||todayLocalISO();D.track={from,setAt:Date.now(),...bankrollSnapshot()};save();renderProfit();toast('New starting point saved');return;}
+  if(t.closest('#brStop')){const old=D.track;delete D.track;save();renderProfit();toast('Back to bet results only','Undo',()=>{D.track=old;save();renderProfit();});return;}
+  if(t.closest('#brBackup')){
+    const blob=new Blob([JSON.stringify(D,null,1)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`surebets_backup_${todayLocalISO()}.json`;a.click();return;
+  }
+});
 function renderProfit(){
   // Combine all entries with dates
   const all=[];
   visibleBets().forEach(b=>{const rd=b.date||b.resolveDate;if(rd&&b.profit!==undefined)all.push({date:rd,profit:betProfit(b),cat:'surebet'})});
   visibleNormals().forEach(n=>{const rd=n.date||n.resolveDate;if(rd&&n.profit!==undefined&&n.profit!==0)all.push({date:rd,profit:n.profit,cat:n.type==='Freebet'?'freebet':'normal'})});
-  costEntries().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'cost'}));
+  trackedCosts().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'cost'}));
   migrateBanks();ensureAdjLogs();
-  adjEntries().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'adjust'}));
-  expenseEntries().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'expense'}));
+  trackedAdj().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'adjust'}));
+  trackedExpenses().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'expense'}));
 
   // Group by month
   const months={};
@@ -3086,18 +3152,7 @@ function renderProfit(){
       </div>
     </div>`;
 
-  const br=bankrollSummary();
-  const diff=+(totalAll-br.profit).toFixed(2);
-  document.getElementById('totalHero').insertAdjacentHTML('beforeend',`
-    <div class="br-card">
-      <div class="br-head"><b>Where your profit is</b><span>Everything you have now, minus what came out of your pocket</span></div>
-      <div class="br-row"><span>Bankroll now <small>all bookmakers + bank, including money in pending bets${br.inTransit?' and withdrawals on their way to the bank':''}</small></span><b>${fmt(br.bankroll+br.inTransit)} €</b></div>
-      <div class="br-row"><span>+ Taken out for personal use <small>doesn't lower your profit</small></span><b>${fmt(br.drawn)} €</b></div>
-      <div class="br-row"><span>− Money you put in <small>deposits from your own pocket</small></span><b>${fmt(br.putIn)} €</b></div>
-      ${br.costs?`<div class="br-row"><span>− Monthly costs <small>paid outside the bankroll</small></span><b>${fmt(br.costs)} €</b></div>`:''}
-      <div class="br-row br-tot"><span>= Profit</span><b class="${br.profit>=0?'pos':'neg'}">${br.profit>=0?'+':''}${fmt(br.profit)} €</b></div>
-      ${Math.abs(diff)>=0.5?`<div class="br-note">Differs from the total above by ${diff>0?'+':''}${fmt(diff)} €: hidden months/items, or settled bets on bookmakers that aren't in Bookmakers.</div>`:''}
-    </div>`);
+  document.getElementById('totalHero').insertAdjacentHTML('beforeend',bankrollCardHtml(all));
   const visibleKeysDesc=[...visibleKeys].reverse();
   const hiddenKeysDesc=[...hiddenKeys].reverse();
 
@@ -5369,7 +5424,7 @@ function computeDayTotals(year,month){
   const dayTotals={};
   D.bets.forEach(b=>{if(isHidden('sb:'+b.id))return;const rd=b.date||b.resolveDate;if(rd&&rd.startsWith(ym)){const d=+rd.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+betProfit(b);}});
   D.normals.forEach(n=>{if(isHidden('nm:'+n.id))return;const rd=n.date||n.resolveDate;if(rd&&rd.startsWith(ym)){const d=+rd.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+(n.profit||0);}});
-  [...costEntries(),...adjEntries(),...expenseEntries()].forEach(a=>{if(a.date.startsWith(ym)){const d=+a.date.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+a.profit;}});
+  [...trackedCosts(),...trackedAdj(),...trackedExpenses()].forEach(a=>{if(a.date.startsWith(ym)){const d=+a.date.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+a.profit;}});
   return dayTotals;
 }
 function renderCalendar(){
@@ -5417,7 +5472,7 @@ function renderPerfChart(){
   const entries=[];
   D.bets.forEach(b=>{if(isHidden('sb:'+b.id))return;const rd=b.date||b.resolveDate;if(rd)entries.push({date:rd,profit:betProfit(b),expected:b.status==='anulada'?0:((b.expectedProfit!=null?b.expectedProfit:b.profit)||0),isBet:true});});
   D.normals.forEach(n=>{if(isHidden('nm:'+n.id))return;const rd=n.date||n.resolveDate;if(rd)entries.push({date:rd,profit:n.profit||0,expected:n.profit||0,isBet:false});});
-  [...costEntries(),...adjEntries(),...expenseEntries()].forEach(a=>entries.push({date:a.date,profit:a.profit,expected:a.profit,isBet:false}));
+  [...trackedCosts(),...trackedAdj(),...trackedExpenses()].forEach(a=>entries.push({date:a.date,profit:a.profit,expected:a.profit,isBet:false}));
   const wrap=document.getElementById('perfChartWrap');
   if(!entries.length){
     wrap.innerHTML='<div class="perf-chart-empty">Not enough data yet to show performance.</div>';
