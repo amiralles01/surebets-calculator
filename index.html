@@ -1781,6 +1781,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .c-flow input{width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:var(--pitch,var(--accent))}
 .c-flow span{display:flex;flex-direction:column;gap:3px;font-size:13px}.c-flow small{font-size:11.5px;color:var(--faint);line-height:1.45}
 .bk-money small.bk-dir{font-size:11.5px;font-weight:600}.bk-dir.pos{color:var(--green)}.bk-dir.neg{color:var(--red)}
+.bk-btn.flow-on{border-color:var(--green);color:var(--green);font-weight:700}
 </style>
 </head>
 <body>
@@ -2483,8 +2484,8 @@ function flowEntries(){
   const out=[];
   visibleCasas().forEach(c=>{const from=flowFromOf(c);if(!from)return;(c.history||[]).forEach(h=>{
     if(h.init||!(h.amount>0)||!h.date||h.date<from)return;
-    if(h.type==='dep')out.push({date:h.date,profit:h.amount});
-    else if(h.type==='wd')out.push({date:h.date,profit:-h.amount});
+    if(h.type==='dep')out.push({date:h.date,profit:h.amount,casaId:c.id});
+    else if(h.type==='wd')out.push({date:h.date,profit:-h.amount,casaId:c.id});
   });});
   return out;
 }
@@ -3696,6 +3697,20 @@ function renderCasas(filter=''){
         </div>
         <div class="bk-hist-empty" style="margin-top:8px">The difference is kept as an adjustment; future bets keep updating the balance on top of it.</div>
       </div>`;
+    }else if(mode==='flow'){
+      const from=flowFromOf(c);
+      const n=from?flowEntries().filter(x=>x.casaId===c.id):[];
+      const sum=n.reduce((a,x)=>a+x.profit,0);
+      panelHtml=`<div class="bk-panel">
+        <div class="bk-panel-title">${from?`Deposits and withdrawals of ${esc(c.name)} count in Profit`:`Make deposits and withdrawals of ${esc(c.name)} count in Profit`}</div>
+        <div class="bk-hist-empty" style="margin-bottom:10px">For the bank account where you keep your winnings: a withdrawal (e.g. a subscription) is subtracted from Profit, a deposit is added. The opening deposit never counts.</div>
+        <div class="bk-panel-row">
+          <div><label class="fl">From</label><input type="date" id="bk-flow-from" value="${from||todayLocalISO()}"></div>
+          <button class="btn-reg" data-flow-on="${c.id}" style="width:auto;padding:9px 16px;align-self:flex-end">${from?'Save date':'Turn on'}</button>
+          ${from?`<button class="btn-s" data-flow-off="${c.id}" style="width:auto;padding:9px 16px;align-self:flex-end">Turn off</button>`:''}
+        </div>
+        ${from?`<div class="bk-hist-empty" style="margin-top:8px">${n.length} movement${n.length===1?'':'s'} counted · <b class="${sum>=0?'pos':'neg'}">${sum>=0?'+':''}${fmt(sum)} €</b> in Profit</div>`:''}
+      </div>`;
     }else if(mode==='costs'){
       const ym=todayLocalISO().slice(0,7);
       const list=(c.costs||[]);
@@ -3753,6 +3768,7 @@ function renderCasas(filter=''){
         <button class="bk-btn${mode==='pending'?' on':''}" data-bk-toggle="pending" data-cid="${c.id}">Pending transfer</button>
         <button class="bk-btn${mode==='hist'?' on':''}" data-bk-toggle="hist" data-cid="${c.id}">History</button>
         <button class="bk-btn${mode==='bal'?' on':''}" data-bk-toggle="bal" data-cid="${c.id}">Set balance</button>
+        <button class="bk-btn${mode==='flow'?' on':''}${flowFromOf(c)?' flow-on':''}" data-bk-toggle="flow" data-cid="${c.id}">${flowFromOf(c)?'✓ Counts in Profit':'Count in Profit'}</button>
         <button class="bk-btn${mode==='costs'?' on':''}" data-bk-toggle="costs" data-cid="${c.id}">Monthly costs${activeCosts(c).length?` · ${fmt(activeCosts(c).reduce((a,k)=>a+k.amount,0))} €`:''}</button>
         <div class="bk-spacer"></div>
         <button class="bk-btn" data-edit-cid="${c.id}">Edit</button>
@@ -3826,6 +3842,18 @@ document.getElementById('casasList').addEventListener('click',e=>{
     openBkPanel=(openBkPanel&&openBkPanel.cid===cid&&openBkPanel.mode===mode)?null:{cid,mode};
     renderCasas(document.getElementById('casasSearch').value);
     return;
+  }
+  const flowOn=e.target.closest('[data-flow-on]');
+  if(flowOn){
+    const c=D.casas.find(x=>x.id===+flowOn.dataset.flowOn);if(!c)return;
+    c.flowFrom=document.getElementById('bk-flow-from').value||todayLocalISO();delete c.flowSince;
+    save();renderCasas(document.getElementById('casasSearch').value);toast(`${c.name}: deposits and withdrawals now count in Profit`);return;
+  }
+  const flowOff=e.target.closest('[data-flow-off]');
+  if(flowOff){
+    const c=D.casas.find(x=>x.id===+flowOff.dataset.flowOff);if(!c)return;
+    delete c.flowFrom;delete c.flowSince;openBkPanel=null;
+    save();renderCasas(document.getElementById('casasSearch').value);toast(`${c.name} no longer counts in Profit`);return;
   }
   const costAdd=e.target.closest('[data-cost-add]');
   if(costAdd){
