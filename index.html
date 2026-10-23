@@ -4602,8 +4602,45 @@ document.getElementById('outcomesList').addEventListener('keydown',e=>{
   if(calculate())quickRegister();else{const f=document.querySelector('#outcomesList .oi');if(f)f.focus();}
 }));
 // Paste parser: finds your registered bookmakers and the first odds after each one
+// Format of the surebet bot ("⚔️ A vs B · 💰 1.6%" … "📈 Cuota: 2.30 en 🏦 betfair (ES)" … "💶 Stake: 44.17 €")
+const SPORT_HOURS=2; // estimated duration used to guess when it ends
+function parseBotFormat(txt){
+  if(!/cuota:\s*\d/i.test(txt))return null;
+  const clean=l=>l.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{20E3}\u{2B50}]/gu,'').replace(/\s+/g,' ').trim();
+  const lines=txt.split(/\n/);
+  const ev=clean(lines[0]||'').split(/\s·\s/)[0].trim();
+  const known=trackedBookmakers();
+  const matchHouse=raw=>{const r=raw.toLowerCase().replace(/\(.*?\)/g,'').trim();
+    return known.find(n=>n.toLowerCase()===r)||known.find(n=>r.includes(n.toLowerCase())||n.toLowerCase().includes(r))||raw.replace(/\(.*?\)/g,'').trim();};
+  const legs=[];let cur=null;
+  lines.forEach(l=>{
+    const t=clean(l);
+    if(/^\d\s+\S/.test(t)&&!/cuota|stake/i.test(t)){cur={result:t.replace(/^\d\s+/,'').replace(/\+?EV\b/i,'').trim()};legs.push(cur);return;}
+    const c=t.match(/cuota:\s*(\d+[.,]\d+|\d+)\s*en\s*(.+)$/i);
+    if(c&&cur){cur.odd=parseFloat(c[1].replace(',','.'));cur.house=matchHouse(c[2]);return;}
+    const st=t.match(/stake:\s*(\d+(?:[.,]\d+)?)/i);
+    if(st&&cur)cur.stake=parseFloat(st[1].replace(',','.'));
+  });
+  const ok=legs.filter(l=>l.odd>1&&l.house);
+  if(ok.length<2)return null;
+  // market = common start of the selections ("Aces del Equipo - Arthur Fils"), outcome = the rest ("Más de 8.5")
+  let pre=ok[0].result;ok.forEach(l=>{while(pre&&!l.result.startsWith(pre))pre=pre.slice(0,-1);});
+  pre=pre.replace(/\s+\S*$/,'').trim();
+  if(pre.length<4)pre='';
+  ok.forEach(l=>{if(pre)l.result=l.result.slice(pre.length).replace(/^[\s\-–:]+/,'').trim();});
+  // when it ends ≈ message time + "empieza en" + match length
+  let date='',time='';
+  const h=txt.match(/hora:\s*(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s*(\d{1,2}):(\d{2})/i);
+  const base=h?new Date(+h[3],+h[2]-1,+h[1],+h[4],+h[5]):new Date();
+  const e=txt.match(/empieza en:\s*(?:(\d+)\s*h)?\s*(?:(\d+)\s*m)?/i);
+  const mins=e?((+e[1]||0)*60+(+e[2]||0)):0;
+  const end=new Date(base.getTime()+(mins+SPORT_HOURS*60)*60000);
+  if(e||h){date=`${end.getFullYear()}-${String(end.getMonth()+1).padStart(2,'0')}-${String(end.getDate()).padStart(2,'0')}`;time=String(end.getHours()+(end.getMinutes()>=30?1:0)).padStart(2,'0')+':00';if(time==='24:00')time='23:00';}
+  return {legs:ok.map(l=>({house:l.house,odd:l.odd,stake:l.stake??null,result:l.result})),ev,market:pre.replace(/\s*-\s*$/,''),date,time};
+}
 function parseSurebetText(txt){
   txt=String(txt||'');
+  const bot=parseBotFormat(txt);if(bot)return bot;
   const names=trackedBookmakers().slice().sort((a,b)=>b.length-a.length);
   const low=txt.toLowerCase();const hits=[];
   names.forEach(n=>{let k=0;const nl=n.toLowerCase();while((k=low.indexOf(nl,k))>=0){if(!hits.some(h=>k<h.pos+h.len&&h.pos<k+nl.length))hits.push({name:n,pos:k,len:nl.length});k+=nl.length;}});
@@ -4656,10 +4693,12 @@ document.getElementById('qPasteBtn').addEventListener('click',()=>{
     if(navigator.clipboard&&navigator.clipboard.readText){navigator.clipboard.readText().then(x=>{if(x&&!t.value){t.value=x;t.dispatchEvent(new Event('input'));}}).catch(()=>{});}}
 });
 document.getElementById('qPaste').addEventListener('input',e=>{
-  const {legs,ev,market}=parseSurebetText(e.target.value);
+  const {legs,ev,market,date,time}=parseSurebetText(e.target.value);
   if(legs.length<2){if(e.target.value.trim())toast('Could not find 2 of your bookmakers with odds in that text');return;}
   clearPresetStakes();
-  outcomes=legs.map((l,i)=>({id:nextId++,house:l.house,result:outcomes[i]?.result||'',odd:l.odd,manualStake:null}));
+  outcomes=legs.map((l,i)=>({id:nextId++,house:l.house,result:l.result||'',odd:l.odd,manualStake:null}));
+  if(date)document.getElementById('q-date').value=date;
+  if(time)document.getElementById('q-hour').value=time;
   const evEl=document.getElementById('q-event');if(ev)evEl.value=ev;
   const mkEl=document.getElementById('q-market');if(market)mkEl.value=market;
   render();document.getElementById('qPasteWrap').style.display='none';
@@ -4722,7 +4761,7 @@ function renderTgCard(){
       return `<div class="tg-it${ok?'':' bad'}">
         <div class="tg-main">
           <div class="tg-ev">${esc(p.ev||'(no event)')}${ok?`<span class="tg-roi ${roi>=0?'pos':'neg'}">${roi>=0?'+':''}${fmt(roi)}%</span>`:''}</div>
-          ${p.market?`<div class="tg-mk">${esc(p.market)}</div>`:''}
+          ${p.market||p.time?`<div class="tg-mk">${[p.market?esc(p.market):'',p.time?'ends ~'+parseInt(p.time,10)+'h':''].filter(Boolean).join(' · ')}</div>`:''}
           <div class="tg-legs">${ok?p.legs.map(l=>`<span class="tg-leg">${esc(l.house)} <b>${fmt(l.odd)}</b></span>`).join('')+(pr?`<span class="tg-pre" title="Your saved stakes will be used">⚡ ${pr.legs.map(l=>fmt(l.stake,l.stake%1?2:0)).join('/')} €</span>`:''):`<span class="tg-raw">Bookmakers not recognised · ${esc(it.text.slice(0,70))}…</span>`}</div>
         </div>
         <div class="tg-btns">${ok?`<button class="btn-s" data-tgload="${it.uid}">Edit</button><button class="btn-reg" data-tgreg="${it.uid}">Register</button>`:''}<button class="tg-x" data-tgdel="${it.uid}" title="Discard">✕</button></div></div>`;
@@ -4735,7 +4774,9 @@ function tgLoad(uid,quiet){
   const it=D.tgInbox.find(x=>x.uid===uid);if(!it)return false;
   const p=parseSurebetText(it.text);if(p.legs.length<2)return false;
   clearPresetStakes();
-  outcomes=p.legs.map(l=>({id:nextId++,house:l.house,result:'',odd:l.odd,manualStake:null}));
+  outcomes=p.legs.map(l=>({id:nextId++,house:l.house,result:l.result||'',odd:l.odd,manualStake:null}));
+  if(p.date)document.getElementById('q-date').value=p.date;
+  if(p.time)document.getElementById('q-hour').value=p.time;
   if(p.ev)document.getElementById('q-event').value=p.ev;
   document.getElementById('q-market').value=p.market||'';
   if(!document.getElementById('q-date').value)document.getElementById('q-date').value=todayISO();
