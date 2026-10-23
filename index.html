@@ -1220,8 +1220,6 @@ input[type=checkbox]{accent-color:var(--accent)}
   .leg-head{display:none}
   .leg{grid-template-columns:minmax(0,1fr) auto auto auto;padding:10px 14px;align-items:center}
   .lr{grid-column:1/-1;order:5;font-size:12.5px;margin-top:-3px}
-  #page-poker .bk-quick-row{grid-template-columns:1fr 1fr!important}
-  #page-poker .bk-quick-row>div:last-child{grid-column:1/-1}
   .th-sub{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
   .th-sub-item{min-width:0;padding:8px 10px}
   .th-sub-val{font-size:16px}
@@ -1833,10 +1831,6 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
       Bookmakers
       <span class="nb" id="casasCount">0</span>
     </div>
-    <div class="ni" data-page="poker">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C9 7 4 9.5 4 14a4 4 0 0 0 7 2.6c0 2-.6 3.4-2 5.4h6c-1.4-2-2-3.4-2-5.4A4 4 0 0 0 20 14c0-4.500-5-7-8-12z"/></svg>
-      Poker
-    </div>
     <div class="nav-group">Workspace</div>
     <div class="ni" data-page="perfil">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -2039,27 +2033,6 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
       <div class="pend-days" id="pendDays"></div>
       <div class="stats" id="pendStats"></div>
       <div id="pendList"></div>
-    </div>
-
-    <!-- ═══ POKER PAGE ═══ -->
-    <div id="page-poker" class="fw" style="display:none">
-      <div class="stats" id="pokerStats"></div>
-      <div class="card">
-        <div class="ch"><span class="ct">Add result</span><span style="font-size:11.5px;color:var(--faint)">Type the amount and press + or −</span></div>
-        <div class="cb">
-          <div class="bk-quick-row" style="grid-template-columns:1fr 1fr 1fr">
-            <div><label class="fl">Amount</label><div class="iw"><input type="number" class="ii" id="pk-amount" placeholder="0" min="0" step="0.01"><span class="isuf">€</span></div></div>
-            <div><label class="fl">Date</label><input type="date" id="pk-date"></div>
-            <div><label class="fl">Note (optional)</label><input type="text" id="pk-note" placeholder="Session, game…" autocomplete="off"></div>
-          </div>
-          <div style="display:flex;gap:10px;margin-top:12px">
-            <button class="btn-accept" id="pk-plus" style="flex:1;justify-content:center;padding:11px 14px;font-size:14px">+ Won</button>
-            <button class="btn-reject" id="pk-minus" style="flex:1;justify-content:center;padding:11px 14px;font-size:14px">− Lost</button>
-          </div>
-          <div class="bk-msg" id="pk-msg"></div>
-        </div>
-      </div>
-      <div id="pokerList"></div>
     </div>
 
     <!-- ═══ CASAS PAGE ═══ -->
@@ -3536,55 +3509,6 @@ function bkInitials(name){
 }
 let openBkPanel=null; // {cid, mode:'dep'|'wd'|'pending'}
 const QUICK_AMOUNTS=[10,20,50,100];
-// ══════════════════════════════════════════
-//  POKER — each entry is just a signed amount: + won / − lost.
-// ══════════════════════════════════════════
-function pokerToday(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-function renderPoker(){
-  if(!Array.isArray(D.poker))D.poker=[];
-  const dateEl=document.getElementById('pk-date');if(!dateEl.value)dateEl.value=pokerToday();
-  const all=[...D.poker].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.id-a.id));
-  const visible=all.filter(e=>!isHidden('pk:'+e.id));
-  const hidden=all.filter(e=>isHidden('pk:'+e.id));
-  const total=visible.reduce((a,e)=>a+e.amount,0);
-  const wins=visible.filter(e=>e.amount>0).reduce((a,e)=>a+e.amount,0);
-  const losses=visible.filter(e=>e.amount<0).reduce((a,e)=>a+e.amount,0);
-  const sg=v=>(v>=0?'+':'−')+fmt(Math.abs(v))+' €';
-  document.getElementById('pokerStats').innerHTML=`
-    <div class="sc"><div class="sl2">Poker profit</div><div class="sv2 ${total>=0?'pos':'neg'}">${sg(total)}</div></div>
-    <div class="sc"><div class="sl2">Won</div><div class="sv2 pos">${sg(wins)}</div></div>
-    <div class="sc"><div class="sl2">Lost</div><div class="sv2 neg">${losses<0?sg(losses):fmt(0)+' €'}</div></div>
-    <div class="sc"><div class="sl2">Entries</div><div class="sv2">${visible.length}</div></div>`;
-  const list=document.getElementById('pokerList');
-  if(!visible.length&&!hidden.length){list.innerHTML=emptyStateHtml('No poker results yet. Add your first + or −.');return;}
-  list.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">`+visible.map(e=>{
-    const pos=e.amount>=0;
-    return`<div class="ni2"><div class="ni2-left"><div class="ni2-ev">${esc(e.note)||(pos?'Won':'Lost')}</div><div class="ni2-meta"><span>${fmtDate(e.date)}</span></div></div><div class="ni2-right"><div class="ni2-pnl ${pos?'pos':'neg'}">${sg(e.amount)}</div></div><div style="display:flex;gap:4px;margin-top:2px">${hideBtnHtml('pk:'+e.id)}<button class="bd2" data-pkdel="${e.id}" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div>`;
-  }).join('')+`</div>`+hiddenPanelHtml('poker',hidden.map(e=>({key:'pk:'+e.id,label:`${fmtDate(e.date)} · ${sg(e.amount)}${e.note?' · '+e.note:''}`})));
-}
-function addPokerEntry(sign){
-  const amountEl=document.getElementById('pk-amount'),msg=document.getElementById('pk-msg');
-  const val=Math.abs(parseFloat(amountEl.value)||0);
-  if(!val){msg.textContent='Enter an amount first.';msg.className='bk-msg err';amountEl.focus();return;}
-  if(!Array.isArray(D.poker))D.poker=[];
-  const date=document.getElementById('pk-date').value||pokerToday();
-  const note=document.getElementById('pk-note').value.trim();
-  D.poker.push({id:Date.now(),amount:sign*val,date,note});
-  save();
-  msg.textContent=`✓ ${sign>0?'+':'−'}${fmt(val)} € added`;msg.className='bk-msg';
-  amountEl.value='';document.getElementById('pk-note').value='';
-  renderPoker();amountEl.focus();
-}
-document.getElementById('pk-plus').addEventListener('click',()=>addPokerEntry(1));
-document.getElementById('pk-minus').addEventListener('click',()=>addPokerEntry(-1));
-document.getElementById('pk-amount').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addPokerEntry(1);}});
-document.getElementById('pokerList').addEventListener('click',e=>{
-  const del=e.target.closest('[data-pkdel]');if(!del)return;
-  if(!confirm('Delete this entry?'))return;
-  D.poker=D.poker.filter(x=>x.id!==+del.dataset.pkdel);
-  save();renderPoker();
-});
-
 // ── Bookmaker balances: net deposits + settled results − money in pending bets ──
 function bookmakerLedger(){
   const m=new Map();
@@ -5446,7 +5370,6 @@ document.getElementById('betsTabs').addEventListener('click',e=>{const b=e.targe
 const pgMeta={
   calc:{title:'New bet',sub:'Surebets, normal bets, freebets and combis — all from one place'},
   bets:{title:'My bets',sub:'Every bet you have registered, by type'},
-  poker:{title:'Poker',sub:'Your poker results: just + or − each session'},
   profit:{title:'Profit',sub:'Monthly performance and running total'},
   pendientes:{title:'Pending',sub:'Bets waiting for a result'},
   casas:{title:'Bookmakers',sub:'Registered bookmakers and the money in each one'},
@@ -5456,7 +5379,7 @@ const pgMeta={
   calculadoras:{title:'Calculators',sub:'Kelly, No-Vig, Hedge, Free Bet and Hold'},
   presets:{title:'Presets',sub:'Saved odds with your usual stakes — applied automatically in New bet'},
 };
-const ALL_PAGES=['calc','bets','profit','pendientes','casas','poker','notas','categorias','perfil','calculadoras','presets'];
+const ALL_PAGES=['calc','bets','profit','pendientes','casas','notas','categorias','perfil','calculadoras','presets'];
 function navTo(page){
     if(page==='surebets'||page==='normales'){const v=page;page='bets';setTimeout(()=>setBetsView(v));}
     const item=document.querySelector(`.ni[data-page="${page}"]`);
@@ -5476,7 +5399,6 @@ function navTo(page){
     else if(page==='profit')renderProfit();
     else if(page==='pendientes')renderPendientes();
     else if(page==='casas')renderCasas();
-    else if(page==='poker')renderPoker();
     else if(page==='notas')renderNotas();
     else if(page==='categorias')renderCategorias();
     else if(page==='perfil')renderPerfil();
@@ -5507,7 +5429,6 @@ function rerenderActivePage(){
   else if(activePage==='profit')renderProfit();
   else if(activePage==='pendientes')renderPendientes();
   else if(activePage==='casas')renderCasas(document.getElementById('casasSearch')?.value||'');
-  else if(activePage==='poker')renderPoker();
   else if(activePage==='notas')renderNotas(document.getElementById('notasSearch')?.value||'');
   else if(activePage==='categorias')renderCategorias();
   else if(activePage==='perfil')renderPerfil();
@@ -5675,7 +5596,6 @@ function emailToPath(email) {
     else if (activePage === 'profit') renderProfit();
     else if (activePage === 'pendientes') renderPendientes();
     else if (activePage === 'casas') renderCasas(document.getElementById('casasSearch')?.value || '');
-    else if (activePage === 'poker') renderPoker();
     else if (activePage === 'notas') renderNotas(document.getElementById('notasSearch')?.value || '');
     else if (activePage === 'categorias') renderCategorias();
     else if (activePage === 'perfil') renderPerfil();
