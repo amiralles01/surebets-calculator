@@ -1348,7 +1348,7 @@ body{font-family:var(--font);font-size:14.5px;line-height:1.5;color:var(--text);
   .sb-account .profile-info{display:none}
   .main{min-height:0}
 }
-@media(min-width:601px) and (max-width:1440px){
+@media(min-width:601px) and (max-width:1100px){
   .sb-word small{display:none}
   .ni{padding:8px 8px;font-size:13.5px}
   .ni .nb{display:none}
@@ -1763,6 +1763,17 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
   #sbCalcCard .or input[data-field="result"]{grid-column:1/4;grid-row:2;height:34px;padding-top:4px;padding-bottom:4px;background:var(--raised)}
   .ps-hit{font-size:12.5px}
 }
+
+/* desktop top nav: never push "New bet" off screen */
+@media(min-width:601px){
+  .nav{gap:0}
+  .ni{padding:8px 9px}
+  .ni .nb{display:none}
+  .ni .nb#pendCount{display:inline-grid}
+  .ni.ni-primary{position:sticky;right:0;margin-left:auto;box-shadow:-18px 0 14px -4px var(--pitch)}
+  .sb-word small{display:none}
+}
+@media(min-width:601px) and (max-width:1180px){.ni{padding:8px 7px;font-size:13px}}
 </style>
 </head>
 <body>
