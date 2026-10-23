@@ -1655,6 +1655,12 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 @media(max-width:600px){.rep-wrap{order:-2}}
 .rep-wrap .fl{margin:0;white-space:nowrap}
 .rep-wrap select{flex:1;min-width:0;text-overflow:ellipsis}
+
+.sb-twin{display:inline-flex;align-items:baseline;gap:1px;margin-right:7px;padding:2px 7px;border-radius:6px;background:var(--ball,#F4C53D);color:#1a1a1a;font-weight:800;font-size:12.5px;font-variant-numeric:tabular-nums;vertical-align:1px}
+.sb-twin small{font-size:10px;font-weight:600;opacity:.65}
+.sb-sub{font-size:12.5px;color:var(--muted,var(--faint));margin-top:3px;display:flex;flex-wrap:wrap;gap:4px;font-variant-numeric:tabular-nums}
+.sb-sub b{color:var(--text);font-weight:650;font-variant-numeric:normal;font-family:inherit}.sb-sub .sep{opacity:.4}
+.pend-item.twin{border-left:3px solid var(--ball,#F4C53D)}
 </style>
 </head>
 <body>
@@ -2180,6 +2186,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
     <div style="font-size:15px;font-weight:700;margin-bottom:16px" id="sbRegModalTitle">Register surebet</div>
     <div style="display:flex;flex-direction:column;gap:11px">
       <div><label class="fl">Event</label><input type="text" id="sbr-event" placeholder="Spain vs Portugal"></div>
+      <div><label class="fl">Market / line <span style="font-weight:400;color:var(--faint)">(optional — tells apart surebets of the same match)</span></label><input type="text" id="sbr-market" placeholder="E.g. Mbappé 1.5+ shots · Corners O9.5" autocomplete="off"></div>
       <div id="sbr-legs-wrap"><label class="fl">Bookmakers</label><div class="sbr-legs" id="sbr-legs"></div></div>
       <div class="two-col">
         <div><label class="fl">Kick-off date</label><input type="date" id="sbr-start"></div>
@@ -2499,6 +2506,7 @@ function openSbRegModal(){
   document.getElementById('sbr-save').textContent='Register in pending';
   const pf=sbPrefill;
   document.getElementById('sbr-event').value=pf?pf.event||'':'';
+  document.getElementById('sbr-market').value=pf?pf.market||'':'';
   renderSbrLegs(res.valid.map(o=>({house:o.house,result:o.result,odd:o.odd})));
   document.getElementById('sbr-start').value=pf&&pf.date?pf.date:new Date().toISOString().slice(0,10);
   document.getElementById('sbr-time').value=pf?hourOnly(pf.time):'';
@@ -2512,6 +2520,7 @@ function openSbEditModal(id){
   document.getElementById('sbRegModalTitle').textContent='Edit surebet';
   document.getElementById('sbr-save').textContent='Save changes';
   document.getElementById('sbr-event').value=b.event||'';
+  document.getElementById('sbr-market').value=b.market||'';
   renderSbrLegs(b.legs||[],true);
   document.getElementById('sbr-start').value=b.date||'';
   document.getElementById('sbr-time').value=hourOnly(b.time);
@@ -2526,7 +2535,8 @@ function registerBet(){
   const timeVal=document.getElementById('sbr-time').value||'';
   const catVal=document.getElementById('sbr-category').value;
   const houses=readSbrHouses();
-  const bet={id:Date.now(),event:ev,date:startVal,time:timeVal,resolveDate:'',profitPct:res.profitPct,profit:res.profit,
+  const mk=document.getElementById('sbr-market').value.trim();
+  const bet={id:Date.now(),event:ev,market:mk,date:startVal,time:timeVal,resolveDate:'',profitPct:res.profitPct,profit:res.profit,
     expectedProfit:res.profit,totalStake:res.actualTotal,minReturn:res.minReturn,status:'pending',
     categoryId:catVal?+catVal:null,
     legs:res.valid.map((o,i)=>({house:houses[i]||o.house||`Bookmaker ${i+1}`,result:o.result||`Outcome ${i+1}`,odd:o.odd,stake:res.stakes[i],minReturn:res.returns[i]}))};
@@ -2541,6 +2551,7 @@ document.getElementById('sbr-save').addEventListener('click',()=>{
     const b=D.bets.find(x=>x.id===editingSbId);if(!b){editingSbId=null;return;}
     const evVal=document.getElementById('sbr-event').value.trim();
     b.event=evVal||b.event||'(No event)';
+    b.market=document.getElementById('sbr-market').value.trim();
     b.date=document.getElementById('sbr-start').value||b.date;
     b.time=document.getElementById('sbr-time').value||'';
     const catVal=document.getElementById('sbr-category').value;
@@ -2605,7 +2616,8 @@ function rerenderBets(){renderSurebets(document.getElementById('sbSearch').value
 document.getElementById('betsDays').addEventListener('click',e=>{const c=e.target.closest('[data-bday]');if(!c)return;betsDay=c.dataset.bday;rerenderBets();});
 document.getElementById('betsDays').addEventListener('change',e=>{if(e.target.id!=='betsDayPick')return;betsDay=e.target.value||'all';rerenderBets();});
 function renderSurebets(filter=''){
-  const bets=D.bets.filter(b=>betsDayMatch(b.date)).filter(b=>!filter||b.event.toLowerCase().includes(filter.toLowerCase())||b.legs.some(l=>l.house&&l.house.toLowerCase().includes(filter.toLowerCase())));
+  const myTw=twinInfo(D.bets);
+  const bets=D.bets.filter(b=>betsDayMatch(b.date)).filter(b=>!filter||b.event.toLowerCase().includes(filter.toLowerCase())||(b.market||'').toLowerCase().includes(filter.toLowerCase())||b.legs.some(l=>l.house&&l.house.toLowerCase().includes(filter.toLowerCase())));
   const vBets=visibleBets().filter(b=>betsDayMatch(b.date));
   renderBetsDays();
   const won=vBets.filter(b=>b.status==='won'),lost=vBets.filter(b=>b.status==='lost');
@@ -2636,7 +2648,7 @@ function renderSurebets(filter=''){
       b.legs.map((l,li)=>`<div class="leg${winnerIdx===li?' leg-winner':''}"><span class="lh">${esc(l.house)}</span><span class="lr">${esc(l.result)}</span><span class="lo">${fmt(l.odd||0)}</span><span class="lk">${fmt(l.stake||0)} €</span><span class="lm">${fmt(l.minReturn||0)} €</span><button class="win-btn${winnerIdx===li?' selected':''}" data-wbid="${b.id}" data-wleg="${li}" title="Mark as the winning outcome">${winnerIdx===li?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Won`:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Won`}</button></div>`).join('')+
       (winnerIdx>=0&&!isVoid?`<div class="real-profit-row"><span class="real-profit-label">✓ ${esc(b.legs[winnerIdx].house)} won — real profit</span><span class="real-profit-val">+${fmt(realProfit)} €</span></div>`:'')
     : `<div style="padding:8px 15px;font-size:12px;color:var(--faint)">No leg breakdown (pre-loaded surebet)</div>`;
-    return`<div class="bi"><div class="bih"><div><div class="bie">${esc(b.event)}</div><div class="bid">${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}${b.categoryId?` · <span class="type-badge-kind">${esc(catName(b.categoryId))}</span>`:''}</div></div><div class="bim"><span class="pp2 ${pctCls}">${pctLabel}</span><span class="sb2 ${sCls}">${sLabel}</span><select class="ss" data-sid="${b.id}"><option value="pending" ${b.status==='pending'?'selected':''}>Pending</option><option value="won" ${b.status==='won'?'selected':''}>Won</option><option value="lost" ${b.status==='lost'?'selected':''}>Lost</option><option value="anulada" ${b.status==='anulada'?'selected':''}>Void</option></select><button class="bd2" data-edit-bid="${b.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>${hideBtnHtml('sb:'+b.id)}<button class="bd2" data-bid="${b.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div><div class="bl">${legsHtml}</div><div class="bf"><span class="bfl">Staked: ${fmt(b.totalStake||0)} € · Min. return: ${fmt(b.minReturn||0)} €</span><span class="bfr ${isVoid?'neu':(displayProfit>=0?'pos':'neg')}">${displayProfit>=0?'+':''}${fmt(displayProfit)} €</span></div></div>`;
+    return`<div class="bi"><div class="bih"><div><div class="bie">${sbTagHtml(b,myTw)}${esc(b.event)}</div>${sbSubHtml(b,myTw)}<div class="bid">${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}${b.categoryId?` · <span class="type-badge-kind">${esc(catName(b.categoryId))}</span>`:''}</div></div><div class="bim"><span class="pp2 ${pctCls}">${pctLabel}</span><span class="sb2 ${sCls}">${sLabel}</span><select class="ss" data-sid="${b.id}"><option value="pending" ${b.status==='pending'?'selected':''}>Pending</option><option value="won" ${b.status==='won'?'selected':''}>Won</option><option value="lost" ${b.status==='lost'?'selected':''}>Lost</option><option value="anulada" ${b.status==='anulada'?'selected':''}>Void</option></select><button class="bd2" data-edit-bid="${b.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>${hideBtnHtml('sb:'+b.id)}<button class="bd2" data-bid="${b.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div><div class="bl">${legsHtml}</div><div class="bf"><span class="bfl">Staked: ${fmt(b.totalStake||0)} € · Min. return: ${fmt(b.minReturn||0)} €</span><span class="bfr ${isVoid?'neu':(displayProfit>=0?'pos':'neg')}">${displayProfit>=0?'+':''}${fmt(displayProfit)} €</span></div></div>`;
   }).join('')+hiddenPanelHtml('sb',hidden.map(b=>({key:'sb:'+b.id,label:b.event||'(No event)'})));
 }
 
@@ -3238,6 +3250,7 @@ function renderPendientes(){
     visible=ex;
   }
   const pendLedger=bookmakerLedger();
+  const pendTw=twinInfo(D.bets.filter(b=>b.status==='pending'));
   const groupHeader=(lst,idx)=>{
     if(pendSort!=='house')return pendDayHeader(lst,idx);
     const g=lst[idx].grp;if(idx>0&&lst[idx-1].grp===g)return '';
@@ -3274,13 +3287,13 @@ function renderPendientes(){
           <span class="pl-radio"></span>
           <span class="pl-house">${esc(l.house)}</span>
           <span class="pl-res">${esc(l.result)}</span>
-          <span class="pl-nums"><span>Odds ${fmt(l.odd||0)}</span><span class="pl-profit ${realProfit>=0?'pos':'neg'}">${realProfit>=0?'+':''}${fmt(realProfit)} €</span></span>
+          <span class="pl-nums"><span>${l.stake!=null?fmt(l.stake)+' € @ ':'Odds '}${fmt(l.odd||0)}</span><span class="pl-profit ${realProfit>=0?'pos':'neg'}">${realProfit>=0?'+':''}${fmt(realProfit)} €</span></span>
         </button>`;
       }).join('')}</div>`:'';
-      return`<div class="pend-item sb">
+      return`<div class="pend-item sb${pendTw.has(b.id)?' twin':''}">
         <div class="pend-top">
           <div>
-            <div class="pend-ev">${esc(b.event)} <span class="type-badge-kind">Surebet</span></div>
+            <div class="pend-ev">${sbTagHtml(b,pendTw)}${esc(b.event)} <span class="type-badge-kind">Surebet</span></div>${sbSubHtml(b,pendTw)}
             <div class="pend-meta">${pendHouseChip([...new Set((b.legs||[]).map(l=>l.house))])}<span>${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}</span>${b.totalStake?`<span>Staked: ${fmt(b.totalStake)} €</span>`:''}</div>
           </div>
           <div style="display:flex;align-items:center;gap:6px"><button class="btn-void" data-cashout="sb:${b.id}" title="Close early for a manual amount">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada" title="Doesn't count as won or lost">Void</button>${hideBtnHtml('sb:'+b.id,true)}</div>
@@ -4305,6 +4318,25 @@ document.getElementById('psQuick').addEventListener('click',e=>{
 });
 
 
+// ── Telling apart several surebets of the same match
+function evKey(b){return (b.event||'').toLowerCase().replace(/\s+/g,' ').trim()+'|'+(b.date||'');}
+function twinInfo(list){ // list: surebets → Map id → {n,total}
+  const g=new Map();list.forEach(b=>{const k=evKey(b);if(!g.has(k))g.set(k,[]);g.get(k).push(b);});
+  const m=new Map();g.forEach(arr=>{if(arr.length<2)return;arr.sort((a,b)=>a.id-b.id).forEach((b,i)=>m.set(b.id,{n:i+1,total:arr.length}));});
+  return m;
+}
+function addedAt(b){if(!(b.id>1e12))return '';const d=new Date(b.id);return d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})+(new Date().toDateString()===d.toDateString()?'':' · '+d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'}));}
+function sbTagHtml(b,tw){
+  const t=tw&&tw.get(b.id);
+  return (t?`<span class="sb-twin" title="${t.n} of ${t.total} surebets on this match">#${t.n}<small>/${t.total}</small></span>`:'');
+}
+function sbSubHtml(b,tw){
+  const t=tw&&tw.get(b.id);const bits=[];
+  if(b.market)bits.push(`<b>${esc(b.market)}</b>`);
+  if(t){bits.push((b.legs||[]).map(l=>`${fmt(l.stake||0,(l.stake||0)%1?2:0)}€ @${fmt(l.odd||0)}`).join(' · '));const a=addedAt(b);if(a)bits.push('added '+a);}
+  return bits.length?`<div class="sb-sub">${bits.join('<span class="sep">·</span>')}</div>`:'';
+}
+
 // ── "Same as last bet": copy everything except the odds from the most recent bet
 let sbPrefill=null;
 function lastBet(){
@@ -4329,7 +4361,7 @@ function applyLastBet(){
     outcomes=(b.legs||[]).map(l=>({id:nextId++,house:l.house||'',result:l.result||'',odd:0,manualStake:null}));
     while(outcomes.length<2)outcomes.push({id:nextId++,house:'',result:'',odd:0,manualStake:null});
     if(b.totalStake>0){totalInv=Math.round(b.totalStake*100)/100;document.getElementById('totalInv').value=totalInv;}
-    sbPrefill={event:b.event,date:b.date,time:b.time,categoryId:b.categoryId??null};
+    sbPrefill={event:b.event,market:b.market||'',date:b.date,time:b.time,categoryId:b.categoryId??null};
     setBetType('Surebet');
     setTimeout(()=>{const f=document.querySelector('#outcomesList .oi');if(f)f.focus();},50);
   }else{
