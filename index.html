@@ -2568,6 +2568,8 @@ let nextId=3,totalInv=100,roundMode='exact',customStep=0.1;
 
 function roundStep(v,s){if(!s||!isFinite(s)||s<=0)return v;const f=1/s;return parseFloat((Math.round(v*f)/f).toPrecision(12))}
 function applyRound(v){if(roundMode==='exact')return v;const s=roundMode==='custom'?customStep:parseFloat(roundMode);return roundStep(v,s)}
+// money is handled in cents, like the bookmakers do
+function cents(x){return Math.round((+x||0)*100+Number.EPSILON*100)/100+0;}
 function fmt(n,d=2){return Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d})}
 function hourOnly(t){return t&&/^\d{1,2}/.test(t)?String(parseInt(t,10)).padStart(2,'0')+':00':'';}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
@@ -2736,15 +2738,16 @@ function calculate(){
   const sumManual=manualIdx.reduce((a,i)=>a+valid[i].manualStake,0);
   const remaining=Math.max(0,totalInv-sumManual);
   const rounded=new Array(valid.length).fill(0);
-  manualIdx.forEach(i=>{rounded[i]=valid[i].manualStake});
+  manualIdx.forEach(i=>{rounded[i]=cents(valid[i].manualStake)});
   if(autoIdx.length){
     const autoP=autoIdx.map(i=>1/valid[i].odd),sumAutoP=autoP.reduce((a,b)=>a+b,0);
-    autoIdx.forEach((i,k)=>{rounded[i]=applyRound((remaining*autoP[k])/sumAutoP)});
+    autoIdx.forEach((i,k)=>{rounded[i]=cents(applyRound((remaining*autoP[k])/sumAutoP))});
   }
-  const actual=rounded.reduce((a,b)=>a+b,0);
-  const returns=valid.map((o,i)=>rounded[i]*o.odd);
+  // stakes and payouts in whole cents, exactly what the bookmaker shows
+  const actual=cents(rounded.reduce((a,b)=>a+b,0));
+  const returns=valid.map((o,i)=>cents(rounded[i]*o.odd));
   const minRet=Math.min(...returns);
-  const profit=minRet-actual;
+  const profit=cents(minRet-actual);
   return{valid,sumPct:sumP*100,isSurebet:sumP<1,stakes:rounded,returns,minReturn:minRet,actualTotal:actual,profit,profitPct:actual>0?(profit/actual)*100:0,hasManual:manualIdx.length>0};
 }
 
@@ -3225,10 +3228,10 @@ document.getElementById('sbList').addEventListener('click',e=>{
     // Toggle: click same leg again to deselect
     if(b.winnerLeg===li){
       delete b.winnerLeg;
-      b.profit=b.minReturn-(b.totalStake||0);
+      b.profit=cents(b.minReturn-(b.totalStake||0));
     } else {
       b.winnerLeg=li;
-      b.profit=(b.legs[li].minReturn||0)-(b.totalStake||0);
+      b.profit=cents((b.legs[li].minReturn||0)-(b.totalStake||0));
     }
     save();renderSurebets(document.getElementById('sbSearch').value);renderProfit();
     return;
@@ -3734,7 +3737,7 @@ document.getElementById('co-save').addEventListener('click',()=>{
   const {kind,item}=cashoutTarget;
   const profit=+(amt-cashoutStake(cashoutTarget)).toFixed(2);
   item.cashOut=amt;
-  item.profit=profit;
+  item.profit=cents(profit);
   item.status=profit>=0?'won':'lost';
   if(!item.resolveDate)item.resolveDate=todayISO();
   document.getElementById('cashoutModal').style.display='none';cashoutTarget=null;
@@ -3748,7 +3751,7 @@ document.getElementById('pendList').addEventListener('click',e=>{
     const bid=+winLegBtn.dataset.pwinbid,li=+winLegBtn.dataset.pwinleg;
     const b=D.bets.find(x=>x.id===bid);if(!b||!b.legs||!b.legs[li])return;
     b.winnerLeg=li;
-    b.profit=(b.legs[li].minReturn||0)-(b.totalStake||0);
+    b.profit=cents((b.legs[li].minReturn||0)-(b.totalStake||0));
     b.status='won';
     if(!b.resolveDate)b.resolveDate=todayISO();
     save();updateBadges();renderPendientes();renderSurebets(document.getElementById('sbSearch').value);renderProfit();
@@ -3763,7 +3766,7 @@ document.getElementById('pendList').addEventListener('click',e=>{
   }
   const bet=D.bets.find(b=>b.id===+btn.dataset.pid);if(!bet)return;
   if(btn.dataset.action==='won'&&bet.legs&&bet.legs.length&&bet.winnerLeg!=null){
-    bet.profit=(bet.legs[bet.winnerLeg].minReturn||0)-(bet.totalStake||0);
+    bet.profit=cents((bet.legs[bet.winnerLeg].minReturn||0)-(bet.totalStake||0));
   }
   bet.status=btn.dataset.action;
   if(bet.status!=='pending'&&!bet.resolveDate)bet.resolveDate=todayISO();
