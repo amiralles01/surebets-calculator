@@ -1781,7 +1781,24 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .c-flow input{width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:var(--pitch,var(--accent))}
 .c-flow span{display:flex;flex-direction:column;gap:3px;font-size:13px}.c-flow small{font-size:11.5px;color:var(--faint);line-height:1.45}
 .bk-money small.bk-dir{font-size:11.5px;font-weight:600}.bk-dir.pos{color:var(--green)}.bk-dir.neg{color:var(--red)}
-.bk-btn.flow-on{border-color:var(--green);color:var(--green);font-weight:700}
+
+.mv-pick{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;margin-bottom:10px}
+.mv-pick label{display:flex;gap:9px;align-items:flex-start;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);cursor:pointer}
+.mv-pick label:has(input:checked){border-color:var(--pitch,var(--accent));box-shadow:0 0 0 1px var(--pitch,var(--accent))}
+.mv-pick input{margin-top:3px;accent-color:var(--pitch,var(--accent))}
+.mv-pick span{display:flex;flex-direction:column;gap:2px;font-size:13px}.mv-pick small{font-size:11.5px;color:var(--faint)}
+.mv-tag{font-size:11.5px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+.mv-tag.mv-expense{color:var(--red);font-weight:600}
+.bank-badge{background:color-mix(in srgb,var(--pitch,#1D4532) 14%,var(--surface))!important;color:var(--pitch,#1D4532)!important}
+.br-card{margin-top:14px;padding:16px 18px;border-radius:14px;background:var(--surface);border:1px solid var(--border);text-align:left}
+.br-head{display:flex;flex-direction:column;gap:2px;margin-bottom:10px}.br-head b{font-size:14px}.br-head span{font-size:12px;color:var(--faint)}
+.br-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:7px 0;border-top:1px solid var(--border);font-size:13.5px}
+.br-row span{display:flex;flex-direction:column}.br-row small{font-size:11.5px;color:var(--faint)}
+.br-row b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.br-tot{border-top:2px solid var(--text);font-weight:700;font-size:15px}.br-tot b{font-size:17px}
+.br-note{margin-top:8px;font-size:12px;color:var(--faint)}
+.bk-money small.bk-dir:not(.pos):not(.neg){color:var(--faint);font-weight:500}
+.br-row b{font-variant-numeric:normal;font-family:var(--display,inherit);font-weight:700}
 </style>
 </head>
 <body>
@@ -2345,8 +2362,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
         <div><label class="fl">Awaiting transfer</label><div class="iw"><input type="number" class="ii" id="c-pending" placeholder="0" min="0" step="0.01"><span class="isuf">€</span></div></div>
       </div>
       <div><label class="fl">Notes (optional)</label><input type="text" id="c-notes" placeholder="Welcome bonus, verified account…"></div>
-      <label class="c-flow"><input type="checkbox" id="c-flow"><span><b>Deposits and withdrawals count in Profit</b><small>For the bank account where you keep your surebet winnings: a withdrawal (e.g. to pay a subscription) is subtracted from Profit and a deposit is added. </small></span></label>
-      <div id="c-flow-from-wrap" style="display:none"><label class="fl">Count movements from</label><input type="date" id="c-flow-from"></div>
+      <label class="c-flow"><input type="checkbox" id="c-bank"><span><b>Bank account</b><small>Where you keep your winnings. Money moved here from a bookmaker is not counted twice; withdrawals ask whether they are an expense (lowers Profit) or personal use (doesn't).</small></span></label>
     </div>
     <div style="display:flex;gap:9px;margin-top:18px">
       <button class="btn-s" id="c-cancel" style="flex:1">Cancel</button>
@@ -2474,20 +2490,51 @@ function costCharges(c){
   return out;
 }
 function nextMonthStart(iso){const [y,m]=iso.split('-').map(Number);return m===12?`${y+1}-01-01`:`${y}-${String(m+1).padStart(2,'0')}-01`;}
-// Accounts marked by the user (e.g. the bank): deposits add to Profit, withdrawals subtract
-function flowFromOf(c){
-  if(c.flowFrom)return c.flowFrom;
-  if(c.flowSince){const d=new Date(c.flowSince);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-  return '';
+// ── Bankroll model ─────────────────────────────────────────────────────
+// Bookmakers + bank accounts hold your bankroll. Moving money between them is internal.
+// Profit = bet results + balance corrections − bank expenses − monthly costs.
+// Taking money out to your personal life is NOT a loss, and putting new money in is NOT profit.
+function isBank(c){return c&&c.kind==='bank';}
+function bankAccounts(){return D.casas.filter(isBank);}
+// older "counts in profit" accounts become bank accounts
+function migrateBanks(){
+  let ch=false;
+  D.casas.forEach(c=>{if(c.flowFrom||c.flowSince){c.kind='bank';delete c.flowFrom;delete c.flowSince;ch=true;}});
+  if(ch)save();
 }
-function flowEntries(){
+// what a movement is, in words and for the maths
+function moveKind(c,h){
+  if(h.type==='dep'){
+    if(h.transfer)return 'in-transfer';
+    if(h.fromBank)return 'in-from-bank';
+    return 'in-personal';
+  }
+  if(h.expense)return 'expense';
+  if(h.transfer)return 'out-transfer';
+  if(h.toBank)return 'out-to-bank';
+  return 'out-personal';
+}
+function expenseEntries(){
   const out=[];
-  visibleCasas().forEach(c=>{const from=flowFromOf(c);if(!from)return;(c.history||[]).forEach(h=>{
-    if(h.init||!(h.amount>0)||!h.date||h.date<from)return;
-    if(h.type==='dep')out.push({date:h.date,profit:h.amount,casaId:c.id});
-    else if(h.type==='wd')out.push({date:h.date,profit:-h.amount,casaId:c.id});
-  });});
+  visibleCasas().forEach(c=>(c.history||[]).forEach(h=>{if(h.type==='wd'&&h.expense&&h.amount>0&&h.date)out.push({date:h.date,profit:-h.amount,note:h.note||'',casa:c.name});}));
   return out;
+}
+function bankrollSummary(){
+  const ledger=bookmakerLedger();let bankroll=0,putIn=0,drawn=0,expenses=0,inTransit=0;
+  visibleCasas().forEach(c=>{
+    const m=casaMoney(c,ledger);bankroll+=m.balance+m.inPlay;putIn+=c.amount||0;
+    (c.history||[]).forEach(h=>{
+      if(h.type!=='wd'||!(h.amount>0))return;
+      const k=moveKind(c,h);
+      if(k==='expense')expenses+=h.amount;
+      else if(k==='out-personal')drawn+=h.amount;
+      else if(k==='out-to-bank'&&!h.transferDone)inTransit+=h.amount;
+    });
+  });
+  // money on its way to the bank is still yours: not taken out, not lost
+  putIn+=drawn+expenses+inTransit;
+  const costs=costEntries().reduce((a,x)=>a-x.profit,0);
+  return {bankroll,inTransit,putIn,drawn,expenses,costs,profit:bankroll+inTransit+drawn-putIn-costs};
 }
 function costEntries(){const out=[];visibleCasas().forEach(c=>out.push(...costCharges(c)));return out;}
 function activeCosts(c){const ym=todayLocalISO().slice(0,7);return (c.costs||[]).filter(k=>!k.until||k.until>=ym);}
@@ -2528,10 +2575,79 @@ function unhideItem(key){if(D.hidden)delete D.hidden[key];save();}
 function visibleBets(){return D.bets.filter(b=>!isHidden('sb:'+b.id));}
 function visibleNormals(){return D.normals.filter(n=>!isHidden('nm:'+n.id));}
 function visibleCasas(){return D.casas.filter(c=>!isHidden('casa:'+c.id));}
+function moveLabel(c,h){
+  const name=id=>(D.casas.find(x=>x.id===id)||{}).name||'bank';
+  switch(moveKind(c,h)){
+    case 'expense':return 'Expense'+(h.note?' · '+esc(h.note):'');
+    case 'out-transfer':return '→ '+esc(name(h.toId));
+    case 'out-to-bank':return '→ '+esc(name(h.toBank))+(h.transferDone?'':' (on its way)');
+    case 'out-personal':return '→ Personal';
+    case 'in-transfer':return '← '+esc(name(h.fromId));
+    case 'in-from-bank':return '← '+esc(name(h.fromBank));
+    default:return h.init?'Opening balance':'← Your pocket';
+  }
+}
+function moveDestHtml(c,mode){
+  const banks=bankAccounts().filter(b=>b.id!==c.id);
+  if(isBank(c)){
+    if(mode==='wd')return `<div class="mv-pick" id="mvPick">
+        <label><input type="radio" name="mvdest" value="expense" checked><span><b>Expense</b><small>Subscription, fee, tool… subtracted from Profit</small></span></label>
+        <label><input type="radio" name="mvdest" value="personal"><span><b>Personal use</b><small>Money for you — Profit stays the same</small></span></label>
+      </div>
+      <input type="text" id="bk-mv-note" placeholder="Concept (optional) · e.g. OddsJam subscription" autocomplete="off" style="margin-bottom:8px">`;
+    return `<div class="bk-hist-empty" style="margin-bottom:8px">New money from your pocket. Money coming from a bookmaker: record a withdrawal in that bookmaker and pick this bank — it arrives here when you confirm it.</div>`;
+  }
+  const opts=banks.map((b,i)=>`<label><input type="radio" name="mvdest" value="${b.id}"${i===0?' checked':''}><span><b>${mode==='wd'?'To':'From'} ${esc(b.name)}</b><small>${mode==='wd'?'Stays in your bankroll — Profit unchanged':'Moves money from your bank — Profit unchanged'}</small></span></label>`).join('');
+  const personal=`<label><input type="radio" name="mvdest" value="personal"${banks.length?'':' checked'}><span><b>${mode==='wd'?'To personal use':'From your pocket'}</b><small>${mode==='wd'?'Leaves the bankroll — Profit unchanged':'New money in — Profit unchanged'}</small></span></label>`;
+  return `<div class="mv-pick" id="mvPick">${opts}${personal}</div>${banks.length?'':`<div class="bk-hist-empty" style="margin:-2px 0 8px">Tip: mark the account where you keep your winnings as a bank (Edit → Bank account) to move money there.</div>`}`;
+}
+function applyMove(c,mode,val){
+  const pick=document.querySelector('#mvPick input[name="mvdest"]:checked');const dest=pick?pick.value:'personal';
+  const date=todayLocalISO();const id=Date.now();
+  if(!Array.isArray(c.history))c.history=[];
+  if(isBank(c)){
+    if(mode==='wd'){
+      const note=(document.getElementById('bk-mv-note')?.value||'').trim();
+      c.amount=+((c.amount||0)-val).toFixed(2);
+      c.history.unshift({id,type:'wd',amount:val,date,status:'confirmed',...(dest==='expense'?{expense:true,note}:{personal:true,note})});
+      return dest==='expense'?`Expense of ${fmt(val)} € — subtracted from Profit`:`${fmt(val)} € taken out for personal use — Profit unchanged`;
+    }
+    c.amount=+((c.amount||0)+val).toFixed(2);
+    c.history.unshift({id,type:'dep',amount:val,date,personal:true});
+    return `${fmt(val)} € added to ${c.name}`;
+  }
+  const bank=dest!=='personal'?D.casas.find(x=>x.id===+dest):null;
+  if(mode==='wd'){
+    c.amount=+((c.amount||0)-val).toFixed(2);
+    c.history.unshift({id,type:'wd',amount:val,date,status:'pending',...(bank?{toBank:bank.id}:{personal:true})});
+    return bank?`${fmt(val)} € on its way to ${bank.name} — confirm it in Pending when it arrives`:`${fmt(val)} € taken out for personal use — confirm it in Pending when it arrives`;
+  }
+  c.amount=+((c.amount||0)+val).toFixed(2);
+  c.history.unshift({id,type:'dep',amount:val,date,...(bank?{fromBank:bank.id}:{personal:true})});
+  if(bank){bank.amount=+((bank.amount||0)-val).toFixed(2);if(!Array.isArray(bank.history))bank.history=[];
+    bank.history.unshift({id:id+1,type:'wd',amount:val,date,status:'confirmed',transfer:true,toId:c.id});}
+  return bank?`${fmt(val)} € moved from ${bank.name} to ${c.name}`:`${fmt(val)} € deposited in ${c.name}`;
+}
+function bankMoneyHtml(c){
+  const h=c.history||[];
+  const sum=f=>h.filter(f).reduce((a,x)=>a+(x.amount||0),0);
+  const fromBk=sum(x=>x.type==='dep'&&x.transfer), exp=sum(x=>x.type==='wd'&&x.expense), pers=sum(x=>x.type==='wd'&&!x.expense&&!x.transfer);
+  return `<div class="bk-money">
+    <div><span>Received from bookmakers</span><b>${fmt(fromBk)} €</b></div>
+    <div><span>Expenses paid</span><b class="${exp?'neg':''}">${fmt(exp)} €</b><small class="bk-dir">count against Profit</small></div>
+    <div><span>Taken out for personal use</span><b>${fmt(pers)} €</b><small class="bk-dir">doesn't lower Profit</small></div>
+  </div>`;
+}
 function confirmWithdrawal(cid,entryId){
   const c=D.casas.find(x=>x.id===cid);if(!c)return;
   const h=(c.history||[]).find(x=>x.id===entryId);if(!h)return;
   h.status='confirmed';
+  if(h.toBank&&!h.transferDone){
+    const b=D.casas.find(x=>x.id===h.toBank);
+    if(b){b.amount=+((b.amount||0)+h.amount).toFixed(2);if(!Array.isArray(b.history))b.history=[];
+      b.history.unshift({id:Date.now(),type:'dep',amount:h.amount,date:todayLocalISO(),transfer:true,fromId:c.id});}
+    h.transferDone=true;
+  }
   save();
 }
 function hideBtnHtml(key,small){return `<button class="hidebtn${small?' sm':''}" data-hidekey="${esc(key)}" title="Hide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.83 21.83 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.82 21.82 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>`;}
@@ -2580,7 +2696,7 @@ function refreshBookmakerList(){
 // Bookmakers registered in the Bookmakers page — the only ones selectable on bets
 function trackedBookmakers(){
   const m=new Map();
-  D.casas.forEach(c=>{const n=(c.name||'').trim();if(n&&!m.has(bkKey(n)))m.set(bkKey(n),n);});
+  D.casas.forEach(c=>{if(isBank(c))return;const n=(c.name||'').trim();if(n&&!m.has(bkKey(n)))m.set(bkKey(n),n);});
   return [...m.values()].sort((a,b)=>a.localeCompare(b,'en',{sensitivity:'base'}));
 }
 function houseOptionsHtml(current,placeholder){
@@ -2891,7 +3007,7 @@ function renderProfitRange(all){
   if(from&&to&&from>to){box.innerHTML=`<div style="font-size:12.5px;color:var(--red)">The start date must be before the end date.</div>`;return;}
   const sel=profitRangeEntries.filter(e=>!isHidden('month:'+e.date.slice(0,7))&&(!from||e.date>=from)&&(!to||e.date<=to));
   const sum=c=>sel.filter(e=>e.cat===c).reduce((a,e)=>a+e.profit,0);
-  const sb=sum('surebet'),nm=sum('normal'),fb=sum('freebet'),adj=sum('adjust'),cst=sum('cost'),flw=sum('flow'),tot=sb+nm+fb+adj+cst+flw;
+  const sb=sum('surebet'),nm=sum('normal'),fb=sum('freebet'),adj=sum('adjust'),cst=sum('cost'),exp=sum('expense'),tot=sb+nm+fb+adj+cst+exp;
   const sg=v=>(v>=0?'+':'')+fmt(v)+' €';
   const label=from&&to?`${fmtDate(from)} → ${fmtDate(to)}`:(from?`From ${fmtDate(from)}`:`Until ${fmtDate(to)}`);
   box.innerHTML=`<div class="total-hero" style="margin:0">
@@ -2901,9 +3017,9 @@ function renderProfitRange(all){
       <div class="th-sub-item"><div class="th-sub-label">Surebets</div><div class="th-sub-val" style="color:var(--green)">${sg(sb)}</div></div>
       <div class="th-sub-item"><div class="th-sub-label">Normal</div><div class="th-sub-val" style="color:${nm>=0?'var(--blue)':'var(--red)'}">${sg(nm)}</div></div>
       <div class="th-sub-item"><div class="th-sub-label">Freebets</div><div class="th-sub-val" style="color:var(--yellow)">${sg(fb)}</div></div>
-      ${flw?`<div class="th-sub-item"><div class="th-sub-label">Bank movements</div><div class="th-sub-val">${sg(flw)}</div></div>`:''}
+      ${exp?`<div class="th-sub-item"><div class="th-sub-label">Bank expenses</div><div class="th-sub-val">${sg(exp)}</div></div>`:''}
       ${cst?`<div class="th-sub-item"><div class="th-sub-label">Monthly costs</div><div class="th-sub-val" style="color:var(--red)">${sg(cst)}</div></div>`:''}
-      ${adj?`<div class="th-sub-item"><div class="th-sub-label">Adjustments</div><div class="th-sub-val">${sg(adj)}</div></div>`:''}
+      ${adj?`<div class="th-sub-item"><div class="th-sub-label">Balance corrections</div><div class="th-sub-val">${sg(adj)}</div></div>`:''}
     </div>
     <div style="font-size:12px;color:var(--faint);margin-top:10px">${sel.length} settled entr${sel.length===1?'y':'ies'} in this period</div>
   </div>`;
@@ -2931,21 +3047,23 @@ function renderProfit(){
   visibleBets().forEach(b=>{const rd=b.date||b.resolveDate;if(rd&&b.profit!==undefined)all.push({date:rd,profit:betProfit(b),cat:'surebet'})});
   visibleNormals().forEach(n=>{const rd=n.date||n.resolveDate;if(rd&&n.profit!==undefined&&n.profit!==0)all.push({date:rd,profit:n.profit,cat:n.type==='Freebet'?'freebet':'normal'})});
   costEntries().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'cost'}));
-  flowEntries().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'flow'}));
+  migrateBanks();ensureAdjLogs();
+  adjEntries().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'adjust'}));
+  expenseEntries().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'expense'}));
 
   // Group by month
   const months={};
   all.forEach(e=>{
     const m=e.date.slice(0,7);
-    if(!months[m])months[m]={surebet:0,normal:0,freebet:0,adjust:0,cost:0,flow:0};
+    if(!months[m])months[m]={surebet:0,normal:0,freebet:0,adjust:0,cost:0,expense:0};
     months[m][e.cat]+=e.profit;
   });
 
   const keys=Object.keys(months).sort();
   const visibleKeys=keys.filter(k=>!isHidden('month:'+k));
   const hiddenKeys=keys.filter(k=>isHidden('month:'+k));
-  const totalAll=visibleKeys.reduce((a,k)=>a+months[k].surebet+months[k].normal+months[k].freebet+months[k].adjust+months[k].cost+months[k].flow,0);
-  const totalFlow=visibleKeys.reduce((a,k)=>a+months[k].flow,0);
+  const totalAll=visibleKeys.reduce((a,k)=>a+months[k].surebet+months[k].normal+months[k].freebet+months[k].adjust+months[k].cost+months[k].expense,0);
+  const totalExp=visibleKeys.reduce((a,k)=>a+months[k].expense,0);
   const totalCost=visibleKeys.reduce((a,k)=>a+months[k].cost,0);
   const totalAdj=visibleKeys.reduce((a,k)=>a+months[k].adjust,0);
   const totalSB=visibleKeys.reduce((a,k)=>a+months[k].surebet,0);
@@ -2962,25 +3080,37 @@ function renderProfit(){
         <div class="th-sub-item"><div class="th-sub-label">Surebets</div><div class="th-sub-val" style="color:var(--green)">${totalSB>=0?'+':''}${fmt(totalSB)} €</div></div>
         <div class="th-sub-item"><div class="th-sub-label">Normal</div><div class="th-sub-val" style="color:${totalNorm>=0?'var(--blue)':'var(--red)'}">${totalNorm>=0?'+':''}${fmt(totalNorm)} €</div></div>
         <div class="th-sub-item"><div class="th-sub-label">Freebets</div><div class="th-sub-val" style="color:var(--yellow)">${totalFB>=0?'+':''}${fmt(totalFB)} €</div></div>
-        ${totalFlow?`<div class="th-sub-item"><div class="th-sub-label">Bank movements</div><div class="th-sub-val" style="color:${totalFlow>=0?'var(--green)':'var(--red)'}">${totalFlow>=0?'+':''}${fmt(totalFlow)} €</div></div>`:''}
+        ${totalExp?`<div class="th-sub-item"><div class="th-sub-label">Bank expenses</div><div class="th-sub-val" style="color:var(--red)">${fmt(totalExp)} €</div></div>`:''}
         ${totalCost?`<div class="th-sub-item"><div class="th-sub-label">Monthly costs</div><div class="th-sub-val" style="color:var(--red)">${fmt(totalCost)} €</div></div>`:''}
-        ${totalAdj?`<div class="th-sub-item"><div class="th-sub-label">Adjustments</div><div class="th-sub-val" style="color:${totalAdj>=0?'var(--green)':'var(--red)'}">${totalAdj>=0?'+':''}${fmt(totalAdj)} €</div></div>`:''}
+        ${totalAdj?`<div class="th-sub-item"><div class="th-sub-label">Balance corrections</div><div class="th-sub-val" style="color:${totalAdj>=0?'var(--green)':'var(--red)'}">${totalAdj>=0?'+':''}${fmt(totalAdj)} €</div></div>`:''}
       </div>
     </div>`;
 
+  const br=bankrollSummary();
+  const diff=+(totalAll-br.profit).toFixed(2);
+  document.getElementById('totalHero').insertAdjacentHTML('beforeend',`
+    <div class="br-card">
+      <div class="br-head"><b>Where your profit is</b><span>Everything you have now, minus what came out of your pocket</span></div>
+      <div class="br-row"><span>Bankroll now <small>all bookmakers + bank, including money in pending bets${br.inTransit?' and withdrawals on their way to the bank':''}</small></span><b>${fmt(br.bankroll+br.inTransit)} €</b></div>
+      <div class="br-row"><span>+ Taken out for personal use <small>doesn't lower your profit</small></span><b>${fmt(br.drawn)} €</b></div>
+      <div class="br-row"><span>− Money you put in <small>deposits from your own pocket</small></span><b>${fmt(br.putIn)} €</b></div>
+      ${br.costs?`<div class="br-row"><span>− Monthly costs <small>paid outside the bankroll</small></span><b>${fmt(br.costs)} €</b></div>`:''}
+      <div class="br-row br-tot"><span>= Profit</span><b class="${br.profit>=0?'pos':'neg'}">${br.profit>=0?'+':''}${fmt(br.profit)} €</b></div>
+      ${Math.abs(diff)>=0.5?`<div class="br-note">Differs from the total above by ${diff>0?'+':''}${fmt(diff)} €: hidden months/items, or settled bets on bookmakers that aren't in Bookmakers.</div>`:''}
+    </div>`);
   const visibleKeysDesc=[...visibleKeys].reverse();
   const hiddenKeysDesc=[...hiddenKeys].reverse();
 
   document.getElementById('monthList').innerHTML=visibleKeysDesc.map(k=>{
-    const m=months[k];const tot=m.surebet+m.normal+m.freebet+m.adjust+m.cost+m.flow;
+    const m=months[k];const tot=m.surebet+m.normal+m.freebet+m.adjust+m.cost+m.expense;
     return`<div class="month-card">
       <div class="mc-head"><span class="mc-month">${mName(k)}</span><div style="display:flex;align-items:center;gap:6px"><span class="mc-total ${tot>=0?'pos':'neg'}">${tot>=0?'+':''}${fmt(tot)} €</span>${hideBtnHtml('month:'+k)}</div></div>
       ${m.surebet!==0?`<div class="mc-row"><span class="mc-cat">Surebets</span><span class="mc-val ${m.surebet>=0?'pos':'neg'}">${m.surebet>=0?'+':''}${fmt(m.surebet)} €</span></div>`:''}
       ${m.normal!==0?`<div class="mc-row"><span class="mc-cat">Normal</span><span class="mc-val ${m.normal>=0?'pos':'neg'}">${m.normal>=0?'+':''}${fmt(m.normal)} €</span></div>`:''}
       ${m.freebet!==0?`<div class="mc-row"><span class="mc-cat">Freebets</span><span class="mc-val ${m.freebet>=0?'pos':'neg'}">${m.freebet>=0?'+':''}${fmt(m.freebet)} €</span></div>`:''}
-      ${m.flow!==0?`<div class="mc-row"><span class="mc-cat">Bank movements</span><span class="mc-val ${m.flow>=0?'pos':'neg'}">${m.flow>=0?'+':''}${fmt(m.flow)} €</span></div>`:''}
+      ${m.expense!==0?`<div class="mc-row"><span class="mc-cat">Bank expenses</span><span class="mc-val neg">${fmt(m.expense)} €</span></div>`:''}
       ${m.cost!==0?`<div class="mc-row"><span class="mc-cat">Monthly costs</span><span class="mc-val neg">${fmt(m.cost)} €</span></div>`:''}
-      ${m.adjust!==0?`<div class="mc-row"><span class="mc-cat">Balance adjustments</span><span class="mc-val ${m.adjust>=0?'pos':'neg'}">${m.adjust>=0?'+':''}${fmt(m.adjust)} €</span></div>`:''}
+      ${m.adjust!==0?`<div class="mc-row"><span class="mc-cat">Balance corrections</span><span class="mc-val ${m.adjust>=0?'pos':'neg'}">${m.adjust>=0?'+':''}${fmt(m.adjust)} €</span></div>`:''}
     </div>`;
   }).join('') + hiddenPanelHtml('profit',hiddenKeysDesc.map(k=>({key:'month:'+k,label:mName(k)})));
   renderProfitRange(all);
@@ -3413,7 +3543,7 @@ function renderPendientes(){
   const pendSBAll=D.bets.filter(b=>b.status==='pending').map(b=>({kind:'sb',item:b}));
   const pendNMAll=D.normals.filter(n=>n.status==='pending').map(n=>({kind:'nm',item:n}));
   const pendWDAll=[];
-  D.casas.forEach(c=>{(c.history||[]).forEach(h=>{if(h.type==='wd'&&h.status==='pending')pendWDAll.push({kind:'wd',item:{cid:c.id,hid:h.id,casaName:c.name,amount:h.amount,date:h.date}});});});
+  D.casas.forEach(c=>{(c.history||[]).forEach(h=>{if(h.type==='wd'&&h.status==='pending')pendWDAll.push({kind:'wd',item:{cid:c.id,hid:h.id,casaName:c.name,amount:h.amount,date:h.date,dest:moveLabel(c,h)}});});});
   const dKey=x=>(x.item.date||'9999-99-99')+' '+(x.item.time||'99:99');
   const pendAll=[...pendSBAll,...pendNMAll,...pendWDAll].sort((a,b)=>dKey(a).localeCompare(dKey(b)));
   renderPendTools(pendAll.filter(({kind,item})=>!isHidden(pendKey(kind,item))));
@@ -3460,7 +3590,7 @@ function renderPendientes(){
       return`<div class="pend-item wd">
         <div class="pend-top">
           <div>
-            <div class="pend-ev">Withdrawal – ${esc(w.casaName)} <span class="type-badge-kind">Bookmaker</span></div>
+            <div class="pend-ev">Withdrawal – ${esc(w.casaName)} <span class="type-badge-kind">${w.dest||'Bookmaker'}</span></div>
             <div class="pend-meta">${pendHouseChip([w.casaName])}<span>${fmtDate(w.date)}</span><span>Amount: ${fmt(w.amount)} €</span></div>
           </div>
           <div style="display:flex;align-items:center;gap:6px">
@@ -3624,6 +3754,7 @@ function casaMoney(c,ledger){
   return {deposited,settled:+e.settled.toFixed(2),inPlay:+e.inPlay.toFixed(2),open:e.open,adj,balance};
 }
 function renderCasas(filter=''){
+  migrateBanks();
   ensureAdjLogs();
   renderBkProfileTabs();
   const ledger0=bookmakerLedger();
@@ -3662,7 +3793,7 @@ function renderCasas(filter=''){
       const prof=c.profileId?(D.bkProfiles||[]).find(p=>p.id===c.profileId):null;
       metaBits.push(`<span class="type-badge-kind">${esc(prof?prof.name:'No profile')}</span>`);
     }
-    if(flowFromOf(c))metaBits.push(`<span class="type-badge-kind" title="Deposits and withdrawals count in Profit">Counts in Profit</span>`);
+    if(isBank(c))metaBits.push(`<span class="type-badge-kind bank-badge">Bank account</span>`);
     if(c.notes)metaBits.push(esc(c.notes));
     if(pend>0)metaBits.push(`<span style="color:var(--yellow)">Pending: ${fmt(pend)} €</span>`);
     if(pendWdCount>0)metaBits.push(`<span style="color:var(--yellow)">${pendWdCount} withdrawal${pendWdCount>1?'s':''} awaiting confirmation</span>`);
@@ -3672,6 +3803,7 @@ function renderCasas(filter=''){
     if(mode==='dep'||mode==='wd'){
       panelHtml=`<div class="bk-panel">
         <div class="bk-panel-title">${mode==='dep'?'Add deposit':'Record withdrawal'}</div>
+        ${moveDestHtml(c,mode)}
         <div class="bk-panel-row">
           <div class="iw"><input type="number" class="ii" id="bk-panel-amount" placeholder="0" min="0" step="0.01"><span class="isuf">€</span></div>
           <button class="btn-reg" data-bk-apply="${c.id}" data-bk-mode="${mode}" style="width:auto;padding:9px 16px">${mode==='dep'?'Add':'Subtract'}</button>
@@ -3696,20 +3828,6 @@ function renderCasas(filter=''){
           ${mny.adj?`<button class="btn-s" data-bk-clear-adj="${c.id}" style="width:auto;padding:9px 16px">Remove adjustment</button>`:''}
         </div>
         <div class="bk-hist-empty" style="margin-top:8px">The difference is kept as an adjustment; future bets keep updating the balance on top of it.</div>
-      </div>`;
-    }else if(mode==='flow'){
-      const from=flowFromOf(c);
-      const n=from?flowEntries().filter(x=>x.casaId===c.id):[];
-      const sum=n.reduce((a,x)=>a+x.profit,0);
-      panelHtml=`<div class="bk-panel">
-        <div class="bk-panel-title">${from?`Deposits and withdrawals of ${esc(c.name)} count in Profit`:`Make deposits and withdrawals of ${esc(c.name)} count in Profit`}</div>
-        <div class="bk-hist-empty" style="margin-bottom:10px">For the bank account where you keep your winnings: a withdrawal (e.g. a subscription) is subtracted from Profit, a deposit is added. The opening deposit never counts.</div>
-        <div class="bk-panel-row">
-          <div><label class="fl">From</label><input type="date" id="bk-flow-from" value="${from||todayLocalISO()}"></div>
-          <button class="btn-reg" data-flow-on="${c.id}" style="width:auto;padding:9px 16px;align-self:flex-end">${from?'Save date':'Turn on'}</button>
-          ${from?`<button class="btn-s" data-flow-off="${c.id}" style="width:auto;padding:9px 16px;align-self:flex-end">Turn off</button>`:''}
-        </div>
-        ${from?`<div class="bk-hist-empty" style="margin-top:8px">${n.length} movement${n.length===1?'':'s'} counted · <b class="${sum>=0?'pos':'neg'}">${sum>=0?'+':''}${fmt(sum)} €</b> in Profit</div>`:''}
       </div>`;
     }else if(mode==='costs'){
       const ym=todayLocalISO().slice(0,7);
@@ -3741,8 +3859,10 @@ function renderCasas(filter=''){
           return `<div class="bk-hist-row">
             <span class="bk-hist-type ${isWd?'wd':'dep'}">${isWd?'− Withdrawal':'+ Deposit'}</span>
             <span class="bk-hist-date">${fmtDate(h.date)}</span>
+            <span class="mv-tag mv-${moveKind(c,h)}">${moveLabel(c,h)}</span>
             <span class="bk-hist-amt ${isWd?'neg':'pos'}">${isWd?'−':'+'}${fmt(h.amount)} €</span>
             ${pendingWd?`<span class="bk-hist-pending">Pending</span><button class="unhidebtn" data-confirm-wd="${c.id}:${h.id}">Confirm received</button>`:''}
+            ${isWd&&!h.transfer&&!h.toBank?`<button class="unhidebtn" data-mv-flip="${c.id}:${h.id}" title="Change what this withdrawal was">${h.expense?'Make it personal':'Make it an expense'}</button>`:''}
           </div>`;
         }).join('')}</div>`}
       </div>`;
@@ -3756,19 +3876,18 @@ function renderCasas(filter=''){
         </div>
         <div class="bk-bal"><div class="bk-bal-val ${pCls}">${fmt(amt)} €</div><div class="bk-bal-sub">balance</div></div>
       </div>
-      <div class="bk-money">
+      ${isBank(c)?bankMoneyHtml(c):`<div class="bk-money">
         <div><span>Deposited</span><b>${fmt(mny.deposited)} €</b></div>
         <div><span>Bet results</span><b class="${mny.settled>0?'pos':mny.settled<0?'neg':''}">${mny.settled>0?'+':''}${fmt(mny.settled)} €</b></div>
         <div><span>In pending bets${mny.open?` (${mny.open})`:''}</span><b class="${mny.inPlay>0?'yel':''}">${fmt(mny.inPlay)} €</b></div>
         ${(()=>{const d=+(mny.deposited-amt).toFixed(2);return `<div><span>Deposited − balance</span><b class="${d>0?'neg':d<0?'pos':''}">${fmt(d)} €</b><small class="bk-dir ${d>0?'neg':d<0?'pos':''}">${d<0?`you're up ${fmt(-d)} €`:d>0?`you're down ${fmt(d)} €`:'even'}</small></div>`;})()}
-      </div>
+      </div>`}
       <div class="bk-actions">
         <button class="bk-btn dep${mode==='dep'?' on':''}" data-bk-toggle="dep" data-cid="${c.id}">+ Deposit</button>
         <button class="bk-btn wd${mode==='wd'?' on':''}" data-bk-toggle="wd" data-cid="${c.id}">− Withdraw</button>
-        <button class="bk-btn${mode==='pending'?' on':''}" data-bk-toggle="pending" data-cid="${c.id}">Pending transfer</button>
+        ${isBank(c)?'':`<button class="bk-btn${mode==='pending'?' on':''}" data-bk-toggle="pending" data-cid="${c.id}">Pending transfer</button>`}
         <button class="bk-btn${mode==='hist'?' on':''}" data-bk-toggle="hist" data-cid="${c.id}">History</button>
         <button class="bk-btn${mode==='bal'?' on':''}" data-bk-toggle="bal" data-cid="${c.id}">Set balance</button>
-        <button class="bk-btn${mode==='flow'?' on':''}${flowFromOf(c)?' flow-on':''}" data-bk-toggle="flow" data-cid="${c.id}">${flowFromOf(c)?'✓ Counts in Profit':'Count in Profit'}</button>
         <button class="bk-btn${mode==='costs'?' on':''}" data-bk-toggle="costs" data-cid="${c.id}">Monthly costs${activeCosts(c).length?` · ${fmt(activeCosts(c).reduce((a,k)=>a+k.amount,0))} €`:''}</button>
         <div class="bk-spacer"></div>
         <button class="bk-btn" data-edit-cid="${c.id}">Edit</button>
@@ -3795,9 +3914,7 @@ function openCasaModal(editId){
   document.getElementById('c-name').value=c?c.name:'';
   document.getElementById('c-amount').value=(c&&c.amount!=null)?c.amount:'';
   document.getElementById('c-notes').value=c?(c.notes||''):'';
-  document.getElementById('c-flow').checked=!!(c&&(c.flowFrom||c.flowSince));
-  document.getElementById('c-flow-from').value=c?flowFromOf(c)||todayLocalISO():todayLocalISO();
-  document.getElementById('c-flow-from-wrap').style.display=document.getElementById('c-flow').checked?'':'none';
+  document.getElementById('c-bank').checked=isBank(c);
   fillProfileSelect(document.getElementById('c-profile'),c?c.profileId:(bkProfileSel!=='all'&&bkProfileSel!=='none'&&bkProfileSel!=='unused'?bkProfileSel:null));
   casaModal.style.display='flex';
   setTimeout(()=>document.getElementById('c-name').focus(),30);
@@ -3814,7 +3931,6 @@ document.getElementById('c-profile').addEventListener('change',e=>{
 });
 document.getElementById('casasAddBtn').addEventListener('click',()=>openCasaModal());
 document.getElementById('c-cancel').addEventListener('click',()=>{casaModal.style.display='none';editingCasaId=null;});
-document.getElementById('c-flow').addEventListener('change',e=>{document.getElementById('c-flow-from-wrap').style.display=e.target.checked?'':'none';});
 document.getElementById('c-save').addEventListener('click',()=>{
   const name=document.getElementById('c-name').value.trim();
   if(!name){alert('Enter the bookmaker name.');return;}
@@ -3822,13 +3938,13 @@ document.getElementById('c-save').addEventListener('click',()=>{
   const notes=document.getElementById('c-notes').value.trim();
   const profileVal=document.getElementById('c-profile').value;
   const profileId=(profileVal&&profileVal!=='__new')?+profileVal:null;
-  const flow=document.getElementById('c-flow').checked;
+  const bank=document.getElementById('c-bank').checked;
   if(editingCasaId){
     const c=D.casas.find(x=>x.id===editingCasaId);
     if(c){c.name=name;c.amount=amount;c.notes=notes;c.profileId=profileId;
-      delete c.flowSince;if(flow)c.flowFrom=document.getElementById('c-flow-from').value||todayLocalISO();else delete c.flowFrom;}
+      if(bank)c.kind='bank';else delete c.kind;}
   }else{
-    D.casas.unshift({id:Date.now(),name,amount,notes,profileId,...(flow?{flowFrom:document.getElementById('c-flow-from').value||todayLocalISO()}:{}),pendingTransfer:0,history:amount>0?[{id:Date.now()+1,type:'dep',amount,date:new Date().toISOString().slice(0,10),init:true}]:[]});
+    D.casas.unshift({id:Date.now(),name,amount,notes,profileId,...(bank?{kind:'bank'}:{}),pendingTransfer:0,history:amount>0?[{id:Date.now()+1,type:'dep',amount,date:new Date().toISOString().slice(0,10),init:true}]:[]});
   }
   save();updateBadges();
   renderCasas(document.getElementById('casasSearch').value);
@@ -3843,17 +3959,12 @@ document.getElementById('casasList').addEventListener('click',e=>{
     renderCasas(document.getElementById('casasSearch').value);
     return;
   }
-  const flowOn=e.target.closest('[data-flow-on]');
-  if(flowOn){
-    const c=D.casas.find(x=>x.id===+flowOn.dataset.flowOn);if(!c)return;
-    c.flowFrom=document.getElementById('bk-flow-from').value||todayLocalISO();delete c.flowSince;
-    save();renderCasas(document.getElementById('casasSearch').value);toast(`${c.name}: deposits and withdrawals now count in Profit`);return;
-  }
-  const flowOff=e.target.closest('[data-flow-off]');
-  if(flowOff){
-    const c=D.casas.find(x=>x.id===+flowOff.dataset.flowOff);if(!c)return;
-    delete c.flowFrom;delete c.flowSince;openBkPanel=null;
-    save();renderCasas(document.getElementById('casasSearch').value);toast(`${c.name} no longer counts in Profit`);return;
+  const flip=e.target.closest('[data-mv-flip]');
+  if(flip){
+    const [cid,hid]=flip.dataset.mvFlip.split(':').map(Number);const c=D.casas.find(x=>x.id===cid);const h=c&&(c.history||[]).find(x=>x.id===hid);if(!h)return;
+    if(h.expense){delete h.expense;h.personal=true;}else{h.expense=true;delete h.personal;}
+    save();renderCasas(document.getElementById('casasSearch').value);
+    toast(h.expense?`${fmt(h.amount)} € is now an expense — subtracted from Profit`:`${fmt(h.amount)} € is now personal — not subtracted from Profit`);return;
   }
   const costAdd=e.target.closest('[data-cost-add]');
   if(costAdd){
@@ -3891,12 +4002,12 @@ document.getElementById('casasList').addEventListener('click',e=>{
     const c=D.casas.find(x=>x.id===cid);if(!c)return;
     const val=parseFloat(document.getElementById('bk-panel-amount').value)||0;
     if(!Array.isArray(c.history))c.history=[];
-    if(mode==='dep'){
-      c.amount=(c.amount||0)+val;
-      if(val>0)c.history.unshift({id:Date.now(),type:'dep',amount:val,date:new Date().toISOString().slice(0,10)});
-    }else if(mode==='wd'){
-      c.amount=(c.amount||0)-val;
-      if(val>0)c.history.unshift({id:Date.now(),type:'wd',amount:val,date:new Date().toISOString().slice(0,10),status:'pending'});
+    if(mode==='dep'||mode==='wd'){
+      if(!(val>0)){toast('Write an amount');return;}
+      const msg=applyMove(c,mode,val);
+      openBkPanel=null;save();updateBadges();renderCasas(document.getElementById('casasSearch').value);
+      if(msg)toast(msg);
+      return;
     }
     else if(mode==='pending')c.pendingTransfer=val<0?0:val;
     else if(mode==='bal'){
@@ -3941,7 +4052,7 @@ let bkProfileSel='all'; // 'all' (active) | 'none' | 'unused' | profileId
 // A bookmaker is "unused" when it has 0 € balance, nothing in play, and no deposit/withdrawal in the last 7 days
 function isUnusedCasa(c,ledger){
   const m=casaMoney(c,ledger);
-  if(activeCosts(c).length)return false;
+  if(isBank(c)||activeCosts(c).length)return false;
   if(Math.abs(m.balance)>=0.005||m.inPlay>0||m.open>0||(c.pendingTransfer||0)>0)return false;
   const cutoff=new Date(Date.now()-7*864e5).toISOString().slice(0,10);
   if((c.history||[]).some(h=>(h.type==='dep'||h.type==='wd')&&(h.date||'')>=cutoff))return false;
@@ -5258,7 +5369,7 @@ function computeDayTotals(year,month){
   const dayTotals={};
   D.bets.forEach(b=>{if(isHidden('sb:'+b.id))return;const rd=b.date||b.resolveDate;if(rd&&rd.startsWith(ym)){const d=+rd.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+betProfit(b);}});
   D.normals.forEach(n=>{if(isHidden('nm:'+n.id))return;const rd=n.date||n.resolveDate;if(rd&&rd.startsWith(ym)){const d=+rd.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+(n.profit||0);}});
-  [...costEntries(),...flowEntries()].forEach(a=>{if(a.date.startsWith(ym)){const d=+a.date.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+a.profit;}});
+  [...costEntries(),...adjEntries(),...expenseEntries()].forEach(a=>{if(a.date.startsWith(ym)){const d=+a.date.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+a.profit;}});
   return dayTotals;
 }
 function renderCalendar(){
@@ -5306,7 +5417,7 @@ function renderPerfChart(){
   const entries=[];
   D.bets.forEach(b=>{if(isHidden('sb:'+b.id))return;const rd=b.date||b.resolveDate;if(rd)entries.push({date:rd,profit:betProfit(b),expected:b.status==='anulada'?0:((b.expectedProfit!=null?b.expectedProfit:b.profit)||0),isBet:true});});
   D.normals.forEach(n=>{if(isHidden('nm:'+n.id))return;const rd=n.date||n.resolveDate;if(rd)entries.push({date:rd,profit:n.profit||0,expected:n.profit||0,isBet:false});});
-  [...costEntries(),...flowEntries()].forEach(a=>entries.push({date:a.date,profit:a.profit,expected:a.profit,isBet:false}));
+  [...costEntries(),...adjEntries(),...expenseEntries()].forEach(a=>entries.push({date:a.date,profit:a.profit,expected:a.profit,isBet:false}));
   const wrap=document.getElementById('perfChartWrap');
   if(!entries.length){
     wrap.innerHTML='<div class="perf-chart-empty">Not enough data yet to show performance.</div>';
