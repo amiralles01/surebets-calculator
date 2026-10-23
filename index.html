@@ -2586,8 +2586,7 @@ function fractionFor(d){
   for(const [p,q] of FRACTION_LADDER){
     const v=1+p/q;if(Math.abs(v*100-Math.round(v*100))<1e-9)continue;      // already exact in 2 decimals
     const cut=Math.floor(v*100+1e-9)/100,near=Math.round(v*100)/100;
-    const half=Math.abs(v*1000-Math.round(v*1000))<1e-9;                   // 1.625, 2.375…: only the cut-off display is unambiguous
-    const score=cut===d?2:(near===d&&!half)?1:0;                           // the cut-off display wins
+    const score=cut===d?2:near===d?1:0;                                    // the cut-off display wins; rounded-up also maps (1.63 → 5/8)
     if(score&&(!best||score>best.score))best={p,q,v,score};
   }
   return best;
