@@ -3639,7 +3639,7 @@ function renderCasas(filter=''){
         <div><span>Deposited</span><b>${fmt(mny.deposited)} €</b></div>
         <div><span>Bet results</span><b class="${mny.settled>0?'pos':mny.settled<0?'neg':''}">${mny.settled>0?'+':''}${fmt(mny.settled)} €</b></div>
         <div><span>In pending bets${mny.open?` (${mny.open})`:''}</span><b class="${mny.inPlay>0?'yel':''}">${fmt(mny.inPlay)} €</b></div>
-        ${mny.adj?`<div><span>Manual adjustment</span><b>${mny.adj>0?'+':''}${fmt(mny.adj)} €</b></div>`:''}
+        ${(()=>{const d=+(mny.deposited-amt).toFixed(2);return `<div><span>Deposited − balance</span><b class="${d>0?'neg':d<0?'pos':''}">${fmt(d)} €</b></div>`;})()}
       </div>
       <div class="bk-actions">
         <button class="bk-btn dep${mode==='dep'?' on':''}" data-bk-toggle="dep" data-cid="${c.id}">+ Deposit</button>
