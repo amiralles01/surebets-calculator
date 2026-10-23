@@ -1776,6 +1776,10 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .bk-cost-form{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,.8fr) auto;gap:8px;align-items:center}
 @media(max-width:600px){.bk-cost-form{grid-template-columns:1fr 1fr}.bk-cost-form>input{grid-column:1/-1}.bk-cost-form .btn-reg{grid-column:1/-1}}
 .bk-cost-form .ii{padding-right:52px!important;text-align:left}
+
+.c-flow{display:flex;gap:10px;align-items:flex-start;padding:11px 12px;border-radius:10px;border:1px solid var(--border);background:var(--raised);cursor:pointer}
+.c-flow input{width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:var(--pitch,var(--accent))}
+.c-flow span{display:flex;flex-direction:column;gap:3px;font-size:13px}.c-flow small{font-size:11.5px;color:var(--faint);line-height:1.45}
 </style>
 </head>
 <body>
@@ -2339,6 +2343,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
         <div><label class="fl">Awaiting transfer</label><div class="iw"><input type="number" class="ii" id="c-pending" placeholder="0" min="0" step="0.01"><span class="isuf">€</span></div></div>
       </div>
       <div><label class="fl">Notes (optional)</label><input type="text" id="c-notes" placeholder="Welcome bonus, verified account…"></div>
+      <label class="c-flow"><input type="checkbox" id="c-flow"><span><b>Deposits and withdrawals count in Profit</b><small>For the bank account where you keep your surebet winnings: a withdrawal (e.g. to pay a subscription) is subtracted from Profit and a deposit is added. Only movements from now on.</small></span></label>
     </div>
     <div style="display:flex;gap:9px;margin-top:18px">
       <button class="btn-s" id="c-cancel" style="flex:1">Cancel</button>
@@ -2466,6 +2471,16 @@ function costCharges(c){
   return out;
 }
 function nextMonthStart(iso){const [y,m]=iso.split('-').map(Number);return m===12?`${y+1}-01-01`:`${y}-${String(m+1).padStart(2,'0')}-01`;}
+// Accounts marked by the user (e.g. the bank): deposits add to Profit, withdrawals subtract
+function flowEntries(){
+  const out=[];
+  visibleCasas().forEach(c=>{if(!c.flowSince)return;(c.history||[]).forEach(h=>{
+    if((h.id||0)<c.flowSince||!(h.amount>0)||!h.date)return;
+    if(h.type==='dep')out.push({date:h.date,profit:h.amount});
+    else if(h.type==='wd')out.push({date:h.date,profit:-h.amount});
+  });});
+  return out;
+}
 function costEntries(){const out=[];visibleCasas().forEach(c=>out.push(...costCharges(c)));return out;}
 function activeCosts(c){const ym=todayLocalISO().slice(0,7);return (c.costs||[]).filter(k=>!k.until||k.until>=ym);}
 function adjEntries(){
@@ -2868,7 +2883,7 @@ function renderProfitRange(all){
   if(from&&to&&from>to){box.innerHTML=`<div style="font-size:12.5px;color:var(--red)">The start date must be before the end date.</div>`;return;}
   const sel=profitRangeEntries.filter(e=>!isHidden('month:'+e.date.slice(0,7))&&(!from||e.date>=from)&&(!to||e.date<=to));
   const sum=c=>sel.filter(e=>e.cat===c).reduce((a,e)=>a+e.profit,0);
-  const sb=sum('surebet'),nm=sum('normal'),fb=sum('freebet'),adj=sum('adjust'),cst=sum('cost'),tot=sb+nm+fb+adj+cst;
+  const sb=sum('surebet'),nm=sum('normal'),fb=sum('freebet'),adj=sum('adjust'),cst=sum('cost'),flw=sum('flow'),tot=sb+nm+fb+adj+cst+flw;
   const sg=v=>(v>=0?'+':'')+fmt(v)+' €';
   const label=from&&to?`${fmtDate(from)} → ${fmtDate(to)}`:(from?`From ${fmtDate(from)}`:`Until ${fmtDate(to)}`);
   box.innerHTML=`<div class="total-hero" style="margin:0">
@@ -2878,6 +2893,7 @@ function renderProfitRange(all){
       <div class="th-sub-item"><div class="th-sub-label">Surebets</div><div class="th-sub-val" style="color:var(--green)">${sg(sb)}</div></div>
       <div class="th-sub-item"><div class="th-sub-label">Normal</div><div class="th-sub-val" style="color:${nm>=0?'var(--blue)':'var(--red)'}">${sg(nm)}</div></div>
       <div class="th-sub-item"><div class="th-sub-label">Freebets</div><div class="th-sub-val" style="color:var(--yellow)">${sg(fb)}</div></div>
+      ${flw?`<div class="th-sub-item"><div class="th-sub-label">Bank movements</div><div class="th-sub-val">${sg(flw)}</div></div>`:''}
       ${cst?`<div class="th-sub-item"><div class="th-sub-label">Monthly costs</div><div class="th-sub-val" style="color:var(--red)">${sg(cst)}</div></div>`:''}
       ${adj?`<div class="th-sub-item"><div class="th-sub-label">Adjustments</div><div class="th-sub-val">${sg(adj)}</div></div>`:''}
     </div>
@@ -2907,19 +2923,21 @@ function renderProfit(){
   visibleBets().forEach(b=>{const rd=b.date||b.resolveDate;if(rd&&b.profit!==undefined)all.push({date:rd,profit:betProfit(b),cat:'surebet'})});
   visibleNormals().forEach(n=>{const rd=n.date||n.resolveDate;if(rd&&n.profit!==undefined&&n.profit!==0)all.push({date:rd,profit:n.profit,cat:n.type==='Freebet'?'freebet':'normal'})});
   costEntries().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'cost'}));
+  flowEntries().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'flow'}));
 
   // Group by month
   const months={};
   all.forEach(e=>{
     const m=e.date.slice(0,7);
-    if(!months[m])months[m]={surebet:0,normal:0,freebet:0,adjust:0,cost:0};
+    if(!months[m])months[m]={surebet:0,normal:0,freebet:0,adjust:0,cost:0,flow:0};
     months[m][e.cat]+=e.profit;
   });
 
   const keys=Object.keys(months).sort();
   const visibleKeys=keys.filter(k=>!isHidden('month:'+k));
   const hiddenKeys=keys.filter(k=>isHidden('month:'+k));
-  const totalAll=visibleKeys.reduce((a,k)=>a+months[k].surebet+months[k].normal+months[k].freebet+months[k].adjust+months[k].cost,0);
+  const totalAll=visibleKeys.reduce((a,k)=>a+months[k].surebet+months[k].normal+months[k].freebet+months[k].adjust+months[k].cost+months[k].flow,0);
+  const totalFlow=visibleKeys.reduce((a,k)=>a+months[k].flow,0);
   const totalCost=visibleKeys.reduce((a,k)=>a+months[k].cost,0);
   const totalAdj=visibleKeys.reduce((a,k)=>a+months[k].adjust,0);
   const totalSB=visibleKeys.reduce((a,k)=>a+months[k].surebet,0);
@@ -2936,6 +2954,7 @@ function renderProfit(){
         <div class="th-sub-item"><div class="th-sub-label">Surebets</div><div class="th-sub-val" style="color:var(--green)">${totalSB>=0?'+':''}${fmt(totalSB)} €</div></div>
         <div class="th-sub-item"><div class="th-sub-label">Normal</div><div class="th-sub-val" style="color:${totalNorm>=0?'var(--blue)':'var(--red)'}">${totalNorm>=0?'+':''}${fmt(totalNorm)} €</div></div>
         <div class="th-sub-item"><div class="th-sub-label">Freebets</div><div class="th-sub-val" style="color:var(--yellow)">${totalFB>=0?'+':''}${fmt(totalFB)} €</div></div>
+        ${totalFlow?`<div class="th-sub-item"><div class="th-sub-label">Bank movements</div><div class="th-sub-val" style="color:${totalFlow>=0?'var(--green)':'var(--red)'}">${totalFlow>=0?'+':''}${fmt(totalFlow)} €</div></div>`:''}
         ${totalCost?`<div class="th-sub-item"><div class="th-sub-label">Monthly costs</div><div class="th-sub-val" style="color:var(--red)">${fmt(totalCost)} €</div></div>`:''}
         ${totalAdj?`<div class="th-sub-item"><div class="th-sub-label">Adjustments</div><div class="th-sub-val" style="color:${totalAdj>=0?'var(--green)':'var(--red)'}">${totalAdj>=0?'+':''}${fmt(totalAdj)} €</div></div>`:''}
       </div>
@@ -2945,12 +2964,13 @@ function renderProfit(){
   const hiddenKeysDesc=[...hiddenKeys].reverse();
 
   document.getElementById('monthList').innerHTML=visibleKeysDesc.map(k=>{
-    const m=months[k];const tot=m.surebet+m.normal+m.freebet+m.adjust+m.cost;
+    const m=months[k];const tot=m.surebet+m.normal+m.freebet+m.adjust+m.cost+m.flow;
     return`<div class="month-card">
       <div class="mc-head"><span class="mc-month">${mName(k)}</span><div style="display:flex;align-items:center;gap:6px"><span class="mc-total ${tot>=0?'pos':'neg'}">${tot>=0?'+':''}${fmt(tot)} €</span>${hideBtnHtml('month:'+k)}</div></div>
       ${m.surebet!==0?`<div class="mc-row"><span class="mc-cat">Surebets</span><span class="mc-val ${m.surebet>=0?'pos':'neg'}">${m.surebet>=0?'+':''}${fmt(m.surebet)} €</span></div>`:''}
       ${m.normal!==0?`<div class="mc-row"><span class="mc-cat">Normal</span><span class="mc-val ${m.normal>=0?'pos':'neg'}">${m.normal>=0?'+':''}${fmt(m.normal)} €</span></div>`:''}
       ${m.freebet!==0?`<div class="mc-row"><span class="mc-cat">Freebets</span><span class="mc-val ${m.freebet>=0?'pos':'neg'}">${m.freebet>=0?'+':''}${fmt(m.freebet)} €</span></div>`:''}
+      ${m.flow!==0?`<div class="mc-row"><span class="mc-cat">Bank movements</span><span class="mc-val ${m.flow>=0?'pos':'neg'}">${m.flow>=0?'+':''}${fmt(m.flow)} €</span></div>`:''}
       ${m.cost!==0?`<div class="mc-row"><span class="mc-cat">Monthly costs</span><span class="mc-val neg">${fmt(m.cost)} €</span></div>`:''}
       ${m.adjust!==0?`<div class="mc-row"><span class="mc-cat">Balance adjustments</span><span class="mc-val ${m.adjust>=0?'pos':'neg'}">${m.adjust>=0?'+':''}${fmt(m.adjust)} €</span></div>`:''}
     </div>`;
@@ -3634,6 +3654,7 @@ function renderCasas(filter=''){
       const prof=c.profileId?(D.bkProfiles||[]).find(p=>p.id===c.profileId):null;
       metaBits.push(`<span class="type-badge-kind">${esc(prof?prof.name:'No profile')}</span>`);
     }
+    if(c.flowSince)metaBits.push(`<span class="type-badge-kind" title="Deposits and withdrawals count in Profit">Counts in Profit</span>`);
     if(c.notes)metaBits.push(esc(c.notes));
     if(pend>0)metaBits.push(`<span style="color:var(--yellow)">Pending: ${fmt(pend)} €</span>`);
     if(pendWdCount>0)metaBits.push(`<span style="color:var(--yellow)">${pendWdCount} withdrawal${pendWdCount>1?'s':''} awaiting confirmation</span>`);
@@ -3751,6 +3772,7 @@ function openCasaModal(editId){
   document.getElementById('c-name').value=c?c.name:'';
   document.getElementById('c-amount').value=(c&&c.amount!=null)?c.amount:'';
   document.getElementById('c-notes').value=c?(c.notes||''):'';
+  document.getElementById('c-flow').checked=!!(c&&c.flowSince);
   fillProfileSelect(document.getElementById('c-profile'),c?c.profileId:(bkProfileSel!=='all'&&bkProfileSel!=='none'&&bkProfileSel!=='unused'?bkProfileSel:null));
   casaModal.style.display='flex';
   setTimeout(()=>document.getElementById('c-name').focus(),30);
@@ -3774,11 +3796,13 @@ document.getElementById('c-save').addEventListener('click',()=>{
   const notes=document.getElementById('c-notes').value.trim();
   const profileVal=document.getElementById('c-profile').value;
   const profileId=(profileVal&&profileVal!=='__new')?+profileVal:null;
+  const flow=document.getElementById('c-flow').checked;
   if(editingCasaId){
     const c=D.casas.find(x=>x.id===editingCasaId);
-    if(c){c.name=name;c.amount=amount;c.notes=notes;c.profileId=profileId;}
+    if(c){c.name=name;c.amount=amount;c.notes=notes;c.profileId=profileId;
+      if(flow&&!c.flowSince)c.flowSince=Date.now();else if(!flow&&c.flowSince)delete c.flowSince;}
   }else{
-    D.casas.unshift({id:Date.now(),name,amount,notes,profileId,pendingTransfer:0,history:amount>0?[{id:Date.now()+1,type:'dep',amount,date:new Date().toISOString().slice(0,10)}]:[]});
+    D.casas.unshift({id:Date.now(),name,amount,notes,profileId,...(flow?{flowSince:Date.now()+10}:{}),pendingTransfer:0,history:amount>0?[{id:Date.now()+1,type:'dep',amount,date:new Date().toISOString().slice(0,10)}]:[]});
   }
   save();updateBadges();
   renderCasas(document.getElementById('casasSearch').value);
@@ -5196,7 +5220,7 @@ function computeDayTotals(year,month){
   const dayTotals={};
   D.bets.forEach(b=>{if(isHidden('sb:'+b.id))return;const rd=b.date||b.resolveDate;if(rd&&rd.startsWith(ym)){const d=+rd.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+betProfit(b);}});
   D.normals.forEach(n=>{if(isHidden('nm:'+n.id))return;const rd=n.date||n.resolveDate;if(rd&&rd.startsWith(ym)){const d=+rd.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+(n.profit||0);}});
-  costEntries().forEach(a=>{if(a.date.startsWith(ym)){const d=+a.date.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+a.profit;}});
+  [...costEntries(),...flowEntries()].forEach(a=>{if(a.date.startsWith(ym)){const d=+a.date.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+a.profit;}});
   return dayTotals;
 }
 function renderCalendar(){
@@ -5244,7 +5268,7 @@ function renderPerfChart(){
   const entries=[];
   D.bets.forEach(b=>{if(isHidden('sb:'+b.id))return;const rd=b.date||b.resolveDate;if(rd)entries.push({date:rd,profit:betProfit(b),expected:b.status==='anulada'?0:((b.expectedProfit!=null?b.expectedProfit:b.profit)||0),isBet:true});});
   D.normals.forEach(n=>{if(isHidden('nm:'+n.id))return;const rd=n.date||n.resolveDate;if(rd)entries.push({date:rd,profit:n.profit||0,expected:n.profit||0,isBet:false});});
-  costEntries().forEach(a=>entries.push({date:a.date,profit:a.profit,expected:a.profit,isBet:false}));
+  [...costEntries(),...flowEntries()].forEach(a=>entries.push({date:a.date,profit:a.profit,expected:a.profit,isBet:false}));
   const wrap=document.getElementById('perfChartWrap');
   if(!entries.length){
     wrap.innerHTML='<div class="perf-chart-empty">Not enough data yet to show performance.</div>';
