@@ -1780,6 +1780,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .c-flow{display:flex;gap:10px;align-items:flex-start;padding:11px 12px;border-radius:10px;border:1px solid var(--border);background:var(--raised);cursor:pointer}
 .c-flow input{width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:var(--pitch,var(--accent))}
 .c-flow span{display:flex;flex-direction:column;gap:3px;font-size:13px}.c-flow small{font-size:11.5px;color:var(--faint);line-height:1.45}
+.bk-money small.bk-dir{font-size:11.5px;font-weight:600}.bk-dir.pos{color:var(--green)}.bk-dir.neg{color:var(--red)}
 </style>
 </head>
 <body>
@@ -2343,7 +2344,8 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
         <div><label class="fl">Awaiting transfer</label><div class="iw"><input type="number" class="ii" id="c-pending" placeholder="0" min="0" step="0.01"><span class="isuf">€</span></div></div>
       </div>
       <div><label class="fl">Notes (optional)</label><input type="text" id="c-notes" placeholder="Welcome bonus, verified account…"></div>
-      <label class="c-flow"><input type="checkbox" id="c-flow"><span><b>Deposits and withdrawals count in Profit</b><small>For the bank account where you keep your surebet winnings: a withdrawal (e.g. to pay a subscription) is subtracted from Profit and a deposit is added. Only movements from now on.</small></span></label>
+      <label class="c-flow"><input type="checkbox" id="c-flow"><span><b>Deposits and withdrawals count in Profit</b><small>For the bank account where you keep your surebet winnings: a withdrawal (e.g. to pay a subscription) is subtracted from Profit and a deposit is added. </small></span></label>
+      <div id="c-flow-from-wrap" style="display:none"><label class="fl">Count movements from</label><input type="date" id="c-flow-from"></div>
     </div>
     <div style="display:flex;gap:9px;margin-top:18px">
       <button class="btn-s" id="c-cancel" style="flex:1">Cancel</button>
@@ -2472,10 +2474,15 @@ function costCharges(c){
 }
 function nextMonthStart(iso){const [y,m]=iso.split('-').map(Number);return m===12?`${y+1}-01-01`:`${y}-${String(m+1).padStart(2,'0')}-01`;}
 // Accounts marked by the user (e.g. the bank): deposits add to Profit, withdrawals subtract
+function flowFromOf(c){
+  if(c.flowFrom)return c.flowFrom;
+  if(c.flowSince){const d=new Date(c.flowSince);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  return '';
+}
 function flowEntries(){
   const out=[];
-  visibleCasas().forEach(c=>{if(!c.flowSince)return;(c.history||[]).forEach(h=>{
-    if((h.id||0)<c.flowSince||!(h.amount>0)||!h.date)return;
+  visibleCasas().forEach(c=>{const from=flowFromOf(c);if(!from)return;(c.history||[]).forEach(h=>{
+    if(h.init||!(h.amount>0)||!h.date||h.date<from)return;
     if(h.type==='dep')out.push({date:h.date,profit:h.amount});
     else if(h.type==='wd')out.push({date:h.date,profit:-h.amount});
   });});
@@ -3654,7 +3661,7 @@ function renderCasas(filter=''){
       const prof=c.profileId?(D.bkProfiles||[]).find(p=>p.id===c.profileId):null;
       metaBits.push(`<span class="type-badge-kind">${esc(prof?prof.name:'No profile')}</span>`);
     }
-    if(c.flowSince)metaBits.push(`<span class="type-badge-kind" title="Deposits and withdrawals count in Profit">Counts in Profit</span>`);
+    if(flowFromOf(c))metaBits.push(`<span class="type-badge-kind" title="Deposits and withdrawals count in Profit">Counts in Profit</span>`);
     if(c.notes)metaBits.push(esc(c.notes));
     if(pend>0)metaBits.push(`<span style="color:var(--yellow)">Pending: ${fmt(pend)} €</span>`);
     if(pendWdCount>0)metaBits.push(`<span style="color:var(--yellow)">${pendWdCount} withdrawal${pendWdCount>1?'s':''} awaiting confirmation</span>`);
@@ -3738,7 +3745,7 @@ function renderCasas(filter=''){
         <div><span>Deposited</span><b>${fmt(mny.deposited)} €</b></div>
         <div><span>Bet results</span><b class="${mny.settled>0?'pos':mny.settled<0?'neg':''}">${mny.settled>0?'+':''}${fmt(mny.settled)} €</b></div>
         <div><span>In pending bets${mny.open?` (${mny.open})`:''}</span><b class="${mny.inPlay>0?'yel':''}">${fmt(mny.inPlay)} €</b></div>
-        ${(()=>{const d=+(mny.deposited-amt).toFixed(2);return `<div><span>Deposited − balance</span><b class="${d>0?'neg':d<0?'pos':''}">${fmt(d)} €</b></div>`;})()}
+        ${(()=>{const d=+(mny.deposited-amt).toFixed(2);return `<div><span>Deposited − balance</span><b class="${d>0?'neg':d<0?'pos':''}">${fmt(d)} €</b><small class="bk-dir ${d>0?'neg':d<0?'pos':''}">${d<0?`you're up ${fmt(-d)} €`:d>0?`you're down ${fmt(d)} €`:'even'}</small></div>`;})()}
       </div>
       <div class="bk-actions">
         <button class="bk-btn dep${mode==='dep'?' on':''}" data-bk-toggle="dep" data-cid="${c.id}">+ Deposit</button>
@@ -3772,7 +3779,9 @@ function openCasaModal(editId){
   document.getElementById('c-name').value=c?c.name:'';
   document.getElementById('c-amount').value=(c&&c.amount!=null)?c.amount:'';
   document.getElementById('c-notes').value=c?(c.notes||''):'';
-  document.getElementById('c-flow').checked=!!(c&&c.flowSince);
+  document.getElementById('c-flow').checked=!!(c&&(c.flowFrom||c.flowSince));
+  document.getElementById('c-flow-from').value=c?flowFromOf(c)||todayLocalISO():todayLocalISO();
+  document.getElementById('c-flow-from-wrap').style.display=document.getElementById('c-flow').checked?'':'none';
   fillProfileSelect(document.getElementById('c-profile'),c?c.profileId:(bkProfileSel!=='all'&&bkProfileSel!=='none'&&bkProfileSel!=='unused'?bkProfileSel:null));
   casaModal.style.display='flex';
   setTimeout(()=>document.getElementById('c-name').focus(),30);
@@ -3789,6 +3798,7 @@ document.getElementById('c-profile').addEventListener('change',e=>{
 });
 document.getElementById('casasAddBtn').addEventListener('click',()=>openCasaModal());
 document.getElementById('c-cancel').addEventListener('click',()=>{casaModal.style.display='none';editingCasaId=null;});
+document.getElementById('c-flow').addEventListener('change',e=>{document.getElementById('c-flow-from-wrap').style.display=e.target.checked?'':'none';});
 document.getElementById('c-save').addEventListener('click',()=>{
   const name=document.getElementById('c-name').value.trim();
   if(!name){alert('Enter the bookmaker name.');return;}
@@ -3800,9 +3810,9 @@ document.getElementById('c-save').addEventListener('click',()=>{
   if(editingCasaId){
     const c=D.casas.find(x=>x.id===editingCasaId);
     if(c){c.name=name;c.amount=amount;c.notes=notes;c.profileId=profileId;
-      if(flow&&!c.flowSince)c.flowSince=Date.now();else if(!flow&&c.flowSince)delete c.flowSince;}
+      delete c.flowSince;if(flow)c.flowFrom=document.getElementById('c-flow-from').value||todayLocalISO();else delete c.flowFrom;}
   }else{
-    D.casas.unshift({id:Date.now(),name,amount,notes,profileId,...(flow?{flowSince:Date.now()+10}:{}),pendingTransfer:0,history:amount>0?[{id:Date.now()+1,type:'dep',amount,date:new Date().toISOString().slice(0,10)}]:[]});
+    D.casas.unshift({id:Date.now(),name,amount,notes,profileId,...(flow?{flowFrom:document.getElementById('c-flow-from').value||todayLocalISO()}:{}),pendingTransfer:0,history:amount>0?[{id:Date.now()+1,type:'dep',amount,date:new Date().toISOString().slice(0,10),init:true}]:[]});
   }
   save();updateBadges();
   renderCasas(document.getElementById('casasSearch').value);
