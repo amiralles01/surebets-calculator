@@ -2424,6 +2424,29 @@ function save(){return window.__fsSave ? window.__fsSave() : Promise.resolve();}
 let D = {bets:[],normals:[],casas:[],notes:[],notesFolders:[],categories:[],hidden:{},bkProfiles:[],poker:[],presets:[]};
 // A "void" surebet neither wins nor loses: it contributes no profit and doesn't count as money
 // at risk in any aggregate stat (ROI, wagered, monthly profit, charts, etc).
+// Manual balance adjustments count as profit/loss on the day they are made
+function todayLocalISO(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function logAdj(c,newAdj){
+  const delta=+((newAdj||0)-(c.balAdj||0)).toFixed(2);
+  c.balAdj=+(newAdj||0).toFixed(2);
+  if(!delta)return;
+  if(!Array.isArray(c.adjLog))c.adjLog=[];
+  c.adjLog.push({id:Date.now(),date:todayLocalISO(),delta});
+}
+// older adjustments had no history: record what is already there once, dated today
+function ensureAdjLogs(){
+  let changed=false;
+  (D.casas||[]).forEach(c=>{
+    const logged=+((c.adjLog||[]).reduce((a,x)=>a+(x.delta||0),0)).toFixed(2);
+    const cur=+(c.balAdj||0).toFixed(2);
+    if(Math.abs(cur-logged)>=0.005){if(!Array.isArray(c.adjLog))c.adjLog=[];c.adjLog.push({id:Date.now()+c.id%1000,date:todayLocalISO(),delta:+(cur-logged).toFixed(2)});changed=true;}
+  });
+  if(changed)save();
+}
+function adjEntries(){
+  const out=[];visibleCasas().forEach(c=>(c.adjLog||[]).forEach(a=>{if(a.delta)out.push({date:a.date,profit:a.delta,casa:c.name});}));
+  return out;
+}
 function betProfit(b){return(b.status==='won'||b.status==='lost')?(b.profit||0):0;}
 function betStake(b){return b.status==='anulada'?0:(b.totalStake||0);}
 function todayISO(){return new Date().toISOString().slice(0,10);}
@@ -2820,7 +2843,7 @@ function renderProfitRange(all){
   if(from&&to&&from>to){box.innerHTML=`<div style="font-size:12.5px;color:var(--red)">The start date must be before the end date.</div>`;return;}
   const sel=profitRangeEntries.filter(e=>!isHidden('month:'+e.date.slice(0,7))&&(!from||e.date>=from)&&(!to||e.date<=to));
   const sum=c=>sel.filter(e=>e.cat===c).reduce((a,e)=>a+e.profit,0);
-  const sb=sum('surebet'),nm=sum('normal'),fb=sum('freebet'),tot=sb+nm+fb;
+  const sb=sum('surebet'),nm=sum('normal'),fb=sum('freebet'),adj=sum('adjust'),tot=sb+nm+fb+adj;
   const sg=v=>(v>=0?'+':'')+fmt(v)+' €';
   const label=from&&to?`${fmtDate(from)} → ${fmtDate(to)}`:(from?`From ${fmtDate(from)}`:`Until ${fmtDate(to)}`);
   box.innerHTML=`<div class="total-hero" style="margin:0">
@@ -2830,6 +2853,7 @@ function renderProfitRange(all){
       <div class="th-sub-item"><div class="th-sub-label">Surebets</div><div class="th-sub-val" style="color:var(--green)">${sg(sb)}</div></div>
       <div class="th-sub-item"><div class="th-sub-label">Normal</div><div class="th-sub-val" style="color:${nm>=0?'var(--blue)':'var(--red)'}">${sg(nm)}</div></div>
       <div class="th-sub-item"><div class="th-sub-label">Freebets</div><div class="th-sub-val" style="color:var(--yellow)">${sg(fb)}</div></div>
+      ${adj?`<div class="th-sub-item"><div class="th-sub-label">Adjustments</div><div class="th-sub-val">${sg(adj)}</div></div>`:''}
     </div>
     <div style="font-size:12px;color:var(--faint);margin-top:10px">${sel.length} settled entr${sel.length===1?'y':'ies'} in this period</div>
   </div>`;
@@ -2856,19 +2880,22 @@ function renderProfit(){
   const all=[];
   visibleBets().forEach(b=>{const rd=b.date||b.resolveDate;if(rd&&b.profit!==undefined)all.push({date:rd,profit:betProfit(b),cat:'surebet'})});
   visibleNormals().forEach(n=>{const rd=n.date||n.resolveDate;if(rd&&n.profit!==undefined&&n.profit!==0)all.push({date:rd,profit:n.profit,cat:n.type==='Freebet'?'freebet':'normal'})});
+  ensureAdjLogs();
+  adjEntries().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'adjust'}));
 
   // Group by month
   const months={};
   all.forEach(e=>{
     const m=e.date.slice(0,7);
-    if(!months[m])months[m]={surebet:0,normal:0,freebet:0};
+    if(!months[m])months[m]={surebet:0,normal:0,freebet:0,adjust:0};
     months[m][e.cat]+=e.profit;
   });
 
   const keys=Object.keys(months).sort();
   const visibleKeys=keys.filter(k=>!isHidden('month:'+k));
   const hiddenKeys=keys.filter(k=>isHidden('month:'+k));
-  const totalAll=visibleKeys.reduce((a,k)=>a+months[k].surebet+months[k].normal+months[k].freebet,0);
+  const totalAll=visibleKeys.reduce((a,k)=>a+months[k].surebet+months[k].normal+months[k].freebet+months[k].adjust,0);
+  const totalAdj=visibleKeys.reduce((a,k)=>a+months[k].adjust,0);
   const totalSB=visibleKeys.reduce((a,k)=>a+months[k].surebet,0);
   const totalNorm=visibleKeys.reduce((a,k)=>a+months[k].normal,0);
   const totalFB=visibleKeys.reduce((a,k)=>a+months[k].freebet,0);
@@ -2883,6 +2910,7 @@ function renderProfit(){
         <div class="th-sub-item"><div class="th-sub-label">Surebets</div><div class="th-sub-val" style="color:var(--green)">${totalSB>=0?'+':''}${fmt(totalSB)} €</div></div>
         <div class="th-sub-item"><div class="th-sub-label">Normal</div><div class="th-sub-val" style="color:${totalNorm>=0?'var(--blue)':'var(--red)'}">${totalNorm>=0?'+':''}${fmt(totalNorm)} €</div></div>
         <div class="th-sub-item"><div class="th-sub-label">Freebets</div><div class="th-sub-val" style="color:var(--yellow)">${totalFB>=0?'+':''}${fmt(totalFB)} €</div></div>
+        ${totalAdj?`<div class="th-sub-item"><div class="th-sub-label">Adjustments</div><div class="th-sub-val" style="color:${totalAdj>=0?'var(--green)':'var(--red)'}">${totalAdj>=0?'+':''}${fmt(totalAdj)} €</div></div>`:''}
       </div>
     </div>`;
 
@@ -2890,12 +2918,13 @@ function renderProfit(){
   const hiddenKeysDesc=[...hiddenKeys].reverse();
 
   document.getElementById('monthList').innerHTML=visibleKeysDesc.map(k=>{
-    const m=months[k];const tot=m.surebet+m.normal+m.freebet;
+    const m=months[k];const tot=m.surebet+m.normal+m.freebet+m.adjust;
     return`<div class="month-card">
       <div class="mc-head"><span class="mc-month">${mName(k)}</span><div style="display:flex;align-items:center;gap:6px"><span class="mc-total ${tot>=0?'pos':'neg'}">${tot>=0?'+':''}${fmt(tot)} €</span>${hideBtnHtml('month:'+k)}</div></div>
       ${m.surebet!==0?`<div class="mc-row"><span class="mc-cat">Surebets</span><span class="mc-val ${m.surebet>=0?'pos':'neg'}">${m.surebet>=0?'+':''}${fmt(m.surebet)} €</span></div>`:''}
       ${m.normal!==0?`<div class="mc-row"><span class="mc-cat">Normal</span><span class="mc-val ${m.normal>=0?'pos':'neg'}">${m.normal>=0?'+':''}${fmt(m.normal)} €</span></div>`:''}
       ${m.freebet!==0?`<div class="mc-row"><span class="mc-cat">Freebets</span><span class="mc-val ${m.freebet>=0?'pos':'neg'}">${m.freebet>=0?'+':''}${fmt(m.freebet)} €</span></div>`:''}
+      ${m.adjust!==0?`<div class="mc-row"><span class="mc-cat">Balance adjustments</span><span class="mc-val ${m.adjust>=0?'pos':'neg'}">${m.adjust>=0?'+':''}${fmt(m.adjust)} €</span></div>`:''}
     </div>`;
   }).join('') + hiddenPanelHtml('profit',hiddenKeysDesc.map(k=>({key:'month:'+k,label:mName(k)})));
   renderProfitRange(all);
@@ -3539,6 +3568,7 @@ function casaMoney(c,ledger){
   return {deposited,settled:+e.settled.toFixed(2),inPlay:+e.inPlay.toFixed(2),open:e.open,adj,balance};
 }
 function renderCasas(filter=''){
+  ensureAdjLogs();
   renderBkProfileTabs();
   const ledger0=bookmakerLedger();
   const byProfile=c=>{
@@ -3736,7 +3766,7 @@ document.getElementById('casasList').addEventListener('click',e=>{
     else if(mode==='pending')c.pendingTransfer=val<0?0:val;
     else if(mode==='bal'){
       const raw=document.getElementById('bk-panel-amount').value;
-      if(raw.trim()!==''){const cur=casaMoney({...c,balAdj:0});c.balAdj=+(parseFloat(raw)-cur.balance).toFixed(2);}
+      if(raw.trim()!==''){const cur=casaMoney({...c,balAdj:0});logAdj(c,parseFloat(raw)-cur.balance);}
     }
     openBkPanel=null;
     save();updateBadges();
@@ -3746,7 +3776,7 @@ document.getElementById('casasList').addEventListener('click',e=>{
   const clearAdjBtn=e.target.closest('[data-bk-clear-adj]');
   if(clearAdjBtn){
     const c=D.casas.find(x=>x.id===+clearAdjBtn.dataset.bkClearAdj);if(!c)return;
-    c.balAdj=0;openBkPanel=null;save();renderCasas(document.getElementById('casasSearch').value);return;
+    logAdj(c,0);openBkPanel=null;save();renderCasas(document.getElementById('casasSearch').value);return;
   }
   const clearPendBtn=e.target.closest('[data-bk-clear-pending]');
   if(clearPendBtn){
@@ -5092,6 +5122,7 @@ function computeDayTotals(year,month){
   const dayTotals={};
   D.bets.forEach(b=>{if(isHidden('sb:'+b.id))return;const rd=b.date||b.resolveDate;if(rd&&rd.startsWith(ym)){const d=+rd.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+betProfit(b);}});
   D.normals.forEach(n=>{if(isHidden('nm:'+n.id))return;const rd=n.date||n.resolveDate;if(rd&&rd.startsWith(ym)){const d=+rd.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+(n.profit||0);}});
+  adjEntries().forEach(a=>{if(a.date.startsWith(ym)){const d=+a.date.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+a.profit;}});
   return dayTotals;
 }
 function renderCalendar(){
@@ -5139,6 +5170,7 @@ function renderPerfChart(){
   const entries=[];
   D.bets.forEach(b=>{if(isHidden('sb:'+b.id))return;const rd=b.date||b.resolveDate;if(rd)entries.push({date:rd,profit:betProfit(b),expected:b.status==='anulada'?0:((b.expectedProfit!=null?b.expectedProfit:b.profit)||0),isBet:true});});
   D.normals.forEach(n=>{if(isHidden('nm:'+n.id))return;const rd=n.date||n.resolveDate;if(rd)entries.push({date:rd,profit:n.profit||0,expected:n.profit||0,isBet:false});});
+  adjEntries().forEach(a=>entries.push({date:a.date,profit:a.profit,expected:a.profit,isBet:false}));
   const wrap=document.getElementById('perfChartWrap');
   if(!entries.length){
     wrap.innerHTML='<div class="perf-chart-empty">Not enough data yet to show performance.</div>';
