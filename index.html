@@ -1772,6 +1772,10 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
   .sb-word small{display:none}
 }
 @media(min-width:601px) and (max-width:1180px){.ni{padding:8px 7px;font-size:13px}}
+
+.bk-cost-form{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,.8fr) auto;gap:8px;align-items:center}
+@media(max-width:600px){.bk-cost-form{grid-template-columns:1fr 1fr}.bk-cost-form>input{grid-column:1/-1}.bk-cost-form .btn-reg{grid-column:1/-1}}
+.bk-cost-form .ii{padding-right:52px!important;text-align:left}
 </style>
 </head>
 <body>
@@ -2443,6 +2447,27 @@ function ensureAdjLogs(){
   });
   if(changed)save();
 }
+// Monthly recurring costs of a bookmaker (account rental, subscriptions…): one charge per month on the chosen day
+function costCharges(c){
+  const out=[];const today=todayLocalISO();
+  (c.costs||[]).forEach(k=>{
+    if(!(k.amount>0)||!k.from)return;
+    let [y,m]=k.from.split('-').map(Number);
+    for(let i=0;i<600;i++){
+      const ym=`${y}-${String(m).padStart(2,'0')}`;
+      if(k.until&&ym>k.until)break;
+      const last=new Date(y,m,0).getDate();
+      const date=`${ym}-${String(Math.min(k.day||1,last)).padStart(2,'0')}`;
+      if(date>today)break;
+      if(date>=(k.start||'0'))out.push({date,profit:-k.amount,name:k.name,casa:c.name});
+      m++;if(m>12){m=1;y++;}
+    }
+  });
+  return out;
+}
+function nextMonthStart(iso){const [y,m]=iso.split('-').map(Number);return m===12?`${y+1}-01-01`:`${y}-${String(m+1).padStart(2,'0')}-01`;}
+function costEntries(){const out=[];visibleCasas().forEach(c=>out.push(...costCharges(c)));return out;}
+function activeCosts(c){const ym=todayLocalISO().slice(0,7);return (c.costs||[]).filter(k=>!k.until||k.until>=ym);}
 function adjEntries(){
   const out=[];visibleCasas().forEach(c=>(c.adjLog||[]).forEach(a=>{if(a.delta)out.push({date:a.date,profit:a.delta,casa:c.name});}));
   return out;
@@ -2843,7 +2868,7 @@ function renderProfitRange(all){
   if(from&&to&&from>to){box.innerHTML=`<div style="font-size:12.5px;color:var(--red)">The start date must be before the end date.</div>`;return;}
   const sel=profitRangeEntries.filter(e=>!isHidden('month:'+e.date.slice(0,7))&&(!from||e.date>=from)&&(!to||e.date<=to));
   const sum=c=>sel.filter(e=>e.cat===c).reduce((a,e)=>a+e.profit,0);
-  const sb=sum('surebet'),nm=sum('normal'),fb=sum('freebet'),adj=sum('adjust'),tot=sb+nm+fb+adj;
+  const sb=sum('surebet'),nm=sum('normal'),fb=sum('freebet'),adj=sum('adjust'),cst=sum('cost'),tot=sb+nm+fb+adj+cst;
   const sg=v=>(v>=0?'+':'')+fmt(v)+' €';
   const label=from&&to?`${fmtDate(from)} → ${fmtDate(to)}`:(from?`From ${fmtDate(from)}`:`Until ${fmtDate(to)}`);
   box.innerHTML=`<div class="total-hero" style="margin:0">
@@ -2853,6 +2878,7 @@ function renderProfitRange(all){
       <div class="th-sub-item"><div class="th-sub-label">Surebets</div><div class="th-sub-val" style="color:var(--green)">${sg(sb)}</div></div>
       <div class="th-sub-item"><div class="th-sub-label">Normal</div><div class="th-sub-val" style="color:${nm>=0?'var(--blue)':'var(--red)'}">${sg(nm)}</div></div>
       <div class="th-sub-item"><div class="th-sub-label">Freebets</div><div class="th-sub-val" style="color:var(--yellow)">${sg(fb)}</div></div>
+      ${cst?`<div class="th-sub-item"><div class="th-sub-label">Monthly costs</div><div class="th-sub-val" style="color:var(--red)">${sg(cst)}</div></div>`:''}
       ${adj?`<div class="th-sub-item"><div class="th-sub-label">Adjustments</div><div class="th-sub-val">${sg(adj)}</div></div>`:''}
     </div>
     <div style="font-size:12px;color:var(--faint);margin-top:10px">${sel.length} settled entr${sel.length===1?'y':'ies'} in this period</div>
@@ -2882,19 +2908,21 @@ function renderProfit(){
   visibleNormals().forEach(n=>{const rd=n.date||n.resolveDate;if(rd&&n.profit!==undefined&&n.profit!==0)all.push({date:rd,profit:n.profit,cat:n.type==='Freebet'?'freebet':'normal'})});
   ensureAdjLogs();
   adjEntries().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'adjust'}));
+  costEntries().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'cost'}));
 
   // Group by month
   const months={};
   all.forEach(e=>{
     const m=e.date.slice(0,7);
-    if(!months[m])months[m]={surebet:0,normal:0,freebet:0,adjust:0};
+    if(!months[m])months[m]={surebet:0,normal:0,freebet:0,adjust:0,cost:0};
     months[m][e.cat]+=e.profit;
   });
 
   const keys=Object.keys(months).sort();
   const visibleKeys=keys.filter(k=>!isHidden('month:'+k));
   const hiddenKeys=keys.filter(k=>isHidden('month:'+k));
-  const totalAll=visibleKeys.reduce((a,k)=>a+months[k].surebet+months[k].normal+months[k].freebet+months[k].adjust,0);
+  const totalAll=visibleKeys.reduce((a,k)=>a+months[k].surebet+months[k].normal+months[k].freebet+months[k].adjust+months[k].cost,0);
+  const totalCost=visibleKeys.reduce((a,k)=>a+months[k].cost,0);
   const totalAdj=visibleKeys.reduce((a,k)=>a+months[k].adjust,0);
   const totalSB=visibleKeys.reduce((a,k)=>a+months[k].surebet,0);
   const totalNorm=visibleKeys.reduce((a,k)=>a+months[k].normal,0);
@@ -2910,6 +2938,7 @@ function renderProfit(){
         <div class="th-sub-item"><div class="th-sub-label">Surebets</div><div class="th-sub-val" style="color:var(--green)">${totalSB>=0?'+':''}${fmt(totalSB)} €</div></div>
         <div class="th-sub-item"><div class="th-sub-label">Normal</div><div class="th-sub-val" style="color:${totalNorm>=0?'var(--blue)':'var(--red)'}">${totalNorm>=0?'+':''}${fmt(totalNorm)} €</div></div>
         <div class="th-sub-item"><div class="th-sub-label">Freebets</div><div class="th-sub-val" style="color:var(--yellow)">${totalFB>=0?'+':''}${fmt(totalFB)} €</div></div>
+        ${totalCost?`<div class="th-sub-item"><div class="th-sub-label">Monthly costs</div><div class="th-sub-val" style="color:var(--red)">${fmt(totalCost)} €</div></div>`:''}
         ${totalAdj?`<div class="th-sub-item"><div class="th-sub-label">Adjustments</div><div class="th-sub-val" style="color:${totalAdj>=0?'var(--green)':'var(--red)'}">${totalAdj>=0?'+':''}${fmt(totalAdj)} €</div></div>`:''}
       </div>
     </div>`;
@@ -2918,12 +2947,13 @@ function renderProfit(){
   const hiddenKeysDesc=[...hiddenKeys].reverse();
 
   document.getElementById('monthList').innerHTML=visibleKeysDesc.map(k=>{
-    const m=months[k];const tot=m.surebet+m.normal+m.freebet+m.adjust;
+    const m=months[k];const tot=m.surebet+m.normal+m.freebet+m.adjust+m.cost;
     return`<div class="month-card">
       <div class="mc-head"><span class="mc-month">${mName(k)}</span><div style="display:flex;align-items:center;gap:6px"><span class="mc-total ${tot>=0?'pos':'neg'}">${tot>=0?'+':''}${fmt(tot)} €</span>${hideBtnHtml('month:'+k)}</div></div>
       ${m.surebet!==0?`<div class="mc-row"><span class="mc-cat">Surebets</span><span class="mc-val ${m.surebet>=0?'pos':'neg'}">${m.surebet>=0?'+':''}${fmt(m.surebet)} €</span></div>`:''}
       ${m.normal!==0?`<div class="mc-row"><span class="mc-cat">Normal</span><span class="mc-val ${m.normal>=0?'pos':'neg'}">${m.normal>=0?'+':''}${fmt(m.normal)} €</span></div>`:''}
       ${m.freebet!==0?`<div class="mc-row"><span class="mc-cat">Freebets</span><span class="mc-val ${m.freebet>=0?'pos':'neg'}">${m.freebet>=0?'+':''}${fmt(m.freebet)} €</span></div>`:''}
+      ${m.cost!==0?`<div class="mc-row"><span class="mc-cat">Monthly costs</span><span class="mc-val neg">${fmt(m.cost)} €</span></div>`:''}
       ${m.adjust!==0?`<div class="mc-row"><span class="mc-cat">Balance adjustments</span><span class="mc-val ${m.adjust>=0?'pos':'neg'}">${m.adjust>=0?'+':''}${fmt(m.adjust)} €</span></div>`:''}
     </div>`;
   }).join('') + hiddenPanelHtml('profit',hiddenKeysDesc.map(k=>({key:'month:'+k,label:mName(k)})));
@@ -3640,6 +3670,26 @@ function renderCasas(filter=''){
         </div>
         <div class="bk-hist-empty" style="margin-top:8px">The difference is kept as an adjustment; future bets keep updating the balance on top of it.</div>
       </div>`;
+    }else if(mode==='costs'){
+      const ym=todayLocalISO().slice(0,7);
+      const list=(c.costs||[]);
+      const charged=costCharges(c).reduce((a,x)=>a-x.profit,0);
+      panelHtml=`<div class="bk-panel">
+        <div class="bk-panel-title">Monthly costs — charged to Profit every month on the day you choose</div>
+        ${list.length?`<div class="bk-hist-list">${list.map(k=>{const on=!k.until||k.until>=ym;return `<div class="bk-hist-row">
+            <span class="bk-hist-type ${on?'wd':''}">${esc(k.name||'Cost')}</span>
+            <span class="bk-hist-date">${on?`every month · day ${k.day}`:`stopped · ${k.until}`}</span>
+            <span class="bk-hist-amt neg">−${fmt(k.amount)} €</span>
+            ${on?`<button class="unhidebtn" data-cost-stop="${c.id}:${k.id}">Stop</button>`:`<button class="unhidebtn" data-cost-del="${c.id}:${k.id}">Delete</button>`}
+          </div>`;}).join('')}</div>
+          <div class="bk-hist-empty" style="margin:6px 0 10px">Charged so far: <b>${fmt(charged)} €</b>. "Stop" ends it from next month and keeps what was already charged.</div>`:''}
+        <div class="bk-cost-form">
+          <input type="text" id="bk-cost-name" placeholder="Concept · e.g. Account rental" autocomplete="off">
+          <div class="iw"><input type="number" class="ii" id="bk-cost-amount" placeholder="0" min="0" step="0.01"><span class="isuf">€/mo</span></div>
+          <div class="iw"><input type="number" class="ii" id="bk-cost-day" placeholder="Day" min="1" max="31" step="1" value="${new Date().getDate()}"><span class="isuf">day</span></div>
+          <button class="btn-reg" data-cost-add="${c.id}" style="width:auto;padding:9px 16px;margin:0">Add</button>
+        </div>
+      </div>`;
     }else if(mode==='hist'){
       const hist=(c.history||[]).slice().sort((a,b)=>(b.id||0)-(a.id||0));
       panelHtml=`<div class="bk-panel">
@@ -3677,6 +3727,7 @@ function renderCasas(filter=''){
         <button class="bk-btn${mode==='pending'?' on':''}" data-bk-toggle="pending" data-cid="${c.id}">Pending transfer</button>
         <button class="bk-btn${mode==='hist'?' on':''}" data-bk-toggle="hist" data-cid="${c.id}">History</button>
         <button class="bk-btn${mode==='bal'?' on':''}" data-bk-toggle="bal" data-cid="${c.id}">Set balance</button>
+        <button class="bk-btn${mode==='costs'?' on':''}" data-bk-toggle="costs" data-cid="${c.id}">Monthly costs${activeCosts(c).length?` · ${fmt(activeCosts(c).reduce((a,k)=>a+k.amount,0))} €`:''}</button>
         <div class="bk-spacer"></div>
         <button class="bk-btn" data-edit-cid="${c.id}">Edit</button>
         ${hideBtnHtml('casa:'+c.id)}
@@ -3744,6 +3795,30 @@ document.getElementById('casasList').addEventListener('click',e=>{
     renderCasas(document.getElementById('casasSearch').value);
     return;
   }
+  const costAdd=e.target.closest('[data-cost-add]');
+  if(costAdd){
+    const c=D.casas.find(x=>x.id===+costAdd.dataset.costAdd);if(!c)return;
+    const amount=Math.abs(parseFloat(document.getElementById('bk-cost-amount').value)||0);
+    const day=Math.min(31,Math.max(1,parseInt(document.getElementById('bk-cost-day').value,10)||1));
+    if(!amount){toast('Write the monthly amount');document.getElementById('bk-cost-amount').focus();return;}
+    const t=todayLocalISO();
+    if(!Array.isArray(c.costs))c.costs=[];
+    // first charge: this month if the day hasn't passed yet, otherwise next month
+    const thisMonth=t.slice(0,7);const dayThis=`${thisMonth}-${String(day).padStart(2,'0')}`;
+    c.costs.push({id:Date.now(),name:document.getElementById('bk-cost-name').value.trim()||'Monthly cost',amount:+amount.toFixed(2),day,from:thisMonth,start:dayThis>=t?dayThis:nextMonthStart(t)});
+    save();renderCasas(document.getElementById('casasSearch').value);toast(`${fmt(amount)} €/month added to ${c.name}`);return;
+  }
+  const costStop=e.target.closest('[data-cost-stop]');
+  if(costStop){
+    const [cid,kid]=costStop.dataset.costStop.split(':').map(Number);const c=D.casas.find(x=>x.id===cid);const k=c&&(c.costs||[]).find(x=>x.id===kid);if(!k)return;
+    k.until=todayLocalISO().slice(0,7);save();renderCasas(document.getElementById('casasSearch').value);toast('Stopped — no more charges from next month');return;
+  }
+  const costDel=e.target.closest('[data-cost-del]');
+  if(costDel){
+    const [cid,kid]=costDel.dataset.costDel.split(':').map(Number);const c=D.casas.find(x=>x.id===cid);if(!c)return;
+    const old=c.costs.slice();c.costs=c.costs.filter(x=>x.id!==kid);save();renderCasas(document.getElementById('casasSearch').value);
+    toast('Cost deleted (and removed from Profit)','Undo',()=>{c.costs=old;save();renderCasas(document.getElementById('casasSearch').value);});return;
+  }
   const quickChip=e.target.closest('[data-bk-quick]');
   if(quickChip){
     const inp=document.getElementById('bk-panel-amount');
@@ -3806,6 +3881,7 @@ let bkProfileSel='all'; // 'all' (active) | 'none' | 'unused' | profileId
 // A bookmaker is "unused" when it has 0 € balance, nothing in play, and no deposit/withdrawal in the last 7 days
 function isUnusedCasa(c,ledger){
   const m=casaMoney(c,ledger);
+  if(activeCosts(c).length)return false;
   if(Math.abs(m.balance)>=0.005||m.inPlay>0||m.open>0||(c.pendingTransfer||0)>0)return false;
   const cutoff=new Date(Date.now()-7*864e5).toISOString().slice(0,10);
   if((c.history||[]).some(h=>(h.type==='dep'||h.type==='wd')&&(h.date||'')>=cutoff))return false;
@@ -5122,7 +5198,7 @@ function computeDayTotals(year,month){
   const dayTotals={};
   D.bets.forEach(b=>{if(isHidden('sb:'+b.id))return;const rd=b.date||b.resolveDate;if(rd&&rd.startsWith(ym)){const d=+rd.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+betProfit(b);}});
   D.normals.forEach(n=>{if(isHidden('nm:'+n.id))return;const rd=n.date||n.resolveDate;if(rd&&rd.startsWith(ym)){const d=+rd.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+(n.profit||0);}});
-  adjEntries().forEach(a=>{if(a.date.startsWith(ym)){const d=+a.date.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+a.profit;}});
+  [...adjEntries(),...costEntries()].forEach(a=>{if(a.date.startsWith(ym)){const d=+a.date.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+a.profit;}});
   return dayTotals;
 }
 function renderCalendar(){
@@ -5170,7 +5246,7 @@ function renderPerfChart(){
   const entries=[];
   D.bets.forEach(b=>{if(isHidden('sb:'+b.id))return;const rd=b.date||b.resolveDate;if(rd)entries.push({date:rd,profit:betProfit(b),expected:b.status==='anulada'?0:((b.expectedProfit!=null?b.expectedProfit:b.profit)||0),isBet:true});});
   D.normals.forEach(n=>{if(isHidden('nm:'+n.id))return;const rd=n.date||n.resolveDate;if(rd)entries.push({date:rd,profit:n.profit||0,expected:n.profit||0,isBet:false});});
-  adjEntries().forEach(a=>entries.push({date:a.date,profit:a.profit,expected:a.profit,isBet:false}));
+  [...adjEntries(),...costEntries()].forEach(a=>entries.push({date:a.date,profit:a.profit,expected:a.profit,isBet:false}));
   const wrap=document.getElementById('perfChartWrap');
   if(!entries.length){
     wrap.innerHTML='<div class="perf-chart-empty">Not enough data yet to show performance.</div>';
