@@ -4583,7 +4583,8 @@ function quickRegister(){
   if(!evEl.value.trim()){evEl.focus();evEl.classList.add('q-need');setTimeout(()=>evEl.classList.remove('q-need'),1200);toast('Write the event first');return;}
   const r=registerCurrent();if(!r)return;const {bet,res}=r;
   save();updateBadges();render();renderRepeatSel();fillQuickDefaults();
-  setTimeout(()=>{const f=document.querySelector('#outcomesList .oi');if(f)f.focus();},30);
+  const queued=tgNext();
+  if(!queued)setTimeout(()=>{const f=document.querySelector('#outcomesList .oi');if(f)f.focus();},30);
   const n=D.bets.filter(b=>b.status==='pending'&&evKey(b)===evKey(bet)).length;
   toast(`Saved${n>1?` · #${n} on this match`:''} · ${res.profit>=0?'+':''}${fmt(res.profit)} €`,'Undo',()=>{
     D.bets=D.bets.filter(b=>b.id!==bet.id);
@@ -4597,6 +4598,7 @@ document.getElementById('outcomesList').addEventListener('keydown',e=>{
   if(i>=0&&i<all.length-1&&!(parseFloat(all[i+1].value)>1)){all[i+1].focus();all[i+1].select();return;}
   handleOutcomeFieldChange(t);quickRegister();
 });
+document.getElementById('totalInv').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();totalInv=parseFloat(e.target.value)||0;quickRegister();}});
 ['q-event','q-market'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{
   if(e.key!=='Enter')return;e.preventDefault();
   if(calculate())quickRegister();else{const f=document.querySelector('#outcomesList .oi');if(f)f.focus();}
@@ -4731,7 +4733,7 @@ async function tgPoll(){
       if(D.tgInbox.some(x=>x.uid===u.update_id))return;
       D.tgInbox.unshift({uid:u.update_id,text,at:(m.date||0)*1000||Date.now()});added++;
     });
-    if(added){D.tgInbox=D.tgInbox.slice(0,100);save();renderTgCard();toast(`${added} surebet${added>1?'s':''} received from Telegram`);}
+    if(added){D.tgInbox=D.tgInbox.slice(0,100);save();renderTgCard();if(!tgNext())toast(`${added} surebet${added>1?'s':''} received from Telegram`);}
   }catch(e){tgLastErr='Could not reach Telegram';renderTgCard();}
   finally{tgBusy=false;}
 }
@@ -4764,11 +4766,25 @@ function renderTgCard(){
           ${p.market||p.time?`<div class="tg-mk">${[p.market?esc(p.market):'',p.time?'ends ~'+parseInt(p.time,10)+'h':''].filter(Boolean).join(' · ')}</div>`:''}
           <div class="tg-legs">${ok?p.legs.map(l=>`<span class="tg-leg">${esc(l.house)} <b>${fmt(l.odd)}</b></span>`).join('')+(pr?`<span class="tg-pre" title="Your saved stakes will be used">⚡ ${pr.legs.map(l=>fmt(l.stake,l.stake%1?2:0)).join('/')} €</span>`:''):`<span class="tg-raw">Bookmakers not recognised · ${esc(it.text.slice(0,70))}…</span>`}</div>
         </div>
-        <div class="tg-btns">${ok?`<button class="btn-s" data-tgload="${it.uid}">Edit</button><button class="btn-reg" data-tgreg="${it.uid}">Register</button>`:''}<button class="tg-x" data-tgdel="${it.uid}" title="Discard">✕</button></div></div>`;
+        <div class="tg-btns">${ok?`<button class="btn-reg" data-tgload="${it.uid}">Use</button>`:''}<button class="tg-x" data-tgdel="${it.uid}" title="Discard">✕</button></div></div>`;
     }).join('');
-    if(items.length>1)html+=`<div class="tg-foot"><button class="link-btn" id="tgClear">Discard all</button>${okCount>1?`<button class="btn-s" id="tgRegAll">Register all ${okCount}</button>`:''}</div>`;
+    if(items.length>1)html+=`<div class="tg-foot"><button class="link-btn" id="tgClear">Discard all</button></div>`;
   }
   card.innerHTML=html+'</div>';
+}
+// Everything comes from the message; the only thing left to type is the stake.
+function focusStake(){
+  const el=document.getElementById('totalInv');if(!el)return;
+  el.scrollIntoView({behavior:'smooth',block:'center'});
+  setTimeout(()=>{el.focus();el.select();},250);
+  const k=window.innerWidth<600?'Register':'Enter';
+  toast(activePreset()?`Saved stakes applied — press ${k}`:`Type your stake and press ${k}`);
+}
+function calcIdle(){return newBetType==='Surebet'&&(document.querySelector('.ni.active')?.dataset.page||'calc')==='calc'&&!outcomes.some(o=>o.odd>1);}
+function tgNext(){
+  const next=(D.tgInbox||[]).slice().reverse().find(it=>parseSurebetText(it.text).legs.length>=2);
+  if(!next||!calcIdle())return false;
+  tgLoad(next.uid);focusStake();return true;
 }
 function tgLoad(uid,quiet){
   const it=D.tgInbox.find(x=>x.uid===uid);if(!it)return false;
@@ -4790,25 +4806,10 @@ document.getElementById('tgCard').addEventListener('click',e=>{
   if(t.closest('#tgTokSave')){const v=document.getElementById('tgTok').value.trim();if(!/^\d+:[\w-]{20,}$/.test(v)){toast('That does not look like a bot token');return;}
     tgSetToken(v);tgSetOffset(0);tgOpenCfg=false;tgLastErr='';renderTgCard();tgStart();toast('Telegram connected — forward a surebet to your bot');return;}
   if(t.closest('#tgTokDel')){tgSetToken('');clearInterval(tgTimer);tgOpenCfg=false;renderTgCard();return;}
-  if(t.closest('#tgRegAll')){tgRegisterAll();return;}
   if(t.closest('#tgClear')){const old=D.tgInbox.slice();D.tgInbox=[];save();renderTgCard();toast('Inbox cleared','Undo',()=>{D.tgInbox=old;save();renderTgCard();});return;}
   const del=t.closest('[data-tgdel]');if(del){D.tgInbox=D.tgInbox.filter(x=>x.uid!==+del.dataset.tgdel);save();renderTgCard();return;}
-  const ld=t.closest('[data-tgload]');if(ld){if(tgLoad(+ld.dataset.tgload)){document.getElementById('sbCalcCard').scrollIntoView({behavior:'smooth',block:'start'});toast('Loaded — check it and press Register');}return;}
-  const rg=t.closest('[data-tgreg]');if(rg){if(tgLoad(+rg.dataset.tgreg))quickRegister();renderTgCard();return;}
+  const ld=t.closest('[data-tgload]');if(ld){if(tgLoad(+ld.dataset.tgload))focusStake();return;}
 });
-function tgRegisterAll(){
-  const ids=D.tgInbox.slice().reverse().map(x=>x.uid);const made=[];let noEv=0;
-  ids.forEach(uid=>{
-    const it=D.tgInbox.find(x=>x.uid===uid);if(!it)return;const p=parseSurebetText(it.text);
-    if(p.legs.length<2)return;
-    if(!p.ev&&!document.getElementById('q-event').value.trim()){noEv++;return;}
-    tgLoad(uid,true);const r=registerCurrent();if(r)made.push(r.bet);
-  });
-  save();updateBadges();render();renderRepeatSel();renderTgCard();
-  const tot=made.reduce((a,b)=>a+(b.profit||0),0);
-  toast(`Registered ${made.length}${noEv?` · ${noEv} skipped (no event)`:''} · ${tot>=0?'+':''}${fmt(tot)} €`,'Undo',()=>{
-    const ids=new Set(made.map(b=>b.id));D.bets=D.bets.filter(b=>!ids.has(b.id));save();updateBadges();render();toast('Undone');});
-}
 document.getElementById('tgSetBtn').addEventListener('click',()=>{tgOpenCfg=!tgOpenCfg;renderTgCard();if(tgOpenCfg)setTimeout(()=>document.getElementById('tgTok')?.focus(),30);});
 
 // ══════════════════════════════════════════
