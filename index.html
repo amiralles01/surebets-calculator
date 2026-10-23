@@ -1661,6 +1661,28 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .sb-sub{font-size:12.5px;color:var(--muted,var(--faint));margin-top:3px;display:flex;flex-wrap:wrap;gap:4px;font-variant-numeric:tabular-nums}
 .sb-sub b{color:var(--text);font-weight:650;font-variant-numeric:normal;font-family:inherit}.sb-sub .sep{opacity:.4}
 .pend-item.twin{border-left:3px solid var(--ball,#F4C53D)}
+
+.q-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1.4fr) minmax(0,1fr) minmax(0,.7fr) minmax(0,1fr);gap:10px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px dashed var(--border)}
+@media(max-width:1100px){.q-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.q-ev,.q-mk{grid-column:span 3}}
+@media(max-width:600px){.q-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.q-ev,.q-mk{grid-column:1/-1}.q-grid>div:last-child{grid-column:1/-1}}
+.q-grid input,.q-grid select{width:100%}
+.q-need{outline:2px solid var(--red)!important;animation:qshake .3s}
+@keyframes qshake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.q-paste{margin-bottom:14px}.q-paste textarea{width:100%;font-family:inherit;padding:10px 12px;border-radius:10px;border:1px solid var(--border2,var(--border));background:var(--raised);color:var(--text);resize:vertical}
+.ch .btn-s#qPasteBtn{margin-left:auto}
+.kbd{font-family:inherit;font-size:10.5px;font-weight:600;padding:1px 6px;border-radius:5px;border:1px solid currentColor;opacity:.55;margin-left:6px}
+@media(max-width:600px){.kbd{display:none}}
+
+.q-bar{display:none}
+@media(max-width:600px){
+  .q-bar.on{display:flex;align-items:center;gap:10px;position:fixed;left:10px;right:10px;bottom:calc(74px + env(safe-area-inset-bottom));z-index:140;
+    padding:8px 8px 8px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--border2,var(--border));box-shadow:0 10px 30px -10px rgba(0,0,0,.35)}
+  .q-bar-info{flex:1;min-width:0;display:flex;flex-direction:column;font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
+  .q-bar-info b{font-size:16px}
+  .q-bar .btn-reg{width:auto;padding:11px 22px;margin:0}
+  #page-calc .card:last-of-type{scroll-margin-bottom:140px}
+  .pb{padding-bottom:calc(160px + env(safe-area-inset-bottom))!important}
+}
 </style>
 </head>
 <body>
@@ -1806,8 +1828,16 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
           </div>
         </div>
         <div class="card" id="sbCalcCard">
-          <div class="ch"><span class="ct">Odds &amp; stake split</span></div>
+          <div class="ch"><span class="ct">Odds &amp; stake split</span><button class="btn-s" id="qPasteBtn" title="Paste the text of a surebet and fill bookmakers and odds automatically">Paste surebet</button></div>
           <div class="cb">
+            <div class="q-paste" id="qPasteWrap" style="display:none"><textarea id="qPaste" rows="3" placeholder="Paste here the surebet text (e.g. from your finder or Telegram). Bookmakers you have registered and their odds are detected automatically."></textarea></div>
+            <div class="q-grid">
+              <div class="q-ev"><label class="fl">Event</label><input type="text" id="q-event" list="q-evlist" placeholder="Real Madrid vs Barcelona" autocomplete="off"><datalist id="q-evlist"></datalist></div>
+              <div class="q-mk"><label class="fl">Market / line</label><input type="text" id="q-market" placeholder="Optional · e.g. Vinicius 1.5+ shots" autocomplete="off"></div>
+              <div><label class="fl">Date</label><input type="date" id="q-date"></div>
+              <div><label class="fl">Hour</label><select id="q-hour" class="hour-sel"><option value="">--</option><option value="00:00">00h</option><option value="01:00">01h</option><option value="02:00">02h</option><option value="03:00">03h</option><option value="04:00">04h</option><option value="05:00">05h</option><option value="06:00">06h</option><option value="07:00">07h</option><option value="08:00">08h</option><option value="09:00">09h</option><option value="10:00">10h</option><option value="11:00">11h</option><option value="12:00">12h</option><option value="13:00">13h</option><option value="14:00">14h</option><option value="15:00">15h</option><option value="16:00">16h</option><option value="17:00">17h</option><option value="18:00">18h</option><option value="19:00">19h</option><option value="20:00">20h</option><option value="21:00">21h</option><option value="22:00">22h</option><option value="23:00">23h</option></select></div>
+              <div><label class="fl">Category</label><select id="q-cat"><option value="">No category</option></select></div>
+            </div>
             <div style="margin-bottom:16px">
               <label class="fl">Total stake</label>
               <div class="iw"><input type="number" class="ii" id="totalInv" value="100" min="0" step="1"><span class="isuf">€</span></div>
@@ -1845,6 +1875,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
         </div>
       </div>
       <div class="rp2" id="resultPanel"></div>
+      <div class="q-bar" id="qBar"></div>
       <div class="rp2" id="nfResult" style="display:none"></div>
     </div>
 
@@ -2465,7 +2496,7 @@ function renderOutcomes(){
 function renderResult(){
   const panel=document.getElementById('resultPanel');
   const res=calculate();
-  if(!res){panel.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>Add at least 2 odds &gt; 1.00.</p></div></div>`;return;}
+  if(!res){const qb=document.getElementById('qBar');if(qb)qb.classList.remove('on');panel.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>Add at least 2 odds &gt; 1.00.</p></div></div>`;return;}
   const{isSurebet,stakes,returns,minReturn,actualTotal,profit,profitPct,sumPct,valid}=res;
   const s=profit>=0?'+':'';
   const badgeHtml=isSurebet?`<div class="badge bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Surebet</div>`:
@@ -2480,8 +2511,11 @@ function renderResult(){
       <div class="sr"><span class="sl">Profit</span><span class="sv ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span></div>
       <div class="pw"><div class="pl"><span>Sum of implied probabilities</span><span>${fmt(sumPct)} %</span></div><div class="pt"><div class="pf ${sumPct>100?'over':''}" style="width:${bW}%"></div></div></div>
     </div>
-    <button class="btn-reg" id="regBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>${isSurebet?'Register this surebet':'Register anyway (negative ROI)'}</button>`;
-  document.getElementById('regBtn').addEventListener('click',openSbRegModal);
+    <button class="btn-reg" id="regBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>${isSurebet?'Register':'Register anyway (negative ROI)'} <kbd class="kbd">Enter</kbd></button>`;
+  document.getElementById('regBtn').addEventListener('click',quickRegister);
+  const qb=document.getElementById('qBar');
+  if(qb){qb.innerHTML=`<div class="q-bar-info"><b class="${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</b><span>${valid.map((o,i)=>fmt(stakes[i])+'€').join(' / ')}</span></div><button class="btn-reg" id="qBarBtn">Register</button>`;
+    document.getElementById('qBarBtn').addEventListener('mousedown',e=>e.preventDefault());document.getElementById('qBarBtn').addEventListener('click',quickRegister);qb.classList.add('on');}
   wirePresetHit();
 }
 
@@ -4361,8 +4395,11 @@ function applyLastBet(){
     outcomes=(b.legs||[]).map(l=>({id:nextId++,house:l.house||'',result:l.result||'',odd:0,manualStake:null}));
     while(outcomes.length<2)outcomes.push({id:nextId++,house:'',result:'',odd:0,manualStake:null});
     if(b.totalStake>0){totalInv=Math.round(b.totalStake*100)/100;document.getElementById('totalInv').value=totalInv;}
-    sbPrefill={event:b.event,market:b.market||'',date:b.date,time:b.time,categoryId:b.categoryId??null};
+    sbPrefill=null;
     setBetType('Surebet');
+    document.getElementById('q-event').value=b.event||'';document.getElementById('q-market').value=b.market||'';
+    document.getElementById('q-date').value=b.date||todayISO();document.getElementById('q-hour').value=hourOnly(b.time);
+    fillCategorySelect(document.getElementById('q-cat'),b.categoryId??null);
     setTimeout(()=>{const f=document.querySelector('#outcomesList .oi');if(f)f.focus();},50);
   }else{
     sbPrefill=null;
@@ -4381,6 +4418,80 @@ function applyLastBet(){
 document.getElementById('repSel').addEventListener('change',e=>{
   if(e.target.value==='last')applyLastBet();
   else{sbPrefill=null;}
+});
+
+
+// ══════════════════════════════════════════
+//  FAST REGISTRATION — inline fields, Enter to save, sticky context, undo
+// ══════════════════════════════════════════
+function fillQuickDefaults(){
+  const d=document.getElementById('q-date');if(d&&!d.value)d.value=todayISO();
+  const c=document.getElementById('q-cat');if(c){const keep=newBetCat!=null?newBetCat:(c.value?+c.value:null);fillCategorySelect(c,keep);}
+  const dl=document.getElementById('q-evlist');
+  if(dl){const seen=new Set();const evs=[];[...D.bets,...D.normals].sort((a,b)=>b.id-a.id).forEach(b=>{const e=(b.event||'').trim();if(e&&!seen.has(e.toLowerCase())&&evs.length<30){seen.add(e.toLowerCase());evs.push(e);}});
+    dl.innerHTML=evs.map(e=>`<option value="${esc(e)}">`).join('');}
+}
+function quickRegister(){
+  const res=calculate();if(!res)return;
+  const evEl=document.getElementById('q-event');const ev=evEl.value.trim();
+  if(!ev){evEl.focus();evEl.classList.add('q-need');setTimeout(()=>evEl.classList.remove('q-need'),1200);toast('Write the event first');return;}
+  const catVal=document.getElementById('q-cat').value;
+  const bet={id:Date.now(),event:ev,market:document.getElementById('q-market').value.trim(),
+    date:document.getElementById('q-date').value||todayISO(),time:document.getElementById('q-hour').value||'',resolveDate:'',
+    profitPct:res.profitPct,profit:res.profit,expectedProfit:res.profit,totalStake:res.actualTotal,minReturn:res.minReturn,status:'pending',
+    categoryId:catVal?+catVal:null,
+    legs:res.valid.map((o,i)=>({house:o.house||`Bookmaker ${i+1}`,result:o.result||`Outcome ${i+1}`,odd:o.odd,stake:res.stakes[i],minReturn:res.returns[i]}))};
+  D.bets.unshift(bet);save();updateBadges();
+  // keep event, market, bookmakers, outcomes, hour & category — only clear the odds
+  outcomes.forEach(o=>{o.odd=0;o.manualStake=null;});
+  newBetCat=null;sbPrefill=null;
+  render();renderRepeatSel();fillQuickDefaults();
+  setTimeout(()=>{const f=document.querySelector('#outcomesList .oi');if(f)f.focus();},30);
+  const n=D.bets.filter(b=>b.status==='pending'&&evKey(b)===evKey(bet)).length;
+  toast(`Saved${n>1?` · #${n} on this match`:''} · ${res.profit>=0?'+':''}${fmt(res.profit)} €`,'Undo',()=>{
+    D.bets=D.bets.filter(b=>b.id!==bet.id);
+    bet.legs.forEach((l,i)=>{if(outcomes[i]){outcomes[i].odd=l.odd;}});
+    save();updateBadges();render();toast('Registration undone');});
+}
+// Enter: next odds field, or register on the last one
+document.getElementById('outcomesList').addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;const t=e.target;if(t.tagName!=='INPUT')return;e.preventDefault();
+  const all=[...document.querySelectorAll('#outcomesList .oi')];const i=all.indexOf(t);
+  if(i>=0&&i<all.length-1&&!(parseFloat(all[i+1].value)>1)){all[i+1].focus();all[i+1].select();return;}
+  handleOutcomeFieldChange(t);quickRegister();
+});
+['q-event','q-market'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;e.preventDefault();
+  if(calculate())quickRegister();else{const f=document.querySelector('#outcomesList .oi');if(f)f.focus();}
+}));
+// Paste parser: finds your registered bookmakers and the first odds after each one
+function parseSurebetText(txt){
+  const names=trackedBookmakers().slice().sort((a,b)=>b.length-a.length);
+  const low=txt.toLowerCase();const hits=[];
+  names.forEach(n=>{let k=0;const nl=n.toLowerCase();while((k=low.indexOf(nl,k))>=0){if(!hits.some(h=>k>=h.pos&&k<h.pos+h.len))hits.push({name:n,pos:k,len:nl.length});k+=nl.length;}});
+  hits.sort((a,b)=>a.pos-b.pos);
+  const legs=[];
+  hits.forEach((h,i)=>{const end=i+1<hits.length?hits[i+1].pos:txt.length;
+    const seg=txt.slice(h.pos+h.len,end);
+    const m=[...seg.matchAll(/(?<![\d.,])(\d{1,3}[.,]\d{1,3})(?![\d.,]*%)/g)].map(x=>parseFloat(x[1].replace(',','.'))).find(v=>v>1&&v<1000);
+    if(m)legs.push({house:h.name,odd:m});});
+  let ev='';const line=txt.split(/\n/).map(l=>l.trim()).find(l=>/\S+\s+(vs\.?|v|-|–)\s+\S+/i.test(l)&&!/^\d/.test(l));
+  if(line)ev=line.replace(/^[^\p{L}\d]+/u,'').replace(/\s{2,}/g,' ').trim().slice(0,80);
+  return {legs,ev};
+}
+document.getElementById('qPasteBtn').addEventListener('click',()=>{
+  const w=document.getElementById('qPasteWrap');const show=w.style.display==='none';w.style.display=show?'':'none';
+  if(show){const t=document.getElementById('qPaste');t.value='';t.focus();
+    if(navigator.clipboard&&navigator.clipboard.readText){navigator.clipboard.readText().then(x=>{if(x&&!t.value){t.value=x;t.dispatchEvent(new Event('input'));}}).catch(()=>{});}}
+});
+document.getElementById('qPaste').addEventListener('input',e=>{
+  const {legs,ev}=parseSurebetText(e.target.value);
+  if(legs.length<2){if(e.target.value.trim())toast('Could not find 2 of your bookmakers with odds in that text');return;}
+  outcomes=legs.map((l,i)=>({id:nextId++,house:l.house,result:outcomes[i]?.result||'',odd:l.odd,manualStake:null}));
+  const evEl=document.getElementById('q-event');if(ev&&!evEl.value.trim())evEl.value=ev;
+  render();document.getElementById('qPasteWrap').style.display='none';
+  toast(`Detected ${legs.map(l=>l.house+' @'+fmt(l.odd)).join(' · ')}`);
+  setTimeout(()=>document.getElementById('q-event').value.trim()?document.getElementById('regBtn')?.focus():document.getElementById('q-event').focus(),30);
 });
 
 // ══════════════════════════════════════════
@@ -4863,10 +4974,11 @@ function setBetType(type){
   const isSb=newBetType==='Surebet';
   document.getElementById('sbCalcCard').style.display=isSb?'':'none';
   document.getElementById('resultPanel').style.display=isSb?'':'none';
+  document.getElementById('qBar').style.display=isSb?'':'none';
   document.getElementById('nfCard').style.display=isSb?'none':'';
   document.getElementById('nfResult').style.display=isSb?'none':'';
   renderRepeatSel();
-  if(isSb){render();return;}
+  if(isSb){fillQuickDefaults();render();return;}
   const m=NF_META[newBetType];
   document.getElementById('nfTitle').textContent=m.title;
   document.getElementById('nfHelp').textContent=m.help;
