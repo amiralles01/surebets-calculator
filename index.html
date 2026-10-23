@@ -1683,6 +1683,14 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
   #page-calc .card:last-of-type{scroll-margin-bottom:140px}
   .pb{padding-bottom:calc(160px + env(safe-area-inset-bottom))!important}
 }
+
+.tg-it{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:11px 0;border-top:1px solid var(--border)}
+.tg-it:first-child{border-top:none}.tg-it.bad{opacity:.7}
+.tg-main{flex:1;min-width:200px}.tg-ev{font-weight:650;font-size:14px}.tg-mk{font-size:12.5px;color:var(--faint);margin-top:2px}
+.tg-roi{font-size:12px;font-weight:700;margin-left:6px}.tg-legs{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tg-btns{display:flex;gap:6px;align-items:center}.tg-btns .btn-reg{margin:0}
+.tg-help{font-size:12.5px;color:var(--faint);line-height:1.55;margin-top:10px}.tg-cfg{margin-bottom:6px}
+.tg-empty{font-size:13px;color:var(--faint);padding:4px 0}
 </style>
 </head>
 <body>
@@ -1821,21 +1829,22 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
               <div><label class="fl" id="nf-stake-label">Amount staked (€)</label><input type="number" id="nf-stake" placeholder="20" step="0.01" min="0"></div>
             </div>
             <div class="two-col">
-              <div><label class="fl">Kick-off date</label><input type="date" id="nf-date"></div>
-              <div><label class="fl">Kick-off hour</label><select id="nf-time" class="hour-sel"><option value="">--</option><option value="00:00">00h</option><option value="01:00">01h</option><option value="02:00">02h</option><option value="03:00">03h</option><option value="04:00">04h</option><option value="05:00">05h</option><option value="06:00">06h</option><option value="07:00">07h</option><option value="08:00">08h</option><option value="09:00">09h</option><option value="10:00">10h</option><option value="11:00">11h</option><option value="12:00">12h</option><option value="13:00">13h</option><option value="14:00">14h</option><option value="15:00">15h</option><option value="16:00">16h</option><option value="17:00">17h</option><option value="18:00">18h</option><option value="19:00">19h</option><option value="20:00">20h</option><option value="21:00">21h</option><option value="22:00">22h</option><option value="23:00">23h</option></select></div>
+              <div><label class="fl">Date</label><input type="date" id="nf-date"></div>
+              <div><label class="fl">Ends ~ (hour)</label><select id="nf-time" class="hour-sel"><option value="">--</option><option value="00:00">00h</option><option value="01:00">01h</option><option value="02:00">02h</option><option value="03:00">03h</option><option value="04:00">04h</option><option value="05:00">05h</option><option value="06:00">06h</option><option value="07:00">07h</option><option value="08:00">08h</option><option value="09:00">09h</option><option value="10:00">10h</option><option value="11:00">11h</option><option value="12:00">12h</option><option value="13:00">13h</option><option value="14:00">14h</option><option value="15:00">15h</option><option value="16:00">16h</option><option value="17:00">17h</option><option value="18:00">18h</option><option value="19:00">19h</option><option value="20:00">20h</option><option value="21:00">21h</option><option value="22:00">22h</option><option value="23:00">23h</option></select></div>
             </div>
             <div><label class="fl">Notes (optional)</label><input type="text" id="nf-notes" placeholder="Boosted odds, promo…" autocomplete="off"></div>
           </div>
         </div>
+        <div class="card tg-card" id="tgCard" style="display:none"></div>
         <div class="card" id="sbCalcCard">
-          <div class="ch"><span class="ct">Odds &amp; stake split</span><button class="btn-s" id="qPasteBtn" title="Paste the text of a surebet and fill bookmakers and odds automatically">Paste surebet</button></div>
+          <div class="ch"><span class="ct">Odds &amp; stake split</span><button class="btn-s" id="tgSetBtn" title="Forward surebets from Telegram and they appear here ready to register">Telegram</button><button class="btn-s" id="qPasteBtn" title="Paste the text of a surebet and fill bookmakers and odds automatically">Paste surebet</button></div>
           <div class="cb">
             <div class="q-paste" id="qPasteWrap" style="display:none"><textarea id="qPaste" rows="3" placeholder="Paste here the surebet text (e.g. from your finder or Telegram). Bookmakers you have registered and their odds are detected automatically."></textarea></div>
             <div class="q-grid">
               <div class="q-ev"><label class="fl">Event</label><input type="text" id="q-event" list="q-evlist" placeholder="Real Madrid vs Barcelona" autocomplete="off"><datalist id="q-evlist"></datalist></div>
               <div class="q-mk"><label class="fl">Market / line</label><input type="text" id="q-market" placeholder="Optional · e.g. Vinicius 1.5+ shots" autocomplete="off"></div>
               <div><label class="fl">Date</label><input type="date" id="q-date"></div>
-              <div><label class="fl">Hour</label><select id="q-hour" class="hour-sel"><option value="">--</option><option value="00:00">00h</option><option value="01:00">01h</option><option value="02:00">02h</option><option value="03:00">03h</option><option value="04:00">04h</option><option value="05:00">05h</option><option value="06:00">06h</option><option value="07:00">07h</option><option value="08:00">08h</option><option value="09:00">09h</option><option value="10:00">10h</option><option value="11:00">11h</option><option value="12:00">12h</option><option value="13:00">13h</option><option value="14:00">14h</option><option value="15:00">15h</option><option value="16:00">16h</option><option value="17:00">17h</option><option value="18:00">18h</option><option value="19:00">19h</option><option value="20:00">20h</option><option value="21:00">21h</option><option value="22:00">22h</option><option value="23:00">23h</option></select></div>
+              <div><label class="fl">Ends ~</label><select id="q-hour" class="hour-sel"><option value="">--</option><option value="00:00">00h</option><option value="01:00">01h</option><option value="02:00">02h</option><option value="03:00">03h</option><option value="04:00">04h</option><option value="05:00">05h</option><option value="06:00">06h</option><option value="07:00">07h</option><option value="08:00">08h</option><option value="09:00">09h</option><option value="10:00">10h</option><option value="11:00">11h</option><option value="12:00">12h</option><option value="13:00">13h</option><option value="14:00">14h</option><option value="15:00">15h</option><option value="16:00">16h</option><option value="17:00">17h</option><option value="18:00">18h</option><option value="19:00">19h</option><option value="20:00">20h</option><option value="21:00">21h</option><option value="22:00">22h</option><option value="23:00">23h</option></select></div>
               <div><label class="fl">Category</label><select id="q-cat"><option value="">No category</option></select></div>
             </div>
             <div style="margin-bottom:16px">
@@ -2197,8 +2206,8 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
         <span>If it loses: <span class="pend-preview-neg" id="m-preview-loss"></span></span>
       </div>
       <div class="two-col">
-        <div><label class="fl">Kick-off date</label><input type="date" id="m-date"></div>
-        <div><label class="fl">Kick-off hour</label><select id="m-time" class="hour-sel"><option value="">--</option><option value="00:00">00h</option><option value="01:00">01h</option><option value="02:00">02h</option><option value="03:00">03h</option><option value="04:00">04h</option><option value="05:00">05h</option><option value="06:00">06h</option><option value="07:00">07h</option><option value="08:00">08h</option><option value="09:00">09h</option><option value="10:00">10h</option><option value="11:00">11h</option><option value="12:00">12h</option><option value="13:00">13h</option><option value="14:00">14h</option><option value="15:00">15h</option><option value="16:00">16h</option><option value="17:00">17h</option><option value="18:00">18h</option><option value="19:00">19h</option><option value="20:00">20h</option><option value="21:00">21h</option><option value="22:00">22h</option><option value="23:00">23h</option></select></div>
+        <div><label class="fl">Date</label><input type="date" id="m-date"></div>
+        <div><label class="fl">Ends ~ (hour)</label><select id="m-time" class="hour-sel"><option value="">--</option><option value="00:00">00h</option><option value="01:00">01h</option><option value="02:00">02h</option><option value="03:00">03h</option><option value="04:00">04h</option><option value="05:00">05h</option><option value="06:00">06h</option><option value="07:00">07h</option><option value="08:00">08h</option><option value="09:00">09h</option><option value="10:00">10h</option><option value="11:00">11h</option><option value="12:00">12h</option><option value="13:00">13h</option><option value="14:00">14h</option><option value="15:00">15h</option><option value="16:00">16h</option><option value="17:00">17h</option><option value="18:00">18h</option><option value="19:00">19h</option><option value="20:00">20h</option><option value="21:00">21h</option><option value="22:00">22h</option><option value="23:00">23h</option></select></div>
       </div>
       <div><label class="fl">Notes (optional)</label><input type="text" id="m-notes" placeholder="Boosted odds…"></div>
       <div><label class="fl">Category (optional)</label><select id="m-category"><option value="">No category</option></select></div>
@@ -2220,8 +2229,8 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
       <div><label class="fl">Market / line <span style="font-weight:400;color:var(--faint)">(optional — tells apart surebets of the same match)</span></label><input type="text" id="sbr-market" placeholder="E.g. Mbappé 1.5+ shots · Corners O9.5" autocomplete="off"></div>
       <div id="sbr-legs-wrap"><label class="fl">Bookmakers</label><div class="sbr-legs" id="sbr-legs"></div></div>
       <div class="two-col">
-        <div><label class="fl">Kick-off date</label><input type="date" id="sbr-start"></div>
-        <div><label class="fl">Kick-off hour</label><select id="sbr-time" class="hour-sel"><option value="">--</option><option value="00:00">00h</option><option value="01:00">01h</option><option value="02:00">02h</option><option value="03:00">03h</option><option value="04:00">04h</option><option value="05:00">05h</option><option value="06:00">06h</option><option value="07:00">07h</option><option value="08:00">08h</option><option value="09:00">09h</option><option value="10:00">10h</option><option value="11:00">11h</option><option value="12:00">12h</option><option value="13:00">13h</option><option value="14:00">14h</option><option value="15:00">15h</option><option value="16:00">16h</option><option value="17:00">17h</option><option value="18:00">18h</option><option value="19:00">19h</option><option value="20:00">20h</option><option value="21:00">21h</option><option value="22:00">22h</option><option value="23:00">23h</option></select></div>
+        <div><label class="fl">Date</label><input type="date" id="sbr-start"></div>
+        <div><label class="fl">Ends ~ (hour)</label><select id="sbr-time" class="hour-sel"><option value="">--</option><option value="00:00">00h</option><option value="01:00">01h</option><option value="02:00">02h</option><option value="03:00">03h</option><option value="04:00">04h</option><option value="05:00">05h</option><option value="06:00">06h</option><option value="07:00">07h</option><option value="08:00">08h</option><option value="09:00">09h</option><option value="10:00">10h</option><option value="11:00">11h</option><option value="12:00">12h</option><option value="13:00">13h</option><option value="14:00">14h</option><option value="15:00">15h</option><option value="16:00">16h</option><option value="17:00">17h</option><option value="18:00">18h</option><option value="19:00">19h</option><option value="20:00">20h</option><option value="21:00">21h</option><option value="22:00">22h</option><option value="23:00">23h</option></select></div>
       </div>
       <div><label class="fl">Category (optional)</label><select id="sbr-category"><option value="">No category</option></select></div>
     </div>
@@ -2408,7 +2417,7 @@ function hiddenPanelHtml(pageKey,hiddenEntries){
 let showHiddenFor={sb:false,nb:false,pend:false,casas:false,notas:false,cat:false,profit:false};
 function sign(n){return n>0?'+':n<0?'':'';}
 // Shared kick-off date+time helpers, used by pending/history/modals
-function fmtWhen(date,time){if(!date)return '';return fmtDate(date)+(time?` · ${time}`:'');}
+function fmtWhen(date,time){if(!date)return '';return fmtDate(date)+(time?` · ends ~${String(parseInt(time,10)).padStart(2,'0')}h`:'');}
 function whenKey(o){return (o.date||'')+' '+(o.time||'');}
 function isPlaceholderHouse(s){return /^(bookmaker|casa) \d+$/i.test((s||'').trim());}
 function bkKey(s){return (s||'').trim().toLowerCase();}
@@ -4477,7 +4486,12 @@ function parseSurebetText(txt){
     if(m)legs.push({house:h.name,odd:m});});
   let ev='';const line=txt.split(/\n/).map(l=>l.trim()).find(l=>/\S+\s+(vs\.?|v|-|–)\s+\S+/i.test(l)&&!/^\d/.test(l));
   if(line)ev=line.replace(/^[^\p{L}\d]+/u,'').replace(/\s{2,}/g,' ').trim().slice(0,80);
-  return {legs,ev};
+  let market='';
+  const lines=txt.split(/\n/).map(l=>l.replace(/^[^\p{L}\d]+/u,'').trim()).filter(Boolean);
+  const low2=names.map(n=>n.toLowerCase());
+  const mk=lines.find(l=>l!==ev&&/\p{L}{2}/u.test(l)&&!low2.some(n=>l.toLowerCase().includes(n))&&!/^(roi|profit|beneficio|surebet|arbitra|%|\d)/i.test(l)&&!/\d+[.,]\d+\s*%/.test(l));
+  if(mk)market=mk.slice(0,80);
+  return {legs,ev,market};
 }
 document.getElementById('qPasteBtn').addEventListener('click',()=>{
   const w=document.getElementById('qPasteWrap');const show=w.style.display==='none';w.style.display=show?'':'none';
@@ -4493,6 +4507,86 @@ document.getElementById('qPaste').addEventListener('input',e=>{
   toast(`Detected ${legs.map(l=>l.house+' @'+fmt(l.odd)).join(' · ')}`);
   setTimeout(()=>document.getElementById('q-event').value.trim()?document.getElementById('regBtn')?.focus():document.getElementById('q-event').focus(),30);
 });
+
+
+// ══════════════════════════════════════════
+//  TELEGRAM INBOX — forward surebets to your own bot, they show up here
+//  (the browser polls the Bot API directly; no server needed)
+// ══════════════════════════════════════════
+let tgBusy=false,tgTimer=null,tgOpenCfg=false,tgLastErr='';
+function tgToken(){try{return localStorage.getItem('sb_tg_token')||'';}catch(e){return '';}}
+function tgSetToken(t){try{t?localStorage.setItem('sb_tg_token',t):localStorage.removeItem('sb_tg_token');}catch(e){}}
+function tgOffset(){try{return +(localStorage.getItem('sb_tg_off')||0);}catch(e){return 0;}}
+function tgSetOffset(o){try{localStorage.setItem('sb_tg_off',String(o));}catch(e){}}
+async function tgPoll(){
+  const tok=tgToken();if(!tok||tgBusy||!firestoreReadyFlag())return;
+  tgBusy=true;
+  try{
+    const r=await fetch(`https://api.telegram.org/bot${tok}/getUpdates?offset=${tgOffset()}&timeout=0&allowed_updates=${encodeURIComponent('["message","channel_post"]')}`);
+    const j=await r.json();
+    if(!j.ok){tgLastErr=j.description||'Telegram error';renderTgCard();return;}
+    tgLastErr='';let added=0;
+    (j.result||[]).forEach(u=>{
+      tgSetOffset(u.update_id+1);
+      const m=u.message||u.channel_post;if(!m)return;
+      const text=(m.text||m.caption||'').trim();if(!text)return;
+      if(D.tgInbox.some(x=>x.uid===u.update_id))return;
+      D.tgInbox.unshift({uid:u.update_id,text,at:(m.date||0)*1000||Date.now()});added++;
+    });
+    if(added){D.tgInbox=D.tgInbox.slice(0,100);save();renderTgCard();toast(`${added} surebet${added>1?'s':''} received from Telegram`);}
+  }catch(e){tgLastErr='Could not reach Telegram';renderTgCard();}
+  finally{tgBusy=false;}
+}
+function firestoreReadyFlag(){return Array.isArray(D.tgInbox);}
+function tgStart(){clearInterval(tgTimer);if(tgToken()){tgPoll();tgTimer=setInterval(()=>{if(!document.hidden)tgPoll();},4000);}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)tgPoll();});
+function renderTgCard(){
+  const card=document.getElementById('tgCard');if(!card)return;
+  const tok=tgToken();const items=(D.tgInbox||[]);
+  if(!tok&&!tgOpenCfg){card.style.display='none';return;}
+  card.style.display='';
+  let html=`<div class="ch"><span class="ct">Telegram inbox${items.length?` <span class="nb" style="margin-left:6px">${items.length}</span>`:''}</span>
+    <span style="font-size:11.5px;color:${tgLastErr?'var(--red)':'var(--faint)'}">${tgLastErr?esc(tgLastErr):tok?'Listening — forward surebets to your bot':''}</span></div><div class="cb">`;
+  if(tgOpenCfg||!tok){
+    html+=`<div class="tg-cfg"><label class="fl">Bot token (from @BotFather)</label>
+      <div style="display:flex;gap:8px"><input type="password" id="tgTok" placeholder="123456789:AA…" value="${esc(tok)}" autocomplete="off" style="flex:1;min-width:0"><button class="btn-reg" id="tgTokSave" style="width:auto;padding:9px 16px">Save</button>${tok?'<button class="btn-s" id="tgTokDel">Disconnect</button>':''}</div>
+      <p class="tg-help">1) In Telegram open <b>@BotFather</b> → <b>/newbot</b> → copy the token here. Use a <b>new</b> bot, not the one that sends your surebets.<br>2) Forward surebet messages to that bot's chat (or add it as admin of a channel and forward them there).<br>3) Keep this app open: they appear here in a few seconds, ready to register. The token stays only on this device.</p></div>`;
+  }
+  if(tok&&!items.length&&!tgOpenCfg)html+=`<div class="tg-empty">Nothing waiting. Forward a surebet to your bot and it shows up here.</div>`;
+  html+=items.map(it=>{
+    const p=parseSurebetText(it.text);const ok=p.legs.length>=2;
+    const sum=ok?p.legs.reduce((a,l)=>a+1/l.odd,0):0;const roi=ok?(1/sum-1)*100:0;
+    return `<div class="tg-it${ok?'':' bad'}">
+      <div class="tg-main"><div class="tg-ev">${esc(p.ev||'(no event detected)')}${ok?` <span class="tg-roi ${roi>=0?'pos':'neg'}">${roi>=0?'+':''}${fmt(roi)} %</span>`:''}</div>
+      ${p.market?`<div class="tg-mk">${esc(p.market)}</div>`:''}
+      <div class="tg-legs">${ok?p.legs.map(l=>`<span class="ps-chip">${esc(l.house)} <b>@${fmt(l.odd)}</b></span>`).join(''):`<span style="color:var(--faint);font-size:12px">Couldn't find 2 of your bookmakers with odds — ${esc(it.text.slice(0,90))}…</span>`}</div></div>
+      <div class="tg-btns">${ok?`<button class="btn-s" data-tgload="${it.uid}">Edit</button><button class="btn-reg" data-tgreg="${it.uid}" style="width:auto;padding:8px 14px">Register</button>`:''}<button class="btn-s" data-tgdel="${it.uid}" title="Discard">✕</button></div></div>`;
+  }).join('');
+  if(items.length>1)html+=`<div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn-s" id="tgClear">Discard all</button></div>`;
+  card.innerHTML=html+'</div>';
+}
+function tgLoad(uid){
+  const it=D.tgInbox.find(x=>x.uid===uid);if(!it)return false;
+  const p=parseSurebetText(it.text);if(p.legs.length<2)return false;
+  outcomes=p.legs.map((l,i)=>({id:nextId++,house:l.house,result:'',odd:l.odd,manualStake:null}));
+  if(p.ev)document.getElementById('q-event').value=p.ev;
+  document.getElementById('q-market').value=p.market||'';
+  if(!document.getElementById('q-date').value)document.getElementById('q-date').value=todayISO();
+  if(newBetType!=='Surebet')setBetType('Surebet');
+  D.tgInbox=D.tgInbox.filter(x=>x.uid!==uid);save();
+  render();renderTgCard();return true;
+}
+document.getElementById('tgCard').addEventListener('click',e=>{
+  const t=e.target;
+  if(t.closest('#tgTokSave')){const v=document.getElementById('tgTok').value.trim();if(!/^\d+:[\w-]{20,}$/.test(v)){toast('That does not look like a bot token');return;}
+    tgSetToken(v);tgSetOffset(0);tgOpenCfg=false;tgLastErr='';renderTgCard();tgStart();toast('Telegram connected — forward a surebet to your bot');return;}
+  if(t.closest('#tgTokDel')){tgSetToken('');clearInterval(tgTimer);tgOpenCfg=false;renderTgCard();return;}
+  if(t.closest('#tgClear')){const old=D.tgInbox.slice();D.tgInbox=[];save();renderTgCard();toast('Inbox cleared','Undo',()=>{D.tgInbox=old;save();renderTgCard();});return;}
+  const del=t.closest('[data-tgdel]');if(del){D.tgInbox=D.tgInbox.filter(x=>x.uid!==+del.dataset.tgdel);save();renderTgCard();return;}
+  const ld=t.closest('[data-tgload]');if(ld){if(tgLoad(+ld.dataset.tgload)){document.getElementById('sbCalcCard').scrollIntoView({behavior:'smooth',block:'start'});toast('Loaded — check it and press Register');}return;}
+  const rg=t.closest('[data-tgreg]');if(rg){if(tgLoad(+rg.dataset.tgreg))quickRegister();return;}
+});
+document.getElementById('tgSetBtn').addEventListener('click',()=>{tgOpenCfg=!tgOpenCfg;renderTgCard();if(tgOpenCfg)setTimeout(()=>document.getElementById('tgTok')?.focus(),30);});
 
 // ══════════════════════════════════════════
 //  CALCULADORAS — Kelly · No-Vig · Hedge · Free Bet · Hold
@@ -4978,7 +5072,8 @@ function setBetType(type){
   document.getElementById('nfCard').style.display=isSb?'none':'';
   document.getElementById('nfResult').style.display=isSb?'none':'';
   renderRepeatSel();
-  if(isSb){fillQuickDefaults();render();return;}
+  document.getElementById('tgCard').style.display=isSb?'':'none';
+  if(isSb){fillQuickDefaults();render();renderTgCard();return;}
   const m=NF_META[newBetType];
   document.getElementById('nfTitle').textContent=m.title;
   document.getElementById('nfHelp').textContent=m.help;
@@ -5288,6 +5383,7 @@ function emailToPath(email) {
       if (!Array.isArray(D.bkProfiles)) D.bkProfiles = [];
       if (!Array.isArray(D.poker)) D.poker = [];
       if (!Array.isArray(D.presets)) D.presets = [];
+      if (!Array.isArray(D.tgInbox)) D.tgInbox = [];
     } else {
       let migrated = null;
       try {
@@ -5305,6 +5401,7 @@ function emailToPath(email) {
       if (!Array.isArray(D.bkProfiles)) D.bkProfiles = [];
       if (!Array.isArray(D.poker)) D.poker = [];
       if (!Array.isArray(D.presets)) D.presets = [];
+      if (!Array.isArray(D.tgInbox)) D.tgInbox = [];
       await setDoc(docRef, D);
     }
 
@@ -5326,11 +5423,13 @@ function emailToPath(email) {
       if (!Array.isArray(D.bkProfiles)) D.bkProfiles = [];
       if (!Array.isArray(D.poker)) D.poker = [];
       if (!Array.isArray(D.presets)) D.presets = [];
+      if (!Array.isArray(D.tgInbox)) D.tgInbox = [];
       refreshCurrentView();
     });
 
     updateBadges();
     render();
+    renderTgCard();tgStart();
   }
 
   function refreshCurrentView() {
