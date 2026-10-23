@@ -3469,7 +3469,13 @@ function casaMoney(c,ledger){
 }
 function renderCasas(filter=''){
   renderBkProfileTabs();
-  const byProfile=c=>bkProfileSel==='all'?true:(bkProfileSel==='none'?!c.profileId:c.profileId===bkProfileSel);
+  const ledger0=bookmakerLedger();
+  const byProfile=c=>{
+    const un=isUnusedCasa(c,ledger0);
+    if(bkProfileSel==='unused')return un;
+    if(un)return false;
+    return bkProfileSel==='all'?true:(bkProfileSel==='none'?!c.profileId:c.profileId===bkProfileSel);
+  };
   const items=D.casas.filter(c=>byProfile(c)&&(!filter||c.name.toLowerCase().includes(filter.toLowerCase())));
   const vCasas=visibleCasas().filter(byProfile);
   const total=vCasas.reduce((a,c)=>a+(c.amount||0),0);
@@ -3495,7 +3501,7 @@ function renderCasas(filter=''){
     const pend=c.pendingTransfer||0;
     const pendWdCount=(c.history||[]).filter(h=>h.type==='wd'&&h.status==='pending').length;
     const metaBits=[];
-    if(bkProfileSel==='all'){
+    if(bkProfileSel==='all'||bkProfileSel==='unused'){
       const prof=c.profileId?(D.bkProfiles||[]).find(p=>p.id===c.profileId):null;
       metaBits.push(`<span class="type-badge-kind">${esc(prof?prof.name:'No profile')}</span>`);
     }
@@ -3595,7 +3601,7 @@ function openCasaModal(editId){
   document.getElementById('c-name').value=c?c.name:'';
   document.getElementById('c-amount').value=(c&&c.amount!=null)?c.amount:'';
   document.getElementById('c-notes').value=c?(c.notes||''):'';
-  fillProfileSelect(document.getElementById('c-profile'),c?c.profileId:(bkProfileSel!=='all'&&bkProfileSel!=='none'?bkProfileSel:null));
+  fillProfileSelect(document.getElementById('c-profile'),c?c.profileId:(bkProfileSel!=='all'&&bkProfileSel!=='none'&&bkProfileSel!=='unused'?bkProfileSel:null));
   casaModal.style.display='flex';
   setTimeout(()=>document.getElementById('c-name').focus(),30);
 }
@@ -3695,15 +3701,26 @@ document.getElementById('casasList').addEventListener('keydown',e=>{
 });
 
 // Profiles: group bookmakers by the person who owns the account (e.g. different family members).
-let bkProfileSel='all'; // 'all' | 'none' | profileId
+let bkProfileSel='all'; // 'all' (active) | 'none' | 'unused' | profileId
+// A bookmaker is "unused" when it has 0 € balance, nothing in play, and no deposit/withdrawal in the last 7 days
+function isUnusedCasa(c,ledger){
+  const m=casaMoney(c,ledger);
+  if(Math.abs(m.balance)>=0.005||m.inPlay>0||m.open>0||(c.pendingTransfer||0)>0)return false;
+  const cutoff=new Date(Date.now()-7*864e5).toISOString().slice(0,10);
+  if((c.history||[]).some(h=>(h.type==='dep'||h.type==='wd')&&(h.date||'')>=cutoff))return false;
+  if(c.id>1e12&&c.id>Date.now()-7*864e5)return false; // just created
+  return true;
+}
 function renderBkProfileTabs(){
   const wrap=document.getElementById('bkProfileTabs');
-  let html=`<div class="cat-chip ${bkProfileSel==='all'?'active':''}" data-bkprofile="all">All profiles</div>`;
+  const lg=bookmakerLedger();const nUnused=D.casas.filter(c=>isUnusedCasa(c,lg)).length;
+  let html=`<div class="cat-chip ${bkProfileSel==='all'?'active':''}" data-bkprofile="all">Active</div>`;
   html+=`<div class="cat-chip ${bkProfileSel==='none'?'active':''}" data-bkprofile="none">No profile</div>`;
   (D.bkProfiles||[]).forEach(p=>{
     const active=bkProfileSel===p.id;
     html+=`<div class="cat-chip profile-chip ${active?'active':''}" data-bkprofile="${p.id}">${esc(p.name)}${active?`<span class="profile-del" data-bkprofile-del="${p.id}" title="Delete profile">×</span>`:''}</div>`;
   });
+  html+=`<div class="cat-chip ${bkProfileSel==='unused'?'active':''}" data-bkprofile="unused" title="0 € balance, nothing in play and no deposits or withdrawals in the last 7 days">Unused${nUnused?` (${nUnused})`:''}</div>`;
   html+=`<button class="btn-s" id="bkProfileAddBtn" style="margin-left:auto">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Add profile</button>`;
@@ -3734,7 +3751,7 @@ document.getElementById('bkProfileTabs').addEventListener('click',e=>{
   const tab=e.target.closest('[data-bkprofile]');
   if(tab){
     const v=tab.dataset.bkprofile;
-    bkProfileSel=(v==='all'||v==='none')?v:+v;
+    bkProfileSel=(v==='all'||v==='none'||v==='unused')?v:+v;
     renderCasas(document.getElementById('casasSearch').value);
   }
 });
