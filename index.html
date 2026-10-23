@@ -2540,7 +2540,8 @@ function bankrollSummary(){
   });
   // money on its way to the bank is still yours: not taken out, not lost
   putIn+=drawn+expenses+inTransit;
-  const costs=costEntries().reduce((a,x)=>a-x.profit,0);
+  // costs of a bank already left its balance; only bookmaker costs are paid from outside
+  const costs=visibleCasas().filter(c=>!isBank(c)).reduce((a,c)=>a+costCharges(c).reduce((s,x)=>s-x.profit,0),0);
   return {bankroll,inTransit,putIn,drawn,expenses,costs,profit:bankroll+inTransit+drawn-putIn-costs};
 }
 function costEntries(){const out=[];visibleCasas().forEach(c=>out.push(...costCharges(c)));return out;}
@@ -2648,6 +2649,7 @@ function bankMoneyHtml(c){
   return `<div class="bk-money">
     <div><span>Received from bookmakers</span><b>${fmt(fromBk)} €</b></div>
     <div><span>Expenses paid</span><b class="${exp?'neg':''}">${fmt(exp)} €</b><small class="bk-dir">count against Profit</small></div>
+    ${(c.costs||[]).length?`<div><span>Monthly costs paid</span><b class="${casaMoney(c).costsPaid?'neg':''}">${fmt(casaMoney(c).costsPaid)} €</b><small class="bk-dir">taken from this balance</small></div>`:''}
     <div><span>Taken out for personal use</span><b>${fmt(pers)} €</b><small class="bk-dir">doesn't lower Profit</small></div>
   </div>`;
 }
@@ -3066,9 +3068,10 @@ function bankrollCardHtml(all){
   const since=all.filter(e=>e.date>=t.from&&!isHidden('month:'+e.date.slice(0,7)));
   const cat=c=>since.filter(e=>e.cat===c).reduce((a,e)=>a+e.profit,0);
   const bets=cat('surebet')+cat('normal')+cat('freebet'),corr=cat('adjust'),exp=cat('expense'),cost=cat('cost');
-  const sinceSum=since.reduce((a,e)=>a+e.profit,0),total=pre+sinceSum;
+  const sinceSum=Math.round(since.reduce((a,e)=>a+e.profit,0)*100)/100+0,total=Math.round((pre+sinceSum)*100)/100+0;
   const br=bankrollSummary();const now=br.bankroll+br.inTransit;
-  const drawn=br.drawn-(t.drawn0||0),putIn=br.putIn-(t.put0||0),change=now-(t.b0||0)+drawn-putIn;
+  const c2=x=>Math.round(x*100)/100+0;
+  const drawn=c2(br.drawn-(t.drawn0||0)),putIn=c2(br.putIn-(t.put0||0)),change=c2(now-(t.b0||0)+drawn-putIn);
   const dayBefore=(()=>{const d=new Date(t.from+'T12:00:00');d.setDate(d.getDate()-1);return isoLocal(d);})();
   const started=new Date(t.setAt);
   return `<div class="br-card" id="brCard">
@@ -3083,7 +3086,7 @@ function bankrollCardHtml(all){
       ${Math.abs(drawn)>=0.005?`<div class="br-row"><span>+ Taken out for personal use <small>doesn't lower your profit</small></span><b>${fmt(drawn)} €</b></div>`:''}
       ${Math.abs(putIn)>=0.005?`<div class="br-row"><span>− New money you put in</span><b>${fmt(putIn)} €</b></div>`:''}
       <div class="br-row br-tot"><span>= What your bankroll earned</span><b class="${change>=0?'pos':'neg'}">${sg(change)}</b></div>
-      <div class="br-note">Bets dated before ${fmtDate(t.from)} that were settled later count above in "Until", but move the bankroll here — small differences come from that. Monthly costs are paid outside the bankroll.</div>
+      <div class="br-note">Bets dated before ${fmtDate(t.from)} that were settled later count above in "Until", but move the bankroll here — small differences come from that. Monthly costs of a bank come out of its balance; those of a bookmaker are paid from outside, so they only show in Profit.</div>
       <div class="br-edit" id="brEditBox" style="display:none">
         <div class="br-start"><div><label class="fl">Count from</label><input type="date" id="brFrom" value="${t.from}" max="${today}"></div><button class="btn-reg" id="brStart">Save</button><button class="btn-s" id="brReset" title="Take today's bankroll as the new starting point">Restart from now</button><button class="btn-s" id="brStop">Stop counting</button></div>
       </div>
@@ -3805,8 +3808,10 @@ function bookmakerLedger(){
 function casaMoney(c,ledger){
   const e=(ledger||bookmakerLedger()).get(bkKey(c.name||''))||{settled:0,inPlay:0,open:0};
   const deposited=c.amount||0, adj=c.balAdj||0;
-  const balance=+(deposited+e.settled+adj-e.inPlay).toFixed(2);
-  return {deposited,settled:+e.settled.toFixed(2),inPlay:+e.inPlay.toFixed(2),open:e.open,adj,balance};
+  // a bank pays its monthly costs out of its own balance
+  const costsPaid=isBank(c)?+costCharges(c).reduce((a,x)=>a-x.profit,0).toFixed(2):0;
+  const balance=+(deposited+e.settled+adj-e.inPlay-costsPaid).toFixed(2);
+  return {deposited,settled:+e.settled.toFixed(2),inPlay:+e.inPlay.toFixed(2),open:e.open,adj,costsPaid,balance};
 }
 function renderCasas(filter=''){
   migrateBanks();
@@ -3889,7 +3894,7 @@ function renderCasas(filter=''){
       const list=(c.costs||[]);
       const charged=costCharges(c).reduce((a,x)=>a-x.profit,0);
       panelHtml=`<div class="bk-panel">
-        <div class="bk-panel-title">Monthly costs — charged to Profit every month on the day you choose</div>
+        <div class="bk-panel-title">Monthly costs — ${isBank(c)?`taken from the ${esc(c.name)} balance and from Profit`:'charged to Profit'} every month on the day you choose</div>
         ${list.length?`<div class="bk-hist-list">${list.map(k=>{const on=!k.until||k.until>=ym;return `<div class="bk-hist-row">
             <span class="bk-hist-type ${on?'wd':''}">${esc(k.name||'Cost')}</span>
             <span class="bk-hist-date">${on?`every month · day ${k.day}`:`stopped · ${k.until}`}</span>
