@@ -2598,8 +2598,10 @@ function isFractionalHouse(house){
   return FRACTIONAL_DEFAULT.test(house||'');
 }
 // the odds the bookmaker really pays with
-function payOdd(house,odd){if(!(odd>1)||!isFractionalHouse(house))return odd;const f=fractionFor(odd);return f?f.v:odd;}
-function fractionLabel(house,odd){if(!(odd>1)||!isFractionalHouse(house))return '';const f=fractionFor(odd);return f?(Math.floor(f.v*10000)/10000).toFixed(4).replace(/0+$/,''):'';}
+// odds typed with 3+ decimals (1.615) are already exact: use them as they are
+function hasExtraDecimals(odd){return Math.abs(odd*100-Math.round(odd*100))>1e-6;}
+function payOdd(house,odd){if(!(odd>1)||!isFractionalHouse(house)||hasExtraDecimals(odd))return odd;const f=fractionFor(odd);return f?f.v:odd;}
+function fractionLabel(house,odd){if(!(odd>1)||!isFractionalHouse(house)||hasExtraDecimals(odd))return '';const f=fractionFor(odd);return f?(Math.floor(f.v*10000)/10000).toFixed(4).replace(/0+$/,''):'';}
 function fmt(n,d=2){return Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d})}
 function hourOnly(t){return t&&/^\d{1,2}/.test(t)?String(parseInt(t,10)).padStart(2,'0')+':00':'';}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
