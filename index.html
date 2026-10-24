@@ -1708,7 +1708,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 #psBanner:empty{display:none}
 .ps-hit{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:9px 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--ball,#F4C53D) 65%,transparent);background:color-mix(in srgb,var(--ball,#F4C53D) 14%,var(--surface));font-size:13px}
 .ps-hit.off{border-style:dashed;background:var(--raised)}
-.ps-hit .link-btn{margin-left:auto}
+.ps-hit .link-btn{margin-left:10px}.ps-hit #psEditHit{margin-left:auto}
 .ps-bolt{font-size:14px}
 .msi.pre{background:color-mix(in srgb,var(--ball,#F4C53D) 16%,var(--surface));border-color:color-mix(in srgb,var(--ball,#F4C53D) 70%,transparent);font-weight:700}
 .msi::placeholder{color:var(--faint);opacity:.85}
@@ -1813,6 +1813,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .frac-tag{font-size:10.5px;font-weight:700;padding:1px 5px;border-radius:5px;background:var(--raised);color:var(--pitch,var(--accent))}
 #sbCalcCard .or .oi-wrap{grid-column:auto}
 @media(max-width:600px){#sbCalcCard .or .oi-wrap{grid-column:2;grid-row:1}}
+.psq-h .psq-edit{margin-left:auto;font-size:12px}
 </style>
 </head>
 <body>
@@ -1883,7 +1884,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
     </div>
     <div class="ni" data-page="presets">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-      Presets
+      Saved stakes
       <span class="nb" id="presetsCount">0</span>
     </div>
     <div class="ni" data-page="notas">
@@ -2093,7 +2094,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
     <!-- ═══ PRESETS PAGE ═══ -->
     <div id="page-presets" class="fw" style="display:none">
       <div class="card">
-        <div class="ch"><span class="ct" id="psFormTitle">New preset</span><span style="font-size:11.5px;color:var(--faint)">Odds you see often and the stakes you always use</span></div>
+        <div class="ch"><span class="ct" id="psFormTitle">New saved stakes</span><span style="font-size:11.5px;color:var(--faint)">Odds you see often and the stakes you always use</span></div>
         <div class="cb">
           <div style="margin-bottom:12px"><label class="fl">Name (optional)</label><input type="text" id="ps-label" placeholder="E.g. Tennis 3.25 / 1.50" autocomplete="off"></div>
           <div class="ps-head"><span>Odds</span><span>Stake (€)</span><span>Return</span><span></span></div>
@@ -2104,7 +2105,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
           </div>
           <div class="ps-sum" id="psSum"></div>
           <div style="display:flex;gap:8px;margin-top:12px">
-            <button class="btn-reg" id="psSave" style="flex:1">Save preset</button>
+            <button class="btn-reg" id="psSave" style="flex:1">Save</button>
             <button class="btn-s" id="psCancel" style="display:none">Cancel</button>
           </div>
         </div>
@@ -4675,7 +4676,8 @@ function renderPsBanner(){
   const valid=outcomes.filter(o=>o.odd>1);
   const p=activePreset();
   if(p){const ps=presetStakesFor(p,valid.map(o=>o.odd));const ret=Math.min(...valid.map((o,i)=>o.odd*ps[i]));
-    box.innerHTML=`<div class="ps-hit"><span class="ps-bolt">⚡</span><span>Saved stakes${p.label?` <b>${esc(p.label)}</b>`:''} applied · ${ps.map(v=>`<b>${fmt(v)} €</b>`).join(' / ')} → ${fmt(ret)} €</span><button class="link-btn" id="psSkip">Don't use</button></div>`;
+    box.innerHTML=`<div class="ps-hit"><span class="ps-bolt">⚡</span><span>Saved stakes${p.label?` <b>${esc(p.label)}</b>`:''} applied · ${ps.map(v=>`<b>${fmt(v)} €</b>`).join(' / ')} → ${fmt(ret)} €</span><button class="link-btn" id="psEditHit">Edit</button><button class="link-btn" id="psSkip">Don't use</button></div>`;
+    document.getElementById('psEditHit').onclick=()=>editPreset(p.id);
     document.getElementById('psSkip').onclick=()=>{psSkipKey=presetKey(valid.map(o=>o.odd));autoPreset();render();};
     return;}
   const key=valid.length>=2?presetKey(valid.map(o=>o.odd)):'';
@@ -4729,7 +4731,7 @@ function renderPsSum(){
   el.innerHTML=`<span>Total stake <b>${fmt(st.tot)} €</b></span><span>Min. return <b>${fmt(st.minR)} €</b></span><span>Profit <b class="${st.profit>=0?'pos':'neg'}">${sg}${fmt(st.profit)} € (${sg}${fmt(st.roi)} %)</b></span>${even?'':`<span style="color:var(--faint)">Returns differ by ${fmt(st.maxR-st.minR)} €</span>`}`;
 }
 function resetPsForm(){psForm=[{odd:'',stake:''},{odd:'',stake:''}];psEditId=null;document.getElementById('ps-label').value='';
-  document.getElementById('psFormTitle').textContent='New preset';document.getElementById('psSave').textContent='Save preset';document.getElementById('psCancel').style.display='none';renderPsForm();}
+  document.getElementById('psFormTitle').textContent='New saved stakes';document.getElementById('psSave').textContent='Save';document.getElementById('psCancel').style.display='none';renderPsForm();}
 function renderPresets(){
   renderPsForm();
   const q=(document.getElementById('psSearch').value||'').trim().toLowerCase().replace(',','.');
@@ -4763,16 +4765,22 @@ document.getElementById('psSave').addEventListener('click',()=>{
   save();updateBadges();toast(dup?'Preset saved (replaced the one with the same odds)':'Preset saved');resetPsForm();renderPresets();
 });
 document.getElementById('psSearch').addEventListener('input',renderPresets);
+function editPreset(id){
+  const p=D.presets.find(x=>x.id===id);if(!p)return;
+  if((document.querySelector('.ni.active')?.dataset.page)!=='presets')navTo('presets');
+  psEditId=p.id;
+  psForm=p.legs.map(l=>({odd:String(l.odd),stake:String(l.stake)}));document.getElementById('ps-label').value=p.label||'';
+  document.getElementById('psFormTitle').textContent='Edit saved stakes';document.getElementById('psSave').textContent='Save changes';document.getElementById('psCancel').style.display='';
+  renderPsForm();document.getElementById('pgBody').scrollTop=0;window.scrollTo(0,0);
+  setTimeout(()=>{const f=document.querySelector('[data-psf="stake"]');if(f){f.focus();f.select();}},80);
+}
 document.getElementById('psList').addEventListener('click',e=>{
   const u=e.target.closest('[data-psuse]'),ed=e.target.closest('[data-psedit]'),rm=e.target.closest('[data-psrm]');
   if(u){const p=D.presets.find(x=>x.id===+u.dataset.psuse);if(!p)return;
     newBetType='Surebet';navTo('calc');loadPresetIntoCalc(p);toast('Preset loaded — pick the bookmakers');}
-  if(ed){const p=D.presets.find(x=>x.id===+ed.dataset.psedit);if(!p)return;psEditId=p.id;
-    psForm=p.legs.map(l=>({odd:String(l.odd),stake:String(l.stake)}));document.getElementById('ps-label').value=p.label||'';
-    document.getElementById('psFormTitle').textContent='Edit preset';document.getElementById('psSave').textContent='Save changes';document.getElementById('psCancel').style.display='';
-    renderPsForm();document.getElementById('pgBody').scrollTop=0;window.scrollTo(0,0);}
+  if(ed)editPreset(+ed.dataset.psedit);
   if(rm){const id=+rm.dataset.psrm;const idx=D.presets.findIndex(x=>x.id===id);if(idx<0)return;const [old]=D.presets.splice(idx,1);
-    save();updateBadges();renderPresets();toast('Preset deleted','Undo',()=>{D.presets.splice(idx,0,old);save();updateBadges();renderPresets();});}
+    save();updateBadges();renderPresets();toast('Saved stakes deleted','Undo',()=>{D.presets.splice(idx,0,old);save();updateBadges();renderPresets();});}
 });
 
 
@@ -4781,7 +4789,7 @@ function renderPsQuick(){
   const ps=D.presets||[];
   if(!ps.length){box.innerHTML=`<div class="psq-empty">Tip: after a calculation, "☆ Save these stakes" remembers them — next time those odds appear the stakes fill in by themselves.</div>`;return;}
   const cur=presetKey(outcomes.filter(o=>o.odd>1).map(o=>o.odd));
-  box.innerHTML=`<div class="psq-h"><span>Saved stakes</span><small>tap to load · applied automatically when the odds match</small></div><div class="psq-row">`+ps.map(p=>{
+  box.innerHTML=`<div class="psq-h"><span>Saved stakes</span><small>tap to load · applied automatically when the odds match</small><button class="link-btn psq-edit" id="psqManage">Edit / delete</button></div><div class="psq-row">`+ps.map(p=>{
     const on=presetKey(p.legs.map(l=>l.odd))===cur;
     return `<button class="psq${on?' on':''}" data-psq="${p.id}">${p.label?`<span class="psq-n">${esc(p.label)}</span>`:''}<span class="psq-o">${p.legs.map(l=>fmt(l.odd)).join(' / ')}</span><span class="psq-s">${p.legs.map(l=>fmt(l.stake,l.stake%1?2:0)+'€').join(' · ')}</span></button>`;}).join('')+`</div>`;
 }
@@ -4792,6 +4800,7 @@ function loadPresetIntoCalc(p){
   render();
 }
 document.getElementById('psQuick').addEventListener('click',e=>{
+  if(e.target.closest('#psqManage')){navTo('presets');return;}
   const b=e.target.closest('[data-psq]');if(!b)return;
   const p=(D.presets||[]).find(x=>x.id===+b.dataset.psq);if(!p)return;
   loadPresetIntoCalc(p);toast('Odds and stakes loaded — pick the bookmakers');
@@ -5756,7 +5765,7 @@ const pgMeta={
   categorias:{title:'Categories',sub:'Organize your bets into your own categories'},
   perfil:{title:'Profile',sub:'Your personal stats and performance'},
   calculadoras:{title:'Calculators',sub:'Kelly, No-Vig, Hedge, Free Bet and Hold'},
-  presets:{title:'Presets',sub:'Saved odds with your usual stakes — applied automatically in New bet'},
+  presets:{title:'Saved stakes',sub:'The stakes you always use for some odds — filled in by themselves in New bet. Tap Edit to change one.'},
 };
 const ALL_PAGES=['calc','bets','profit','pendientes','casas','notas','categorias','perfil','calculadoras','presets'];
 function navTo(page){
