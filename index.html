@@ -1989,6 +1989,23 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .pc-note-edit input{flex:1;min-width:0;padding:8px 10px;font-size:14px;background:#FFFBEA!important;border-color:#E9D58A!important}
 .bi-note{display:flex;align-items:center;gap:5px;margin-top:3px;font-size:12.5px;font-style:italic;color:#8A6400}
 @media(max-width:600px){.pc-ttl>b{font-size:14.5px}}
+.co-legs{display:flex;flex-direction:column;gap:10px}
+.co-legs:empty{display:none}
+.co-leg{display:grid;grid-template-columns:minmax(0,1fr) 130px;grid-template-areas:"info in" "q q";gap:6px 10px;align-items:center;padding:10px 12px;border-radius:10px;background:var(--raised)}
+.co-leg-info{grid-area:info;min-width:0;display:flex;flex-direction:column}
+.co-leg-info b{font-size:14px}
+.co-leg-info span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.co-leg-in{grid-area:in;position:relative}
+.co-leg-in input{width:100%;padding-right:26px!important;text-align:right;font-weight:650}
+.co-leg-in span{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--faint);font-size:13px;pointer-events:none}
+.co-quick{grid-area:q;display:flex;gap:6px;flex-wrap:wrap}
+.co-quick button{padding:4px 9px;border-radius:7px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.co-quick button:hover{color:var(--text);border-color:var(--faint)}
+.co-sum{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:10px;border:1px dashed var(--border2)}
+.co-sum>div{display:flex;justify-content:space-between;gap:10px}
+.co-sum .co-tot{border-top:1px solid var(--border);padding-top:6px;margin-top:2px;font-weight:600}
+.co-sum b.pos{color:var(--green)}.co-sum b.neg{color:var(--red)}
+.real-profit-val.neg{color:var(--red)}
 </style>
 </head>
 <body>
@@ -2524,10 +2541,11 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 
 <!-- ══ CASH OUT MODAL ══ -->
 <div id="cashoutModal" class="modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
-  <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:380px;margin:16px">
+  <div class="modal-inner" id="co-box" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:380px;margin:16px">
     <div style="font-size:15px;font-weight:700;margin-bottom:4px">Cash out</div>
     <div id="co-info" style="font-size:12px;color:var(--muted,#888);margin-bottom:14px"></div>
-    <div><label class="fl">Amount received (€)</label><input type="number" id="co-amount" step="0.01" min="0" placeholder="0.00"></div>
+    <div id="co-legs" class="co-legs"></div>
+    <div id="co-single"><label class="fl">Amount received (€)</label><input type="number" id="co-amount" step="0.01" min="0" placeholder="0.00"></div>
     <div id="co-preview" style="margin-top:12px;font-size:13px"></div>
     <div style="display:flex;gap:9px;margin-top:18px">
       <button class="btn-s" id="co-cancel" style="flex:1">Cancel</button>
@@ -3173,6 +3191,7 @@ function renderSurebets(filter=''){
     const pctLabel=hasPct?(displayProfitPct>=0?'+':'')+fmt(displayProfitPct)+' %':'—';
     const legsHtml=hasLegs?`<div class="leg-head"><span>Bookmaker</span><span>Outcome</span><span style="text-align:right">Odds</span><span style="text-align:right">Stake</span><span style="text-align:right">Return</span><span></span></div>`+
       b.legs.map((l,li)=>`<div class="leg${winnerIdx===li?' leg-winner':''}"><span class="lh">${esc(l.house)}</span><span class="lr">${esc(l.result)}</span><span class="lo">${fmt(l.odd||0)}</span><span class="lk">${fmt(l.stake||0)} €</span><span class="lm">${fmt(l.minReturn||0)} €</span><button class="win-btn${winnerIdx===li?' selected':''}" data-wbid="${b.id}" data-wleg="${li}" title="Mark as the winning outcome">${winnerIdx===li?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Won`:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Won`}</button></div>`).join('')+
+      (b.cashOut!=null&&!isVoid?`<div class="real-profit-row"><span class="real-profit-label">Cash out${Array.isArray(b.cashOutLegs)?' · '+b.legs.map((l,i)=>`${esc(l.house)} ${fmt(b.cashOutLegs[i]||0)} €`).join(' · '):` · ${fmt(b.cashOut)} €`}</span><span class="real-profit-val ${(b.profit||0)>=0?'':'neg'}">${(b.profit||0)>=0?'+':''}${fmt(b.profit||0)} €</span></div>`:'')+
       (winnerIdx>=0&&!isVoid?`<div class="real-profit-row"><span class="real-profit-label">✓ ${esc(b.legs[winnerIdx].house)} won — real profit</span><span class="real-profit-val">+${fmt(realProfit)} €</span></div>`:'')
     : `<div style="padding:8px 15px;font-size:12px;color:var(--faint)">No leg breakdown (pre-loaded surebet)</div>`;
     return`<div class="bi"><div class="bih"><div><div class="bie">${sbTagHtml(b,myTw)}${esc(b.event)}</div>${sbSubHtml(b,myTw)}${b.notes?`<div class="bi-note">${PEND_NOTE_IC}${esc(b.notes)}</div>`:''}<div class="bid">${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}${b.categoryId?` · <span class="type-badge-kind">${esc(catName(b.categoryId))}</span>`:''}</div></div><div class="bim"><span class="pp2 ${pctCls}">${pctLabel}</span><span class="sb2 ${sCls}">${sLabel}</span><select class="ss" data-sid="${b.id}"><option value="pending" ${b.status==='pending'?'selected':''}>Pending</option><option value="won" ${b.status==='won'?'selected':''}>Won</option><option value="lost" ${b.status==='lost'?'selected':''}>Lost</option><option value="anulada" ${b.status==='anulada'?'selected':''}>Void</option></select><button class="bd2" data-edit-bid="${b.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>${hideBtnHtml('sb:'+b.id)}<button class="bd2" data-bid="${b.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div><div class="bl">${legsHtml}</div><div class="bf"><span class="bfl">Staked: ${fmt(b.totalStake||0)} € · Min. return: ${fmt(b.minReturn||0)} €</span><span class="bfr ${isVoid?'neu':(displayProfit>=0?'pos':'neg')}">${displayProfit>=0?'+':''}${fmt(displayProfit)} €</span></div></div>`;
@@ -3433,6 +3452,7 @@ document.getElementById('sbList').addEventListener('change',e=>{
   const sel=e.target.closest('[data-sid]');if(!sel)return;
   const b=D.bets.find(x=>x.id===+sel.dataset.sid);if(!b)return;
   b.status=sel.value;
+  if(b.status==='pending'||b.status==='anulada'){delete b.cashOut;delete b.cashOutLegs;}
   if(b.status!=='pending'&&!b.resolveDate)b.resolveDate=todayISO();
   save();updateBadges();renderSurebets(document.getElementById('sbSearch').value);renderProfit();
 });
@@ -3442,6 +3462,7 @@ document.getElementById('sbList').addEventListener('click',e=>{
   if(winBtn){
     const bid=+winBtn.dataset.wbid,li=+winBtn.dataset.wleg;
     const b=D.bets.find(x=>x.id===bid);if(!b)return;
+    delete b.cashOut;delete b.cashOutLegs; // picking a winner replaces a cash out
     // Toggle: click same leg again to deselect
     if(b.winnerLeg===li){
       delete b.winnerLeg;
@@ -4119,10 +4140,21 @@ function cashoutStake(t){
   if(t.kind==='sb')return t.item.totalStake||0;
   return t.item.type==='Freebet'?0:(t.item.stake||0); // freebet stake is not real money
 }
+// surebets with legs: the money received at each bookmaker is entered separately
+function coPerLeg(t){return !!(t&&t.kind==='sb'&&t.item.legs&&t.item.legs.length);}
+function coLegAmounts(){return [...document.querySelectorAll('#co-legs [data-coleg]')].map(i=>{const v=parseFloat(String(i.value).replace(',','.'));return isNaN(v)?null:v;});}
 function updateCashoutPreview(){
   if(!cashoutTarget)return;
-  const amt=parseFloat(document.getElementById('co-amount').value);
   const el=document.getElementById('co-preview');
+  if(coPerLeg(cashoutTarget)){
+    const legs=cashoutTarget.item.legs,amts=coLegAmounts();
+    if(amts.every(a=>a==null)){el.innerHTML='';return;}
+    const tot=amts.reduce((x,a)=>x+(a||0),0),p=tot-cashoutStake(cashoutTarget);
+    el.innerHTML=`<div class="co-sum">${legs.map((l,i)=>{const net=(amts[i]||0)-(l.stake||0);return`<div><span>${esc(l.house||'Leg '+(i+1))}</span><b class="${net>=0?'pos':'neg'}">${net>=0?'+':''}${fmt(net)} €</b></div>`;}).join('')}
+      <div class="co-tot"><span>Received ${fmt(tot)} € · profit</span><b class="${p>=0?'pos':'neg'}">${p>=0?'+':''}${fmt(p)} €</b></div></div>`;
+    return;
+  }
+  const amt=parseFloat(document.getElementById('co-amount').value);
   if(isNaN(amt)){el.innerHTML='';return;}
   const p=amt-cashoutStake(cashoutTarget);
   el.innerHTML=`Resulting profit: <b class="${p>=0?'pos':'neg'}">${p>=0?'+':''}${fmt(p)} €</b>`;
@@ -4132,21 +4164,45 @@ function openCashoutModal(kind,id){
   if(!item)return;
   cashoutTarget={kind,item};
   const st=cashoutStake(cashoutTarget);
-  document.getElementById('co-info').textContent=`${item.event||''} · ${kind==='nm'&&item.type==='Freebet'?'Freebet (stake not counted)':'Staked: '+fmt(st)+' €'}`;
+  const per=coPerLeg(cashoutTarget);
+  document.getElementById('co-info').textContent=`${item.event||''} · ${kind==='nm'&&item.type==='Freebet'?'Freebet (stake not counted)':'Staked: '+fmt(st)+' €'}${per?' · enter what you got back at each bookmaker':''}`;
+  document.getElementById('co-single').style.display=per?'none':'';
+  document.getElementById('co-box').style.maxWidth=per?'460px':'380px';
+  document.getElementById('co-legs').innerHTML=per?item.legs.map((l,i)=>{const ret=l.minReturn!=null?l.minReturn:(l.odd||0)*(l.stake||0);return`<div class="co-leg">
+      <div class="co-leg-info"><b>${esc(l.house||'Leg '+(i+1))}</b><span>${esc(l.result||'')} · ${fmt(l.stake||0)} € @ ${fmt(l.odd||0)}</span></div>
+      <div class="co-leg-in"><input type="number" step="0.01" min="0" inputmode="decimal" data-coleg="${i}" placeholder="0.00" aria-label="Received at ${esc(l.house||'')}"><span>€</span></div>
+      <div class="co-quick"><button type="button" data-cofill="${i}" data-v="0">Lost · 0 €</button><button type="button" data-cofill="${i}" data-v="${ret}">Won · ${fmt(ret)} €</button><button type="button" data-cofill="${i}" data-v="${l.stake||0}">Stake back · ${fmt(l.stake||0)} €</button></div>
+    </div>`;}).join(''):'';
   document.getElementById('co-amount').value='';
   document.getElementById('co-preview').innerHTML='';
   document.getElementById('cashoutModal').style.display='flex';
-  document.getElementById('co-amount').focus();
+  const f=per?document.querySelector('#co-legs [data-coleg]'):document.getElementById('co-amount');f.focus();
 }
 document.getElementById('co-amount').addEventListener('input',updateCashoutPreview);
+document.getElementById('co-legs').addEventListener('input',updateCashoutPreview);
+document.getElementById('co-legs').addEventListener('click',e=>{
+  const q=e.target.closest('[data-cofill]');if(!q)return;
+  const inp=document.querySelector(`#co-legs [data-coleg="${q.dataset.cofill}"]`);inp.value=(+q.dataset.v).toFixed(2);updateCashoutPreview();
+});
 document.getElementById('co-cancel').addEventListener('click',()=>{document.getElementById('cashoutModal').style.display='none';cashoutTarget=null;});
 document.getElementById('co-save').addEventListener('click',()=>{
   if(!cashoutTarget)return;
-  const amt=parseFloat(document.getElementById('co-amount').value);
-  if(isNaN(amt)||amt<0){alert('Enter the amount received (0 or more).');return;}
   const {kind,item}=cashoutTarget;
+  let amt,legAmts=null;
+  if(coPerLeg(cashoutTarget)){
+    const a=coLegAmounts();
+    if(a.every(x=>x==null)){alert('Enter what you received at each bookmaker (0 if nothing).');return;}
+    if(a.some(x=>x!=null&&x<0)){alert('Amounts can\'t be negative.');return;}
+    legAmts=a.map(x=>cents(x||0));amt=cents(legAmts.reduce((x,y)=>x+y,0));
+  }else{
+    amt=parseFloat(document.getElementById('co-amount').value);
+    if(isNaN(amt)||amt<0){alert('Enter the amount received (0 or more).');return;}
+  }
+  pendUndoToast([[kind==='sb'?D.bets:D.normals,item]],`${item.event||'Bet'} · cashed out ${fmt(amt)} €`);
   const profit=+(amt-cashoutStake(cashoutTarget)).toFixed(2);
   item.cashOut=amt;
+  if(legAmts)item.cashOutLegs=legAmts;else delete item.cashOutLegs;
+  delete item.winnerLeg;delete item.pendMark;
   item.profit=cents(profit);
   item.status=profit>=0?'won':'lost';
   if(!item.resolveDate)item.resolveDate=todayISO();
@@ -4292,7 +4348,9 @@ function bookmakerLedger(){
     if(b.status==='pending'){legs.forEach(l=>{const e=g(l.house);if(e){e.inPlay+=l.stake||0;e.open++;}});return;}
     if(b.status!=='won'&&b.status!=='lost')return;
     const w=b.winnerLeg;
-    if(b.cashOut==null&&w!=null&&legs[w]){
+    if(b.cashOut!=null&&Array.isArray(b.cashOutLegs)&&b.cashOutLegs.length===legs.length){ // cash out entered per bookmaker
+      legs.forEach((l,i)=>{const e=g(l.house);if(e)e.settled+=(b.cashOutLegs[i]||0)-(l.stake||0);});
+    }else if(b.cashOut==null&&w!=null&&legs[w]){
       legs.forEach((l,i)=>{const e=g(l.house);if(e)e.settled+=i===w?((l.minReturn!=null?l.minReturn:(l.odd||0)*(l.stake||0))-(l.stake||0)):-(l.stake||0);});
     }else{ // cash out / legacy without a winning leg: split the result by stake
       const tot=legs.reduce((a,l)=>a+(l.stake||0),0)||legs.length;
