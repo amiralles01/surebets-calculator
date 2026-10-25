@@ -1856,7 +1856,6 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .pc-ev{grid-area:ev;min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:3px 7px}
 .pc-ev>b{min-width:0;max-width:100%;font-family:var(--display);font-size:15px;font-weight:650;letter-spacing:-.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pc-ev .sb-twin{font-family:var(--font)}
-.pc-row.sb .pc-ev{flex-wrap:nowrap}
 .pc-sub{flex-basis:100%;font-size:12.5px;color:var(--muted)}
 .pc-sub mark{font-weight:650;color:var(--text)!important}
 .pc-legs{grid-area:legs;display:grid;grid-template-columns:repeat(var(--n,2),minmax(150px,196px));gap:6px}
@@ -1977,6 +1976,19 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .pd-chip.mk.active .pd-n{background:rgba(255,255,255,.2);color:#fff}
 @media(max-width:1180px){.pc-legs.has-res{grid-template-columns:repeat(var(--n,2),minmax(128px,168px)) auto}}
 @media(max-width:820px){.pc-legs.has-res{grid-template-columns:repeat(var(--n,2),minmax(0,1fr))}.pc-legs.has-res .pc-resolve{grid-column:1/-1}.pc-nm-btns .pc-mk{flex:1}}
+.pc-ttl{display:flex;align-items:center;gap:7px;min-width:0;max-width:100%}
+.pc-ttl>b{min-width:0;font-family:var(--display);font-size:15px;font-weight:650;letter-spacing:-.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-ttl>.type-pill,.pc-ttl>.promo-tag{flex-shrink:0}
+.note-ic{width:13px;height:13px;flex-shrink:0}
+.pc-note{flex-basis:100%;display:flex;align-items:center;gap:5px;min-width:0;max-width:100%;padding:0;border:none;background:none;cursor:pointer;
+  font-family:inherit;font-size:12.5px;font-style:italic;color:#8A6400;text-align:left}
+.pc-note span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pend-item .pc-note{margin-top:6px;font-size:13px}
+.pc-note-edit{flex-basis:100%;width:100%;display:flex;align-items:center;gap:8px;color:#8A6400}
+.pend-item .pc-note-edit{margin-top:8px}
+.pc-note-edit input{flex:1;min-width:0;padding:8px 10px;font-size:14px;background:#FFFBEA!important;border-color:#E9D58A!important}
+.bi-note{display:flex;align-items:center;gap:5px;margin-top:3px;font-size:12.5px;font-style:italic;color:#8A6400}
+@media(max-width:600px){.pc-ttl>b{font-size:14.5px}}
 </style>
 </head>
 <body>
@@ -2501,6 +2513,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
         <div><label class="fl">Ends ~ (hour)</label><select id="sbr-time" class="hour-sel"><option value="">--</option><option value="00:00">00h</option><option value="01:00">01h</option><option value="02:00">02h</option><option value="03:00">03h</option><option value="04:00">04h</option><option value="05:00">05h</option><option value="06:00">06h</option><option value="07:00">07h</option><option value="08:00">08h</option><option value="09:00">09h</option><option value="10:00">10h</option><option value="11:00">11h</option><option value="12:00">12h</option><option value="13:00">13h</option><option value="14:00">14h</option><option value="15:00">15h</option><option value="16:00">16h</option><option value="17:00">17h</option><option value="18:00">18h</option><option value="19:00">19h</option><option value="20:00">20h</option><option value="21:00">21h</option><option value="22:00">22h</option><option value="23:00">23h</option></select></div>
       </div>
       <div><label class="fl">Category (optional)</label><select id="sbr-category"><option value="">No category</option></select></div>
+      <div><label class="fl">Note (optional)</label><input type="text" id="sbr-notes" placeholder="E.g. Winamax promo, boosted odds…" maxlength="200" autocomplete="off"></div>
     </div>
     <div style="display:flex;gap:9px;margin-top:18px">
       <button class="btn-s" id="sbr-cancel" style="flex:1">Cancel</button>
@@ -3021,6 +3034,7 @@ function openSbRegModal(){
   document.getElementById('sbr-start').value=pf&&pf.date?pf.date:new Date().toISOString().slice(0,10);
   document.getElementById('sbr-time').value=pf?hourOnly(pf.time):'';
   fillCategorySelect(document.getElementById('sbr-category'),pf&&newBetCat==null?pf.categoryId:newBetCat);
+  document.getElementById('sbr-notes').value='';
   document.getElementById('sbRegModal').style.display='flex';
 }
 function openSbEditModal(id){
@@ -3035,6 +3049,7 @@ function openSbEditModal(id){
   document.getElementById('sbr-start').value=b.date||'';
   document.getElementById('sbr-time').value=hourOnly(b.time);
   fillCategorySelect(document.getElementById('sbr-category'),b.categoryId);
+  document.getElementById('sbr-notes').value=b.notes||'';
   document.getElementById('sbRegModal').style.display='flex';
 }
 function registerBet(){
@@ -3049,6 +3064,7 @@ function registerBet(){
   const bet={id:Date.now(),event:ev,market:mk,date:startVal,time:timeVal,resolveDate:'',profitPct:res.profitPct,profit:res.profit,
     expectedProfit:res.profit,totalStake:res.actualTotal,minReturn:res.minReturn,status:'pending',
     categoryId:catVal?+catVal:null,
+    ...(document.getElementById('sbr-notes').value.trim()?{notes:document.getElementById('sbr-notes').value.trim()}:{}),
     legs:res.valid.map((o,i)=>({house:houses[i]||o.house||`Bookmaker ${i+1}`,result:o.result||`Outcome ${i+1}`,odd:o.odd,stake:res.stakes[i],minReturn:res.returns[i]}))};
   D.bets.unshift(bet);save();updateBadges();renderPendientes();
   document.getElementById('sbRegModal').style.display='none';
@@ -3062,6 +3078,7 @@ document.getElementById('sbr-save').addEventListener('click',()=>{
     const evVal=document.getElementById('sbr-event').value.trim();
     b.event=evVal||b.event||'(No event)';
     b.market=document.getElementById('sbr-market').value.trim();
+    const nt=document.getElementById('sbr-notes').value.trim();if(nt)b.notes=nt;else delete b.notes;
     b.date=document.getElementById('sbr-start').value||b.date;
     b.time=document.getElementById('sbr-time').value||'';
     const catVal=document.getElementById('sbr-category').value;
@@ -3158,7 +3175,7 @@ function renderSurebets(filter=''){
       b.legs.map((l,li)=>`<div class="leg${winnerIdx===li?' leg-winner':''}"><span class="lh">${esc(l.house)}</span><span class="lr">${esc(l.result)}</span><span class="lo">${fmt(l.odd||0)}</span><span class="lk">${fmt(l.stake||0)} €</span><span class="lm">${fmt(l.minReturn||0)} €</span><button class="win-btn${winnerIdx===li?' selected':''}" data-wbid="${b.id}" data-wleg="${li}" title="Mark as the winning outcome">${winnerIdx===li?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Won`:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Won`}</button></div>`).join('')+
       (winnerIdx>=0&&!isVoid?`<div class="real-profit-row"><span class="real-profit-label">✓ ${esc(b.legs[winnerIdx].house)} won — real profit</span><span class="real-profit-val">+${fmt(realProfit)} €</span></div>`:'')
     : `<div style="padding:8px 15px;font-size:12px;color:var(--faint)">No leg breakdown (pre-loaded surebet)</div>`;
-    return`<div class="bi"><div class="bih"><div><div class="bie">${sbTagHtml(b,myTw)}${esc(b.event)}</div>${sbSubHtml(b,myTw)}<div class="bid">${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}${b.categoryId?` · <span class="type-badge-kind">${esc(catName(b.categoryId))}</span>`:''}</div></div><div class="bim"><span class="pp2 ${pctCls}">${pctLabel}</span><span class="sb2 ${sCls}">${sLabel}</span><select class="ss" data-sid="${b.id}"><option value="pending" ${b.status==='pending'?'selected':''}>Pending</option><option value="won" ${b.status==='won'?'selected':''}>Won</option><option value="lost" ${b.status==='lost'?'selected':''}>Lost</option><option value="anulada" ${b.status==='anulada'?'selected':''}>Void</option></select><button class="bd2" data-edit-bid="${b.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>${hideBtnHtml('sb:'+b.id)}<button class="bd2" data-bid="${b.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div><div class="bl">${legsHtml}</div><div class="bf"><span class="bfl">Staked: ${fmt(b.totalStake||0)} € · Min. return: ${fmt(b.minReturn||0)} €</span><span class="bfr ${isVoid?'neu':(displayProfit>=0?'pos':'neg')}">${displayProfit>=0?'+':''}${fmt(displayProfit)} €</span></div></div>`;
+    return`<div class="bi"><div class="bih"><div><div class="bie">${sbTagHtml(b,myTw)}${esc(b.event)}</div>${sbSubHtml(b,myTw)}${b.notes?`<div class="bi-note">${PEND_NOTE_IC}${esc(b.notes)}</div>`:''}<div class="bid">${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}${b.categoryId?` · <span class="type-badge-kind">${esc(catName(b.categoryId))}</span>`:''}</div></div><div class="bim"><span class="pp2 ${pctCls}">${pctLabel}</span><span class="sb2 ${sCls}">${sLabel}</span><select class="ss" data-sid="${b.id}"><option value="pending" ${b.status==='pending'?'selected':''}>Pending</option><option value="won" ${b.status==='won'?'selected':''}>Won</option><option value="lost" ${b.status==='lost'?'selected':''}>Lost</option><option value="anulada" ${b.status==='anulada'?'selected':''}>Void</option></select><button class="bd2" data-edit-bid="${b.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>${hideBtnHtml('sb:'+b.id)}<button class="bd2" data-bid="${b.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div><div class="bl">${legsHtml}</div><div class="bf"><span class="bfl">Staked: ${fmt(b.totalStake||0)} € · Min. return: ${fmt(b.minReturn||0)} €</span><span class="bfr ${isVoid?'neu':(displayProfit>=0?'pos':'neg')}">${displayProfit>=0?'+':''}${fmt(displayProfit)} €</span></div></div>`;
   }).join('')+hiddenPanelHtml('sb',hidden.map(b=>({key:'sb:'+b.id,label:b.event||'(No event)'})));
 }
 
@@ -3742,7 +3759,7 @@ function pendHouseChip(names){const hs=(names||[]).map(h=>(h||'').trim()).filter
 function pendMatchesHouse(kind,item){return pendHouse==='all'||pendHouses(kind,item).some(h=>bkKey(h)===bkKey(pendHouse));}
 function pendMatchesQuery(kind,item){
   const q=pendQuery.trim().toLowerCase();if(!q)return true;
-  const txt=kind==='wd'?'withdrawal '+(item.casaName||''):kind==='sb'?[item.event,...(item.legs||[]).flatMap(l=>[l.house,l.result])].join(' '):[item.event,item.house,item.type].join(' ');
+  const txt=kind==='wd'?'withdrawal '+(item.casaName||''):kind==='sb'?[item.event,item.notes,...(item.legs||[]).flatMap(l=>[l.house,l.result])].join(' '):[item.event,item.house,item.type,item.notes].join(' ');
   return q.split(/\s+/).every(w=>(txt||'').toLowerCase().includes(w));
 }
 // ── Promo highlights: "bookmaker X, odds ≥ N (and stake ≥ S)" rules, saved with the rest of the data ──
@@ -3920,6 +3937,9 @@ function pendMarkBtns(n,cls){
   const m=n.pendMark;
   return `<button class="pc-mk lost${m==='lost'?' on':''}${cls}" data-pid="${n.id}" data-kind="nm" data-action="lost" aria-pressed="${m==='lost'}">Lost</button><button class="pc-mk won${m==='won'?' on':''}${cls}" data-pid="${n.id}" data-kind="nm" data-action="won" aria-pressed="${m==='won'}">Won</button>`;
 }
+const PEND_NOTE_IC='<svg class="note-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+function pendNoteLine(kind,item){return item.notes?`<button class="pc-note" data-note-open="${kind}:${item.id}" title="Edit note">${PEND_NOTE_IC}<span>${esc(item.notes)}</span></button>`:'';}
+function pendNoteEdit(kind,item){return `<label class="pc-note-edit">${PEND_NOTE_IC}<input type="text" data-note="${kind}:${item.id}" value="${esc(item.notes||'')}" placeholder="Add a note…" maxlength="200" enterkeyhint="done" autocomplete="off"></label>`;}
 function pendCompactHtml(kind,item,tw){
   const key=pendKey(kind,item);
   const open=pendOpen.has(key);
@@ -3945,12 +3965,12 @@ function pendCompactHtml(kind,item,tw){
     const p=typeof mk==='number'&&legs[mk]?(legs[mk].minReturn||0)-(b.totalStake||0):(b.profit||0);
     return `<div class="pc-row sb${marked?' marked':''}${pr?' promo':''}${tw.has(b.id)?' twin':''}"${pr?` style="--hl:${pr.color}"`:''}>
       ${pendTimeHtml(b,withDate)}
-      <div class="pc-ev"><b>${sbTagHtml(b,tw)}${esc(b.event)}</b>${promoTag(pr)}</div>
+      <div class="pc-ev"><span class="pc-ttl"><b>${sbTagHtml(b,tw)}${esc(b.event)}</b>${promoTag(pr)}</span>${pendNoteLine('sb',b)}</div>
       <span class="pc-profit ${p>=0?'pos':'neg'}">${p>=0?'+':''}${fmt(p)} €</span>
       <div class="pc-legs${marked?' has-res':''}" style="--n:${Math.max(legs.length,1)}">${legsHtml}${marked?PEND_RESOLVE('sb',b.id):''}</div>
       <span class="pc-tail">${more}</span>
       ${open?`<div class="pc-extra">${sbSubHtml(b,tw)}<div class="pend-meta">${pendHouseChip([...new Set(legs.map(l=>l.house))])}<span>${fmtWhen(b.date,b.time)}</span>${b.totalStake?`<span>Staked: ${fmt(b.totalStake)} €</span>`:''}${b.minReturn?`<span>Min. return: ${fmt(b.minReturn)} €</span>`:''}</div>
-        <div class="pc-btns"><button class="btn-void" data-cashout="sb:${b.id}">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`:''}
+        ${pendNoteEdit('sb',b)}<div class="pc-btns"><button class="btn-void" data-cashout="sb:${b.id}">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`:''}
     </div>`;
   }
   const n=item;const pr=itemPromo('nm',n);
@@ -3958,17 +3978,22 @@ function pendCompactHtml(kind,item,tw){
   const loss=n.potentialLoss!=null?n.potentialLoss:(n.type==='Freebet'?0:-(n.stake||0));
   return `<div class="pc-row nm${n.pendMark!=null?' marked':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
     ${pendTimeHtml(n,withDate)}
-    <div class="pc-ev"><b>${esc(n.event)}</b> ${typePill(n.type)}${promoTag(pr)}<span class="pc-sub"><span class="pc-nmh${pr?' promo':''}"><mark>${esc(n.house||'No bookmaker')}</mark> @ <mark>${fmt(n.odd||0)}</mark></span> · ${fmt(n.stake||0)} €</span></div>
+    <div class="pc-ev"><span class="pc-ttl"><b>${esc(n.event)}</b> ${typePill(n.type)}${promoTag(pr)}</span><span class="pc-sub"><span class="pc-nmh${pr?' promo':''}"><mark>${esc(n.house||'No bookmaker')}</mark> @ <mark>${fmt(n.odd||0)}</mark></span> · ${fmt(n.stake||0)} €</span>${pendNoteLine('nm',n)}</div>
     <span class="pc-profit ${n.pendMark==='lost'?'neg':'pos'}" title="If it wins +${fmt(win)} € · if it loses ${fmt(loss)} €">${n.pendMark==='lost'?fmt(loss):'+'+fmt(win)} €</span>
     <div class="pc-legs pc-nm-btns">${pendMarkBtns(n,' pc-act')}${n.pendMark!=null?PEND_RESOLVE('nm',n.id):''}</div>
     <span class="pc-tail">${more}</span>
     ${open?`<div class="pc-extra"><div class="pend-meta">${pendHouseChip([n.house])}<span>${fmtWhen(n.date,n.time)}</span><span>Odds ${fmt(n.odd||0)}</span><span>Staked: ${fmt(n.stake||0)} €</span></div>
-      <div class="pc-btns"><button class="btn-void" data-cashout="nm:${n.id}">Cash out</button><button class="btn-void" data-pid="${n.id}" data-kind="nm" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`:''}
+      ${pendNoteEdit('nm',n)}<div class="pc-btns"><button class="btn-void" data-cashout="nm:${n.id}">Cash out</button><button class="btn-void" data-pid="${n.id}" data-kind="nm" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`:''}
   </div>`;
 }
 let pendLastShown=[];
 function pendShownMarked(){return pendLastShown.filter(x=>pendHasMark(x.kind,x.item));}
 function renderPendientes(){
+  const ae=document.activeElement,typing=ae&&ae.matches&&ae.matches('#pendList [data-note]')?{k:ae.dataset.note,v:ae.value,c:ae.selectionStart}:null;
+  renderPendientesInner();
+  if(typing){const el=document.querySelector(`#pendList [data-note="${typing.k}"]`);if(el){el.value=typing.v;el.focus();try{el.setSelectionRange(typing.c,typing.c);}catch(e){}}}
+}
+function renderPendientesInner(){
   if(typeof pendDisarm==='function')pendDisarm();
   const pendSBAll=D.bets.filter(b=>b.status==='pending').map(b=>({kind:'sb',item:b}));
   const pendNMAll=D.normals.filter(n=>n.status==='pending').map(n=>({kind:'nm',item:n}));
@@ -4060,8 +4085,9 @@ function renderPendientes(){
           <div>
             <div class="pend-ev">${sbTagHtml(b,pendTw)}${esc(b.event)} <span class="type-badge-kind">Surebet</span>${promoTag(pr)}</div>${sbSubHtml(b,pendTw)}
             <div class="pend-meta">${pendHouseChip([...new Set((b.legs||[]).map(l=>l.house))])}<span>${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}</span>${b.totalStake?`<span>Staked: ${fmt(b.totalStake)} €</span>`:''}</div>
+            ${pendOpen.has('sb:'+b.id)?pendNoteEdit('sb',b):pendNoteLine('sb',b)}
           </div>
-          <div style="display:flex;align-items:center;gap:6px"><button class="btn-void" data-cashout="sb:${b.id}" title="Close early for a manual amount">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada" title="Doesn't count as won or lost">Void</button>${hideBtnHtml('sb:'+b.id,true)}</div>
+          <div style="display:flex;align-items:center;gap:6px"><button class="btn-void" data-note-open="sb:${b.id}">${b.notes?'Edit note':'Note'}</button><button class="btn-void" data-cashout="sb:${b.id}" title="Close early for a manual amount">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada" title="Doesn't count as won or lost">Void</button>${hideBtnHtml('sb:'+b.id,true)}</div>
         </div>
         ${hasLegs?legsHtml:`<div class="pend-hint">No leg breakdown. <button class="pc-mk won${b.pendMark==='won'?' on':''}" data-pid="${b.id}" data-kind="sb" data-action="won">Won</button></div>`}
         ${b.pendMark!=null?`<div class="pend-hint pend-mk-hint"><span><b>${esc(pendMarkLabel('sb',b))}</b> — marked, not resolved yet. It stays here until you resolve it.</span>${PEND_RESOLVE('sb',b.id)}</div>`:hasLegs?`<div class="pend-hint">Tap the outcome that happened to <b>mark</b> it — then <b>Resolve</b> it once it's settled.</div>`:''}
@@ -4075,8 +4101,10 @@ function renderPendientes(){
       <div class="pend-left">
         <div class="pend-ev">${esc(n.event)} ${typePill(n.type)}${promoTag(pr)}</div>
         <div class="pend-meta">${pendHouseChip([n.house])}<span>${fmtWhen(n.date,n.time)}${n.resolveDate?' → '+fmtDate(n.resolveDate):''}</span><span class="pc-nmh${pr?' promo':''}">Odds <mark>${fmt(n.odd||0)}</mark></span><span>Staked: ${fmt(n.stake||0)} €</span></div>
+        ${pendOpen.has('nm:'+n.id)?pendNoteEdit('nm',n):pendNoteLine('nm',n)}
       </div>
       <div class="pend-right">
+        <button class="btn-void" data-note-open="nm:${n.id}">${n.notes?'Edit note':'Note'}</button>
         <div class="pend-preview">If it wins: <span class="pend-preview-pos">+${fmt(win)} €</span><br>If it loses: <span class="pend-preview-neg">${fmt(loss)} €</span></div>
         <button class="btn-void" data-cashout="nm:${n.id}" title="Close early for a manual amount">Cash out</button>
         <button class="btn-void" data-pid="${n.id}" data-kind="nm" data-action="anulada" title="Doesn't count as won or lost">Void</button>
@@ -4178,7 +4206,19 @@ function pendResolveAll(){
   list.forEach(({kind,item})=>pendResolveItem(kind,item));
   save();updateBadges();refreshAfterPend();
 }
+function pendNoteTarget(key){const [k,i]=key.split(':');return (k==='nm'?D.normals:D.bets).find(x=>x.id===+i);}
+document.getElementById('pendList').addEventListener('change',e=>{
+  const inp=e.target.closest('[data-note]');if(!inp)return;
+  const item=pendNoteTarget(inp.dataset.note);if(!item)return;
+  const v=inp.value.trim();if((item.notes||'')===v)return;
+  if(v)item.notes=v;else delete item.notes;
+  if(pendView==='full')pendOpen.delete(inp.dataset.note);
+  save();inp.blur();renderPendientes();renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);
+});
+document.getElementById('pendList').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('[data-note]')){e.preventDefault();e.target.blur();}});
 document.getElementById('pendList').addEventListener('click',e=>{
+  const no=e.target.closest('[data-note-open]');
+  if(no){const k=no.dataset.noteOpen;pendOpen.add(k);renderPendientes();const el=document.querySelector(`#pendList [data-note="${k}"]`);if(el){el.focus();const L=el.value.length;try{el.setSelectionRange(L,L);}catch(err){}}return;}
   const mo=e.target.closest('[data-pcmore]');
   if(mo){const k=mo.dataset.pcmore;pendOpen.has(k)?pendOpen.delete(k):pendOpen.add(k);renderPendientes();return;}
   const coBtn=e.target.closest('[data-cashout]');
