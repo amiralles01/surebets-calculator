@@ -1951,6 +1951,17 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
   .promo-form .pf-house,.promo-form .pf-name{grid-column:span 2}
   .promo-form .pf-add{grid-column:span 2;width:100%}
 }
+.pc-leg{position:relative}
+.pc-leg.armed,.pend-leg.armed{border-color:var(--green)!important}
+.pc-leg.armed::after,.pend-leg.armed::after{content:attr(data-confirm);position:absolute;inset:-1px;border-radius:inherit;display:grid;place-items:center;padding:0 8px;text-align:center;
+  background:var(--green);color:#fff;font-size:12.5px;font-weight:700;line-height:1.2;animation:armIn .12s ease-out}
+.pc-leg.armed::before,.pend-leg.armed::before{content:'';position:absolute;left:6px;right:6px;bottom:3px;height:3px;border-radius:2px;background:rgba(255,255,255,.75);z-index:1;transform-origin:left;animation:armTimer 4s linear forwards}
+.btn-accept.armed,.btn-reject.armed,.btn-void.armed{position:relative;overflow:hidden;font-weight:700}
+.btn-reject.armed{background:var(--red)!important;border-color:var(--red)!important;color:#fff!important}
+.btn-void.armed{background:var(--text)!important;border-color:var(--text)!important;color:var(--surface)!important}
+.btn-accept.armed{box-shadow:0 0 0 3px var(--gglow)}
+@keyframes armIn{from{opacity:0}to{opacity:1}}
+@keyframes armTimer{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 </style>
 </head>
 <body>
@@ -3905,7 +3916,7 @@ function pendCompactHtml(kind,item,tw){
   if(kind==='sb'){
     const b=item;const promos=itemPromos('sb',b);const pr=promos.find(Boolean);
     const legs=b.legs||[];
-    const legsHtml=legs.length?legs.map((l,li)=>{const r=promos[li];return`<button class="pc-leg${r?' promo':''}" data-pwinbid="${b.id}" data-pwinleg="${li}" title="Tap if this happened — settles it"${r?` style="--hl:${r.color}"`:''}>
+    const legsHtml=legs.length?legs.map((l,li)=>{const r=promos[li];return`<button class="pc-leg${r?' promo':''}" data-pwinbid="${b.id}" data-pwinleg="${li}" title="Tap twice if this happened — settles it"${r?` style="--hl:${r.color}"`:''}>
         <span class="pc-h"><mark>${esc(l.house||'—')}</mark></span><span class="pc-o"><mark>${fmt(l.odd||0)}</mark></span><span class="pc-r">${esc(l.result||'')}</span></button>`;}).join('')
       :`<button class="btn-accept pc-act" data-pid="${b.id}" data-kind="sb" data-action="won">${PEND_IC.check}Accept</button>`;
     const p=b.profit||0;
@@ -3933,6 +3944,7 @@ function pendCompactHtml(kind,item,tw){
   </div>`;
 }
 function renderPendientes(){
+  if(typeof pendDisarm==='function')pendDisarm();
   const pendSBAll=D.bets.filter(b=>b.status==='pending').map(b=>({kind:'sb',item:b}));
   const pendNMAll=D.normals.filter(n=>n.status==='pending').map(n=>({kind:'nm',item:n}));
   const pendWDAll=[];
@@ -4024,7 +4036,7 @@ function renderPendientes(){
           <div style="display:flex;align-items:center;gap:6px"><button class="btn-void" data-cashout="sb:${b.id}" title="Close early for a manual amount">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada" title="Doesn't count as won or lost">Void</button>${hideBtnHtml('sb:'+b.id,true)}</div>
         </div>
         ${hasLegs?legsHtml:`<div class="pend-hint">No leg breakdown. <button class="btn-accept" data-pid="${b.id}" data-kind="sb" data-action="won"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Accept</button></div>`}
-        ${hasLegs?`<div class="pend-hint">Tap the outcome that happened — it's accepted <b>immediately</b>.</div>`:''}
+        ${hasLegs?`<div class="pend-hint">Tap the outcome that happened, then tap it <b>again</b> to confirm.</div>`:''}
       </div>`;
     }
     const n=item;
@@ -4093,11 +4105,42 @@ function pendUndoToast(arr,item,msg){
 }
 function refreshAfterPend(){renderPendientes();renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);renderProfit();}
 const PEND_ACT_LABEL={won:'Won',lost:'Lost',anulada:'Void'};
+// settling needs two taps on the same outcome/button: the first one only arms it
+let pendArm=null; // {key, el, html, timer}
+const PEND_ARM_MS=4000;
+function pendDisarm(){
+  if(!pendArm)return;
+  clearTimeout(pendArm.timer);
+  const el=pendArm.el;el.classList.remove('armed');
+  if(pendArm.html!=null)el.innerHTML=pendArm.html;
+  delete el.dataset.confirm;
+  pendArm=null;
+}
+function pendConfirmTap(el){
+  const d=el.dataset;
+  const key=d.pwinbid?'leg:'+d.pwinbid+':'+d.pwinleg:'pid:'+d.kind+':'+d.pid+':'+d.action;
+  if(pendArm&&pendArm.key===key&&pendArm.el===el&&document.contains(el)){clearTimeout(pendArm.timer);pendArm=null;return true;}
+  pendDisarm();
+  pendArm={key,el,html:null,timer:setTimeout(pendDisarm,PEND_ARM_MS)};
+  el.classList.add('armed');
+  if(d.pwinbid){
+    const b=D.bets.find(x=>x.id===+d.pwinbid);const l=b&&b.legs&&b.legs[+d.pwinleg];
+    el.dataset.confirm=`✓ ${l&&l.house?l.house:'This'} won — tap again`;
+  }else{
+    pendArm.html=el.innerHTML;
+    el.innerHTML={won:'Tap again: won',lost:'Tap again: lost',anulada:'Tap again: void'}[d.action]||'Tap again';
+  }
+  return false;
+}
+// a tap anywhere else cancels the armed one
+document.addEventListener('click',e=>{if(pendArm&&!pendArm.el.contains(e.target))pendDisarm();},true);
 document.getElementById('pendList').addEventListener('click',e=>{
   const mo=e.target.closest('[data-pcmore]');
   if(mo){const k=mo.dataset.pcmore;pendOpen.has(k)?pendOpen.delete(k):pendOpen.add(k);renderPendientes();return;}
   const coBtn=e.target.closest('[data-cashout]');
   if(coBtn){const [k,i]=coBtn.dataset.cashout.split(':');openCashoutModal(k,+i);return;}
+  const settleBtn=e.target.closest('[data-pwinbid],[data-pid]');
+  if(settleBtn&&!pendConfirmTap(settleBtn))return;
   const winLegBtn=e.target.closest('[data-pwinbid]');
   if(winLegBtn){
     const bid=+winLegBtn.dataset.pwinbid,li=+winLegBtn.dataset.pwinleg;
