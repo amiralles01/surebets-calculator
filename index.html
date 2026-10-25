@@ -4845,6 +4845,7 @@ function renderRepeatSel(){
 function applyLastBet(){
   const L=lastBet();if(!L)return;const b=L.b;
   if(L.kind==='sb'){
+    if(tgRequeue())save();
     clearPresetStakes();
     outcomes=(b.legs||[]).map(l=>({id:nextId++,house:l.house||'',result:l.result||'',odd:0,manualStake:null}));
     while(outcomes.length<2)outcomes.push({id:nextId++,house:'',result:'',odd:0,manualStake:null});
@@ -4895,7 +4896,7 @@ function registerCurrent(){
   const wasPreset=outcomes.some(o=>o.fromPreset);
   outcomes.forEach(o=>{o.odd=0;if(o.fromPreset||wasPreset){o.manualStake=null;o.fromPreset=false;}});
   if(wasPreset&&psBaseTotal!=null){setTotal(psBaseTotal);psBaseTotal=null;}
-  psSkipKey=null;newBetCat=null;sbPrefill=null;
+  psSkipKey=null;newBetCat=null;sbPrefill=null;tgCur=null;
   return {bet,res};
 }
 function quickRegister(){
@@ -5041,6 +5042,7 @@ document.getElementById('qPasteBtn').addEventListener('click',()=>{
 document.getElementById('qPaste').addEventListener('input',e=>{
   const {legs,ev,market,date,time}=parseSurebetText(e.target.value);
   if(legs.length<2){if(e.target.value.trim())toast('Could not find 2 of your bookmakers with odds in that text');return;}
+  if(tgRequeue())save();
   clearPresetStakes();
   outcomes=legs.map((l,i)=>({id:nextId++,house:l.house,result:l.result||'',odd:l.odd,manualStake:null}));
   if(date)document.getElementById('q-date').value=date;
@@ -5058,6 +5060,8 @@ document.getElementById('qPaste').addEventListener('input',e=>{
 //  (the browser polls the Bot API directly; no server needed)
 // ══════════════════════════════════════════
 let tgBusy=false,tgTimer=null,tgOpenCfg=false,tgLastErr='';
+// the Telegram surebet currently loaded in the calculator (not yet registered)
+let tgCur=null;
 function tgToken(){try{return localStorage.getItem('sb_tg_token')||'';}catch(e){return '';}}
 function tgSetToken(t){try{t?localStorage.setItem('sb_tg_token',t):localStorage.removeItem('sb_tg_token');}catch(e){}}
 function tgOffset(){try{return +(localStorage.getItem('sb_tg_off')||0);}catch(e){return 0;}}
@@ -5132,9 +5136,17 @@ function tgNext(){
   if(!next||!calcIdle())return false;
   tgLoad(next.uid);focusStake();return true;
 }
+// Something else is about to replace the calculator: the Telegram surebet loaded there and not
+// registered yet goes back into the queue (in its original order) instead of being lost.
+function tgRequeue(){
+  const c=tgCur;tgCur=null;
+  if(!c||!outcomes.some(o=>o.odd>1)||D.tgInbox.some(x=>x.uid===c.uid))return false;
+  D.tgInbox.push(c);D.tgInbox.sort((a,b)=>b.uid-a.uid);renderTgCard();return true;
+}
 function tgLoad(uid,quiet){
   const it=D.tgInbox.find(x=>x.uid===uid);if(!it)return false;
   const p=parseSurebetText(it.text,it.at);if(p.legs.length<2)return false;
+  tgRequeue();tgCur=it;
   clearPresetStakes();
   outcomes=p.legs.map(l=>({id:nextId++,house:l.house,result:l.result||'',odd:l.odd,manualStake:null}));
   if(p.date)document.getElementById('q-date').value=p.date;
