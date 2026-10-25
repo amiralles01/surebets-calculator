@@ -1814,6 +1814,143 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 #sbCalcCard .or .oi-wrap{grid-column:auto}
 @media(max-width:600px){#sbCalcCard .or .oi-wrap{grid-column:2;grid-row:1}}
 .psq-h .psq-edit{margin-left:auto;font-size:12px}
+
+/* ═════════ PENDING: search, compact list, promo highlights ═════════ */
+.pend-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#pendSearch{-webkit-appearance:none;appearance:none;background-color:var(--inp);border:1px solid var(--border2);border-radius:10px;color:var(--text);outline:none;
+  flex:1 1 260px;max-width:440px;padding:10px 12px 10px 36px;font-size:14px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%238F9893' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:12px 50%}
+#pendHouseWrap{display:contents}
+.pend-bar .pend-house-sel{flex:0 1 220px;min-width:160px}
+.pend-view .seg-b{gap:6px}.pend-view svg{width:15px;height:15px}
+.promo-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:12px;border:none;background:var(--surface);box-shadow:var(--lift);
+  color:var(--muted);font-weight:600;font-size:13.5px;cursor:pointer;transition:all var(--t)}
+.promo-btn svg{width:16px;height:16px}
+.promo-btn:hover{color:var(--text)}
+.promo-btn.live{color:var(--text)}.promo-btn.live svg{color:#B98A00}
+.promo-btn.on{background:var(--pitch);color:#fff}.promo-btn.on svg{color:var(--ball)}
+.promo-btn .pd-n{font-size:11px;background:var(--ball);color:var(--ball-ink);border-radius:99px;padding:0 7px;font-weight:700}
+
+/* highlighter marks: only painted when a promo rule hits */
+#pendList mark{background:none;color:inherit}
+#pendList .pc-leg.promo mark,#pendList .pend-leg.promo mark,#pendList .pc-nmh.promo mark{background:linear-gradient(transparent 50%,var(--hl) 50%,var(--hl) 90%,transparent 90%);padding:0 2px;margin:0 -2px;border-radius:2px}
+.promo-tag{display:inline-flex;align-items:center;gap:4px;flex-shrink:0;padding:2px 8px 2px 6px;border-radius:5px;background:var(--hl);color:#1C2A20;
+  font-family:var(--font);font-size:11.5px;font-weight:700;letter-spacing:0;line-height:1.5;white-space:nowrap}
+.promo-tag svg{width:11px;height:11px}
+.pend-item.promo{box-shadow:inset 4px 0 0 var(--hl),var(--lift)}
+.pend-leg.promo{border-color:var(--hl);box-shadow:inset 0 0 0 1px var(--hl)}
+
+/* compact rows */
+#pendList.compact{gap:6px}
+#pendList.compact .pend-day-h{margin:12px 2px 2px}
+.pc-row{position:relative;display:grid;grid-template-columns:66px minmax(0,1fr) auto 86px 32px;grid-template-areas:"time ev legs profit tail";
+  align-items:center;gap:6px 12px;padding:8px 8px 8px 12px;background:var(--surface);border-radius:12px;box-shadow:var(--lift)}
+.pc-row.promo{box-shadow:inset 4px 0 0 var(--hl),var(--lift)}
+.pc-row.twin:not(.promo){box-shadow:inset 3px 0 0 var(--ball),var(--lift)}
+.pc-row.wd{box-shadow:inset 3px 0 0 var(--cyan),var(--lift)}
+.pc-time{grid-area:time;justify-self:start;display:inline-flex;align-items:center;gap:3px;padding:3px 7px;border-radius:6px;background:var(--raised);
+  color:var(--muted);font-size:12.5px;font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pc-time.done{background:var(--gdim);color:var(--green)}
+.pc-time svg{width:11px;height:11px}
+.pc-ev{grid-area:ev;min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:3px 7px}
+.pc-ev>b{min-width:0;max-width:100%;font-family:var(--display);font-size:15px;font-weight:650;letter-spacing:-.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-ev .sb-twin{font-family:var(--font)}
+.pc-row.sb .pc-ev{flex-wrap:nowrap}
+.pc-sub{flex-basis:100%;font-size:12.5px;color:var(--muted)}
+.pc-sub mark{font-weight:650;color:var(--text)!important}
+.pc-legs{grid-area:legs;display:grid;grid-template-columns:repeat(var(--n,2),minmax(150px,196px));gap:6px}
+.pc-nm-btns,.pc-row.wd .pc-legs{display:flex;gap:6px;justify-content:flex-end}
+.pc-leg{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"h o" "r r";gap:0 8px;text-align:left;padding:6px 10px 7px;
+  border-radius:9px;border:1px solid var(--border2);background:var(--raised);color:var(--text);cursor:pointer;transition:border-color var(--t),background var(--t),transform .08s}
+.pc-leg:hover{border-color:var(--green);background:var(--gdim)}
+.pc-leg:active{transform:scale(.97)}
+.pc-leg.promo{border-color:var(--hl);box-shadow:inset 0 0 0 1px var(--hl)}
+.pc-h{grid-area:h;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-o{grid-area:o;font-size:13.5px;font-weight:750;font-variant-numeric:tabular-nums}
+.pc-r{grid-area:r;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-profit{grid-area:profit;text-align:right;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pc-profit.pos{color:var(--green)}.pc-profit.neg{color:var(--red)}
+.pc-tail{grid-area:tail;display:flex;justify-content:center}
+.pc-more{width:30px;height:30px;display:grid;place-items:center;border-radius:8px;border:none;background:transparent;color:var(--faint);cursor:pointer}
+.pc-more svg{width:16px;height:16px}
+.pc-more:hover,.pc-more.on{background:var(--raised);color:var(--text)}
+.pc-act{min-height:34px!important;padding:6px 12px!important;font-size:12.5px!important;white-space:nowrap}
+.pc-act small{font-weight:500;opacity:.75;margin-left:3px}
+.pc-extra{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;padding-top:8px;margin-top:2px;border-top:1px dashed var(--border)}
+.pc-extra .pend-meta{margin-top:0;display:flex;flex-wrap:wrap}
+.pc-extra .sb-sub{flex-basis:100%;margin-top:0}
+.pc-btns{display:flex;gap:6px;align-items:center;margin-left:auto}
+.pc-btns .btn-void{min-height:34px;padding:6px 12px;font-size:12.5px}
+
+/* day chips: promo toggle + ready to settle */
+.pd-sep{flex-shrink:0;width:1px;height:20px;background:var(--border2);margin:0 2px}
+.pd-chip.promo-chip{gap:5px;border-color:#E2B21F;color:#7A5600;background:rgba(244,197,61,.14)}
+.pd-chip.promo-chip svg{width:12px;height:12px}
+.pd-chip.promo-chip.active{background:var(--ball);border-color:var(--ball);color:var(--ball-ink)}
+.pd-chip.promo-chip.active .pd-n{background:rgba(0,0,0,.1);color:var(--ball-ink)}
+.pd-chip.done{color:var(--green);border-color:rgba(35,130,75,.35)}
+.pd-chip.done.active{background:var(--green);border-color:var(--green);color:#fff}
+.pd-chip.done.active .pd-n{background:rgba(255,255,255,.2);color:#fff}
+
+/* promo rules panel */
+.promo-panel{background:var(--surface);border-radius:var(--r);box-shadow:var(--lift);padding:16px 18px;display:flex;flex-direction:column;gap:14px;border-top:5px solid var(--ball)}
+.promo-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.promo-title{font-family:var(--display);font-size:17px;font-weight:650;letter-spacing:-.02em}
+.promo-sub{font-size:12.5px;color:var(--muted);margin-top:2px;max-width:640px}
+.promo-x{width:30px;height:30px;flex-shrink:0;border-radius:8px;border:none;background:var(--raised);color:var(--muted);cursor:pointer;font-size:13px}
+.promo-rules{display:flex;flex-direction:column;gap:6px}
+.promo-rule{display:grid;grid-template-columns:14px minmax(0,1fr) auto auto auto;align-items:center;gap:10px;padding:8px 8px 8px 12px;border-radius:10px;background:var(--raised)}
+.promo-rule.off{opacity:.55}
+.promo-sw{width:14px;height:14px;border-radius:4px;background:var(--hl)}
+.promo-info{min-width:0;font-size:12.5px;color:var(--muted)}
+.promo-info b{color:var(--text);font-size:14px}
+.promo-lbl{font-weight:600;color:var(--text)}
+.promo-exp{color:var(--red);font-weight:600}
+.promo-n{font-size:12px;font-weight:650;color:var(--muted);white-space:nowrap}
+.promo-toggle{position:relative;width:40px;height:24px;border-radius:99px;border:none;background:var(--border2);cursor:pointer;transition:background var(--t)}
+.promo-toggle i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform var(--t)}
+.promo-toggle.on{background:var(--pitch)}
+.promo-toggle.on i{transform:translateX(16px)}
+.promo-form{display:grid;grid-template-columns:1.3fr .7fr .7fr 1.3fr 1fr 1fr auto;gap:8px;align-items:end}
+.promo-form label{display:flex;flex-direction:column;gap:4px;min-width:0}
+.promo-form label>span{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}
+.promo-form label>span i{font-style:normal;font-weight:500;color:var(--faint)}
+.promo-form input,.promo-form select{width:100%;padding:9px 10px;font-size:14px}
+.promo-form .pf-add{width:auto;padding:10px 16px;margin:0;white-space:nowrap}
+
+@media(max-width:1180px){.pc-legs{grid-template-columns:repeat(var(--n,2),minmax(128px,168px))}.promo-form{grid-template-columns:repeat(3,minmax(0,1fr))}.promo-form .pf-add{grid-column:span 3}}
+@media(max-width:820px){
+  .pc-row{grid-template-columns:auto minmax(0,1fr) auto 30px;grid-template-areas:"time ev profit tail" "legs legs legs legs";padding:9px 6px 10px 10px;gap:7px 9px}
+  .pc-legs{grid-template-columns:repeat(var(--n,2),minmax(0,1fr))}
+  .pc-nm-btns .pc-act,.pc-row.wd .pc-act{flex:1;justify-content:center}
+}
+@media(max-width:600px){
+  .pend-bar{gap:8px}
+  .pend-bar{flex-wrap:nowrap}
+  #pendSearch{flex:1 1 58%;min-width:0;max-width:none;font-size:16px}
+  .pend-bar .pend-house-sel{flex:1 1 38%;min-width:0}
+  .pend-tools .seg.pend-sort{flex:1 1 auto}
+  .pend-tools .seg.pend-view{flex:0 0 auto}
+  .pend-view .seg-b span{display:none}
+  .pend-view .seg-b{padding:8px 9px}
+  .pend-tools .ps-by{display:none}
+  #pendDays .pd-pick input{font-size:16px!important;width:156px;padding:4px 9px!important}
+  .pend-sort .seg-b{padding:8px 6px;text-transform:capitalize}
+  .promo-btn{padding:9px 11px}
+  #pendStats{gap:8px}
+  #pendStats .sc{padding:10px 12px}
+  #pendStats .sl2{font-size:11.5px}
+  #pendStats .sv2{font-size:21px}
+  .pc-ev>b{font-size:14.5px}
+  .pc-ev .promo-tag{font-size:0;gap:0;padding:3px 5px}.pc-ev .promo-tag svg{width:12px;height:12px}
+  .promo-panel{padding:14px}
+  .promo-rule{grid-template-columns:12px minmax(0,1fr) auto auto;gap:8px}
+  .promo-n{display:none}
+  .promo-form{grid-template-columns:1fr 1fr}
+  .promo-form .pf-house,.promo-form .pf-name{grid-column:span 2}
+  .promo-form .pf-add{grid-column:span 2;width:100%}
+}
 </style>
 </head>
 <body>
@@ -2071,7 +2208,9 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 
     <!-- ═══ PENDIENTES PAGE ═══ -->
     <div id="page-pendientes" class="fw" style="display:none">
+      <div class="pend-bar"><input type="search" id="pendSearch" placeholder="Search team or bookmaker" autocomplete="off" enterkeyhint="search"><span id="pendHouseWrap"></span></div>
       <div class="pend-tools" id="pendTools"></div>
+      <div id="pendPromo"></div>
       <div class="pend-days" id="pendDays"></div>
       <div class="stats" id="pendStats"></div>
       <div id="pendList"></div>
@@ -3565,7 +3704,9 @@ function pendKey(kind,item){
   if(kind==='nm')return 'nm:'+item.id;
   return 'wd:'+item.cid+':'+item.hid;
 }
-let pendSort='day', pendHouse='all';
+let pendSort='day', pendHouse='all', pendQuery='', pendOnlyPromo=false, promoPanelOpen=false;
+let pendView=(()=>{try{return localStorage.getItem('sb_pend_view')||'compact';}catch(e){return 'compact';}})(); // 'compact' | 'full'
+const pendOpen=new Set(); // compact rows expanded to show their actions
 function pendHouses(kind,item){
   if(kind==='wd')return [item.casaName||''];
   if(kind==='sb'){const hs=[...new Set((item.legs||[]).map(l=>(l.house||'').trim()).filter(Boolean))];return hs.length?hs:[''];}
@@ -3573,19 +3714,104 @@ function pendHouses(kind,item){
 }
 function pendHouseChip(names){const hs=(names||[]).map(h=>(h||'').trim()).filter(h=>h&&!isPlaceholderHouse(h));return `<span class="pend-house${hs.length?'':' none'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="21" x2="21" y2="21"/><line x1="6" y1="17" x2="6" y2="11"/><line x1="12" y1="17" x2="12" y2="11"/><line x1="18" y1="17" x2="18" y2="11"/><polygon points="12 3 20 8 4 8"/></svg>${hs.length?hs.map(esc).join(' · '):'No bookmaker'}</span>`;}
 function pendMatchesHouse(kind,item){return pendHouse==='all'||pendHouses(kind,item).some(h=>bkKey(h)===bkKey(pendHouse));}
+function pendMatchesQuery(kind,item){
+  const q=pendQuery.trim().toLowerCase();if(!q)return true;
+  const txt=kind==='wd'?'withdrawal '+(item.casaName||''):kind==='sb'?[item.event,...(item.legs||[]).flatMap(l=>[l.house,l.result])].join(' '):[item.event,item.house,item.type].join(' ');
+  return q.split(/\s+/).every(w=>(txt||'').toLowerCase().includes(w));
+}
+// ── Promo highlights: "bookmaker X, odds ≥ N (and stake ≥ S)" rules, saved with the rest of the data ──
+const PROMO_COLORS=['#F4C53D','#FF9EBB','#86DDB0','#9CC8FF','#FFB36B'];
+function promoRules(){if(!Array.isArray(D.promoRules))D.promoRules=[];return D.promoRules;}
+function promoExpired(r){return !!r.until&&r.until<shiftedISO(0);}
+function promoLive(){return promoRules().filter(r=>r.on&&!promoExpired(r));}
+function promoFor(house,odd,stake,date){
+  return promoLive().find(r=>bkKey(r.house)===bkKey(house)&&(odd||0)>=r.minOdd-1e-9&&(!r.minStake||(stake||0)>=r.minStake-1e-9)
+    &&(!r.from||!date||date>=r.from)&&(!r.until||!date||date<=r.until))||null;
+}
+// the rule each leg/bet hits (index-aligned with legs for surebets)
+function itemPromos(kind,item){
+  if(kind==='sb')return (item.legs||[]).map(l=>promoFor(l.house,l.odd,l.stake,item.date));
+  if(kind==='nm')return [promoFor(item.house,item.odd,item.stake,item.date)];
+  return [];
+}
+function itemPromo(kind,item){return itemPromos(kind,item).find(Boolean)||null;}
+function promoTag(r){return r?`<span class="promo-tag" style="--hl:${r.color}"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>${esc(r.label||(r.house+' ≥ '+fmt(r.minOdd)))}</span>`:'';}
+function promoDesc(r){
+  const bits=[`odds ≥ ${fmt(r.minOdd)}`];
+  if(r.minStake)bits.push(`stake ≥ ${fmt(r.minStake)} €`);
+  if(r.from||r.until)bits.push((r.from?pendDayLabel(r.from):'…')+' – '+(r.until?pendDayLabel(r.until):'…'));
+  return bits.join(' · ');
+}
+function renderPromoPanel(){
+  const box=document.getElementById('pendPromo');
+  if(!promoPanelOpen){box.innerHTML='';return;}
+  const rules=promoRules();
+  const pend=[...D.bets.filter(b=>b.status==='pending').map(b=>({kind:'sb',item:b})),...D.normals.filter(n=>n.status==='pending').map(n=>({kind:'nm',item:n}))];
+  const hits=r=>pend.filter(({kind,item})=>itemPromos(kind,item).some(x=>x&&x.id===r.id)).length;
+  const books=trackedBookmakers();
+  box.innerHTML=`<div class="promo-panel">
+    <div class="promo-head"><div><div class="promo-title">Promo highlights</div><div class="promo-sub">Marks the bets at a bookmaker whose odds (and stake) reach a minimum — e.g. Winamax, odds 3.00+, stake 5 € for a "win a bet at 3.00" promo.</div></div><button class="promo-x" id="promoClose" title="Close">✕</button></div>
+    ${rules.length?`<div class="promo-rules">${rules.map(r=>{const exp=promoExpired(r);const n=r.on&&!exp?hits(r):0;return`<div class="promo-rule${r.on&&!exp?'':' off'}">
+      <span class="promo-sw" style="--hl:${r.color}"></span>
+      <div class="promo-info"><b>${esc(r.house)}</b>${r.label?` <span class="promo-lbl">${esc(r.label)}</span>`:''}<div>${promoDesc(r)}${exp?' · <span class="promo-exp">ended</span>':''}</div></div>
+      <span class="promo-n">${r.on&&!exp?`${n} pending`:''}</span>
+      <button class="promo-toggle${r.on?' on':''}" data-promo-toggle="${r.id}" title="${r.on?'Turn off':'Turn on'}" aria-pressed="${r.on?'true':'false'}"><i></i></button>
+      <button class="bd2" data-promo-del="${r.id}" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+    </div>`;}).join('')}</div>`:''}
+    <div class="promo-form">
+      <label class="pf-house"><span>Bookmaker</span><select id="pr-house">${books.length?books.map(h=>`<option value="${esc(h)}">${esc(h)}</option>`).join(''):'<option value="">Add bookmakers first</option>'}</select></label>
+      <label class="pf-odd"><span>Min. odds</span><input type="text" inputmode="decimal" id="pr-odd" placeholder="3.00"></label>
+      <label class="pf-stake"><span>Min. stake <i>optional</i></span><input type="text" inputmode="decimal" id="pr-stake" placeholder="5 €"></label>
+      <label class="pf-name"><span>Name <i>optional</i></span><input type="text" id="pr-label" placeholder="The Walking Bet" maxlength="40"></label>
+      <label class="pf-from"><span>From <i>optional</i></span><input type="date" id="pr-from"></label>
+      <label class="pf-until"><span>Until <i>optional</i></span><input type="date" id="pr-until"></label>
+      <button class="btn-reg pf-add" id="pr-add">Add highlight</button>
+    </div>
+  </div>`;
+}
+function promoNum(v){const n=parseFloat(String(v||'').replace(',','.').replace(/[^\d.]/g,''));return isNaN(n)?0:n;}
+document.getElementById('pendPromo').addEventListener('click',e=>{
+  if(e.target.closest('#promoClose')){promoPanelOpen=false;renderPendientes();return;}
+  const tg=e.target.closest('[data-promo-toggle]');
+  if(tg){const r=promoRules().find(x=>x.id===+tg.dataset.promoToggle);if(!r)return;r.on=!r.on;if(r.on&&promoExpired(r))r.until='';save();renderPromoPanel();renderPendientes();return;}
+  const del=e.target.closest('[data-promo-del]');
+  if(del){const rules=promoRules();const i=rules.findIndex(x=>x.id===+del.dataset.promoDel);if(i<0)return;const [old]=rules.splice(i,1);
+    save();renderPromoPanel();renderPendientes();toast('Highlight deleted','Undo',()=>{promoRules().splice(i,0,old);save();renderPromoPanel();renderPendientes();});return;}
+  if(e.target.closest('#pr-add')){
+    const house=document.getElementById('pr-house').value.trim();
+    const minOdd=promoNum(document.getElementById('pr-odd').value);
+    if(!house){alert('Add your bookmakers in Bookmakers first.');return;}
+    if(!(minOdd>1)){alert('Enter the minimum odds, e.g. 3.00');document.getElementById('pr-odd').focus();return;}
+    const from=document.getElementById('pr-from').value,until=document.getElementById('pr-until').value;
+    if(from&&until&&until<from){alert('"Until" is before "From".');return;}
+    const used=new Set(promoRules().map(r=>r.color));
+    const color=PROMO_COLORS.find(c=>!used.has(c))||PROMO_COLORS[promoRules().length%PROMO_COLORS.length];
+    promoRules().push({id:Date.now(),house,minOdd:r2(minOdd),minStake:r2(promoNum(document.getElementById('pr-stake').value)),label:document.getElementById('pr-label').value.trim(),from,until,on:true,color});
+    save();renderPromoPanel();renderPendientes();
+    toast(`Highlighting ${house} at odds ${fmt(minOdd)}+`);
+  }
+});
 function renderPendTools(allVisible){
   const names=new Map();
   allVisible.forEach(({kind,item})=>pendHouses(kind,item).forEach(h=>{if(h&&!names.has(bkKey(h)))names.set(bkKey(h),h);}));
   trackedBookmakers().forEach(h=>{if(!names.has(bkKey(h)))names.set(bkKey(h),h);});
   const list=[...names.values()].sort((a,b)=>a.localeCompare(b,'en',{sensitivity:'base'}));
   if(pendHouse!=='all'&&!list.some(h=>bkKey(h)===bkKey(pendHouse)))pendHouse='all';
+  document.getElementById('pendHouseWrap').innerHTML=`<select id="pendHouseSel" class="pend-house-sel"><option value="all">All bookmakers</option>${list.map(h=>`<option value="${esc(h)}"${bkKey(h)===bkKey(pendHouse)?' selected':''}>${esc(h)}</option>`).join('')}</select>`;
+  const live=promoLive().length;
   document.getElementById('pendTools').innerHTML=`
-    <div class="seg pend-sort"><button class="seg-b${pendSort==='day'?' active':''}" data-psort="day">By day</button><button class="seg-b${pendSort==='house'?' active':''}" data-psort="house">By bookmaker</button></div>
-    <select id="pendHouseSel" class="pend-house-sel"><option value="all">All bookmakers</option>${list.map(h=>`<option value="${esc(h)}"${bkKey(h)===bkKey(pendHouse)?' selected':''}>${esc(h)}</option>`).join('')}</select>`;
+    <div class="seg pend-sort"><button class="seg-b${pendSort==='day'?' active':''}" data-psort="day"><span class="ps-by">By </span>day</button><button class="seg-b${pendSort==='house'?' active':''}" data-psort="house"><span class="ps-by">By </span>bookmaker</button></div>
+    <div class="seg pend-view" role="group" aria-label="View"><button class="seg-b${pendView==='compact'?' active':''}" data-pview="compact" title="Compact list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg><span>Compact</span></button><button class="seg-b${pendView==='full'?' active':''}" data-pview="full" title="Detailed cards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="7" rx="2"/><rect x="3.5" y="14" width="17" height="6" rx="2"/></svg><span>Detailed</span></button></div>
+    <button class="promo-btn${promoPanelOpen?' on':''}${live?' live':''}" data-promo-open><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l-6 6v3h9l3-3"/><path d="M22 12l-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>Promos${live?` <span class="pd-n">${live}</span>`:''}</button>`;
 }
-document.getElementById('pendTools').addEventListener('click',e=>{const b=e.target.closest('[data-psort]');if(!b)return;pendSort=b.dataset.psort;renderPendientes();});
-document.getElementById('pendTools').addEventListener('change',e=>{if(e.target.id!=='pendHouseSel')return;pendHouse=e.target.value;renderPendientes();});
-let pendDayFilter='all'; // 'all' | 'overdue' | 'nodate' | 'YYYY-MM-DD'
+document.getElementById('pendTools').addEventListener('click',e=>{
+  const b=e.target.closest('[data-psort]');if(b){pendSort=b.dataset.psort;renderPendientes();return;}
+  const v=e.target.closest('[data-pview]');if(v){pendView=v.dataset.pview;try{localStorage.setItem('sb_pend_view',pendView);}catch(err){}renderPendientes();return;}
+  if(e.target.closest('[data-promo-open]')){promoPanelOpen=!promoPanelOpen;renderPromoPanel();renderPendientes();if(promoPanelOpen)document.getElementById('pendPromo').scrollIntoView({block:'nearest',behavior:'smooth'});}
+});
+document.getElementById('pendHouseWrap').addEventListener('change',e=>{if(e.target.id!=='pendHouseSel')return;pendHouse=e.target.value;renderPendientes();});
+document.getElementById('pendSearch').addEventListener('input',e=>{pendQuery=e.target.value;renderPendientes();});
+let pendDayFilter='all'; // 'all' | 'done' | 'overdue' | 'nodate' | 'YYYY-MM-DD'
 function localISO(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function shiftedISO(n){const d=new Date();d.setDate(d.getDate()+n);return localISO(d);}
 function pendDayLabel(iso){
@@ -3599,18 +3825,31 @@ function pendDayLabel(iso){
   if(d.getFullYear()!==new Date().getFullYear())o.year='numeric';
   return d.toLocaleDateString('en-GB',o);
 }
-function pendMatchesDay(date){
+// the estimated end (date + "ends ~" time) has already passed → it can be settled
+function pendEnded(item){
+  const d=item.date||'';if(!d)return false;
+  const today=shiftedISO(0);
+  if(d<today)return true;
+  if(d>today||!item.time)return false;
+  const [h,m]=String(item.time).split(':').map(x=>parseInt(x,10)||0);
+  const now=new Date();return now.getHours()*60+now.getMinutes()>=h*60+m;
+}
+function pendMatchesDay(date,item){
   if(pendDayFilter==='all')return true;
+  if(pendDayFilter==='done')return !!item&&pendEnded(item);
   if(pendDayFilter==='overdue')return !!date&&date<shiftedISO(0);
   if(pendDayFilter==='nodate')return !date;
   return date===pendDayFilter;
 }
 function renderPendDays(allVisible){
   const today=shiftedISO(0);
-  const counts={};let overdue=0,nodate=0;
-  allVisible.forEach(({item})=>{const d=item.date||'';if(!d)nodate++;else if(d<today)overdue++;else counts[d]=(counts[d]||0)+1;});
+  const counts={};let overdue=0,nodate=0,done=0,promo=0;
+  allVisible.forEach(({kind,item})=>{const d=item.date||'';if(!d)nodate++;else if(d<today)overdue++;else counts[d]=(counts[d]||0)+1;if(pendEnded(item))done++;if(itemPromo(kind,item))promo++;});
+  if(!promoLive().length)pendOnlyPromo=false;
   const chip=(key,label,n,extra='')=>`<button class="pd-chip ${extra}${pendDayFilter===key?' active':''}" data-pday="${key}">${label}${n!=null?` <span class="pd-n">${n}</span>`:''}</button>`;
-  let html=chip('all','All',allVisible.length);
+  let html=promoLive().length?`<button class="pd-chip promo-chip${pendOnlyPromo?' active':''}" data-ppromo title="Show only bets that match a promo highlight"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>Promo <span class="pd-n">${promo}</span></button><span class="pd-sep"></span>`:'';
+  html+=chip('all','All',allVisible.length);
+  if(done)html+=chip('done','Ready to settle',done,'done');
   if(overdue)html+=chip('overdue','Overdue',overdue,'od');
   if(!counts[today])html+=chip(today,'Today',0);
   Object.keys(counts).sort().forEach(d=>{html+=chip(d,pendDayLabel(d),counts[d]);});
@@ -3628,6 +3867,7 @@ function pendDayHeader(list,idx){
   return `<div class="pend-day-h${od?' od':''}">${pendDayLabel(d)}${od?' · overdue':''} <span class="pd-n">${n}</span></div>`;
 }
 document.getElementById('pendDays').addEventListener('click',e=>{
+  if(e.target.closest('[data-ppromo]')){pendOnlyPromo=!pendOnlyPromo;renderPendientes();return;}
   const c=e.target.closest('[data-pday]');if(!c)return;
   pendDayFilter=c.dataset.pday;renderPendientes();
 });
@@ -3635,6 +3875,63 @@ document.getElementById('pendDays').addEventListener('change',e=>{
   if(e.target.id!=='pendDayPick')return;
   pendDayFilter=e.target.value||'all';renderPendientes();
 });
+const PEND_IC={
+  more:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+};
+function pendTimeHtml(item,withDate){
+  const ended=pendEnded(item);
+  const t=item.time?'~'+String(parseInt(item.time,10)).padStart(2,'0')+'h':'';
+  const d=withDate&&item.date?new Date(item.date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
+  const label=[d,t].filter(Boolean).join(' ')||'—';
+  return `<span class="pc-time${ended?' done':''}" title="${ended?'Should have ended — ready to settle':'Estimated end'}">${ended?PEND_IC.check:''}${label}</span>`;
+}
+// compact row: one line per bet, outcome buttons inline, rarely-used actions behind "⋯"
+function pendCompactHtml(kind,item,tw){
+  const key=pendKey(kind,item);
+  const open=pendOpen.has(key);
+  const withDate=pendSort==='house'||pendDayFilter==='done'||pendDayFilter==='overdue';
+  const more=`<button class="pc-more${open?' on':''}" data-pcmore="${esc(key)}" title="More actions" aria-expanded="${open}">${PEND_IC.more}</button>`;
+  if(kind==='wd'){
+    const w=item;
+    return `<div class="pc-row wd">
+      <span class="pc-time">${w.date?new Date(w.date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'—'}</span>
+      <div class="pc-ev"><b>Withdrawal – ${esc(w.casaName)}</b><span class="pc-sub">${w.dest||'Bookmaker'}</span></div>
+      <span class="pc-profit">${fmt(w.amount)} €</span>
+      <div class="pc-legs"><button class="btn-accept pc-act" data-confirm-wd="${w.cid}:${w.hid}">${PEND_IC.check}Confirm received</button></div>
+      <span class="pc-tail">${hideBtnHtml(key,true)}</span>
+    </div>`;
+  }
+  if(kind==='sb'){
+    const b=item;const promos=itemPromos('sb',b);const pr=promos.find(Boolean);
+    const legs=b.legs||[];
+    const legsHtml=legs.length?legs.map((l,li)=>{const r=promos[li];return`<button class="pc-leg${r?' promo':''}" data-pwinbid="${b.id}" data-pwinleg="${li}" title="Tap if this happened — settles it"${r?` style="--hl:${r.color}"`:''}>
+        <span class="pc-h"><mark>${esc(l.house||'—')}</mark></span><span class="pc-o"><mark>${fmt(l.odd||0)}</mark></span><span class="pc-r">${esc(l.result||'')}</span></button>`;}).join('')
+      :`<button class="btn-accept pc-act" data-pid="${b.id}" data-kind="sb" data-action="won">${PEND_IC.check}Accept</button>`;
+    const p=b.profit||0;
+    return `<div class="pc-row sb${pr?' promo':''}${tw.has(b.id)?' twin':''}"${pr?` style="--hl:${pr.color}"`:''}>
+      ${pendTimeHtml(b,withDate)}
+      <div class="pc-ev"><b>${sbTagHtml(b,tw)}${esc(b.event)}</b>${promoTag(pr)}</div>
+      <span class="pc-profit ${p>=0?'pos':'neg'}">${p>=0?'+':''}${fmt(p)} €</span>
+      <div class="pc-legs" style="--n:${Math.max(legs.length,1)}">${legsHtml}</div>
+      <span class="pc-tail">${more}</span>
+      ${open?`<div class="pc-extra">${sbSubHtml(b,tw)}<div class="pend-meta">${pendHouseChip([...new Set(legs.map(l=>l.house))])}<span>${fmtWhen(b.date,b.time)}</span>${b.totalStake?`<span>Staked: ${fmt(b.totalStake)} €</span>`:''}${b.minReturn?`<span>Min. return: ${fmt(b.minReturn)} €</span>`:''}</div>
+        <div class="pc-btns"><button class="btn-void" data-cashout="sb:${b.id}">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`:''}
+    </div>`;
+  }
+  const n=item;const pr=itemPromo('nm',n);
+  const win=n.potentialWin!=null?n.potentialWin:+(((n.stake||0)*((n.odd||1)-1)).toFixed(2));
+  const loss=n.potentialLoss!=null?n.potentialLoss:(n.type==='Freebet'?0:-(n.stake||0));
+  return `<div class="pc-row nm${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
+    ${pendTimeHtml(n,withDate)}
+    <div class="pc-ev"><b>${esc(n.event)}</b> ${typePill(n.type)}${promoTag(pr)}<span class="pc-sub"><span class="pc-nmh${pr?' promo':''}"><mark>${esc(n.house||'No bookmaker')}</mark> @ <mark>${fmt(n.odd||0)}</mark></span> · ${fmt(n.stake||0)} €</span></div>
+    <span class="pc-profit pos">+${fmt(win)} €</span>
+    <div class="pc-legs pc-nm-btns"><button class="btn-reject pc-act" data-pid="${n.id}" data-kind="nm" data-action="lost">Lost <small>${fmt(loss)} €</small></button><button class="btn-accept pc-act" data-pid="${n.id}" data-kind="nm" data-action="won">${PEND_IC.check}Won</button></div>
+    <span class="pc-tail">${more}</span>
+    ${open?`<div class="pc-extra"><div class="pend-meta">${pendHouseChip([n.house])}<span>${fmtWhen(n.date,n.time)}</span><span>Odds ${fmt(n.odd||0)}</span><span>Staked: ${fmt(n.stake||0)} €</span></div>
+      <div class="pc-btns"><button class="btn-void" data-cashout="nm:${n.id}">Cash out</button><button class="btn-void" data-pid="${n.id}" data-kind="nm" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`:''}
+  </div>`;
+}
 function renderPendientes(){
   const pendSBAll=D.bets.filter(b=>b.status==='pending').map(b=>({kind:'sb',item:b}));
   const pendNMAll=D.normals.filter(n=>n.status==='pending').map(n=>({kind:'nm',item:n}));
@@ -3642,13 +3939,16 @@ function renderPendientes(){
   D.casas.forEach(c=>{(c.history||[]).forEach(h=>{if(h.type==='wd'&&h.status==='pending')pendWDAll.push({kind:'wd',item:{cid:c.id,hid:h.id,casaName:c.name,amount:h.amount,date:h.date,dest:moveLabel(c,h)}});});});
   const dKey=x=>(x.item.date||'9999-99-99')+' '+(x.item.time||'99:99');
   const pendAll=[...pendSBAll,...pendNMAll,...pendWDAll].sort((a,b)=>dKey(a).localeCompare(dKey(b)));
-  renderPendTools(pendAll.filter(({kind,item})=>!isHidden(pendKey(kind,item))));
-  renderPendDays(pendAll.filter(({kind,item})=>!isHidden(pendKey(kind,item))&&pendMatchesHouse(kind,item)));
-  const pend=pendAll.filter(({kind,item})=>pendMatchesDay(item.date||'')&&pendMatchesHouse(kind,item));
-  const pendSB=visibleBets().filter(b=>b.status==='pending'&&pendMatchesDay(b.date||'')&&pendMatchesHouse('sb',b));
-  const pendNM=visibleNormals().filter(n=>n.status==='pending'&&pendMatchesDay(n.date||'')&&pendMatchesHouse('nm',n));
-  const pendWD=[];
-  visibleCasas().forEach(c=>{(c.history||[]).forEach(h=>{if(h.type==='wd'&&h.status==='pending'&&!isHidden('wd:'+c.id+':'+h.id)&&pendMatchesDay(h.date||'')&&pendMatchesHouse('wd',{casaName:c.name}))pendWD.push(h);});});
+  const notHidden=({kind,item})=>!isHidden(pendKey(kind,item));
+  const promoOk=({kind,item})=>!pendOnlyPromo||!!itemPromo(kind,item);
+  renderPendTools(pendAll.filter(notHidden));
+  if(!document.getElementById('pendPromo').contains(document.activeElement))renderPromoPanel();
+  renderPendDays(pendAll.filter(x=>notHidden(x)&&pendMatchesHouse(x.kind,x.item)&&pendMatchesQuery(x.kind,x.item)));
+  const pend=pendAll.filter(x=>pendMatchesDay(x.item.date||'',x.item)&&pendMatchesHouse(x.kind,x.item)&&pendMatchesQuery(x.kind,x.item)&&promoOk(x));
+  const shown=pend.filter(notHidden);
+  const pendSB=shown.filter(x=>x.kind==='sb').map(x=>x.item);
+  const pendNM=shown.filter(x=>x.kind==='nm').map(x=>x.item);
+  const pendWD=shown.filter(x=>x.kind==='wd'&&!isHidden('casa:'+x.item.cid));
   const totalExpected=pendSB.reduce((a,x)=>a+(x.profit||0),0)+pendNM.reduce((a,x)=>a+(x.potentialWin!=null?x.potentialWin:0),0);
   const totalStake=pendSB.reduce((a,x)=>a+(x.totalStake||0),0)+pendNM.reduce((a,x)=>a+(x.stake||0),0);
   const totalMinRet=pendSB.reduce((a,x)=>a+(x.minReturn||0),0);
@@ -3658,8 +3958,9 @@ function renderPendientes(){
     <div class="sc"><div class="sl2">Staked</div><div class="sv2">${fmt(totalStake)} €</div></div>
     <div class="sc"><div class="sl2">Total min. return</div><div class="sv2">${fmt(totalMinRet)} €</div></div>`;
   const list=document.getElementById('pendList');
-  let visible=pend.filter(({kind,item})=>!isHidden(pendKey(kind,item)));
-  const hidden=pend.filter(({kind,item})=>isHidden(pendKey(kind,item)));
+  list.classList.toggle('compact',pendView==='compact');
+  let visible=shown;
+  const hidden=pend.filter(x=>!notHidden(x));
   if(pendSort==='house'){
     // one group per bookmaker; a surebet shows under each bookmaker it uses
     const ex=[];
@@ -3679,8 +3980,12 @@ function renderPendientes(){
     const inPlayG=g?(pendLedger.get(bkKey(g))||{inPlay:0}).inPlay:0;
     return `<div class="pend-day-h">${g?esc(g):'No bookmaker'} <span class="pd-n">${grp.length} · ${exp>=0?'+':''}${fmt(exp)} € expected · ${fmt(inPlayG)} € in play${mny?` · balance ${fmt(mny.balance)} €`:''}</span></div>`;
   };
-  if(!visible.length&&!hidden.length){list.innerHTML=emptyStateHtml(pendDayFilter==='all'?'You have no pending bets right now.':`No pending bets for ${pendDayFilter==='overdue'?'past days':pendDayFilter==='nodate'?'bets without a date':pendDayLabel(pendDayFilter).toLowerCase()==='today'?'today':pendDayLabel(pendDayFilter)}.`);return;}
-  list.innerHTML=visible.map(({kind,item},idx)=>groupHeader(visible,idx)+(()=>{
+  if(!visible.length&&!hidden.length){
+    const filtered=pendQuery.trim()||pendOnlyPromo||pendHouse!=='all';
+    list.innerHTML=emptyStateHtml(filtered?'Nothing matches these filters.':pendDayFilter==='all'?'You have no pending bets right now.':pendDayFilter==='done'?'Nothing has finished yet — all your pending bets are still being played.':`No pending bets for ${pendDayFilter==='overdue'?'past days':pendDayFilter==='nodate'?'bets without a date':pendDayLabel(pendDayFilter).toLowerCase()==='today'?'today':pendDayLabel(pendDayFilter)}.`);
+    return;
+  }
+  list.innerHTML=visible.map(({kind,item},idx)=>groupHeader(visible,idx)+(pendView==='compact'?pendCompactHtml(kind,item,pendTw):(()=>{
     if(kind==='wd'){
       const w=item;
       return`<div class="pend-item wd">
@@ -3698,20 +4003,22 @@ function renderPendientes(){
     }
     if(kind==='sb'){
       const b=item;
+      const promos=itemPromos('sb',b);const pr=promos.find(Boolean);
       const hasLegs=!!(b.legs&&b.legs.length);
       const legsHtml=hasLegs?`<div class="pend-legs">${b.legs.map((l,li)=>{
         const realProfit=(l.minReturn||0)-(b.totalStake||0);
-        return`<button class="pend-leg" data-pwinbid="${b.id}" data-pwinleg="${li}">
+        const r=promos[li];
+        return`<button class="pend-leg${r?' promo':''}" data-pwinbid="${b.id}" data-pwinleg="${li}"${r?` style="--hl:${r.color}"`:''}>
           <span class="pl-radio"></span>
-          <span class="pl-house">${esc(l.house)}</span>
+          <span class="pl-house"><mark>${esc(l.house)}</mark></span>
           <span class="pl-res">${esc(l.result)}</span>
-          <span class="pl-nums"><span>${l.stake!=null?fmt(l.stake)+' € @ ':'Odds '}${fmt(l.odd||0)}</span><span class="pl-profit ${realProfit>=0?'pos':'neg'}">${realProfit>=0?'+':''}${fmt(realProfit)} €</span></span>
+          <span class="pl-nums"><span>${l.stake!=null?fmt(l.stake)+' € @ ':'Odds '}<mark>${fmt(l.odd||0)}</mark></span><span class="pl-profit ${realProfit>=0?'pos':'neg'}">${realProfit>=0?'+':''}${fmt(realProfit)} €</span></span>
         </button>`;
       }).join('')}</div>`:'';
-      return`<div class="pend-item sb${pendTw.has(b.id)?' twin':''}">
+      return`<div class="pend-item sb${pendTw.has(b.id)?' twin':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
         <div class="pend-top">
           <div>
-            <div class="pend-ev">${sbTagHtml(b,pendTw)}${esc(b.event)} <span class="type-badge-kind">Surebet</span></div>${sbSubHtml(b,pendTw)}
+            <div class="pend-ev">${sbTagHtml(b,pendTw)}${esc(b.event)} <span class="type-badge-kind">Surebet</span>${promoTag(pr)}</div>${sbSubHtml(b,pendTw)}
             <div class="pend-meta">${pendHouseChip([...new Set((b.legs||[]).map(l=>l.house))])}<span>${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}</span>${b.totalStake?`<span>Staked: ${fmt(b.totalStake)} €</span>`:''}</div>
           </div>
           <div style="display:flex;align-items:center;gap:6px"><button class="btn-void" data-cashout="sb:${b.id}" title="Close early for a manual amount">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada" title="Doesn't count as won or lost">Void</button>${hideBtnHtml('sb:'+b.id,true)}</div>
@@ -3721,12 +4028,13 @@ function renderPendientes(){
       </div>`;
     }
     const n=item;
+    const pr=itemPromo('nm',n);
     const win=n.potentialWin!=null?n.potentialWin:+(((n.stake||0)*((n.odd||1)-1)).toFixed(2));
     const loss=n.potentialLoss!=null?n.potentialLoss:(n.type==='Freebet'?0:-(n.stake||0));
-    return`<div class="pend-item">
+    return`<div class="pend-item${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
       <div class="pend-left">
-        <div class="pend-ev">${esc(n.event)} ${typePill(n.type)}</div>
-        <div class="pend-meta">${pendHouseChip([n.house])}<span>${fmtWhen(n.date,n.time)}${n.resolveDate?' → '+fmtDate(n.resolveDate):''}</span><span>Odds ${fmt(n.odd||0)}</span><span>Staked: ${fmt(n.stake||0)} €</span></div>
+        <div class="pend-ev">${esc(n.event)} ${typePill(n.type)}${promoTag(pr)}</div>
+        <div class="pend-meta">${pendHouseChip([n.house])}<span>${fmtWhen(n.date,n.time)}${n.resolveDate?' → '+fmtDate(n.resolveDate):''}</span><span class="pc-nmh${pr?' promo':''}">Odds <mark>${fmt(n.odd||0)}</mark></span><span>Staked: ${fmt(n.stake||0)} €</span></div>
       </div>
       <div class="pend-right">
         <div class="pend-preview">If it wins: <span class="pend-preview-pos">+${fmt(win)} €</span><br>If it loses: <span class="pend-preview-neg">${fmt(loss)} €</span></div>
@@ -3737,7 +4045,7 @@ function renderPendientes(){
         ${hideBtnHtml('nm:'+n.id,true)}
       </div>
     </div>`;
-  })()).join('')+hiddenPanelHtml('pend',hidden.map(({kind,item})=>({key:pendKey(kind,item),label:kind==='wd'?('Withdrawal – '+(item.casaName||'')):(item.event||'(No event)')})));
+  })())).join('')+hiddenPanelHtml('pend',hidden.map(({kind,item})=>({key:pendKey(kind,item),label:kind==='wd'?('Withdrawal – '+(item.casaName||'')):(item.event||'(No event)')})));
 }
 let cashoutTarget=null;
 function cashoutStake(t){
@@ -3778,34 +4086,46 @@ document.getElementById('co-save').addEventListener('click',()=>{
   document.getElementById('cashoutModal').style.display='none';cashoutTarget=null;
   save();updateBadges();renderPendientes();renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);renderProfit();
 });
+// settling from Pending is one tap, so every settle offers an undo
+function pendUndoToast(arr,item,msg){
+  const snap=JSON.stringify(item);
+  toast(msg,'Undo',()=>{const i=arr.findIndex(x=>x.id===item.id);if(i<0)return;arr[i]=JSON.parse(snap);save();updateBadges();refreshAfterPend();});
+}
+function refreshAfterPend(){renderPendientes();renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);renderProfit();}
+const PEND_ACT_LABEL={won:'Won',lost:'Lost',anulada:'Void'};
 document.getElementById('pendList').addEventListener('click',e=>{
+  const mo=e.target.closest('[data-pcmore]');
+  if(mo){const k=mo.dataset.pcmore;pendOpen.has(k)?pendOpen.delete(k):pendOpen.add(k);renderPendientes();return;}
   const coBtn=e.target.closest('[data-cashout]');
   if(coBtn){const [k,i]=coBtn.dataset.cashout.split(':');openCashoutModal(k,+i);return;}
   const winLegBtn=e.target.closest('[data-pwinbid]');
   if(winLegBtn){
     const bid=+winLegBtn.dataset.pwinbid,li=+winLegBtn.dataset.pwinleg;
     const b=D.bets.find(x=>x.id===bid);if(!b||!b.legs||!b.legs[li])return;
+    pendUndoToast(D.bets,b,`${b.event||'Surebet'} · ${b.legs[li].house||''} won`);
     b.winnerLeg=li;
     b.profit=cents((b.legs[li].minReturn||0)-(b.totalStake||0));
     b.status='won';
     if(!b.resolveDate)b.resolveDate=todayISO();
-    save();updateBadges();renderPendientes();renderSurebets(document.getElementById('sbSearch').value);renderProfit();
+    save();updateBadges();refreshAfterPend();
     return;
   }
   const btn=e.target.closest('[data-pid]');if(!btn)return;
   if(btn.dataset.kind==='nm'){
     const n=D.normals.find(x=>x.id===+btn.dataset.pid);if(!n)return;
+    pendUndoToast(D.normals,n,`${n.event||'Bet'} · ${PEND_ACT_LABEL[btn.dataset.action]||''}`);
     resolveNormal(n,btn.dataset.action);
-    save();updateBadges();renderPendientes();renderNormals(document.getElementById('nbSearch').value);renderProfit();
+    save();updateBadges();refreshAfterPend();
     return;
   }
   const bet=D.bets.find(b=>b.id===+btn.dataset.pid);if(!bet)return;
+  pendUndoToast(D.bets,bet,`${bet.event||'Surebet'} · ${PEND_ACT_LABEL[btn.dataset.action]||''}`);
   if(btn.dataset.action==='won'&&bet.legs&&bet.legs.length&&bet.winnerLeg!=null){
     bet.profit=cents((bet.legs[bet.winnerLeg].minReturn||0)-(bet.totalStake||0));
   }
   bet.status=btn.dataset.action;
   if(bet.status!=='pending'&&!bet.resolveDate)bet.resolveDate=todayISO();
-  save();updateBadges();renderPendientes();renderSurebets(document.getElementById('sbSearch').value);renderProfit();
+  save();updateBadges();refreshAfterPend();
 });
 
 // ══════════════════════════════════════════
