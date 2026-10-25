@@ -1952,16 +1952,31 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
   .promo-form .pf-add{grid-column:span 2;width:100%}
 }
 .pc-leg{position:relative}
-.pc-leg.armed,.pend-leg.armed{border-color:var(--green)!important}
-.pc-leg.armed::after,.pend-leg.armed::after{content:attr(data-confirm);position:absolute;inset:-1px;border-radius:inherit;display:grid;place-items:center;padding:0 8px;text-align:center;
-  background:var(--green);color:#fff;font-size:12.5px;font-weight:700;line-height:1.2;animation:armIn .12s ease-out}
-.pc-leg.armed::before,.pend-leg.armed::before{content:'';position:absolute;left:6px;right:6px;bottom:3px;height:3px;border-radius:2px;background:rgba(255,255,255,.75);z-index:1;transform-origin:left;animation:armTimer 4s linear forwards}
 .btn-accept.armed,.btn-reject.armed,.btn-void.armed{position:relative;overflow:hidden;font-weight:700}
 .btn-reject.armed{background:var(--red)!important;border-color:var(--red)!important;color:#fff!important}
 .btn-void.armed{background:var(--text)!important;border-color:var(--text)!important;color:var(--surface)!important}
-.btn-accept.armed{box-shadow:0 0 0 3px var(--gglow)}
-@keyframes armIn{from{opacity:0}to{opacity:1}}
-@keyframes armTimer{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.pc-mk{min-height:34px;padding:6px 14px;border-radius:10px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);font-weight:650;font-size:13px;cursor:pointer;white-space:nowrap;transition:all var(--t)}
+.pc-mk:hover{color:var(--text);border-color:var(--faint)}
+.pc-mk.won.on{background:var(--green);border-color:var(--green);color:#fff}
+.pc-mk.lost.on{background:var(--red);border-color:var(--red);color:#fff}
+.pc-leg.marked{background:var(--green);border-color:var(--green);color:#fff;box-shadow:none}
+.pc-leg.marked .pc-r{color:rgba(255,255,255,.82)}
+.pc-leg.marked .pc-h::before{content:'✓ '}
+.pc-row.marked .pc-leg:not(.marked){opacity:.5}
+.pc-row.marked{box-shadow:inset 4px 0 0 var(--green),var(--lift)}
+.pend-item.marked{box-shadow:inset 4px 0 0 var(--green),var(--lift)}
+.pend-item.marked .pend-leg:not(.selected){opacity:.55}
+.pc-legs.has-res{grid-template-columns:repeat(var(--n,2),minmax(150px,196px)) auto}
+.pc-resolve{align-self:stretch;justify-content:center}
+.pend-mk-hint{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--muted)}
+.pend-mk-hint b{color:var(--green)}
+.pend-bulk{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px 10px 16px;border-radius:12px;background:var(--gdim);border:1px solid rgba(35,130,75,.3);font-size:13.5px;color:var(--text)}
+.pend-bulk b{color:var(--green)}
+.pd-chip.mk{color:var(--green);border-color:var(--green);font-weight:700}
+.pd-chip.mk.active{background:var(--green);border-color:var(--green);color:#fff}
+.pd-chip.mk.active .pd-n{background:rgba(255,255,255,.2);color:#fff}
+@media(max-width:1180px){.pc-legs.has-res{grid-template-columns:repeat(var(--n,2),minmax(128px,168px)) auto}}
+@media(max-width:820px){.pc-legs.has-res{grid-template-columns:repeat(var(--n,2),minmax(0,1fr))}.pc-legs.has-res .pc-resolve{grid-column:1/-1}.pc-nm-btns .pc-mk{flex:1}}
 </style>
 </head>
 <body>
@@ -3848,18 +3863,20 @@ function pendEnded(item){
 function pendMatchesDay(date,item){
   if(pendDayFilter==='all')return true;
   if(pendDayFilter==='done')return !!item&&pendEnded(item);
+  if(pendDayFilter==='marked')return !!item&&item.pendMark!=null;
   if(pendDayFilter==='overdue')return !!date&&date<shiftedISO(0);
   if(pendDayFilter==='nodate')return !date;
   return date===pendDayFilter;
 }
 function renderPendDays(allVisible){
   const today=shiftedISO(0);
-  const counts={};let overdue=0,nodate=0,done=0,promo=0;
-  allVisible.forEach(({kind,item})=>{const d=item.date||'';if(!d)nodate++;else if(d<today)overdue++;else counts[d]=(counts[d]||0)+1;if(pendEnded(item))done++;if(itemPromo(kind,item))promo++;});
+  const counts={};let overdue=0,nodate=0,done=0,promo=0,marked=0;
+  allVisible.forEach(({kind,item})=>{const d=item.date||'';if(!d)nodate++;else if(d<today)overdue++;else counts[d]=(counts[d]||0)+1;if(pendEnded(item))done++;if(itemPromo(kind,item))promo++;if(item.pendMark!=null)marked++;});
   if(!promoLive().length)pendOnlyPromo=false;
   const chip=(key,label,n,extra='')=>`<button class="pd-chip ${extra}${pendDayFilter===key?' active':''}" data-pday="${key}">${label}${n!=null?` <span class="pd-n">${n}</span>`:''}</button>`;
   let html=promoLive().length?`<button class="pd-chip promo-chip${pendOnlyPromo?' active':''}" data-ppromo title="Show only bets that match a promo highlight"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>Promo <span class="pd-n">${promo}</span></button><span class="pd-sep"></span>`:'';
   html+=chip('all','All',allVisible.length);
+  if(marked||pendDayFilter==='marked')html+=chip('marked','Marked · not resolved',marked,'mk');
   if(done)html+=chip('done','Ready to settle',done,'done');
   if(overdue)html+=chip('overdue','Overdue',overdue,'od');
   if(!counts[today])html+=chip(today,'Today',0);
@@ -3898,6 +3915,11 @@ function pendTimeHtml(item,withDate){
   return `<span class="pc-time${ended?' done':''}" title="${ended?'Should have ended — ready to settle':'Estimated end'}">${ended?PEND_IC.check:''}${label}</span>`;
 }
 // compact row: one line per bet, outcome buttons inline, rarely-used actions behind "⋯"
+const PEND_RESOLVE=(kind,id)=>`<button class="btn-accept pc-act pc-resolve" data-resolve="${kind}:${id}" title="Settle it with the marked result">${PEND_IC.check}Resolve</button>`;
+function pendMarkBtns(n,cls){
+  const m=n.pendMark;
+  return `<button class="pc-mk lost${m==='lost'?' on':''}${cls}" data-pid="${n.id}" data-kind="nm" data-action="lost" aria-pressed="${m==='lost'}">Lost</button><button class="pc-mk won${m==='won'?' on':''}${cls}" data-pid="${n.id}" data-kind="nm" data-action="won" aria-pressed="${m==='won'}">Won</button>`;
+}
 function pendCompactHtml(kind,item,tw){
   const key=pendKey(kind,item);
   const open=pendOpen.has(key);
@@ -3916,15 +3938,16 @@ function pendCompactHtml(kind,item,tw){
   if(kind==='sb'){
     const b=item;const promos=itemPromos('sb',b);const pr=promos.find(Boolean);
     const legs=b.legs||[];
-    const legsHtml=legs.length?legs.map((l,li)=>{const r=promos[li];return`<button class="pc-leg${r?' promo':''}" data-pwinbid="${b.id}" data-pwinleg="${li}" title="Tap twice if this happened — settles it"${r?` style="--hl:${r.color}"`:''}>
+    const mk=b.pendMark;const marked=mk!=null;
+    const legsHtml=legs.length?legs.map((l,li)=>{const r=promos[li];return`<button class="pc-leg${r?' promo':''}${mk===li?' marked':''}" data-pwinbid="${b.id}" data-pwinleg="${li}" title="${mk===li?'Marked as the winner — tap to unmark':'Tap to mark this as the outcome that happened'}" aria-pressed="${mk===li}"${r?` style="--hl:${r.color}"`:''}>
         <span class="pc-h"><mark>${esc(l.house||'—')}</mark></span><span class="pc-o"><mark>${fmt(l.odd||0)}</mark></span><span class="pc-r">${esc(l.result||'')}</span></button>`;}).join('')
-      :`<button class="btn-accept pc-act" data-pid="${b.id}" data-kind="sb" data-action="won">${PEND_IC.check}Accept</button>`;
-    const p=b.profit||0;
-    return `<div class="pc-row sb${pr?' promo':''}${tw.has(b.id)?' twin':''}"${pr?` style="--hl:${pr.color}"`:''}>
+      :`<button class="pc-mk won pc-act${mk==='won'?' on':''}" data-pid="${b.id}" data-kind="sb" data-action="won">Won</button>`;
+    const p=typeof mk==='number'&&legs[mk]?(legs[mk].minReturn||0)-(b.totalStake||0):(b.profit||0);
+    return `<div class="pc-row sb${marked?' marked':''}${pr?' promo':''}${tw.has(b.id)?' twin':''}"${pr?` style="--hl:${pr.color}"`:''}>
       ${pendTimeHtml(b,withDate)}
       <div class="pc-ev"><b>${sbTagHtml(b,tw)}${esc(b.event)}</b>${promoTag(pr)}</div>
       <span class="pc-profit ${p>=0?'pos':'neg'}">${p>=0?'+':''}${fmt(p)} €</span>
-      <div class="pc-legs" style="--n:${Math.max(legs.length,1)}">${legsHtml}</div>
+      <div class="pc-legs${marked?' has-res':''}" style="--n:${Math.max(legs.length,1)}">${legsHtml}${marked?PEND_RESOLVE('sb',b.id):''}</div>
       <span class="pc-tail">${more}</span>
       ${open?`<div class="pc-extra">${sbSubHtml(b,tw)}<div class="pend-meta">${pendHouseChip([...new Set(legs.map(l=>l.house))])}<span>${fmtWhen(b.date,b.time)}</span>${b.totalStake?`<span>Staked: ${fmt(b.totalStake)} €</span>`:''}${b.minReturn?`<span>Min. return: ${fmt(b.minReturn)} €</span>`:''}</div>
         <div class="pc-btns"><button class="btn-void" data-cashout="sb:${b.id}">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`:''}
@@ -3933,16 +3956,18 @@ function pendCompactHtml(kind,item,tw){
   const n=item;const pr=itemPromo('nm',n);
   const win=n.potentialWin!=null?n.potentialWin:+(((n.stake||0)*((n.odd||1)-1)).toFixed(2));
   const loss=n.potentialLoss!=null?n.potentialLoss:(n.type==='Freebet'?0:-(n.stake||0));
-  return `<div class="pc-row nm${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
+  return `<div class="pc-row nm${n.pendMark!=null?' marked':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
     ${pendTimeHtml(n,withDate)}
     <div class="pc-ev"><b>${esc(n.event)}</b> ${typePill(n.type)}${promoTag(pr)}<span class="pc-sub"><span class="pc-nmh${pr?' promo':''}"><mark>${esc(n.house||'No bookmaker')}</mark> @ <mark>${fmt(n.odd||0)}</mark></span> · ${fmt(n.stake||0)} €</span></div>
-    <span class="pc-profit pos">+${fmt(win)} €</span>
-    <div class="pc-legs pc-nm-btns"><button class="btn-reject pc-act" data-pid="${n.id}" data-kind="nm" data-action="lost">Lost <small>${fmt(loss)} €</small></button><button class="btn-accept pc-act" data-pid="${n.id}" data-kind="nm" data-action="won">${PEND_IC.check}Won</button></div>
+    <span class="pc-profit ${n.pendMark==='lost'?'neg':'pos'}" title="If it wins +${fmt(win)} € · if it loses ${fmt(loss)} €">${n.pendMark==='lost'?fmt(loss):'+'+fmt(win)} €</span>
+    <div class="pc-legs pc-nm-btns">${pendMarkBtns(n,' pc-act')}${n.pendMark!=null?PEND_RESOLVE('nm',n.id):''}</div>
     <span class="pc-tail">${more}</span>
     ${open?`<div class="pc-extra"><div class="pend-meta">${pendHouseChip([n.house])}<span>${fmtWhen(n.date,n.time)}</span><span>Odds ${fmt(n.odd||0)}</span><span>Staked: ${fmt(n.stake||0)} €</span></div>
       <div class="pc-btns"><button class="btn-void" data-cashout="nm:${n.id}">Cash out</button><button class="btn-void" data-pid="${n.id}" data-kind="nm" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`:''}
   </div>`;
 }
+let pendLastShown=[];
+function pendShownMarked(){return pendLastShown.filter(x=>pendHasMark(x.kind,x.item));}
 function renderPendientes(){
   if(typeof pendDisarm==='function')pendDisarm();
   const pendSBAll=D.bets.filter(b=>b.status==='pending').map(b=>({kind:'sb',item:b}));
@@ -3958,6 +3983,7 @@ function renderPendientes(){
   renderPendDays(pendAll.filter(x=>notHidden(x)&&pendMatchesHouse(x.kind,x.item)&&pendMatchesQuery(x.kind,x.item)));
   const pend=pendAll.filter(x=>pendMatchesDay(x.item.date||'',x.item)&&pendMatchesHouse(x.kind,x.item)&&pendMatchesQuery(x.kind,x.item)&&promoOk(x));
   const shown=pend.filter(notHidden);
+  pendLastShown=shown;
   const pendSB=shown.filter(x=>x.kind==='sb').map(x=>x.item);
   const pendNM=shown.filter(x=>x.kind==='nm').map(x=>x.item);
   const pendWD=shown.filter(x=>x.kind==='wd'&&!isHidden('casa:'+x.item.cid));
@@ -3997,7 +4023,9 @@ function renderPendientes(){
     list.innerHTML=emptyStateHtml(filtered?'Nothing matches these filters.':pendDayFilter==='all'?'You have no pending bets right now.':pendDayFilter==='done'?'Nothing has finished yet — all your pending bets are still being played.':`No pending bets for ${pendDayFilter==='overdue'?'past days':pendDayFilter==='nodate'?'bets without a date':pendDayLabel(pendDayFilter).toLowerCase()==='today'?'today':pendDayLabel(pendDayFilter)}.`);
     return;
   }
-  list.innerHTML=visible.map(({kind,item},idx)=>groupHeader(visible,idx)+(pendView==='compact'?pendCompactHtml(kind,item,pendTw):(()=>{
+  const mkN=shown.filter(x=>pendHasMark(x.kind,x.item)).length;
+  const bulk=mkN?`<div class="pend-bulk"><span><b>${mkN}</b> marked, not resolved yet</span><button class="btn-accept" data-resolve-all>${PEND_IC.check}Resolve ${mkN>1?'all '+mkN:'it'}</button></div>`:'';
+  list.innerHTML=bulk+visible.map(({kind,item},idx)=>groupHeader(visible,idx)+(pendView==='compact'?pendCompactHtml(kind,item,pendTw):(()=>{
     if(kind==='wd'){
       const w=item;
       return`<div class="pend-item wd">
@@ -4020,14 +4048,14 @@ function renderPendientes(){
       const legsHtml=hasLegs?`<div class="pend-legs">${b.legs.map((l,li)=>{
         const realProfit=(l.minReturn||0)-(b.totalStake||0);
         const r=promos[li];
-        return`<button class="pend-leg${r?' promo':''}" data-pwinbid="${b.id}" data-pwinleg="${li}"${r?` style="--hl:${r.color}"`:''}>
+        return`<button class="pend-leg${r?' promo':''}${b.pendMark===li?' selected':''}" aria-pressed="${b.pendMark===li}" data-pwinbid="${b.id}" data-pwinleg="${li}"${r?` style="--hl:${r.color}"`:''}>
           <span class="pl-radio"></span>
           <span class="pl-house"><mark>${esc(l.house)}</mark></span>
           <span class="pl-res">${esc(l.result)}</span>
           <span class="pl-nums"><span>${l.stake!=null?fmt(l.stake)+' € @ ':'Odds '}<mark>${fmt(l.odd||0)}</mark></span><span class="pl-profit ${realProfit>=0?'pos':'neg'}">${realProfit>=0?'+':''}${fmt(realProfit)} €</span></span>
         </button>`;
       }).join('')}</div>`:'';
-      return`<div class="pend-item sb${pendTw.has(b.id)?' twin':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
+      return`<div class="pend-item sb${b.pendMark!=null?' marked':''}${pendTw.has(b.id)?' twin':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
         <div class="pend-top">
           <div>
             <div class="pend-ev">${sbTagHtml(b,pendTw)}${esc(b.event)} <span class="type-badge-kind">Surebet</span>${promoTag(pr)}</div>${sbSubHtml(b,pendTw)}
@@ -4035,15 +4063,15 @@ function renderPendientes(){
           </div>
           <div style="display:flex;align-items:center;gap:6px"><button class="btn-void" data-cashout="sb:${b.id}" title="Close early for a manual amount">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada" title="Doesn't count as won or lost">Void</button>${hideBtnHtml('sb:'+b.id,true)}</div>
         </div>
-        ${hasLegs?legsHtml:`<div class="pend-hint">No leg breakdown. <button class="btn-accept" data-pid="${b.id}" data-kind="sb" data-action="won"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Accept</button></div>`}
-        ${hasLegs?`<div class="pend-hint">Tap the outcome that happened, then tap it <b>again</b> to confirm.</div>`:''}
+        ${hasLegs?legsHtml:`<div class="pend-hint">No leg breakdown. <button class="pc-mk won${b.pendMark==='won'?' on':''}" data-pid="${b.id}" data-kind="sb" data-action="won">Won</button></div>`}
+        ${b.pendMark!=null?`<div class="pend-hint pend-mk-hint"><span><b>${esc(pendMarkLabel('sb',b))}</b> — marked, not resolved yet. It stays here until you resolve it.</span>${PEND_RESOLVE('sb',b.id)}</div>`:hasLegs?`<div class="pend-hint">Tap the outcome that happened to <b>mark</b> it — then <b>Resolve</b> it once it's settled.</div>`:''}
       </div>`;
     }
     const n=item;
     const pr=itemPromo('nm',n);
     const win=n.potentialWin!=null?n.potentialWin:+(((n.stake||0)*((n.odd||1)-1)).toFixed(2));
     const loss=n.potentialLoss!=null?n.potentialLoss:(n.type==='Freebet'?0:-(n.stake||0));
-    return`<div class="pend-item${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
+    return`<div class="pend-item${n.pendMark!=null?' marked':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
       <div class="pend-left">
         <div class="pend-ev">${esc(n.event)} ${typePill(n.type)}${promoTag(pr)}</div>
         <div class="pend-meta">${pendHouseChip([n.house])}<span>${fmtWhen(n.date,n.time)}${n.resolveDate?' → '+fmtDate(n.resolveDate):''}</span><span class="pc-nmh${pr?' promo':''}">Odds <mark>${fmt(n.odd||0)}</mark></span><span>Staked: ${fmt(n.stake||0)} €</span></div>
@@ -4051,9 +4079,8 @@ function renderPendientes(){
       <div class="pend-right">
         <div class="pend-preview">If it wins: <span class="pend-preview-pos">+${fmt(win)} €</span><br>If it loses: <span class="pend-preview-neg">${fmt(loss)} €</span></div>
         <button class="btn-void" data-cashout="nm:${n.id}" title="Close early for a manual amount">Cash out</button>
-        <button class="btn-reject" data-pid="${n.id}" data-kind="nm" data-action="lost">Lost</button>
         <button class="btn-void" data-pid="${n.id}" data-kind="nm" data-action="anulada" title="Doesn't count as won or lost">Void</button>
-        <button class="btn-accept" data-pid="${n.id}" data-kind="nm" data-action="won"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Accept</button>
+        ${pendMarkBtns(n,'')}${n.pendMark!=null?PEND_RESOLVE('nm',n.id):''}
         ${hideBtnHtml('nm:'+n.id,true)}
       </div>
     </div>`;
@@ -4099,13 +4126,31 @@ document.getElementById('co-save').addEventListener('click',()=>{
   save();updateBadges();renderPendientes();renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);renderProfit();
 });
 // settling from Pending is one tap, so every settle offers an undo
-function pendUndoToast(arr,item,msg){
-  const snap=JSON.stringify(item);
-  toast(msg,'Undo',()=>{const i=arr.findIndex(x=>x.id===item.id);if(i<0)return;arr[i]=JSON.parse(snap);save();updateBadges();refreshAfterPend();});
+// Undo for one or many settles: restores each bet exactly as it was
+function pendUndoToast(entries,msg){
+  const snaps=entries.map(([arr,item])=>[arr,item.id,JSON.stringify(item)]);
+  toast(msg,'Undo',()=>{snaps.forEach(([arr,id,snap])=>{const i=arr.findIndex(x=>x.id===id);if(i>=0)arr[i]=JSON.parse(snap);});save();updateBadges();refreshAfterPend();});
 }
 function refreshAfterPend(){renderPendientes();renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);renderProfit();}
-const PEND_ACT_LABEL={won:'Won',lost:'Lost',anulada:'Void'};
-// settling needs two taps on the same outcome/button: the first one only arms it
+// Two separate, saved steps: the result (pendMark — which leg won, or won/lost) is marked
+// with a tap and stays pending; "Resolve" settles it with that result once it's been paid.
+function pendHasMark(kind,item){return kind!=='wd'&&item.pendMark!=null;}
+function pendResolveItem(kind,item){
+  const m=item.pendMark;if(m==null)return false;
+  if(kind==='nm'){resolveNormal(item,m);}
+  else if(typeof m==='number'&&item.legs&&item.legs[m]){
+    item.winnerLeg=m;item.profit=cents((item.legs[m].minReturn||0)-(item.totalStake||0));item.status='won';
+  }else item.status='won';
+  if(!item.resolveDate)item.resolveDate=todayISO();
+  delete item.pendMark;
+  return true;
+}
+function pendMarkLabel(kind,item){
+  const m=item.pendMark;
+  if(kind==='nm')return m==='won'?'Won':'Lost';
+  return typeof m==='number'&&item.legs&&item.legs[m]?(item.legs[m].house||'Leg '+(m+1))+' won':'Won';
+}
+// Void settles straight away, so it needs two taps on the button: the first one only arms it
 let pendArm=null; // {key, el, html, timer}
 const PEND_ARM_MS=4000;
 function pendDisarm(){
@@ -4113,61 +4158,71 @@ function pendDisarm(){
   clearTimeout(pendArm.timer);
   const el=pendArm.el;el.classList.remove('armed');
   if(pendArm.html!=null)el.innerHTML=pendArm.html;
-  delete el.dataset.confirm;
   pendArm=null;
 }
 function pendConfirmTap(el){
   const d=el.dataset;
-  const key=d.pwinbid?'leg:'+d.pwinbid+':'+d.pwinleg:'pid:'+d.kind+':'+d.pid+':'+d.action;
+  const key=d.kind+':'+d.pid+':'+d.action;
   if(pendArm&&pendArm.key===key&&pendArm.el===el&&document.contains(el)){clearTimeout(pendArm.timer);pendArm=null;return true;}
   pendDisarm();
-  pendArm={key,el,html:null,timer:setTimeout(pendDisarm,PEND_ARM_MS)};
+  pendArm={key,el,html:el.innerHTML,timer:setTimeout(pendDisarm,PEND_ARM_MS)};
   el.classList.add('armed');
-  if(d.pwinbid){
-    const b=D.bets.find(x=>x.id===+d.pwinbid);const l=b&&b.legs&&b.legs[+d.pwinleg];
-    el.dataset.confirm=`✓ ${l&&l.house?l.house:'This'} won — tap again`;
-  }else{
-    pendArm.html=el.innerHTML;
-    el.innerHTML={won:'Tap again: won',lost:'Tap again: lost',anulada:'Tap again: void'}[d.action]||'Tap again';
-  }
+  el.innerHTML='Tap again: void';
   return false;
 }
 // a tap anywhere else cancels the armed one
 document.addEventListener('click',e=>{if(pendArm&&!pendArm.el.contains(e.target))pendDisarm();},true);
+function pendResolveAll(){
+  const list=pendShownMarked();if(!list.length)return;
+  pendUndoToast(list.map(({kind,item})=>[kind==='nm'?D.normals:D.bets,item]),`${list.length} bet${list.length>1?'s':''} resolved`);
+  list.forEach(({kind,item})=>pendResolveItem(kind,item));
+  save();updateBadges();refreshAfterPend();
+}
 document.getElementById('pendList').addEventListener('click',e=>{
   const mo=e.target.closest('[data-pcmore]');
   if(mo){const k=mo.dataset.pcmore;pendOpen.has(k)?pendOpen.delete(k):pendOpen.add(k);renderPendientes();return;}
   const coBtn=e.target.closest('[data-cashout]');
   if(coBtn){const [k,i]=coBtn.dataset.cashout.split(':');openCashoutModal(k,+i);return;}
-  const settleBtn=e.target.closest('[data-pwinbid],[data-pid]');
-  if(settleBtn&&!pendConfirmTap(settleBtn))return;
+  if(e.target.closest('[data-resolve-all]')){pendResolveAll();return;}
+  const rs=e.target.closest('[data-resolve]');
+  if(rs){
+    const [k,i]=rs.dataset.resolve.split(':');
+    const arr=k==='nm'?D.normals:D.bets;const item=arr.find(x=>x.id===+i);if(!item||item.pendMark==null)return;
+    pendUndoToast([[arr,item]],`${item.event||'Bet'} · ${pendMarkLabel(k,item)} — resolved`);
+    pendResolveItem(k,item);
+    save();updateBadges();refreshAfterPend();
+    return;
+  }
+  // marking a result: tap to mark, tap the same one again to unmark, tap another to change it
   const winLegBtn=e.target.closest('[data-pwinbid]');
   if(winLegBtn){
     const bid=+winLegBtn.dataset.pwinbid,li=+winLegBtn.dataset.pwinleg;
     const b=D.bets.find(x=>x.id===bid);if(!b||!b.legs||!b.legs[li])return;
-    pendUndoToast(D.bets,b,`${b.event||'Surebet'} · ${b.legs[li].house||''} won`);
-    b.winnerLeg=li;
-    b.profit=cents((b.legs[li].minReturn||0)-(b.totalStake||0));
-    b.status='won';
-    if(!b.resolveDate)b.resolveDate=todayISO();
-    save();updateBadges();refreshAfterPend();
+    if(b.pendMark===li)delete b.pendMark;else b.pendMark=li;
+    save();renderPendientes();
     return;
   }
   const btn=e.target.closest('[data-pid]');if(!btn)return;
+  const act=btn.dataset.action;
+  if(act==='won'||act==='lost'){
+    const arr=btn.dataset.kind==='nm'?D.normals:D.bets;
+    const item=arr.find(x=>x.id===+btn.dataset.pid);if(!item)return;
+    if(item.pendMark===act)delete item.pendMark;else item.pendMark=act;
+    save();renderPendientes();
+    return;
+  }
+  if(!pendConfirmTap(btn))return;
   if(btn.dataset.kind==='nm'){
     const n=D.normals.find(x=>x.id===+btn.dataset.pid);if(!n)return;
-    pendUndoToast(D.normals,n,`${n.event||'Bet'} · ${PEND_ACT_LABEL[btn.dataset.action]||''}`);
-    resolveNormal(n,btn.dataset.action);
+    pendUndoToast([[D.normals,n]],`${n.event||'Bet'} · Void`);
+    resolveNormal(n,act);delete n.pendMark;
     save();updateBadges();refreshAfterPend();
     return;
   }
   const bet=D.bets.find(b=>b.id===+btn.dataset.pid);if(!bet)return;
-  pendUndoToast(D.bets,bet,`${bet.event||'Surebet'} · ${PEND_ACT_LABEL[btn.dataset.action]||''}`);
-  if(btn.dataset.action==='won'&&bet.legs&&bet.legs.length&&bet.winnerLeg!=null){
-    bet.profit=cents((bet.legs[bet.winnerLeg].minReturn||0)-(bet.totalStake||0));
-  }
-  bet.status=btn.dataset.action;
-  if(bet.status!=='pending'&&!bet.resolveDate)bet.resolveDate=todayISO();
+  pendUndoToast([[D.bets,bet]],`${bet.event||'Surebet'} · Void`);
+  bet.status=act;delete bet.pendMark;
+  if(!bet.resolveDate)bet.resolveDate=todayISO();
   save();updateBadges();refreshAfterPend();
 });
 
