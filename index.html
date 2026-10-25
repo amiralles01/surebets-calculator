@@ -6261,7 +6261,16 @@ function emailToPath(email) {
     try {
       await signInWithPopup(auth, provider);
     } catch (e) {
-      authStatus.textContent = 'Sign-in error. Please try again.';
+      // Muestra el código real (p. ej. auth/popup-blocked) para saber si es la app o el navegador.
+      const msgs = {
+        'auth/popup-blocked': 'The browser blocked the Google window. Allow pop-ups for this site and try again.',
+        'auth/popup-closed-by-user': 'The Google window was closed before finishing. Try again.',
+        'auth/cancelled-popup-request': 'Another sign-in window was already open. Try again.',
+        'auth/network-request-failed': 'No connection to Google. Check your internet (or VPN/adblock) and try again.',
+        'auth/unauthorized-domain': 'This web address is not authorised for sign-in.',
+        'auth/web-storage-unsupported': 'The browser is blocking cookies/storage for this site. Allow them and try again.'
+      };
+      authStatus.textContent = (msgs[e && e.code] || 'Sign-in error. Please try again.') + ' (' + ((e && e.code) || 'unknown') + ')';
       console.error('[signIn] Error en signInWithPopup:', e);
     }
   };
