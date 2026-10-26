@@ -1776,6 +1776,10 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .bk-cost-form{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,.8fr) auto;gap:8px;align-items:center}
 @media(max-width:600px){.bk-cost-form{grid-template-columns:1fr 1fr}.bk-cost-form>input{grid-column:1/-1}.bk-cost-form .btn-reg{grid-column:1/-1}}
 .bk-cost-form .ii{padding-right:52px!important;text-align:left}
+.sw-form{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,.8fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) auto;gap:8px;align-items:center;margin-top:10px}
+.sw-form>*{min-width:0;width:100%}.sw-form .btn-reg{width:auto}
+@media(max-width:760px){.sw-form{grid-template-columns:1fr 1fr}.sw-form>#sw-name,.sw-form .btn-reg{grid-column:1/-1}}
+.sw-row .bk-hist-type{max-width:none}.sw-casa{font-size:11.5px;color:var(--faint)}
 
 .c-flow{display:flex;gap:10px;align-items:flex-start;padding:11px 12px;border-radius:10px;border:1px solid var(--border);background:var(--raised);cursor:pointer}
 .c-flow input{width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:var(--pitch,var(--accent))}
@@ -2244,6 +2248,20 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
     <!-- ═══ PROFIT PAGE ═══ -->
     <div id="page-profit" class="fw" style="display:none">
       <div id="totalHero"></div>
+      <div class="card" id="swCard">
+        <div class="ch"><span class="ct">Software costs</span><span style="font-size:11.5px;color:var(--faint)">Subtracted from Total Profit · not from daily earnings</span></div>
+        <div class="cb">
+          <div id="swList"></div>
+          <div class="sw-form">
+            <input type="text" id="sw-name" placeholder="Concept · e.g. BetHero" autocomplete="off">
+            <div class="iw"><input type="number" class="ii" id="sw-amount" placeholder="0" min="0" step="0.01"><span class="isuf">€</span></div>
+            <input type="date" id="sw-date">
+            <select id="sw-repeat"><option value="month">Every month</option><option value="once">One payment</option></select>
+            <select id="sw-casa"></select>
+            <button class="btn-reg" id="sw-add" style="width:auto;padding:9px 16px;margin:0">Add</button>
+          </div>
+        </div>
+      </div>
       <div class="card">
         <div class="ch"><span class="ct">Profit by date range</span><span style="font-size:11.5px;color:var(--faint)">Pick a start and end day</span></div>
         <div class="cb">
@@ -2761,6 +2779,27 @@ function trackInfo(){return D.track&&D.track.from?D.track:null;}
 function trackedAdj(){const t=trackInfo();return t?adjEntries().filter(a=>a.date>=t.from&&a.id>=t.setAt):[];}
 function trackedExpenses(){const t=trackInfo();return t?expenseEntries().filter(a=>a.date>=t.from):[];}
 function trackedCosts(){const t=trackInfo();return t?costEntries().filter(a=>a.date>=t.from):[];}
+// Software costs (subscriptions, tools…): always subtracted from Total Profit, monthly totals and date ranges,
+// but never from daily earnings (calendar, chart, month box). Optionally tied to a bookmaker.
+function softCosts(){if(!Array.isArray(D.software))D.software=[];return D.software;}
+function softwareCharges(){
+  const out=[];const today=todayLocalISO();
+  softCosts().forEach(k=>{
+    if(!(k.amount>0)||!k.date)return;
+    const base={profit:-k.amount,name:k.name,casaId:k.casaId||null,sid:k.id};
+    if(k.repeat==='once'){if(k.date<=today)out.push({date:k.date,...base});return;}
+    let [y,m]=k.date.split('-').map(Number);const day=+k.date.slice(8,10);
+    for(let i=0;i<600;i++){
+      const ym=`${y}-${String(m).padStart(2,'0')}`;
+      if(k.until&&ym>k.until)break;
+      const date=`${ym}-${String(Math.min(day,new Date(y,m,0).getDate())).padStart(2,'0')}`;
+      if(date>today)break;
+      out.push({date,...base});
+      m++;if(m>12){m=1;y++;}
+    }
+  });
+  return out;
+}
 function bankrollSnapshot(){const b=bankrollSummary();return {b0:+(b.bankroll+b.inTransit).toFixed(2),put0:+b.putIn.toFixed(2),drawn0:+b.drawn.toFixed(2)};}
 function betProfit(b){return(b.status==='won'||b.status==='lost')?(b.profit||0):0;}
 function betStake(b){return b.status==='anulada'?0:(b.totalStake||0);}
@@ -3261,7 +3300,7 @@ function renderProfitRange(all){
   if(from&&to&&from>to){box.innerHTML=`<div style="font-size:12.5px;color:var(--red)">The start date must be before the end date.</div>`;return;}
   const sel=profitRangeEntries.filter(e=>!isHidden('month:'+e.date.slice(0,7))&&(!from||e.date>=from)&&(!to||e.date<=to));
   const sum=c=>sel.filter(e=>e.cat===c).reduce((a,e)=>a+e.profit,0);
-  const sb=sum('surebet'),nm=sum('normal'),fb=sum('freebet'),adj=sum('adjust'),cst=sum('cost'),exp=sum('expense'),tot=sb+nm+fb+adj+cst+exp;
+  const sb=sum('surebet'),nm=sum('normal'),fb=sum('freebet'),adj=sum('adjust'),cst=sum('cost'),exp=sum('expense'),sw=sum('software'),tot=sb+nm+fb+adj+cst+exp+sw;
   const sg=v=>(v>=0?'+':'')+fmt(v)+' €';
   const label=from&&to?`${fmtDate(from)} → ${fmtDate(to)}`:(from?`From ${fmtDate(from)}`:`Until ${fmtDate(to)}`);
   box.innerHTML=`<div class="total-hero" style="margin:0">
@@ -3273,6 +3312,7 @@ function renderProfitRange(all){
       <div class="th-sub-item"><div class="th-sub-label">Freebets</div><div class="th-sub-val" style="color:var(--yellow)">${sg(fb)}</div></div>
       ${exp?`<div class="th-sub-item"><div class="th-sub-label">Bank expenses</div><div class="th-sub-val">${sg(exp)}</div></div>`:''}
       ${cst?`<div class="th-sub-item"><div class="th-sub-label">Monthly costs</div><div class="th-sub-val" style="color:var(--red)">${sg(cst)}</div></div>`:''}
+      ${sw?`<div class="th-sub-item"><div class="th-sub-label">Software</div><div class="th-sub-val" style="color:var(--red)">${sg(sw)}</div></div>`:''}
       ${adj?`<div class="th-sub-item"><div class="th-sub-label">Balance corrections</div><div class="th-sub-val">${sg(adj)}</div></div>`:''}
     </div>
     <div style="font-size:12px;color:var(--faint);margin-top:10px">${sel.length} settled entr${sel.length===1?'y':'ies'} in this period</div>
@@ -3295,6 +3335,48 @@ document.getElementById('pr-7').addEventListener('click',()=>{
 });
 document.getElementById('pr-clear').addEventListener('click',()=>setProfitRange('',''));
 
+function renderSoftware(){
+  const sel=document.getElementById('sw-casa');const cur=sel.value;
+  sel.innerHTML=`<option value="">No bookmaker</option>`+[...D.casas].sort((a,b)=>a.name.localeCompare(b.name)).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  if([...sel.options].some(o=>o.value===cur))sel.value=cur;
+  const dt=document.getElementById('sw-date');if(!dt.value)dt.value=todayLocalISO();
+  const ym=todayLocalISO().slice(0,7);const ch=softwareCharges();
+  const list=[...softCosts()].sort((a,b)=>b.id-a.id);
+  document.getElementById('swList').innerHTML=list.length?`<div class="bk-hist-list">${list.map(k=>{
+      const paid=ch.filter(x=>x.sid===k.id).reduce((a,x)=>a-x.profit,0);
+      const casa=k.casaId?D.casas.find(c=>c.id===k.casaId):null;
+      const on=k.repeat!=='once'&&(!k.until||k.until>=ym);
+      const when=k.repeat==='once'?`one payment · ${fmtDate(k.date)}`:(on?`${fmt(k.amount)} €/month · since ${fmtDate(k.date)}`:`${fmt(k.amount)} €/month · stopped ${k.until}`);
+      return `<div class="bk-hist-row sw-row">
+        <span class="bk-hist-type wd">${esc(k.name||'Software')}${casa?` <span class="sw-casa">· ${esc(casa.name)}</span>`:''}</span>
+        <span class="bk-hist-date">${when}</span>
+        <span class="bk-hist-amt neg">−${fmt(paid)} €</span>
+        ${on?`<button class="unhidebtn" data-sw-stop="${k.id}">Stop</button>`:''}<button class="unhidebtn" data-sw-del="${k.id}">Delete</button>
+      </div>`;}).join('')}</div>
+    <div class="bk-hist-empty" style="margin:6px 0 0">Paid so far: <b>${fmt(ch.reduce((a,x)=>a-x.profit,0))} €</b>. "Stop" ends a subscription from next month and keeps what was already paid.</div>`
+    :`<div class="bk-hist-empty">Add the tools you pay for (BetHero, OddsJam, VPN…). They come off Total Profit but your daily earnings stay as they are.</div>`;
+}
+document.getElementById('sw-add').addEventListener('click',()=>{
+  const amount=parseFloat(document.getElementById('sw-amount').value);
+  if(!(amount>0)){toast('Enter the amount');return;}
+  const date=document.getElementById('sw-date').value||todayLocalISO();
+  const casaId=+document.getElementById('sw-casa').value||null;
+  const repeat=document.getElementById('sw-repeat').value==='once'?'once':'month';
+  softCosts().push({id:Date.now(),name:document.getElementById('sw-name').value.trim()||'Software',amount:+amount.toFixed(2),date,repeat,casaId});
+  document.getElementById('sw-name').value='';document.getElementById('sw-amount').value='';document.getElementById('sw-casa').value='';
+  save();renderProfit();toast(repeat==='once'?`Software cost of ${fmt(amount)} € subtracted from Profit`:`${fmt(amount)} €/month subtracted from Profit`);
+});
+document.getElementById('swList').addEventListener('click',e=>{
+  const st=e.target.closest('[data-sw-stop]');
+  if(st){const k=softCosts().find(x=>x.id===+st.dataset.swStop);if(!k)return;
+    k.until=todayLocalISO().slice(0,7);save();renderProfit();
+    toast(`${k.name} stopped from next month`,'Undo',()=>{delete k.until;save();renderProfit();});return;}
+  const dl=e.target.closest('[data-sw-del]');
+  if(dl){const arr=softCosts();const i=arr.findIndex(x=>x.id===+dl.dataset.swDel);if(i<0)return;
+    const [old]=arr.splice(i,1);save();renderProfit();
+    toast('Software cost deleted (and removed from Profit)','Undo',()=>{softCosts().splice(i,0,old);save();renderProfit();});}
+});
+
 function bankrollCardHtml(all){
   const t=trackInfo();const today=todayLocalISO();
   const sg=v=>(v>=0?'+':'')+fmt(v)+' €';
@@ -3303,10 +3385,11 @@ function bankrollCardHtml(all){
       <div class="br-start"><div><label class="fl">Start counting from</label><input type="date" id="brFrom" value="${today}" max="${today}"></div><button class="btn-reg" id="brStart">Start</button></div>
       <div class="br-foot"><button class="link-btn" id="brBackup">Download a full backup (JSON)</button></div>
     </div>`;
-  const pre=all.filter(e=>e.date<t.from&&!isHidden('month:'+e.date.slice(0,7))).reduce((a,e)=>a+e.profit,0);
+  const preAll=all.filter(e=>e.date<t.from&&!isHidden('month:'+e.date.slice(0,7)));
+  const pre=preAll.reduce((a,e)=>a+e.profit,0),preSw=preAll.filter(e=>e.cat==='software').reduce((a,e)=>a+e.profit,0);
   const since=all.filter(e=>e.date>=t.from&&!isHidden('month:'+e.date.slice(0,7)));
   const cat=c=>since.filter(e=>e.cat===c).reduce((a,e)=>a+e.profit,0);
-  const bets=cat('surebet')+cat('normal')+cat('freebet'),corr=cat('adjust'),exp=cat('expense'),cost=cat('cost');
+  const bets=cat('surebet')+cat('normal')+cat('freebet'),corr=cat('adjust'),exp=cat('expense'),cost=cat('cost'),sw=cat('software');
   const sinceSum=Math.round(since.reduce((a,e)=>a+e.profit,0)*100)/100+0,total=Math.round((pre+sinceSum)*100)/100+0;
   const br=bankrollSummary();const now=br.bankroll+br.inTransit;
   const c2=x=>Math.round(x*100)/100+0;
@@ -3315,9 +3398,9 @@ function bankrollCardHtml(all){
   const started=new Date(t.setAt);
   return `<div class="br-card" id="brCard">
       <div class="br-head"><b>Your profit, step by step</b><span>Bankroll counted since ${fmtDate(t.from)} · <button class="link-btn" id="brEdit">change</button></span></div>
-      <div class="br-row"><span>Until ${fmtDate(dayBefore)} <small>bet results only, as before</small></span><b>${sg(pre)}</b></div>
+      <div class="br-row"><span>Until ${fmtDate(dayBefore)} <small>${preSw?`bet results · software ${sg(preSw)}`:'bet results only, as before'}</small></span><b>${sg(pre)}</b></div>
       <div class="br-row"><span>Since ${fmtDate(t.from)}
-        <small>bets ${sg(bets)}${corr?` · balance corrections ${sg(corr)}`:''}${exp?` · bank expenses ${sg(exp)}`:''}${cost?` · monthly costs ${sg(cost)}`:''}</small></span><b>${sg(sinceSum)}</b></div>
+        <small>bets ${sg(bets)}${corr?` · balance corrections ${sg(corr)}`:''}${exp?` · bank expenses ${sg(exp)}`:''}${cost?` · monthly costs ${sg(cost)}`:''}${sw?` · software ${sg(sw)}`:''}</small></span><b>${sg(sinceSum)}</b></div>
       <div class="br-row br-tot"><span>= Total profit</span><b class="${total>=0?'pos':'neg'}">${sg(total)}</b></div>
       <div class="br-sub"><b>Your money since you started</b> <small>(${started.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})} ${started.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})})</small></div>
       <div class="br-row"><span>Bankroll now <small>all bookmakers + bank, including money in pending bets</small></span><b>${fmt(now)} €</b></div>
@@ -3325,7 +3408,7 @@ function bankrollCardHtml(all){
       ${Math.abs(drawn)>=0.005?`<div class="br-row"><span>+ Taken out for personal use <small>doesn't lower your profit</small></span><b>${fmt(drawn)} €</b></div>`:''}
       ${Math.abs(putIn)>=0.005?`<div class="br-row"><span>− New money you put in</span><b>${fmt(putIn)} €</b></div>`:''}
       <div class="br-row br-tot"><span>= What your bankroll earned</span><b class="${change>=0?'pos':'neg'}">${sg(change)}</b></div>
-      <div class="br-note">Bets dated before ${fmtDate(t.from)} that were settled later count above in "Until", but move the bankroll here — small differences come from that. Monthly costs of a bank come out of its balance; those of a bookmaker are paid from outside, so they only show in Profit.</div>
+      <div class="br-note">Bets dated before ${fmtDate(t.from)} that were settled later count above in "Until", but move the bankroll here — small differences come from that. Monthly costs of a bank come out of its balance; those of a bookmaker are paid from outside, so they only show in Profit${softCosts().length?' (same for software costs)':''}.</div>
       <div class="br-edit" id="brEditBox" style="display:none">
         <div class="br-start"><div><label class="fl">Count from</label><input type="date" id="brFrom" value="${t.from}" max="${today}"></div><button class="btn-reg" id="brStart">Save</button><button class="btn-s" id="brReset" title="Take today's bankroll as the new starting point">Restart from now</button><button class="btn-s" id="brStop">Stop counting</button></div>
       </div>
@@ -3355,6 +3438,7 @@ function renderProfit(){
   visibleBets().forEach(b=>{const rd=b.date||b.resolveDate;if(rd&&b.profit!==undefined)all.push({date:rd,profit:betProfit(b),cat:'surebet'})});
   visibleNormals().forEach(n=>{const rd=n.date||n.resolveDate;if(rd&&n.profit!==undefined&&n.profit!==0)all.push({date:rd,profit:n.profit,cat:n.type==='Freebet'?'freebet':'normal'})});
   trackedCosts().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'cost'}));
+  softwareCharges().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'software'}));
   migrateBanks();ensureAdjLogs();
   trackedAdj().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'adjust'}));
   trackedExpenses().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'expense'}));
@@ -3363,14 +3447,15 @@ function renderProfit(){
   const months={};
   all.forEach(e=>{
     const m=e.date.slice(0,7);
-    if(!months[m])months[m]={surebet:0,normal:0,freebet:0,adjust:0,cost:0,expense:0};
+    if(!months[m])months[m]={surebet:0,normal:0,freebet:0,adjust:0,cost:0,expense:0,software:0};
     months[m][e.cat]+=e.profit;
   });
 
   const keys=Object.keys(months).sort();
   const visibleKeys=keys.filter(k=>!isHidden('month:'+k));
   const hiddenKeys=keys.filter(k=>isHidden('month:'+k));
-  const totalAll=visibleKeys.reduce((a,k)=>a+months[k].surebet+months[k].normal+months[k].freebet+months[k].adjust+months[k].cost+months[k].expense,0);
+  const totalAll=visibleKeys.reduce((a,k)=>a+months[k].surebet+months[k].normal+months[k].freebet+months[k].adjust+months[k].cost+months[k].expense+months[k].software,0);
+  const totalSw=visibleKeys.reduce((a,k)=>a+months[k].software,0);
   const totalExp=visibleKeys.reduce((a,k)=>a+months[k].expense,0);
   const totalCost=visibleKeys.reduce((a,k)=>a+months[k].cost,0);
   const totalAdj=visibleKeys.reduce((a,k)=>a+months[k].adjust,0);
@@ -3390,6 +3475,7 @@ function renderProfit(){
         <div class="th-sub-item"><div class="th-sub-label">Freebets</div><div class="th-sub-val" style="color:var(--yellow)">${totalFB>=0?'+':''}${fmt(totalFB)} €</div></div>
         ${totalExp?`<div class="th-sub-item"><div class="th-sub-label">Bank expenses</div><div class="th-sub-val" style="color:var(--red)">${fmt(totalExp)} €</div></div>`:''}
         ${totalCost?`<div class="th-sub-item"><div class="th-sub-label">Monthly costs</div><div class="th-sub-val" style="color:var(--red)">${fmt(totalCost)} €</div></div>`:''}
+        ${totalSw?`<div class="th-sub-item"><div class="th-sub-label">Software</div><div class="th-sub-val" style="color:var(--red)">${fmt(totalSw)} €</div></div>`:''}
         ${totalAdj?`<div class="th-sub-item"><div class="th-sub-label">Balance corrections</div><div class="th-sub-val" style="color:${totalAdj>=0?'var(--green)':'var(--red)'}">${totalAdj>=0?'+':''}${fmt(totalAdj)} €</div></div>`:''}
       </div>
     </div>`;
@@ -3399,7 +3485,7 @@ function renderProfit(){
   const hiddenKeysDesc=[...hiddenKeys].reverse();
 
   document.getElementById('monthList').innerHTML=visibleKeysDesc.map(k=>{
-    const m=months[k];const tot=m.surebet+m.normal+m.freebet+m.adjust+m.cost+m.expense;
+    const m=months[k];const tot=m.surebet+m.normal+m.freebet+m.adjust+m.cost+m.expense+m.software;
     return`<div class="month-card">
       <div class="mc-head"><span class="mc-month">${mName(k)}</span><div style="display:flex;align-items:center;gap:6px"><span class="mc-total ${tot>=0?'pos':'neg'}">${tot>=0?'+':''}${fmt(tot)} €</span>${hideBtnHtml('month:'+k)}</div></div>
       ${m.surebet!==0?`<div class="mc-row"><span class="mc-cat">Surebets</span><span class="mc-val ${m.surebet>=0?'pos':'neg'}">${m.surebet>=0?'+':''}${fmt(m.surebet)} €</span></div>`:''}
@@ -3407,10 +3493,12 @@ function renderProfit(){
       ${m.freebet!==0?`<div class="mc-row"><span class="mc-cat">Freebets</span><span class="mc-val ${m.freebet>=0?'pos':'neg'}">${m.freebet>=0?'+':''}${fmt(m.freebet)} €</span></div>`:''}
       ${m.expense!==0?`<div class="mc-row"><span class="mc-cat">Bank expenses</span><span class="mc-val neg">${fmt(m.expense)} €</span></div>`:''}
       ${m.cost!==0?`<div class="mc-row"><span class="mc-cat">Monthly costs</span><span class="mc-val neg">${fmt(m.cost)} €</span></div>`:''}
+      ${m.software!==0?`<div class="mc-row"><span class="mc-cat">Software</span><span class="mc-val neg">${fmt(m.software)} €</span></div>`:''}
       ${m.adjust!==0?`<div class="mc-row"><span class="mc-cat">Balance corrections</span><span class="mc-val ${m.adjust>=0?'pos':'neg'}">${m.adjust>=0?'+':''}${fmt(m.adjust)} €</span></div>`:''}
     </div>`;
   }).join('') + hiddenPanelHtml('profit',hiddenKeysDesc.map(k=>({key:'month:'+k,label:mName(k)})));
   renderProfitRange(all);
+  renderSoftware();
 }
 
 // ══════════════════════════════════════════
@@ -4415,6 +4503,8 @@ function renderCasas(filter=''){
     }
     if(isBank(c))metaBits.push(`<span class="type-badge-kind bank-badge">Bank account</span>`);
     if(c.notes)metaBits.push(esc(c.notes));
+    const swPaid=softwareCharges().filter(x=>x.casaId===c.id).reduce((a,x)=>a-x.profit,0);
+    if(swPaid>0)metaBits.push(`<span style="color:var(--red)">Software: −${fmt(swPaid)} €</span>`);
     if(pend>0)metaBits.push(`<span style="color:var(--yellow)">Pending: ${fmt(pend)} €</span>`);
     if(pendWdCount>0)metaBits.push(`<span style="color:var(--yellow)">${pendWdCount} withdrawal${pendWdCount>1?'s':''} awaiting confirmation</span>`);
     const isOpen=!!(openBkPanel&&openBkPanel.cid===c.id);
