@@ -1881,6 +1881,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .pc-extra .sb-sub{flex-basis:100%;margin-top:0}
 .pc-btns{display:flex;gap:6px;align-items:center;margin-left:auto}
 .pc-btns .btn-void{min-height:34px;padding:6px 12px;font-size:12.5px}
+.pend-edit{display:inline-flex;align-items:center;gap:5px}.pend-edit svg{width:13px;height:13px;flex:none}
 
 /* day chips: promo toggle + ready to settle */
 .pd-sep{flex-shrink:0;width:1px;height:20px;background:var(--border2);margin:0 2px}
@@ -3102,16 +3103,16 @@ document.getElementById('sbr-save').addEventListener('click',()=>{
     const catVal=document.getElementById('sbr-category').value;
     b.categoryId=catVal?+catVal:null;
     const houses=readSbrHouses();
-    (b.legs||[]).forEach((l,i)=>{if(houses[i])l.house=houses[i];});
-    // editable odds & stakes per leg
     let legsChanged=false;
+    (b.legs||[]).forEach((l,i)=>{if(houses[i]&&houses[i]!==l.house){l.house=houses[i];legsChanged=true;}});
+    // editable odds & stakes per leg
     (b.legs||[]).forEach((l,i)=>{
       const oEl=document.querySelector(`#sbr-legs [data-legodd="${i}"]`),sEl=document.querySelector(`#sbr-legs [data-legstake="${i}"]`);
       const o=oEl?parseFloat(oEl.value):NaN,st=sEl?parseFloat(sEl.value):NaN;
       if(!isNaN(o)&&o>1&&o!==l.odd){l.odd=o;legsChanged=true;}
       if(!isNaN(st)&&st>=0&&st!==l.stake){l.stake=st;legsChanged=true;}
     });
-    if(legsChanged&&b.legs&&b.legs.length&&b.cashOut==null){
+    if(legsChanged&&b.legs&&b.legs.length&&b.cashOut==null&&b.legs.every(l=>l.stake!=null)){
       b.legs.forEach(l=>{l.minReturn=cents(payOdd(l.house,l.odd||0)*(l.stake||0));});
       b.totalStake=+b.legs.reduce((a,l)=>a+(l.stake||0),0).toFixed(2);
       b.minReturn=Math.min(...b.legs.map(l=>l.minReturn));
@@ -3708,6 +3709,7 @@ document.getElementById('m-save').addEventListener('click',()=>{
       n.event=ev||n.event||'(Sin evento)';n.type=type;
       if(!isNaN(oddIn)&&oddIn>0)n.odd=oddIn;
       if(!isNaN(stakeIn)&&stakeIn>0)n.stake=stakeIn;
+      n.house=document.getElementById('m-house').value.trim(); // before the payout: fractional odds depend on the bookmaker
       if(n.odd>1&&n.stake>0){
         n.potentialWin=cents(n.stake*(payOdd(n.house,n.odd)-1));
         n.potentialLoss=n.type==='Freebet'?0:-n.stake;
@@ -3959,6 +3961,7 @@ function pendMarkBtns(n,cls){
   return `<button class="pc-mk lost${m==='lost'?' on':''}${cls}" data-pid="${n.id}" data-kind="nm" data-action="lost" aria-pressed="${m==='lost'}">Lost</button><button class="pc-mk won${m==='won'?' on':''}${cls}" data-pid="${n.id}" data-kind="nm" data-action="won" aria-pressed="${m==='won'}">Won</button>`;
 }
 const PEND_NOTE_IC='<svg class="note-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+const PEND_EDIT=(kind,id)=>`<button class="btn-void pend-edit" data-pedit="${kind}:${id}" title="Change event, bookmakers, odds, stakes, date…"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>Edit</button>`;
 function pendNoteLine(kind,item){return item.notes?`<button class="pc-note" data-note-open="${kind}:${item.id}" title="Edit note">${PEND_NOTE_IC}<span>${esc(item.notes)}</span></button>`:'';}
 function pendNoteEdit(kind,item){return `<label class="pc-note-edit">${PEND_NOTE_IC}<input type="text" data-note="${kind}:${item.id}" value="${esc(item.notes||'')}" placeholder="Add a note…" maxlength="200" enterkeyhint="done" autocomplete="off"></label>`;}
 function pendCompactHtml(kind,item,tw){
@@ -3991,7 +3994,7 @@ function pendCompactHtml(kind,item,tw){
       <div class="pc-legs${marked?' has-res':''}" style="--n:${Math.max(legs.length,1)}">${legsHtml}${marked?PEND_RESOLVE('sb',b.id):''}</div>
       <span class="pc-tail">${more}</span>
       ${open?`<div class="pc-extra">${sbSubHtml(b,tw)}<div class="pend-meta">${pendHouseChip([...new Set(legs.map(l=>l.house))])}<span>${fmtWhen(b.date,b.time)}</span>${b.totalStake?`<span>Staked: ${fmt(b.totalStake)} €</span>`:''}${b.minReturn?`<span>Min. return: ${fmt(b.minReturn)} €</span>`:''}</div>
-        ${pendNoteEdit('sb',b)}<div class="pc-btns"><button class="btn-void" data-cashout="sb:${b.id}">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`:''}
+        ${pendNoteEdit('sb',b)}<div class="pc-btns">${PEND_EDIT('sb',b.id)}<button class="btn-void" data-cashout="sb:${b.id}">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`:''}
     </div>`;
   }
   const n=item;const pr=itemPromo('nm',n);
@@ -4004,7 +4007,7 @@ function pendCompactHtml(kind,item,tw){
     <div class="pc-legs pc-nm-btns">${pendMarkBtns(n,' pc-act')}${n.pendMark!=null?PEND_RESOLVE('nm',n.id):''}</div>
     <span class="pc-tail">${more}</span>
     ${open?`<div class="pc-extra"><div class="pend-meta">${pendHouseChip([n.house])}<span>${fmtWhen(n.date,n.time)}</span><span>Odds ${fmt(n.odd||0)}</span><span>Staked: ${fmt(n.stake||0)} €</span></div>
-      ${pendNoteEdit('nm',n)}<div class="pc-btns"><button class="btn-void" data-cashout="nm:${n.id}">Cash out</button><button class="btn-void" data-pid="${n.id}" data-kind="nm" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`:''}
+      ${pendNoteEdit('nm',n)}<div class="pc-btns">${PEND_EDIT('nm',n.id)}<button class="btn-void" data-cashout="nm:${n.id}">Cash out</button><button class="btn-void" data-pid="${n.id}" data-kind="nm" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`:''}
   </div>`;
 }
 let pendLastShown=[];
@@ -4108,7 +4111,7 @@ function renderPendientesInner(){
             <div class="pend-meta">${pendHouseChip([...new Set((b.legs||[]).map(l=>l.house))])}<span>${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}</span>${b.totalStake?`<span>Staked: ${fmt(b.totalStake)} €</span>`:''}</div>
             ${pendOpen.has('sb:'+b.id)?pendNoteEdit('sb',b):pendNoteLine('sb',b)}
           </div>
-          <div style="display:flex;align-items:center;gap:6px"><button class="btn-void" data-note-open="sb:${b.id}">${b.notes?'Edit note':'Note'}</button><button class="btn-void" data-cashout="sb:${b.id}" title="Close early for a manual amount">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada" title="Doesn't count as won or lost">Void</button>${hideBtnHtml('sb:'+b.id,true)}</div>
+          <div style="display:flex;align-items:center;gap:6px">${PEND_EDIT('sb',b.id)}<button class="btn-void" data-note-open="sb:${b.id}">${b.notes?'Edit note':'Note'}</button><button class="btn-void" data-cashout="sb:${b.id}" title="Close early for a manual amount">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada" title="Doesn't count as won or lost">Void</button>${hideBtnHtml('sb:'+b.id,true)}</div>
         </div>
         ${hasLegs?legsHtml:`<div class="pend-hint">No leg breakdown. <button class="pc-mk won${b.pendMark==='won'?' on':''}" data-pid="${b.id}" data-kind="sb" data-action="won">Won</button></div>`}
         ${b.pendMark!=null?`<div class="pend-hint pend-mk-hint"><span><b>${esc(pendMarkLabel('sb',b))}</b> — marked, not resolved yet. It stays here until you resolve it.</span>${PEND_RESOLVE('sb',b.id)}</div>`:hasLegs?`<div class="pend-hint">Tap the outcome that happened to <b>mark</b> it — then <b>Resolve</b> it once it's settled.</div>`:''}
@@ -4125,6 +4128,7 @@ function renderPendientesInner(){
         ${pendOpen.has('nm:'+n.id)?pendNoteEdit('nm',n):pendNoteLine('nm',n)}
       </div>
       <div class="pend-right">
+        ${PEND_EDIT('nm',n.id)}
         <button class="btn-void" data-note-open="nm:${n.id}">${n.notes?'Edit note':'Note'}</button>
         <div class="pend-preview">If it wins: <span class="pend-preview-pos">+${fmt(win)} €</span><br>If it loses: <span class="pend-preview-neg">${fmt(loss)} €</span></div>
         <button class="btn-void" data-cashout="nm:${n.id}" title="Close early for a manual amount">Cash out</button>
@@ -4275,6 +4279,8 @@ document.getElementById('pendList').addEventListener('keydown',e=>{if(e.key==='E
 document.getElementById('pendList').addEventListener('click',e=>{
   const no=e.target.closest('[data-note-open]');
   if(no){const k=no.dataset.noteOpen;pendOpen.add(k);renderPendientes();const el=document.querySelector(`#pendList [data-note="${k}"]`);if(el){el.focus();const L=el.value.length;try{el.setSelectionRange(L,L);}catch(err){}}return;}
+  const pe=e.target.closest('[data-pedit]');
+  if(pe){const [k,i]=pe.dataset.pedit.split(':');k==='nm'?openNormalModal(+i):openSbEditModal(+i);return;}
   const mo=e.target.closest('[data-pcmore]');
   if(mo){const k=mo.dataset.pcmore;pendOpen.has(k)?pendOpen.delete(k):pendOpen.add(k);renderPendientes();return;}
   const coBtn=e.target.closest('[data-cashout]');
