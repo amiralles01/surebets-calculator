@@ -1779,7 +1779,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .sw-form{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,.8fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) auto;gap:8px;align-items:center;margin-top:10px}
 .sw-form>*{min-width:0;width:100%}.sw-form .btn-reg{width:auto}
 @media(max-width:760px){.sw-form{grid-template-columns:1fr 1fr}.sw-form>#sw-name,.sw-form .btn-reg{grid-column:1/-1}}
-.sw-row .bk-hist-type{max-width:none}.sw-casa{font-size:11.5px;color:var(--faint)}
+.sw-row .bk-hist-type{max-width:none}.cal-sw{display:block;font-size:11px;font-weight:500;color:var(--faint);text-align:right}.sw-casa{font-size:11.5px;color:var(--faint)}
 
 .c-flow{display:flex;gap:10px;align-items:flex-start;padding:11px 12px;border-radius:10px;border:1px solid var(--border);background:var(--raised);cursor:pointer}
 .c-flow input{width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:var(--pitch,var(--accent))}
@@ -2249,7 +2249,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
     <div id="page-profit" class="fw" style="display:none">
       <div id="totalHero"></div>
       <div class="card" id="swCard">
-        <div class="ch"><span class="ct">Software costs</span><span style="font-size:11.5px;color:var(--faint)">Subtracted from Total Profit · not from daily earnings</span></div>
+        <div class="ch"><span class="ct">Software costs</span><span style="font-size:11.5px;color:var(--faint)">Subtracted from monthly and total Profit · never from daily earnings</span></div>
         <div class="cb">
           <div id="swList"></div>
           <div class="sw-form">
@@ -6130,12 +6130,15 @@ function computeDayTotals(year,month){
   [...trackedCosts(),...trackedAdj(),...trackedExpenses()].forEach(a=>{if(a.date.startsWith(ym)){const d=+a.date.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+a.profit;}});
   return dayTotals;
 }
+// software of a month: part of the monthly profit, never of a single day
+function monthSoftware(year,month){const ym=`${year}-${String(month+1).padStart(2,'0')}`;return softwareCharges().filter(a=>a.date.startsWith(ym)).reduce((a,x)=>a+x.profit,0);}
 function renderCalendar(){
   document.getElementById('calMonthLabel').textContent=`${MES_ES[calMonth]} ${calYear}`;
   const dayTotals=computeDayTotals(calYear,calMonth);
-  const hasData=Object.keys(dayTotals).length>0;
-  const monthTotal=Object.values(dayTotals).reduce((a,b)=>a+b,0);
-  document.getElementById('calMonthTotal').innerHTML=hasData?`<span style="color:${monthTotal>=0?'var(--green)':'var(--red)'}">${monthTotal>=0?'+':''}${fmt(monthTotal,0)} €</span>`:'';
+  const sw=monthSoftware(calYear,calMonth);
+  const hasData=Object.keys(dayTotals).length>0||sw!==0;
+  const monthTotal=Object.values(dayTotals).reduce((a,b)=>a+b,0)+sw;
+  document.getElementById('calMonthTotal').innerHTML=hasData?`<span style="color:${monthTotal>=0?'var(--green)':'var(--red)'}">${monthTotal>=0?'+':''}${fmt(monthTotal,0)} €</span>${sw?`<small class="cal-sw">incl. software ${fmt(sw,0)} €</small>`:''}`:'';
   const firstDow=(new Date(calYear,calMonth,1).getDay()+6)%7;
   const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
   let html='';
@@ -6160,9 +6163,10 @@ document.getElementById('calTodayBtn').addEventListener('click',()=>{const t=new
 function renderProfitMesBox(){
   const t=new Date();
   const dayTotals=computeDayTotals(t.getFullYear(),t.getMonth());
-  const hasData=Object.keys(dayTotals).length>0;
-  const total=Object.values(dayTotals).reduce((a,b)=>a+b,0);
-  document.getElementById('profitMesLabel').textContent=`${MES_ES[t.getMonth()]} ${t.getFullYear()} profit`;
+  const sw=monthSoftware(t.getFullYear(),t.getMonth());
+  const hasData=Object.keys(dayTotals).length>0||sw!==0;
+  const total=Object.values(dayTotals).reduce((a,b)=>a+b,0)+sw;
+  document.getElementById('profitMesLabel').textContent=`${MES_ES[t.getMonth()]} ${t.getFullYear()} profit${sw?` · incl. software ${fmt(sw,0)} €`:''}`;
   const val=document.getElementById('profitMesVal');
   if(!hasData){val.textContent='—';val.className='profit-mes-val neu';}
   else{val.textContent=(total>=0?'+':'')+fmt(total,0)+' €';val.className='profit-mes-val '+(total>=0?'pos':'neg');}
