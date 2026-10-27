@@ -2011,6 +2011,63 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .co-sum .co-tot{border-top:1px solid var(--border);padding-top:6px;margin-top:2px;font-weight:600}
 .co-sum b.pos{color:var(--green)}.co-sum b.neg{color:var(--red)}
 .real-profit-val.neg{color:var(--red)}
+
+/* ── Balance per bookmaker + warnings before registering ── */
+.bk-left{font-size:11.5px;color:var(--faint);margin-top:3px;font-variant-numeric:tabular-nums}
+.bk-left.short{color:var(--red);font-weight:600}
+.reg-warn{display:flex;align-items:center;gap:12px;justify-content:space-between;margin-bottom:10px;padding:11px 14px;border-radius:12px;background:var(--rdim);border:1px solid color-mix(in srgb,var(--red) 35%,transparent);font-size:12.5px;line-height:1.45}
+.reg-warn>div{display:flex;flex-direction:column;min-width:0}
+.reg-warn b{color:var(--red);font-size:13px}
+.reg-warn span{color:var(--muted)}
+.reg-warn.dup{background:var(--ydim);border-color:color-mix(in srgb,var(--yellow) 45%,transparent)}
+.reg-warn.dup b{color:var(--text)}
+.reg-warn .tool{flex-shrink:0}
+.q-bar-info i{font-style:normal}
+.q-dup{font-style:normal;font-size:11px;font-weight:700;color:var(--text);background:var(--ydim);border:1px solid color-mix(in srgb,var(--yellow) 50%,transparent);padding:1px 6px;border-radius:6px;align-self:flex-start;margin-top:3px}.q-dup:empty{display:none}.q-bar-info i.q-short{color:var(--red);font-weight:700}
+/* ── New bet header: today so far ── */
+.today-sub b{font-weight:700;color:inherit;font-variant-numeric:tabular-nums}
+.today-sub b.pos{color:var(--ball,#F4C53D)}
+.today-sub i{font-style:normal;opacity:.5;margin:0 7px}
+/* ── Bookmakers: last activity ── */
+.bk-act{font-size:12px;color:var(--faint);margin-top:3px}.bk-act.idle{color:var(--yellow);font-weight:600}
+.th-pace{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:6px;position:relative;font-variant-numeric:tabular-nums}
+.th-pace span{display:flex;flex-direction:column}
+.th-pace small{font-size:11.5px;color:rgba(255,255,255,.6)}
+.th-pace b{font-size:15px;font-weight:700;color:#fff}.th-pace b.pos{color:#8fdcae}.th-pace b.neg{color:#ff9a90}
+@media(max-width:600px){.th-pace{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px}.th-sub-val{font-size:clamp(13px,4vw,16px)!important;white-space:nowrap}}
+.sc-names{display:block;font-size:11.5px;font-weight:500;color:var(--faint);letter-spacing:0;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:inherit}
+.bk-secs{display:contents}.bk-morebtn{display:none}
+@media(max-width:600px){
+  .bk-morebtn{display:inline-flex}
+  .bk-card:not(.more) .bk-secs{display:none}
+}
+/* ── Profit: by bookmaker ── */
+#bkStatsCard .ch{gap:10px;flex-wrap:wrap}
+.bks-per{display:inline-flex;gap:3px;padding:3px;border-radius:10px;background:var(--raised)}
+.bks-per button{border:0;background:none;font:inherit;font-size:12px;font-weight:600;color:var(--muted);padding:5px 10px;border-radius:7px;cursor:pointer}
+.bks-per button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.bks-tbl{display:flex;flex-direction:column;font-variant-numeric:tabular-nums}
+.bks-h,.bks-r{display:grid;grid-template-columns:minmax(0,1.7fr) 1fr 1fr .8fr;gap:10px;align-items:center}
+.bks-h{font-size:11px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;padding:0 0 8px;border-bottom:1px solid var(--border)}
+.bks-h span:not(:first-child),.bks-r>span:not(:first-child){text-align:right;white-space:nowrap}
+.bks-r{padding:10px 0;border-bottom:1px solid var(--border);font-size:13.5px;font-weight:600}
+.bks-r .pos{color:var(--green)}.bks-r .neg{color:var(--red)}
+.bks-n{position:relative;display:flex;flex-direction:column;min-width:0;padding-bottom:5px}
+.bks-n b{font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bks-n small{font-size:11.5px;font-weight:500;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bks-n em{font-style:normal}.bks-n em.idle{color:var(--yellow);font-weight:600}
+.bks-bar{position:absolute;left:0;bottom:0;height:3px;border-radius:2px;background:var(--green);opacity:.35}
+.bks-t{border-bottom:none;font-size:14px}.bks-t .bks-n{padding-bottom:0}
+.bks-note,.bks-empty{font-size:12px;color:var(--faint);line-height:1.5;margin-top:10px}
+@media(max-width:600px){
+  .bks-h,.bks-r{grid-template-columns:minmax(0,1fr) 58px 70px 54px;gap:6px}
+  .bks-r{font-size:12px;letter-spacing:-.2px}.bks-h{font-size:10px}
+  .reg-warn{flex-direction:column;align-items:stretch}
+  /* Profile: values used to wrap ("28.4k / €") in the 3-column boxes */
+  .stats3 .statbox{padding:10px 10px}
+  .stats3 .statbox-val{font-size:clamp(15px,4.6vw,19px);white-space:nowrap;letter-spacing:-.6px}
+  .stats3 .statbox-label{font-size:11px}
+}
 </style>
 </head>
 <body>
@@ -2222,6 +2279,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
       <div class="stats" id="sbStats"></div>
       <div class="tb">
         <input type="text" id="sbSearch" placeholder="Search event or bookmaker…">
+        <button class="btn-s" id="sbCsv" title="Spreadsheet for Excel / Google Sheets (the day filter applies)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="12" y1="3" x2="12" y2="21"/></svg>Excel</button>
         <button class="btn-s" id="sbExport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
         <button class="btn-s" id="sbImport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import</button>
         <input type="file" id="sbFile" accept=".json" style="display:none">
@@ -2236,6 +2294,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
       <div class="stats" id="nbStats"></div>
       <div class="tb">
         <input type="text" id="nbSearch" placeholder="Search event…">
+        <button class="btn-s" id="nbCsv" title="Spreadsheet for Excel / Google Sheets (the day filter applies)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="12" y1="3" x2="12" y2="21"/></svg>Excel</button>
         <button class="btn-s" id="nbExport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
         <button class="btn-s" id="nbImport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import</button>
         <input type="file" id="nbFile" accept=".json" style="display:none">
@@ -2277,12 +2336,16 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
           <div id="profitRangeResult" style="margin-top:12px"></div>
         </div>
       </div>
+      <div class="card" id="bkStatsCard">
+        <div class="ch"><span class="ct">By bookmaker</span><div class="bks-per" id="bkStatsPer"><button data-bkper="month" class="on">This month</button><button data-bkper="last">Last month</button><button data-bkper="all">All</button></div></div>
+        <div class="cb" id="bkStatsBody"></div>
+      </div>
       <div id="monthList"></div>
     </div>
 
     <!-- ═══ PENDIENTES PAGE ═══ -->
     <div id="page-pendientes" class="fw" style="display:none">
-      <div class="pend-bar"><input type="search" id="pendSearch" placeholder="Search team or bookmaker" autocomplete="off" enterkeyhint="search"><span id="pendHouseWrap"></span></div>
+      <div class="pend-bar"><input type="search" id="pendSearch" placeholder="Team or bookmaker" autocomplete="off" enterkeyhint="search"><span id="pendHouseWrap"></span></div>
       <div class="pend-tools" id="pendTools"></div>
       <div id="pendPromo"></div>
       <div class="pend-days" id="pendDays"></div>
@@ -2678,7 +2741,8 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 // ══════════════════════════════════════════
 //  STORE — Firestore-backed
 // ══════════════════════════════════════════
-function save(){return window.__fsSave ? window.__fsSave() : Promise.resolve();}
+let saveVer=0; // bumped on every save: cached views (bookmaker ledger) know the data changed
+function save(){saveVer++;return window.__fsSave ? window.__fsSave() : Promise.resolve();}
 
 let D = {bets:[],normals:[],casas:[],notes:[],notesFolders:[],categories:[],hidden:{},bkProfiles:[],poker:[],presets:[]};
 // A "void" surebet neither wins nor loses: it contributes no profit and doesn't count as money
@@ -3045,9 +3109,16 @@ function renderResult(){
   if(!res){const qb=document.getElementById('qBar');if(qb)qb.classList.remove('on');panel.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>Add at least 2 odds &gt; 1.00.</p></div></div>`;return;}
   const{isSurebet,stakes,returns,minReturn,actualTotal,profit,profitPct,sumPct,valid}=res;
   const s=profit>=0?'+':'';
+  const led=cachedLedger();
+  // a negative balance means that bookmaker's money isn't really being tracked → no figure, no warning
+  const bal=valid.map(o=>{const c=casaFor(o.house);const b=c?casaMoney(c,led).balance:null;return b!=null&&b>=0?b:null;});
+  const short=valid.map((o,i)=>bal[i]!=null&&stakes[i]>bal[i]+0.004);
+  const shortIdx=short.map((x,i)=>x?i:-1).filter(i=>i>=0);
+  const canFit=shortIdx.length&&shortIdx.every(i=>bal[i]>=1);
+  const balWarn=shortIdx.length?`<div class="reg-warn"><div><b>Not enough balance</b>${shortIdx.map(i=>`<span>${esc(valid[i].house)} needs ${fmt(stakes[i])}&nbsp;€ · has ${fmt(bal[i])}&nbsp;€</span>`).join('')}</div>${canFit?`<button class="tool" id="fitBalBtn" title="Lowers the total so every stake fits in its bookmaker">Fit to balance</button>`:''}</div>`:'';
   const badgeHtml=isSurebet?`<div class="badge bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Surebet</div>`:
     `<div class="badge br"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>No surebet</div>`;
-  const bkHtml=valid.map((o,i)=>`<div class="bkr"><div><div class="bkn">${esc(o.house||`Bookmaker ${i+1}`)}</div><div class="bks">${esc(o.result||`Outcome ${i+1}`)} · Odds ${fmt(o.odd)}${fractionLabel(o.house,o.odd)?` <span class="frac-tag" title="This bookmaker pays with the exact fraction behind the odds it shows">pays ${fractionLabel(o.house,o.odd)}</span>`:''}</div></div><div class="bkv"><div class="bkst">${fmt(stakes[i])} €${o.manualStake>0?` <span style="color:var(--yellow);font-size:10px;font-weight:600">${o.fromPreset?'SAVED':'MANUAL'}</span>`:''}</div><div class="bkr2">return ${fmt(returns[i])} €</div><div class="bkm">min. ${fmt(returns[i])} €</div></div></div>`).join('');
+  const bkHtml=valid.map((o,i)=>`<div class="bkr"><div><div class="bkn">${esc(o.house||`Bookmaker ${i+1}`)}</div><div class="bks">${esc(o.result||`Outcome ${i+1}`)} · Odds ${fmt(o.odd)}${fractionLabel(o.house,o.odd)?` <span class="frac-tag" title="This bookmaker pays with the exact fraction behind the odds it shows">pays ${fractionLabel(o.house,o.odd)}</span>`:''}</div>${bal[i]!=null?`<div class="bk-left${short[i]?' short':''}">${short[i]?'Only ':''}${fmt(bal[i])} € available</div>`:''}</div><div class="bkv"><div class="bkst">${fmt(stakes[i])} €${o.manualStake>0?` <span style="color:var(--yellow);font-size:10px;font-weight:600">${o.fromPreset?'SAVED':'MANUAL'}</span>`:''}</div><div class="bkr2">return ${fmt(returns[i])} €</div><div class="bkm">min. ${fmt(returns[i])} €</div></div></div>`).join('');
   const bW=Math.min(sumPct/1.3,100);
   panel.innerHTML=`
     <div class="card ph2 ${isSurebet?'sb':''}">${badgeHtml}<div class="pp ${profit>=0?'pos':'neg'}">${s}${fmt(profitPct)} %</div><div class="ps">Guaranteed profit: <span class="hi ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span></div></div>
@@ -3057,13 +3128,54 @@ function renderResult(){
       <div class="sr"><span class="sl">Profit</span><span class="sv ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span></div>
       <div class="pw"><div class="pl"><span>Sum of implied probabilities</span><span>${fmt(sumPct)} %</span></div><div class="pt"><div class="pf ${sumPct>100?'over':''}" style="width:${bW}%"></div></div></div>
     </div>
+    ${balWarn}<div id="dupWarn"></div>
     <button class="btn-reg" id="regBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>${isSurebet?'Register':'Register anyway (negative ROI)'} <kbd class="kbd">Enter</kbd></button>
     ${presetHitHtml(valid,stakes)}`;
   document.getElementById('regBtn').addEventListener('click',quickRegister);
+  const fb=document.getElementById('fitBalBtn');if(fb)fb.addEventListener('click',fitToBalance);
   const qb=document.getElementById('qBar');
-  if(qb){qb.innerHTML=`<div class="q-bar-info"><b class="${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</b><span>${valid.map((o,i)=>fmt(stakes[i])+'€').join(' / ')}</span></div><button class="btn-reg" id="qBarBtn">Register</button>`;
+  if(qb){qb.innerHTML=`<div class="q-bar-info"><b class="${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</b><span>${valid.map((o,i)=>`<i class="${short[i]?'q-short':''}">${fmt(stakes[i])}€</i>`).join(' / ')}</span><em class="q-dup" id="qDup"></em></div>${canFit?`<button class="tool" id="qFitBtn">Fit</button>`:''}<button class="btn-reg" id="qBarBtn">Register</button>`;
+    const qf=document.getElementById('qFitBtn');if(qf){qf.addEventListener('mousedown',e=>e.preventDefault());qf.addEventListener('click',fitToBalance);}
     document.getElementById('qBarBtn').addEventListener('mousedown',e=>e.preventDefault());document.getElementById('qBarBtn').addEventListener('click',quickRegister);qb.classList.add('on');}
   wirePresetHit();
+  renderDupWarn();
+}
+// ── Same surebet already registered (Telegram can send the same one twice) ──
+function legSig(legs){return legs.map(l=>bkKey((l.house||'').trim())+'@'+(+l.odd||0).toFixed(3)).sort().join('|');}
+function findDuplicate(){
+  const ev=matchName(document.getElementById('q-event')?.value);if(!ev)return null;
+  const mk=(document.getElementById('q-market')?.value||'').trim().toLowerCase();
+  const valid=outcomes.filter(o=>o.odd>1);if(valid.length<2)return null;
+  const sig=legSig(valid);
+  return (D.bets||[]).filter(b=>b.status==='pending'&&matchName(b.event)===ev&&(b.market||'').trim().toLowerCase()===mk&&(b.legs||[]).length===valid.length&&legSig(b.legs)===sig)
+    .sort((a,b)=>b.id-a.id)[0]||null;
+}
+function renderDupWarn(){
+  const el=document.getElementById('dupWarn');if(!el)return;
+  const d=findDuplicate();
+  const q=document.getElementById('qDup');if(q)q.textContent=d?'Already registered'+(addedAt(d)?' at '+addedAt(d):''):'';
+  el.innerHTML=d?`<div class="reg-warn dup"><div><b>Already registered${addedAt(d)?' at '+addedAt(d):''}</b><span>Same match, market, bookmakers and odds (${fmt(d.totalStake||0)} € staked). Register it again only if you really placed it twice.</span></div></div>`:'';
+}
+['q-event','q-market'].forEach(id=>document.getElementById(id).addEventListener('input',renderDupWarn));
+// Lowers the total (and any fixed stakes) until every stake fits in what its bookmaker has
+let fitBaseTotal=null; // total before "Fit to balance", put back after registering
+function fitToBalance(){
+  let ok=false;
+  const v0=outcomes.filter(o=>o.odd>1).map(o=>o.odd);
+  if(findPreset(v0))psSkipKey=presetKey(v0); // don't let saved stakes jump back in
+  if(fitBaseTotal==null)fitBaseTotal=psBaseTotal!=null?psBaseTotal:totalInv;psBaseTotal=null;
+  for(let k=0;k<40;k++){
+    const res=calculate();if(!res)return;
+    const led=cachedLedger();let f=1;
+    res.valid.forEach((o,i)=>{const c=casaFor(o.house);if(!c)return;const b=casaMoney(c,led).balance;if(b>=0&&res.stakes[i]>b+0.004)f=Math.min(f,Math.max(0,b)/res.stakes[i]);});
+    if(f>=1){ok=true;break;}
+    if(k)f*=0.99; // rounding pushed it back over: shave a little more
+    outcomes.forEach(o=>{if(o.manualStake>0){o.manualStake=Math.floor(o.manualStake*f*100)/100;o.fromPreset=false;}});
+    setTotal(Math.floor(totalInv*f*100)/100);
+    renderOutcomes();
+  }
+  render();
+  toast(ok?`Stakes fitted to your balance · total ${fmt(calculate()?.actualTotal||totalInv)} €`:"Couldn't fit the stakes — check the balances");
 }
 
 function render(){autoPreset();renderOutcomes();renderResult();renderPsQuick();renderPsBanner();}
@@ -3124,10 +3236,10 @@ function registerBet(){
     categoryId:catVal?+catVal:null,
     ...(document.getElementById('sbr-notes').value.trim()?{notes:document.getElementById('sbr-notes').value.trim()}:{}),
     legs:res.valid.map((o,i)=>({house:houses[i]||o.house||`Bookmaker ${i+1}`,result:o.result||`Outcome ${i+1}`,odd:o.odd,stake:res.stakes[i],minReturn:res.returns[i]}))};
-  D.bets.unshift(bet);save();updateBadges();renderPendientes();
+  D.bets.unshift(bet);const mw=timeVal?syncMatchWhen(bet):[];save();updateBadges();renderPendientes();
   document.getElementById('sbRegModal').style.display='none';
   newBetCat=null;sbPrefill=null;renderRepeatSel();
-  toast(`Surebet saved to pending · ${res.profit>=0?'+':''}${fmt(res.profit)} €`,'View pending',()=>navTo('pendientes'));
+  toast(`Surebet saved to pending · ${res.profit>=0?'+':''}${fmt(res.profit)} €${matchWhenMsg(mw)}`,'View pending',()=>navTo('pendientes'));
 }
 document.getElementById('sbr-cancel').addEventListener('click',()=>{document.getElementById('sbRegModal').style.display='none';editingSbId=null;});
 document.getElementById('sbr-save').addEventListener('click',()=>{
@@ -3137,8 +3249,10 @@ document.getElementById('sbr-save').addEventListener('click',()=>{
     b.event=evVal||b.event||'(No event)';
     b.market=document.getElementById('sbr-market').value.trim();
     const nt=document.getElementById('sbr-notes').value.trim();if(nt)b.notes=nt;else delete b.notes;
+    const was=b.date+' '+(b.time||'');
     b.date=document.getElementById('sbr-start').value||b.date;
     b.time=document.getElementById('sbr-time').value||'';
+    const mw=b.status==='pending'&&was!==b.date+' '+(b.time||'')?syncMatchWhen(b):[];
     const catVal=document.getElementById('sbr-category').value;
     b.categoryId=catVal?+catVal:null;
     const houses=readSbrHouses();
@@ -3165,6 +3279,7 @@ document.getElementById('sbr-save').addEventListener('click',()=>{
     renderSurebets(document.getElementById('sbSearch').value);renderProfit();renderPendientes();
     if(document.getElementById('page-categorias').style.display!=='none')renderCategorias();
     document.getElementById('sbRegModal').style.display='none';editingSbId=null;
+    if(mw.length)toast(`Saved · time updated on ${mw.length} other bet${mw.length>1?'s':''} of this match`,'Undo',()=>{undoMatchWhen(mw);save();renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);renderPendientes();toast('Other bets put back');});
     return;
   }
   registerBet();
@@ -3432,7 +3547,41 @@ document.getElementById('totalHero').addEventListener('click',e=>{
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`surebets_backup_${todayLocalISO()}.json`;a.click();return;
   }
 });
+// ── Profit page: volume and result per bookmaker for a period (settled bets only) ──
+let bkStatsPer='month';
+function renderBkStats(){
+  const el=document.getElementById('bkStatsBody');if(!el)return;
+  document.querySelectorAll('#bkStatsPer [data-bkper]').forEach(b=>b.classList.toggle('on',b.dataset.bkper===bkStatsPer));
+  const now=new Date(),ym=todayLocalISO().slice(0,7);
+  const lm=(()=>{const d=new Date(now.getFullYear(),now.getMonth()-1,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');})();
+  const keep=bkStatsPer==='all'?null:x=>(x.date||'').slice(0,7)===(bkStatsPer==='month'?ym:lm);
+  const act=bookmakerActivity();
+  const rows=[...bookmakerLedger(keep).entries()].filter(([k,e])=>e.n>0).sort((a,b)=>b[1].vol-a[1].vol);
+  if(!rows.length){el.innerHTML=`<div class="bks-empty">No settled bets in this period.</div>`;return;}
+  const tot=rows.reduce((a,[k,e])=>({vol:a.vol+e.vol,res:a.res+e.settled,n:a.n+e.n}),{vol:0,res:0,n:0});
+  const sgn=v=>(v>0?'+':'')+fmt(v,Math.abs(v)>=1000?0:2);
+  const pct=(r,v)=>v?(r>0?'+':'')+fmt(r/v*100,1)+'%':'—';
+  const cls=v=>v>0.004?'pos':v<-0.004?'neg':'';
+  const maxVol=rows[0][1].vol||1;
+  el.innerHTML=`<div class="bks-tbl"><div class="bks-h"><span>Bookmaker</span><span>Staked</span><span>Result</span><span>ROI</span></div>`+
+    rows.map(([k,e])=>{const a=act.get(k),idle=a&&a.last&&daysAgo(a.last)>IDLE_DAYS;
+      return `<div class="bks-r"><span class="bks-n"><b>${esc((D.casas||[]).find(c=>bkKey(c.name||'')===k)?.name||e.name)}</b><small>${e.n} bet${e.n>1?'s':''}${a&&a.last?` · <em class="${idle?'idle':''}">last ${agoLabel(a.last)}</em>`:''}</small><i class="bks-bar" style="width:${Math.max(3,e.vol/maxVol*100).toFixed(1)}%"></i></span><span>${fmt(e.vol,0)} €</span><span class="${cls(e.settled)}">${sgn(e.settled)} €</span><span class="${cls(e.settled)}">${pct(e.settled,e.vol)}</span></div>`;}).join('')+
+    `<div class="bks-r bks-t"><span class="bks-n"><b>Total</b><small>${tot.n} bets</small></span><span>${fmt(tot.vol,0)} €</span><span class="${cls(tot.res)}">${sgn(tot.res)} €</span><span class="${cls(tot.res)}">${pct(tot.res,tot.vol)}</span></div></div>
+    <div class="bks-note">Result = what each bookmaker paid you minus what you staked there. In a surebet one bookmaker wins and the others lose, so single bookmakers swing; the total is your real profit.</div>`;
+}
+document.getElementById('bkStatsPer').addEventListener('click',e=>{const b=e.target.closest('[data-bkper]');if(!b)return;bkStatsPer=b.dataset.bkper;renderBkStats();});
+// Profit hero: today / last 7 days / this month / average per day this month
+function paceHtml(all){
+  const t=todayLocalISO(),w=shiftedISO(-6),ym=t.slice(0,7);
+  const live=all.filter(e=>!isHidden('month:'+e.date.slice(0,7)));
+  const sum=f=>live.filter(f).reduce((a,e)=>a+e.profit,0);
+  const today=sum(e=>e.date===t),week=sum(e=>e.date>=w&&e.date<=t),month=sum(e=>e.date.slice(0,7)===ym&&e.date<=t);
+  const avg=month/(+t.slice(8));
+  const it=(l,v,d=2)=>`<span><small>${l}</small><b class="${v>0.004?'pos':v<-0.004?'neg':''}">${v>0.004?'+':''}${fmt(v,d)} €</b></span>`;
+  return `<div class="th-pace">${it('Today',today)}${it('Last 7 days',week)}${it('This month',month)}${it('Per day this month',avg)}</div>`;
+}
 function renderProfit(){
+  renderBkStats();
   // Combine all entries with dates
   const all=[];
   visibleBets().forEach(b=>{const rd=b.date||b.resolveDate;if(rd&&b.profit!==undefined)all.push({date:rd,profit:betProfit(b),cat:'surebet'})});
@@ -3469,6 +3618,7 @@ function renderProfit(){
     <div class="total-hero">
       <div class="th-label">Total Profit</div>
       <div class="th-val ${totalAll>=0?'pos':'neg'}">${totalAll>=0?'+':''}${fmt(totalAll)} €</div>
+      ${paceHtml(all)}
       <div class="th-sub">
         <div class="th-sub-item"><div class="th-sub-label">Surebets</div><div class="th-sub-val" style="color:var(--green)">${totalSB>=0?'+':''}${fmt(totalSB)} €</div></div>
         <div class="th-sub-item"><div class="th-sub-label">Normal</div><div class="th-sub-val" style="color:${totalNorm>=0?'var(--blue)':'var(--red)'}">${totalNorm>=0?'+':''}${fmt(totalNorm)} €</div></div>
@@ -3525,7 +3675,7 @@ document.getElementById('addBtn').addEventListener('click',()=>{
   outcomes.push({id:nextId++,house:'',result:'',odd:0,manualStake:null});render();
   setTimeout(()=>{const ins=document.querySelectorAll('.oi');if(ins.length)ins[ins.length-1].focus();},40);
 });
-document.getElementById('totalInv').addEventListener('input',e=>{totalInv=parseFloat(e.target.value)||0;renderResult();});
+document.getElementById('totalInv').addEventListener('input',e=>{totalInv=parseFloat(e.target.value)||0;fitBaseTotal=null;renderResult();});
 document.getElementById('roundPills').addEventListener('click',e=>{
   const btn=e.target.closest('.rpb');if(!btn)return;
   roundMode=btn.dataset.mode;
@@ -3581,6 +3731,32 @@ function extractImportArray(parsed, keyOrKeys){
   return null;
 }
 
+// ── Excel export: CSV with ; and decimal commas so Spanish Excel opens it straight into columns ──
+function csvDownload(name,head,rows){
+  const cell=v=>{if(typeof v==='number')return String(+v.toFixed(2)).replace('.',',');v=String(v??'');return /[;"\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  const txt='﻿'+[head,...rows].map(r=>r.map(cell).join(';')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'text/csv;charset=utf-8'}));a.download=name;a.click();
+}
+const ST_LABEL={pending:'Pending',won:'Won',lost:'Lost',anulada:'Void'};
+document.getElementById('sbCsv').addEventListener('click',()=>{
+  const list=visibleBets().filter(b=>betsDayMatch(b.date)).sort((a,b)=>(a.date||'').localeCompare(b.date||'')||a.id-b.id);
+  if(!list.length){toast('No surebets to export');return;}
+  const maxL=Math.max(2,...list.map(b=>(b.legs||[]).length));
+  const head=['Date','Time','Event','Market','Status','Total stake','Profit','ROI %','Winner'];
+  for(let i=1;i<=maxL;i++)head.push('Bookmaker '+i,'Outcome '+i,'Odds '+i,'Stake '+i);
+  head.push('Notes');
+  csvDownload(`surebets_${todayLocalISO()}.csv`,head,list.map(b=>{
+    const legs=b.legs||[],p=b.status==='pending'?(b.expectedProfit??b.profit??0):betProfit(b);
+    const r=[b.date||'',b.time||'',b.event||'',b.market||'',ST_LABEL[b.status]||b.status||'',b.totalStake||0,p,b.totalStake?p/b.totalStake*100:0,b.winnerLeg!=null&&legs[b.winnerLeg]?legs[b.winnerLeg].house:''];
+    for(let i=0;i<maxL;i++){const l=legs[i];r.push(l?l.house||'':'',l?l.result||'':'',l?+l.odd||0:'',l?+l.stake||0:'');}
+    r.push(b.notes||'');return r;}));
+});
+document.getElementById('nbCsv').addEventListener('click',()=>{
+  const list=visibleNormals().filter(n=>betsDayMatch(n.date)).sort((a,b)=>(a.date||'').localeCompare(b.date||'')||a.id-b.id);
+  if(!list.length){toast('No bets to export');return;}
+  csvDownload(`bets_${todayLocalISO()}.csv`,['Date','Time','Type','Event','Bookmaker','Odds','Stake','Status','Profit','Notes'],
+    list.map(n=>[n.date||'',n.time||'',n.type||'Normal',n.event||'',n.house||'',+n.odd||0,+n.stake||0,ST_LABEL[n.status]||n.status||'',n.status==='pending'?'':(n.profit||0),n.notes||'']));
+});
 document.getElementById('sbExport').addEventListener('click',()=>{
   const blob=new Blob([JSON.stringify({bets:D.bets},null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`surebets_${new Date().toISOString().slice(0,10)}.json`;a.click();
@@ -3791,6 +3967,7 @@ document.getElementById('m-save').addEventListener('click',()=>{
   const stakeIn=parseFloat(document.getElementById('m-stake').value);
   const catVal=document.getElementById('m-category').value;
   const categoryId=catVal?+catVal:null;
+  let mw=[],mwSrc=null;
   if(editingNormalId){
     const n=D.normals.find(x=>x.id===editingNormalId);
     if(n){
@@ -3802,12 +3979,15 @@ document.getElementById('m-save').addEventListener('click',()=>{
         n.potentialWin=cents(n.stake*(payOdd(n.house,n.odd)-1));
         n.potentialLoss=n.type==='Freebet'?0:-n.stake;
       }
+      const was=n.date+' '+(n.time||'');
       n.date=document.getElementById('m-date').value||n.date||todayISO();
       n.time=document.getElementById('m-time').value||'';
+      if(n.status==='pending'&&was!==n.date+' '+(n.time||''))mw=syncMatchWhen(n);
       n.house=document.getElementById('m-house').value.trim();
       n.notes=document.getElementById('m-notes').value.trim();
       n.categoryId=categoryId;
       if(n.status==='won'||n.status==='lost')resolveNormal(n,n.status);
+      mwSrc=n;
     }
   }else{
     if(!ev){alert('Introduce el evento.');return;}
@@ -3817,14 +3997,17 @@ document.getElementById('m-save').addEventListener('click',()=>{
       potentialWin:cents(stakeIn*(payOdd(document.getElementById('m-house')?.value,oddIn)-1)),potentialLoss:type==='Freebet'?0:-stakeIn,
       status:'pending',
       date:document.getElementById('m-date').value||todayISO(),
+      time:document.getElementById('m-time').value||'',
       resolveDate:'',
       notes:document.getElementById('m-notes').value.trim(),
       categoryId});
+    mwSrc=D.normals[0];if(mwSrc.time)mw=syncMatchWhen(mwSrc);
   }
   save();updateBadges();
   renderNormals(document.getElementById('nbSearch').value);renderProfit();renderPendientes();
   if(document.getElementById('page-categorias').style.display!=='none')renderCategorias();
   modal.style.display='none';editingNormalId=null;
+  if(mw.length)toast(`Saved${matchWhenMsg(mw)}`,'Undo',()=>{undoMatchWhen(mw);save();renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);renderPendientes();toast('Other bets put back');});
 });
 
 // Resuelve una apuesta normal/freebet/combi (usada desde Normales y desde Pendientes)
@@ -3843,7 +4026,7 @@ function resolveNormal(n,status){
 // ══════════════════════════════════════════
 function fmtCompact(n){
   const abs=Math.abs(n||0);
-  if(abs>=1000)return(n/1000).toLocaleString('es-ES',{minimumFractionDigits:1,maximumFractionDigits:1})+'k';
+  if(abs>=1000)return(n/1000).toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1})+'k';
   return fmt(n||0,0);
 }
 function emptyStateHtml(msg){
@@ -4429,16 +4612,20 @@ function bkInitials(name){
 let openBkPanel=null; // {cid, mode:'dep'|'wd'|'pending'}
 const QUICK_AMOUNTS=[10,20,50,100];
 // ── Bookmaker balances: net deposits + settled results − money in pending bets ──
-function bookmakerLedger(){
+function bookmakerLedger(keep){ // keep(item) → only count those items (e.g. one month)
   const m=new Map();
-  const g=h=>{const k=bkKey((h||'').trim());if(!k)return null;if(!m.has(k))m.set(k,{settled:0,inPlay:0,open:0});return m.get(k);};
+  const g=h=>{const k=bkKey((h||'').trim());if(!k)return null;if(!m.has(k))m.set(k,{settled:0,inPlay:0,open:0,n:0,vol:0,name:(h||'').trim()});return m.get(k);};
   visibleNormals().forEach(n=>{
+    if(keep&&!keep(n))return;
     const e=g(n.house);if(!e)return;
+    if(n.status==='won'||n.status==='lost'){e.n++;if(n.type!=='Freebet')e.vol+=n.stake||0;}
     if(n.status==='pending'){e.inPlay+=n.type==='Freebet'?0:(n.stake||0);e.open++;}
     else if(n.status==='won'||n.status==='lost')e.settled+=n.profit||0;
   });
   visibleBets().forEach(b=>{
     const legs=b.legs||[];if(!legs.length)return;
+    if(keep&&!keep(b))return;
+    if(b.status==='won'||b.status==='lost')legs.forEach(l=>{const e=g(l.house);if(e){e.n++;e.vol+=l.stake||0;}});
     if(b.status==='pending'){legs.forEach(l=>{const e=g(l.house);if(e){e.inPlay+=l.stake||0;e.open++;}});return;}
     if(b.status!=='won'&&b.status!=='lost')return;
     const w=b.winnerLeg;
@@ -4453,6 +4640,21 @@ function bookmakerLedger(){
   });
   return m;
 }
+let _ledgerCache=null;
+function cachedLedger(){if(!_ledgerCache||_ledgerCache.d!==D||_ledgerCache.v!==saveVer)_ledgerCache={d:D,v:saveVer,m:bookmakerLedger()};return _ledgerCache.m;}
+// the tracked bookmaker (not a bank) behind a leg's name, if any
+function casaFor(house){const k=bkKey((house||'').trim());if(!k)return null;return (D.casas||[]).find(c=>!isBank(c)&&bkKey(c.name||'')===k)||null;}
+// when each bookmaker was last used and how much this month → Map key → {last:'YYYY-MM-DD', month:n}
+function bookmakerActivity(){
+  const m=new Map(),ym=todayLocalISO().slice(0,7);
+  const hit=(h,d)=>{const k=bkKey((h||'').trim());if(!k||!d)return;const e=m.get(k)||{last:'',month:0};if(d>e.last)e.last=d;if(d.slice(0,7)===ym)e.month++;m.set(k,e);};
+  visibleBets().forEach(b=>(b.legs||[]).forEach(l=>hit(l.house,b.date)));
+  visibleNormals().forEach(n=>hit(n.house,n.date));
+  return m;
+}
+function daysAgo(d){return Math.round((Date.parse(todayLocalISO()+'T00:00:00')-Date.parse(d+'T00:00:00'))/864e5);}
+function agoLabel(d){const n=daysAgo(d);return n<=0?'today':n===1?'yesterday':n+' days ago';}
+const IDLE_DAYS=14; // a bookmaker unused for longer gets flagged (accounts look healthier with steady activity)
 function casaMoney(c,ledger){
   const e=(ledger||bookmakerLedger()).get(bkKey(c.name||''))||{settled:0,inPlay:0,open:0};
   const deposited=c.amount||0, adj=c.balAdj||0;
@@ -4476,9 +4678,9 @@ function renderCasas(filter=''){
   const vCasas=visibleCasas().filter(byProfile);
   const total=vCasas.reduce((a,c)=>a+(c.amount||0),0);
   const avg=vCasas.length?total/vCasas.length:0;
-  const top=vCasas.reduce((best,c)=>(!best||(c.amount||0)>(best.amount||0))?c:best,null);
   const totalPending=vCasas.reduce((a,c)=>a+(c.pendingTransfer||0),0);
-  const ledger=bookmakerLedger();
+  const ledger=bookmakerLedger(),act=bookmakerActivity();
+  const idleList=vCasas.filter(c=>!isBank(c)).filter(c=>{const a=act.get(bkKey(c.name||''));return a&&a.last&&daysAgo(a.last)>IDLE_DAYS;});
   const totBal=vCasas.reduce((a,c)=>a+casaMoney(c,ledger).balance,0), totPlay=vCasas.reduce((a,c)=>a+casaMoney(c,ledger).inPlay,0);
   document.getElementById('casasStats').innerHTML=`
     <div class="sc"><div class="sl2">Balance available</div><div class="sv2 ${totBal>=0?'pos':'neg'}">${fmt(totBal)} €</div></div>
@@ -4486,7 +4688,7 @@ function renderCasas(filter=''){
     <div class="sc"><div class="sl2">Bookmakers tracked</div><div class="sv2">${vCasas.length}</div></div>
     <div class="sc"><div class="sl2">Total deposited</div><div class="sv2">${fmt(total)} €</div></div>
     <div class="sc"><div class="sl2">Pending to receive</div><div class="sv2 ${totalPending>0?'yel':''}">${fmt(totalPending)} €</div></div>
-    <div class="sc"><div class="sl2">Top bookmaker</div><div class="sv2" style="font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${top?esc(top.name):'—'}</div></div>`;
+    <div class="sc" title="${esc(idleList.map(c=>c.name).join(', '))}"><div class="sl2">Idle ${IDLE_DAYS}+ days</div><div class="sv2 ${idleList.length?'yel':''}">${idleList.length}<small class="sc-names">${idleList.length?esc(idleList.slice(0,3).map(c=>c.name).join(', '))+(idleList.length>3?'…':''):'all active'}</small></div></div>`;
   const list=document.getElementById('casasList');
   const visible=items.filter(c=>!isHidden('casa:'+c.id));
   const hidden=items.filter(c=>isHidden('casa:'+c.id));
@@ -4503,6 +4705,9 @@ function renderCasas(filter=''){
     }
     if(isBank(c))metaBits.push(`<span class="type-badge-kind bank-badge">Bank account</span>`);
     if(c.notes)metaBits.push(esc(c.notes));
+    let actHtml='';
+    if(!isBank(c)){const a=act.get(bkKey(c.name||''));
+      actHtml=a&&a.last?`<div class="bk-act${daysAgo(a.last)>IDLE_DAYS?' idle':''}" title="Date of the last bet placed here">${daysAgo(a.last)>IDLE_DAYS?'Idle · ':''}last bet ${agoLabel(a.last)}${a.month?` · ${a.month} this month`:''}</div>`:`<div class="bk-act">no bets yet</div>`;}
     const swPaid=softwareCharges().filter(x=>x.casaId===c.id).reduce((a,x)=>a-x.profit,0);
     if(swPaid>0)metaBits.push(`<span style="color:var(--red)">Software: −${fmt(swPaid)} €</span>`);
     if(pend>0)metaBits.push(`<span style="color:var(--yellow)">Pending: ${fmt(pend)} €</span>`);
@@ -4577,12 +4782,12 @@ function renderCasas(filter=''){
         }).join('')}</div>`}
       </div>`;
     }
-    return`<div class="bk-card">
+    return`<div class="bk-card${bkMoreOpen.has(c.id)||(mode&&mode!=='dep'&&mode!=='wd')?' more':''}">
       <div class="bk-main">
         <div class="bk-avatar">${esc(bkInitials(c.name))}</div>
         <div class="bk-info">
           <div class="bk-name">${esc(c.name)}</div>
-          ${metaBits.length?`<div class="bk-meta">${metaBits.join(' · ')}</div>`:''}
+          ${metaBits.length?`<div class="bk-meta">${metaBits.join(' · ')}</div>`:''}${actHtml}
         </div>
         <div class="bk-bal"><div class="bk-bal-val ${pCls}">${fmt(amt)} €</div><div class="bk-bal-sub">balance</div></div>
       </div>
@@ -4595,6 +4800,8 @@ function renderCasas(filter=''){
       <div class="bk-actions">
         <button class="bk-btn dep${mode==='dep'?' on':''}" data-bk-toggle="dep" data-cid="${c.id}">+ Deposit</button>
         <button class="bk-btn wd${mode==='wd'?' on':''}" data-bk-toggle="wd" data-cid="${c.id}">− Withdraw</button>
+        <button class="bk-btn bk-morebtn" data-bk-more="${c.id}">${bkMoreOpen.has(c.id)||(mode&&mode!=='dep'&&mode!=='wd')?'Less':'More'}</button>
+        <span class="bk-secs">
         ${isBank(c)?'':`<button class="bk-btn${mode==='pending'?' on':''}" data-bk-toggle="pending" data-cid="${c.id}">Pending transfer</button>`}
         <button class="bk-btn${mode==='hist'?' on':''}" data-bk-toggle="hist" data-cid="${c.id}">History</button>
         <button class="bk-btn${mode==='bal'?' on':''}" data-bk-toggle="bal" data-cid="${c.id}">Set balance</button>
@@ -4603,6 +4810,7 @@ function renderCasas(filter=''){
         <button class="bk-btn" data-edit-cid="${c.id}">Edit</button>
         ${hideBtnHtml('casa:'+c.id)}
         <button class="bk-btn" data-cid="${c.id}">Delete</button>
+        </span>
       </div>
       ${panelHtml}
     </div>`;
@@ -4664,7 +4872,22 @@ document.getElementById('c-save').addEventListener('click',()=>{
   casaModal.style.display='none';editingCasaId=null;
 });
 document.getElementById('casasSearch').addEventListener('input',e=>renderCasas(e.target.value));
+// Esc closes the dialog on top (through its Cancel button, so it cleans up like a click would)
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  const ov=[...document.querySelectorAll('.modal-ov')].filter(m=>m.style.display&&m.style.display!=='none').pop();if(!ov)return;
+  const c=ov.querySelector('[id$="cancel"],[id$="Cancel"]');if(c)c.click();else ov.style.display='none';
+});
+// phone: the less-used buttons of each bookmaker hide behind "More"
+const bkMoreOpen=new Set();
 document.getElementById('casasList').addEventListener('click',e=>{
+  const moreBtn=e.target.closest('[data-bk-more]');
+  if(moreBtn){
+    const cid=+moreBtn.dataset.bkMore,card=moreBtn.closest('.bk-card');
+    const open=!card.classList.contains('more');
+    if(open)bkMoreOpen.add(cid);else{bkMoreOpen.delete(cid);if(openBkPanel&&openBkPanel.cid===cid&&!['dep','wd'].includes(openBkPanel.mode)){openBkPanel=null;renderCasas(document.getElementById('casasSearch').value);return;}}
+    card.classList.toggle('more',open);moreBtn.textContent=open?'Less':'More';return;
+  }
   const toggleBtn=e.target.closest('[data-bk-toggle]');
   if(toggleBtn){
     const cid=+toggleBtn.dataset.cid,mode=toggleBtn.dataset.bkToggle;
@@ -5420,7 +5643,26 @@ document.getElementById('psQuick').addEventListener('click',e=>{
 
 
 // ── Telling apart several surebets of the same match
-function evKey(b){return (b.event||'').toLowerCase().replace(/\s+/g,' ').trim()+'|'+(b.date||'');}
+function evKey(b){return matchName(b.event)+'|'+(b.date||'');}
+// ── Same match, same kick-off: a new/edited date or time is copied to every other pending bet of that match
+function matchName(e){return String(e||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+  .replace(/\s+(vs\.?|v\.?|-|–|—|x)\s+/g,' vs ').replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();}
+const MATCH_DAYS=3; // same name further apart than this = a different match (league vs cup, return leg…)
+function syncMatchWhen(src){ // → list of {item,date,time} with the old values (for undo)
+  const nm=matchName(src.event);if(!nm||!src.date)return [];
+  const day=d=>Date.parse(d+'T00:00:00')/864e5;
+  const out=[];
+  [...D.bets,...D.normals].forEach(o=>{
+    if(o===src||o.status!=='pending'||matchName(o.event)!==nm)return;
+    if(o.date&&Math.abs(day(o.date)-day(src.date))>MATCH_DAYS)return;
+    const t=src.time||o.time||'';
+    if(o.date===src.date&&(o.time||'')===t)return;
+    out.push({item:o,date:o.date,time:o.time});o.date=src.date;o.time=t;
+  });
+  return out;
+}
+function undoMatchWhen(ch){(ch||[]).forEach(c=>{c.item.date=c.date;c.item.time=c.time;});}
+function matchWhenMsg(ch){return ch.length?` · time updated on ${ch.length} other bet${ch.length>1?'s':''} of this match`:'';}
 function twinInfo(list){ // list: surebets → Map id → {n,total}
   const g=new Map();list.forEach(b=>{const k=evKey(b);if(!g.has(k))g.set(k,[]);g.get(k).push(b);});
   const m=new Map();g.forEach(arr=>{if(arr.length<2)return;arr.sort((a,b)=>a.id-b.id).forEach((b,i)=>m.set(b.id,{n:i+1,total:arr.length}));});
@@ -5508,6 +5750,7 @@ function registerCurrent(){
   const wasPreset=outcomes.some(o=>o.fromPreset);
   outcomes.forEach(o=>{o.odd=0;if(o.fromPreset||wasPreset){o.manualStake=null;o.fromPreset=false;}});
   if(wasPreset&&psBaseTotal!=null){setTotal(psBaseTotal);psBaseTotal=null;}
+  if(fitBaseTotal!=null){setTotal(fitBaseTotal);fitBaseTotal=null;}
   psSkipKey=null;newBetCat=null;sbPrefill=null;tgCur=null;
   return {bet,res};
 }
@@ -5516,12 +5759,13 @@ function quickRegister(){
   const evEl=document.getElementById('q-event');
   if(!evEl.value.trim()){evEl.focus();evEl.classList.add('q-need');setTimeout(()=>evEl.classList.remove('q-need'),1200);toast('Write the event first');return;}
   const r=registerCurrent();if(!r)return;const {bet,res}=r;
+  const mw=bet.time?syncMatchWhen(bet):[];
   save();updateBadges();render();renderRepeatSel();fillQuickDefaults();
   const queued=tgNext();
   if(!queued)setTimeout(()=>{const f=document.querySelector('#outcomesList .oi');if(f)f.focus();},30);
   const n=D.bets.filter(b=>b.status==='pending'&&evKey(b)===evKey(bet)).length;
-  toast(`Saved${n>1?` · #${n} on this match`:''} · ${res.profit>=0?'+':''}${fmt(res.profit)} €`,'Undo',()=>{
-    D.bets=D.bets.filter(b=>b.id!==bet.id);
+  toast(`Saved${n>1?` · #${n} on this match`:''} · ${res.profit>=0?'+':''}${fmt(res.profit)} €${matchWhenMsg(mw)}`,'Undo',()=>{
+    D.bets=D.bets.filter(b=>b.id!==bet.id);undoMatchWhen(mw);
     bet.legs.forEach((l,i)=>{if(outcomes[i]){outcomes[i].odd=l.odd;}});
     save();updateBadges();render();toast('Registration undone');});
 }
@@ -6364,11 +6608,11 @@ function saveNewNormal(){
     notes:document.getElementById('nf-notes').value.trim(),
     categoryId:catVal?+catVal:null};
   if(sels.length)bet.selections=sels;
-  D.normals.unshift(bet);
+  D.normals.unshift(bet);const mw=bet.time?syncMatchWhen(bet):[];
   save();updateBadges();renderPendientes();renderNormals(document.getElementById('nbSearch').value);renderProfit();
   newBetCat=null;
   resetNfForm();renderRepeatSel();
-  toast(`${type} saved to pending · +${fmt(bet.potentialWin)} € if it wins`,'View pending',()=>navTo('pendientes'));
+  toast(`${type} saved to pending · +${fmt(bet.potentialWin)} € if it wins${matchWhenMsg(mw)}`,'View pending',()=>navTo('pendientes'));
 }
 // open the New bet page (optionally on a type and with a category preselected)
 function goNewBet(type,catId){
@@ -6435,6 +6679,7 @@ function navTo(page){
     if(target)target.style.display=page==='calc'?'contents':'flex';
     document.getElementById('pgTitle').textContent=pgMeta[page].title;
     document.getElementById('pgSub').textContent=pgMeta[page].sub;
+    if(page==='calc')renderTodaySub();
     if(page==='calc')setBetType(newBetType);
     else if(page==='bets'){renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);}
     else if(page==='profit')renderProfit();
@@ -6459,6 +6704,19 @@ function updateBadges(){
   document.getElementById('casasCount').textContent=visibleCasas().length;
   const psc=document.getElementById('presetsCount');if(psc)psc.textContent=(D.presets||[]).length;
   const tpc=document.getElementById('tabPendCount');if(tpc){const n=document.getElementById('pendCount').textContent;tpc.textContent=n;tpc.dataset.n=n;}
+  renderTodaySub();
+}
+// New bet header: what you've registered today (by the moment you saved it, not the match date)
+function renderTodaySub(){
+  if((document.querySelector('.ni.active')?.dataset.page||'calc')!=='calc')return;
+  const el=document.getElementById('pgSub');if(!el)return;
+  const t=new Date().toDateString(),isToday=x=>x.id>1e12&&new Date(x.id).toDateString()===t;
+  const sb=visibleBets().filter(isToday).filter(b=>b.status!=='anulada'),nm=visibleNormals().filter(isToday);
+  if(!sb.length&&!nm.length){el.textContent=pgMeta.calc.sub;return;}
+  const staked=sb.reduce((a,b)=>a+(b.totalStake||0),0)+nm.reduce((a,n)=>a+(n.type==='Freebet'?0:(n.stake||0)),0);
+  const locked=sb.reduce((a,b)=>a+(b.expectedProfit!=null?b.expectedProfit:(b.profit||0)),0);
+  const n=sb.length+nm.length;
+  el.innerHTML=`<span class="today-sub">Today <b>${n}</b> bet${n>1?'s':''}<i>·</i><b>${fmt(staked,0)} €</b> staked${sb.length?`<i>·</i><b class="${locked>=0?'pos':'neg'}">${locked>=0?'+':''}${fmt(locked)} €</b> locked in`:''}</span>`;
 }
 
 // Re-renders whichever page is currently on screen. Used after hide/unhide actions,
