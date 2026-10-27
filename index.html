@@ -3085,10 +3085,10 @@ function registerBet(){
     categoryId:catVal?+catVal:null,
     ...(document.getElementById('sbr-notes').value.trim()?{notes:document.getElementById('sbr-notes').value.trim()}:{}),
     legs:res.valid.map((o,i)=>({house:houses[i]||o.house||`Bookmaker ${i+1}`,result:o.result||`Outcome ${i+1}`,odd:o.odd,stake:res.stakes[i],minReturn:res.returns[i]}))};
-  D.bets.unshift(bet);save();updateBadges();renderPendientes();
+  D.bets.unshift(bet);const mw=timeVal?syncMatchWhen(bet):[];save();updateBadges();renderPendientes();
   document.getElementById('sbRegModal').style.display='none';
   newBetCat=null;sbPrefill=null;renderRepeatSel();
-  toast(`Surebet saved to pending · ${res.profit>=0?'+':''}${fmt(res.profit)} €`,'View pending',()=>navTo('pendientes'));
+  toast(`Surebet saved to pending · ${res.profit>=0?'+':''}${fmt(res.profit)} €${matchWhenMsg(mw)}`,'View pending',()=>navTo('pendientes'));
 }
 document.getElementById('sbr-cancel').addEventListener('click',()=>{document.getElementById('sbRegModal').style.display='none';editingSbId=null;});
 document.getElementById('sbr-save').addEventListener('click',()=>{
@@ -3098,8 +3098,10 @@ document.getElementById('sbr-save').addEventListener('click',()=>{
     b.event=evVal||b.event||'(No event)';
     b.market=document.getElementById('sbr-market').value.trim();
     const nt=document.getElementById('sbr-notes').value.trim();if(nt)b.notes=nt;else delete b.notes;
+    const was=b.date+' '+(b.time||'');
     b.date=document.getElementById('sbr-start').value||b.date;
     b.time=document.getElementById('sbr-time').value||'';
+    const mw=b.status==='pending'&&was!==b.date+' '+(b.time||'')?syncMatchWhen(b):[];
     const catVal=document.getElementById('sbr-category').value;
     b.categoryId=catVal?+catVal:null;
     const houses=readSbrHouses();
@@ -3126,6 +3128,7 @@ document.getElementById('sbr-save').addEventListener('click',()=>{
     renderSurebets(document.getElementById('sbSearch').value);renderProfit();renderPendientes();
     if(document.getElementById('page-categorias').style.display!=='none')renderCategorias();
     document.getElementById('sbRegModal').style.display='none';editingSbId=null;
+    if(mw.length)toast(`Saved · time updated on ${mw.length} other bet${mw.length>1?'s':''} of this match`,'Undo',()=>{undoMatchWhen(mw);save();renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);renderPendientes();toast('Other bets put back');});
     return;
   }
   registerBet();
@@ -3703,6 +3706,7 @@ document.getElementById('m-save').addEventListener('click',()=>{
   const stakeIn=parseFloat(document.getElementById('m-stake').value);
   const catVal=document.getElementById('m-category').value;
   const categoryId=catVal?+catVal:null;
+  let mw=[],mwSrc=null;
   if(editingNormalId){
     const n=D.normals.find(x=>x.id===editingNormalId);
     if(n){
@@ -3714,12 +3718,15 @@ document.getElementById('m-save').addEventListener('click',()=>{
         n.potentialWin=cents(n.stake*(payOdd(n.house,n.odd)-1));
         n.potentialLoss=n.type==='Freebet'?0:-n.stake;
       }
+      const was=n.date+' '+(n.time||'');
       n.date=document.getElementById('m-date').value||n.date||todayISO();
       n.time=document.getElementById('m-time').value||'';
+      if(n.status==='pending'&&was!==n.date+' '+(n.time||''))mw=syncMatchWhen(n);
       n.house=document.getElementById('m-house').value.trim();
       n.notes=document.getElementById('m-notes').value.trim();
       n.categoryId=categoryId;
       if(n.status==='won'||n.status==='lost')resolveNormal(n,n.status);
+      mwSrc=n;
     }
   }else{
     if(!ev){alert('Introduce el evento.');return;}
@@ -3729,14 +3736,17 @@ document.getElementById('m-save').addEventListener('click',()=>{
       potentialWin:cents(stakeIn*(payOdd(document.getElementById('m-house')?.value,oddIn)-1)),potentialLoss:type==='Freebet'?0:-stakeIn,
       status:'pending',
       date:document.getElementById('m-date').value||todayISO(),
+      time:document.getElementById('m-time').value||'',
       resolveDate:'',
       notes:document.getElementById('m-notes').value.trim(),
       categoryId});
+    mwSrc=D.normals[0];if(mwSrc.time)mw=syncMatchWhen(mwSrc);
   }
   save();updateBadges();
   renderNormals(document.getElementById('nbSearch').value);renderProfit();renderPendientes();
   if(document.getElementById('page-categorias').style.display!=='none')renderCategorias();
   modal.style.display='none';editingNormalId=null;
+  if(mw.length)toast(`Saved${matchWhenMsg(mw)}`,'Undo',()=>{undoMatchWhen(mw);save();renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);renderPendientes();toast('Other bets put back');});
 });
 
 // Resuelve una apuesta normal/freebet/combi (usada desde Normales y desde Pendientes)
@@ -5330,7 +5340,26 @@ document.getElementById('psQuick').addEventListener('click',e=>{
 
 
 // ── Telling apart several surebets of the same match
-function evKey(b){return (b.event||'').toLowerCase().replace(/\s+/g,' ').trim()+'|'+(b.date||'');}
+function evKey(b){return matchName(b.event)+'|'+(b.date||'');}
+// ── Same match, same kick-off: a new/edited date or time is copied to every other pending bet of that match
+function matchName(e){return String(e||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+  .replace(/\s+(vs\.?|v\.?|-|–|—|x)\s+/g,' vs ').replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();}
+const MATCH_DAYS=3; // same name further apart than this = a different match (league vs cup, return leg…)
+function syncMatchWhen(src){ // → list of {item,date,time} with the old values (for undo)
+  const nm=matchName(src.event);if(!nm||!src.date)return [];
+  const day=d=>Date.parse(d+'T00:00:00')/864e5;
+  const out=[];
+  [...D.bets,...D.normals].forEach(o=>{
+    if(o===src||o.status!=='pending'||matchName(o.event)!==nm)return;
+    if(o.date&&Math.abs(day(o.date)-day(src.date))>MATCH_DAYS)return;
+    const t=src.time||o.time||'';
+    if(o.date===src.date&&(o.time||'')===t)return;
+    out.push({item:o,date:o.date,time:o.time});o.date=src.date;o.time=t;
+  });
+  return out;
+}
+function undoMatchWhen(ch){(ch||[]).forEach(c=>{c.item.date=c.date;c.item.time=c.time;});}
+function matchWhenMsg(ch){return ch.length?` · time updated on ${ch.length} other bet${ch.length>1?'s':''} of this match`:'';}
 function twinInfo(list){ // list: surebets → Map id → {n,total}
   const g=new Map();list.forEach(b=>{const k=evKey(b);if(!g.has(k))g.set(k,[]);g.get(k).push(b);});
   const m=new Map();g.forEach(arr=>{if(arr.length<2)return;arr.sort((a,b)=>a.id-b.id).forEach((b,i)=>m.set(b.id,{n:i+1,total:arr.length}));});
@@ -5426,12 +5455,13 @@ function quickRegister(){
   const evEl=document.getElementById('q-event');
   if(!evEl.value.trim()){evEl.focus();evEl.classList.add('q-need');setTimeout(()=>evEl.classList.remove('q-need'),1200);toast('Write the event first');return;}
   const r=registerCurrent();if(!r)return;const {bet,res}=r;
+  const mw=bet.time?syncMatchWhen(bet):[];
   save();updateBadges();render();renderRepeatSel();fillQuickDefaults();
   const queued=tgNext();
   if(!queued)setTimeout(()=>{const f=document.querySelector('#outcomesList .oi');if(f)f.focus();},30);
   const n=D.bets.filter(b=>b.status==='pending'&&evKey(b)===evKey(bet)).length;
-  toast(`Saved${n>1?` · #${n} on this match`:''} · ${res.profit>=0?'+':''}${fmt(res.profit)} €`,'Undo',()=>{
-    D.bets=D.bets.filter(b=>b.id!==bet.id);
+  toast(`Saved${n>1?` · #${n} on this match`:''} · ${res.profit>=0?'+':''}${fmt(res.profit)} €${matchWhenMsg(mw)}`,'Undo',()=>{
+    D.bets=D.bets.filter(b=>b.id!==bet.id);undoMatchWhen(mw);
     bet.legs.forEach((l,i)=>{if(outcomes[i]){outcomes[i].odd=l.odd;}});
     save();updateBadges();render();toast('Registration undone');});
 }
@@ -6270,11 +6300,11 @@ function saveNewNormal(){
     notes:document.getElementById('nf-notes').value.trim(),
     categoryId:catVal?+catVal:null};
   if(sels.length)bet.selections=sels;
-  D.normals.unshift(bet);
+  D.normals.unshift(bet);const mw=bet.time?syncMatchWhen(bet):[];
   save();updateBadges();renderPendientes();renderNormals(document.getElementById('nbSearch').value);renderProfit();
   newBetCat=null;
   resetNfForm();renderRepeatSel();
-  toast(`${type} saved to pending · +${fmt(bet.potentialWin)} € if it wins`,'View pending',()=>navTo('pendientes'));
+  toast(`${type} saved to pending · +${fmt(bet.potentialWin)} € if it wins${matchWhenMsg(mw)}`,'View pending',()=>navTo('pendientes'));
 }
 // open the New bet page (optionally on a type and with a category preselected)
 function goNewBet(type,catId){
