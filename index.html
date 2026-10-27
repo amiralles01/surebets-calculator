@@ -3575,8 +3575,10 @@ function paceHtml(all){
   const t=todayLocalISO(),w=shiftedISO(-6),ym=t.slice(0,7);
   const live=all.filter(e=>!isHidden('month:'+e.date.slice(0,7)));
   const sum=f=>live.filter(f).reduce((a,e)=>a+e.profit,0);
-  const today=sum(e=>e.date===t),week=sum(e=>e.date>=w&&e.date<=t),month=sum(e=>e.date.slice(0,7)===ym&&e.date<=t);
-  const avg=month/(+t.slice(8));
+  // software, monthly costs and bank expenses hit the month, never a day
+  const daily=e=>e.cat!=='software'&&e.cat!=='cost'&&e.cat!=='expense';
+  const today=sum(e=>daily(e)&&e.date===t),week=sum(e=>daily(e)&&e.date>=w&&e.date<=t),month=sum(e=>e.date.slice(0,7)===ym&&e.date<=t);
+  const avg=sum(e=>daily(e)&&e.date.slice(0,7)===ym&&e.date<=t)/(+t.slice(8));
   const it=(l,v,d=2)=>`<span><small>${l}</small><b class="${v>0.004?'pos':v<-0.004?'neg':''}">${v>0.004?'+':''}${fmt(v,d)} €</b></span>`;
   return `<div class="th-pace">${it('Today',today)}${it('Last 7 days',week)}${it('This month',month)}${it('Per day this month',avg)}</div>`;
 }
@@ -6371,18 +6373,18 @@ function computeDayTotals(year,month){
   const dayTotals={};
   D.bets.forEach(b=>{if(isHidden('sb:'+b.id))return;const rd=b.date||b.resolveDate;if(rd&&rd.startsWith(ym)){const d=+rd.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+betProfit(b);}});
   D.normals.forEach(n=>{if(isHidden('nm:'+n.id))return;const rd=n.date||n.resolveDate;if(rd&&rd.startsWith(ym)){const d=+rd.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+(n.profit||0);}});
-  [...trackedCosts(),...trackedAdj(),...trackedExpenses()].forEach(a=>{if(a.date.startsWith(ym)){const d=+a.date.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+a.profit;}});
+  trackedAdj().forEach(a=>{if(a.date.startsWith(ym)){const d=+a.date.slice(8,10);dayTotals[d]=(dayTotals[d]||0)+a.profit;}});
   return dayTotals;
 }
-// software of a month: part of the monthly profit, never of a single day
-function monthSoftware(year,month){const ym=`${year}-${String(month+1).padStart(2,'0')}`;return softwareCharges().filter(a=>a.date.startsWith(ym)).reduce((a,x)=>a+x.profit,0);}
+// software, monthly costs and bank expenses of a month: part of the monthly profit, never of a single day
+function monthSoftware(year,month){const ym=`${year}-${String(month+1).padStart(2,'0')}`;return [...softwareCharges(),...trackedCosts(),...trackedExpenses()].filter(a=>a.date.startsWith(ym)).reduce((a,x)=>a+x.profit,0);}
 function renderCalendar(){
   document.getElementById('calMonthLabel').textContent=`${MES_ES[calMonth]} ${calYear}`;
   const dayTotals=computeDayTotals(calYear,calMonth);
   const sw=monthSoftware(calYear,calMonth);
   const hasData=Object.keys(dayTotals).length>0||sw!==0;
   const monthTotal=Object.values(dayTotals).reduce((a,b)=>a+b,0)+sw;
-  document.getElementById('calMonthTotal').innerHTML=hasData?`<span style="color:${monthTotal>=0?'var(--green)':'var(--red)'}">${monthTotal>=0?'+':''}${fmt(monthTotal,0)} €</span>${sw?`<small class="cal-sw">incl. software ${fmt(sw,0)} €</small>`:''}`:'';
+  document.getElementById('calMonthTotal').innerHTML=hasData?`<span style="color:${monthTotal>=0?'var(--green)':'var(--red)'}">${monthTotal>=0?'+':''}${fmt(monthTotal,0)} €</span>${sw?`<small class="cal-sw">incl. costs ${fmt(sw,0)} €</small>`:''}`:'';
   const firstDow=(new Date(calYear,calMonth,1).getDay()+6)%7;
   const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
   let html='';
@@ -6410,7 +6412,7 @@ function renderProfitMesBox(){
   const sw=monthSoftware(t.getFullYear(),t.getMonth());
   const hasData=Object.keys(dayTotals).length>0||sw!==0;
   const total=Object.values(dayTotals).reduce((a,b)=>a+b,0)+sw;
-  document.getElementById('profitMesLabel').textContent=`${MES_ES[t.getMonth()]} ${t.getFullYear()} profit${sw?` · incl. software ${fmt(sw,0)} €`:''}`;
+  document.getElementById('profitMesLabel').textContent=`${MES_ES[t.getMonth()]} ${t.getFullYear()} profit${sw?` · incl. costs ${fmt(sw,0)} €`:''}`;
   const val=document.getElementById('profitMesVal');
   if(!hasData){val.textContent='—';val.className='profit-mes-val neu';}
   else{val.textContent=(total>=0?'+':'')+fmt(total,0)+' €';val.className='profit-mes-val '+(total>=0?'pos':'neg');}
@@ -6423,7 +6425,7 @@ function renderPerfChart(){
   const entries=[];
   D.bets.forEach(b=>{if(isHidden('sb:'+b.id))return;const rd=b.date||b.resolveDate;if(rd)entries.push({date:rd,profit:betProfit(b),expected:b.status==='anulada'?0:((b.expectedProfit!=null?b.expectedProfit:b.profit)||0),isBet:true});});
   D.normals.forEach(n=>{if(isHidden('nm:'+n.id))return;const rd=n.date||n.resolveDate;if(rd)entries.push({date:rd,profit:n.profit||0,expected:n.profit||0,isBet:false});});
-  [...trackedCosts(),...trackedAdj(),...trackedExpenses()].forEach(a=>entries.push({date:a.date,profit:a.profit,expected:a.profit,isBet:false}));
+  trackedAdj().forEach(a=>entries.push({date:a.date,profit:a.profit,expected:a.profit,isBet:false}));
   const wrap=document.getElementById('perfChartWrap');
   if(!entries.length){
     wrap.innerHTML='<div class="perf-chart-empty">Not enough data yet to show performance.</div>';
