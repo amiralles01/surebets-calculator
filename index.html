@@ -2030,6 +2030,11 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .today-sub i{font-style:normal;opacity:.5;margin:0 7px}
 /* ── Bookmakers: last activity ── */
 .bk-act{font-size:12px;color:var(--faint);margin-top:3px}.bk-act.idle{color:var(--yellow);font-weight:600}
+.th-pace{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:6px;position:relative;font-variant-numeric:tabular-nums}
+.th-pace span{display:flex;flex-direction:column}
+.th-pace small{font-size:11.5px;color:rgba(255,255,255,.6)}
+.th-pace b{font-size:15px;font-weight:700;color:#fff}.th-pace b.pos{color:#8fdcae}.th-pace b.neg{color:#ff9a90}
+@media(max-width:600px){.th-pace{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px}.th-sub-val{font-size:clamp(13px,4vw,16px)!important;white-space:nowrap}}
 .sc-names{display:block;font-size:11.5px;font-weight:500;color:var(--faint);letter-spacing:0;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:inherit}
 .bk-secs{display:contents}.bk-morebtn{display:none}
 @media(max-width:600px){
@@ -3565,6 +3570,16 @@ function renderBkStats(){
     <div class="bks-note">Result = what each bookmaker paid you minus what you staked there. In a surebet one bookmaker wins and the others lose, so single bookmakers swing; the total is your real profit.</div>`;
 }
 document.getElementById('bkStatsPer').addEventListener('click',e=>{const b=e.target.closest('[data-bkper]');if(!b)return;bkStatsPer=b.dataset.bkper;renderBkStats();});
+// Profit hero: today / last 7 days / this month / average per day this month
+function paceHtml(all){
+  const t=todayLocalISO(),w=shiftedISO(-6),ym=t.slice(0,7);
+  const live=all.filter(e=>!isHidden('month:'+e.date.slice(0,7)));
+  const sum=f=>live.filter(f).reduce((a,e)=>a+e.profit,0);
+  const today=sum(e=>e.date===t),week=sum(e=>e.date>=w&&e.date<=t),month=sum(e=>e.date.slice(0,7)===ym&&e.date<=t);
+  const avg=month/(+t.slice(8));
+  const it=(l,v,d=2)=>`<span><small>${l}</small><b class="${v>0.004?'pos':v<-0.004?'neg':''}">${v>0.004?'+':''}${fmt(v,d)} €</b></span>`;
+  return `<div class="th-pace">${it('Today',today)}${it('Last 7 days',week)}${it('This month',month)}${it('Per day this month',avg)}</div>`;
+}
 function renderProfit(){
   renderBkStats();
   // Combine all entries with dates
@@ -3603,6 +3618,7 @@ function renderProfit(){
     <div class="total-hero">
       <div class="th-label">Total Profit</div>
       <div class="th-val ${totalAll>=0?'pos':'neg'}">${totalAll>=0?'+':''}${fmt(totalAll)} €</div>
+      ${paceHtml(all)}
       <div class="th-sub">
         <div class="th-sub-item"><div class="th-sub-label">Surebets</div><div class="th-sub-val" style="color:var(--green)">${totalSB>=0?'+':''}${fmt(totalSB)} €</div></div>
         <div class="th-sub-item"><div class="th-sub-label">Normal</div><div class="th-sub-val" style="color:${totalNorm>=0?'var(--blue)':'var(--red)'}">${totalNorm>=0?'+':''}${fmt(totalNorm)} €</div></div>
@@ -4856,6 +4872,12 @@ document.getElementById('c-save').addEventListener('click',()=>{
   casaModal.style.display='none';editingCasaId=null;
 });
 document.getElementById('casasSearch').addEventListener('input',e=>renderCasas(e.target.value));
+// Esc closes the dialog on top (through its Cancel button, so it cleans up like a click would)
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  const ov=[...document.querySelectorAll('.modal-ov')].filter(m=>m.style.display&&m.style.display!=='none').pop();if(!ov)return;
+  const c=ov.querySelector('[id$="cancel"],[id$="Cancel"]');if(c)c.click();else ov.style.display='none';
+});
 // phone: the less-used buttons of each bookmaker hide behind "More"
 const bkMoreOpen=new Set();
 document.getElementById('casasList').addEventListener('click',e=>{
