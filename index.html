@@ -1832,6 +1832,10 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
   color:var(--muted);font-weight:600;font-size:13.5px;cursor:pointer;transition:all var(--t)}
 .promo-btn svg{width:16px;height:16px}
 .promo-btn:hover{color:var(--text)}
+.ar-tag{display:inline-flex;align-items:center;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--gdim);color:var(--green);font-size:11.5px;font-weight:650;white-space:nowrap;vertical-align:1px}
+.ar-tag.ar-sub{margin:3px 0 0;align-self:flex-start}
+.ar-btn.busy svg{animation:arSpin 1s linear infinite}.ar-btn:disabled{opacity:.6;cursor:default}
+@keyframes arSpin{to{transform:rotate(360deg)}}
 .promo-btn.live{color:var(--text)}.promo-btn.live svg{color:#B98A00}
 .promo-btn.on{background:var(--pitch);color:#fff}.promo-btn.on svg{color:var(--ball)}
 .promo-btn .pd-n{font-size:11px;background:var(--ball);color:var(--ball-ink);border-radius:99px;padding:0 7px;font-weight:700}
@@ -4141,11 +4145,13 @@ function renderPendTools(allVisible){
   document.getElementById('pendTools').innerHTML=`
     <div class="seg pend-sort"><button class="seg-b${pendSort==='day'?' active':''}" data-psort="day"><span class="ps-by">By </span>day</button><button class="seg-b${pendSort==='house'?' active':''}" data-psort="house"><span class="ps-by">By </span>bookmaker</button></div>
     <div class="seg pend-view" role="group" aria-label="View"><button class="seg-b${pendView==='compact'?' active':''}" data-pview="compact" title="Compact list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg><span>Compact</span></button><button class="seg-b${pendView==='full'?' active':''}" data-pview="full" title="Detailed cards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="7" rx="2"/><rect x="3.5" y="14" width="17" height="6" rx="2"/></svg><span>Detailed</span></button></div>
-    <button class="promo-btn${promoPanelOpen?' on':''}${live?' live':''}" data-promo-open><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l-6 6v3h9l3-3"/><path d="M22 12l-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>Promos${live?` <span class="pd-n">${live}</span>`:''}</button>`;
+    <button class="promo-btn${promoPanelOpen?' on':''}${live?' live':''}" data-promo-open><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l-6 6v3h9l3-3"/><path d="M22 12l-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>Promos${live?` <span class="pd-n">${live}</span>`:''}</button>
+    <button class="promo-btn ar-btn${arBusy?' busy':''}" id="arBtn" data-ar-check title="Look up final scores and mark the winning leg of finished surebets (winner, totals, handicaps)"${arBusy?' disabled':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>Check results</button>`;
 }
 document.getElementById('pendTools').addEventListener('click',e=>{
   const b=e.target.closest('[data-psort]');if(b){pendSort=b.dataset.psort;renderPendientes();return;}
   const v=e.target.closest('[data-pview]');if(v){pendView=v.dataset.pview;try{localStorage.setItem('sb_pend_view',pendView);}catch(err){}renderPendientes();return;}
+  if(e.target.closest('[data-ar-check]')){pendAutoResults(true);return;}
   if(e.target.closest('[data-promo-open]')){promoPanelOpen=!promoPanelOpen;renderPromoPanel();renderPendientes();if(promoPanelOpen)document.getElementById('pendPromo').scrollIntoView({block:'nearest',behavior:'smooth'});}
 });
 document.getElementById('pendHouseWrap').addEventListener('change',e=>{if(e.target.id!=='pendHouseSel')return;pendHouse=e.target.value;renderPendientes();});
@@ -4262,7 +4268,7 @@ function pendCompactHtml(kind,item,tw){
     const p=typeof mk==='number'&&legs[mk]?(legs[mk].minReturn||0)-(b.totalStake||0):(b.profit||0);
     return `<div class="pc-row sb${marked?' marked':''}${pr?' promo':''}${tw.has(b.id)?' twin':''}"${pr?` style="--hl:${pr.color}"`:''}>
       ${pendTimeHtml(b,withDate)}
-      <div class="pc-ev"><span class="pc-ttl"><b>${sbTagHtml(b,tw)}${esc(b.event)}</b>${promoTag(pr)}</span>${pendNoteLine('sb',b)}</div>
+      <div class="pc-ev"><span class="pc-ttl"><b>${sbTagHtml(b,tw)}${esc(b.event)}</b>${promoTag(pr)}</span>${arLine(b,true)}${pendNoteLine('sb',b)}</div>
       <span class="pc-profit ${p>=0?'pos':'neg'}">${p>=0?'+':''}${fmt(p)} €</span>
       <div class="pc-legs${marked?' has-res':''}" style="--n:${Math.max(legs.length,1)}">${legsHtml}${marked?PEND_RESOLVE('sb',b.id):''}</div>
       <span class="pc-tail">${more}</span>
@@ -4380,7 +4386,7 @@ function renderPendientesInner(){
       return`<div class="pend-item sb${b.pendMark!=null?' marked':''}${pendTw.has(b.id)?' twin':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
         <div class="pend-top">
           <div>
-            <div class="pend-ev">${sbTagHtml(b,pendTw)}${esc(b.event)} <span class="type-badge-kind">Surebet</span>${promoTag(pr)}</div>${sbSubHtml(b,pendTw)}
+            <div class="pend-ev">${sbTagHtml(b,pendTw)}${esc(b.event)} <span class="type-badge-kind">Surebet</span>${promoTag(pr)}${arLine(b)}</div>${sbSubHtml(b,pendTw)}
             <div class="pend-meta">${pendHouseChip([...new Set((b.legs||[]).map(l=>l.house))])}<span>${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}</span>${b.totalStake?`<span>Staked: ${fmt(b.totalStake)} €</span>`:''}</div>
             ${pendOpen.has('sb:'+b.id)?pendNoteEdit('sb',b):pendNoteLine('sb',b)}
           </div>
@@ -4574,6 +4580,7 @@ document.getElementById('pendList').addEventListener('click',e=>{
     const bid=+winLegBtn.dataset.pwinbid,li=+winLegBtn.dataset.pwinleg;
     const b=D.bets.find(x=>x.id===bid);if(!b||!b.legs||!b.legs[li])return;
     if(b.pendMark===li)delete b.pendMark;else b.pendMark=li;
+    delete b.autoRes;
     save();renderPendientes();
     return;
   }
@@ -5914,6 +5921,191 @@ document.getElementById('qPaste').addEventListener('input',e=>{
 
 
 // ══════════════════════════════════════════
+//  AUTO RESULTS — once a match is over, mark which leg won from ESPN's free public scores
+//  (main markets only: winner / 1X2 / double chance, totals, handicaps, both teams to score).
+//  It only MARKS the leg; "Resolve" still settles it.
+// ══════════════════════════════════════════
+const AR_BASE='https://site.api.espn.com/apis/site/v2/sports/';
+const AR_FEEDS=[['tennis','tennis/atp'],['tennis','tennis/wta'],['basket','basketball/nba'],['soccer','soccer/all'],
+  ...['esp.1','esp.2','esp.copa_del_rey','eng.1','eng.2','eng.fa','eng.league_cup','ita.1','ger.1','fra.1','por.1','ned.1','bel.1','tur.1','sco.1',
+  'uefa.champions','uefa.europa','uefa.europa.conf','usa.1','mex.1','arg.1','bra.1','fifa.world','uefa.nations'].map(l=>['soccer','soccer/'+l])];
+const AR_MAX_DAYS=10;      // older pending bets aren't looked up
+const AR_EVERY_MIN=10;     // automatic check while the app is open
+const arCache=new Map();   // url → {t, events}
+let arBusy=false,arLast=0;
+const arTried=new Map(); // bet id → when it was last looked up without a result (auto checks wait AR_RETRY_MIN)
+const AR_RETRY_MIN=30;
+const arNorm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9.+\- ]+/g,' ').replace(/\s+/g,' ').trim();
+const AR_STOP=new Set('fc cf cd ud sd rc ac sc afc sv fk sk club de del la el los las the and vs real'.split(' '));
+const arToks=s=>arNorm(s).replace(/[.+\-]/g,' ').split(' ').filter(t=>t.length>=3&&!AR_STOP.has(t)&&!/^\d+$/.test(t));
+function arTokMatch(a,b){return a===b||(a.length>=4&&b.length>=4&&(a.startsWith(b)||b.startsWith(a)));}
+// how well a piece of text ("Mensik", "Atlético Madrid") names a competitor (0 = not at all)
+function arNameScore(txt,comp){
+  const t=arToks(txt);if(!t.length)return 0;
+  return t.filter(x=>comp.toks.some(y=>arTokMatch(x,y))).length/t.length;
+}
+async function arFetch(path,ymd){
+  const url=`${AR_BASE}${path}/scoreboard?dates=${ymd}&limit=500`;
+  const c=arCache.get(url);if(c&&Date.now()-c.t<AR_EVERY_MIN*60000)return c.events;
+  const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),12000);
+  try{
+    const r=await fetch(url,{signal:ctl.signal});if(!r.ok)throw new Error(r.status);
+    const events=await r.json().then(j=>j.events||[]);
+    arCache.set(url,{t:Date.now(),events});return events;
+  }catch(e){return null;}finally{clearTimeout(tm);}
+}
+// ESPN events → flat list of finished matches {sport, date, comps:[{toks,score,games,sets,winner}], status}
+function arMatches(sport,events){
+  const out=[];
+  const one=(cp,ev)=>{
+    const st=(cp.status||ev.status||{}).type||{};
+    const cs=(cp.competitors||[]);if(cs.length!==2)return;
+    const comps=cs.map(c=>{
+      const who=c.athlete||c.team||(c.roster&&c.roster.athletes&&c.roster.athletes[0])||{};
+      const names=[who.displayName,who.shortDisplayName,who.name,who.location,who.fullName,who.shortName].filter(Boolean);
+      const ls=(c.linescores||[]).map(x=>+(x.value!=null?x.value:x.displayValue)).filter(x=>!isNaN(x));
+      const sc=typeof c.score==='object'&&c.score?c.score.value:c.score;
+      return {name:names[0]||'',toks:[...new Set(names.flatMap(arToks))],score:sc!=null&&sc!==''?+sc:NaN,ls,winner:c.winner===true,home:c.homeAway==='home'};
+    });
+    if(sport==='tennis'){
+      const n=Math.min(comps[0].ls.length,comps[1].ls.length);
+      comps.forEach((c,i)=>{const o=comps[1-i];c.games=c.ls.slice(0,n).reduce((a,x)=>a+x,0);c.sets=c.ls.slice(0,n).filter((x,k)=>x>o.ls[k]).length;c.score=c.sets;});
+    }
+    out.push({sport,id:cp.id||ev.id,date:Date.parse(cp.date||ev.date||''),comps,
+      done:st.completed===true||st.state==='post',
+      odd:[st.name,st.description,st.detail,st.shortDetail,cp.status&&cp.status.type&&cp.status.type.detail].join(' ')});
+  };
+  (events||[]).forEach(ev=>{
+    (ev.competitions||[]).forEach(cp=>one(cp,ev));
+    (ev.groupings||[]).forEach(g=>{if(/doubles|dobles/i.test((g.grouping&&(g.grouping.slug||g.grouping.displayName))||''))return;(g.competitions||[]).forEach(cp=>one(cp,ev));});
+  });
+  return out;
+}
+// the finished match a surebet is about: both sides of "A vs B" must name its two competitors
+function arFindMatch(b,pool){
+  const parts=String(b.event||'').split(/\s+(?:vs\.?|v\.?|-|–|—|x|@)\s+/i);if(parts.length!==2)return null;
+  const end=Date.parse(b.date+'T'+(b.time||'23:00')+':00');
+  let best=null;
+  pool.forEach(m=>{
+    if(!isNaN(m.date)&&!isNaN(end)&&Math.abs(end-SPORT_HOURS*3600000-m.date)>36*3600000)return;
+    const s00=arNameScore(parts[0],m.comps[0]),s11=arNameScore(parts[1],m.comps[1]);
+    const s01=arNameScore(parts[0],m.comps[1]),s10=arNameScore(parts[1],m.comps[0]);
+    const [sc,flip]=s00+s11>=s01+s10?[Math.min(s00,s11),false]:[Math.min(s01,s10),true];
+    if(sc<0.5)return;
+    if(!best||sc>best.sc)best={sc,m,A:m.comps[flip?1:0],B:m.comps[flip?0:1]};
+  });
+  return best;
+}
+const AR_SKIP=/corner|tarjeta|card|booking|\btiros?\b|\bshots?\b|\baces?\b|doble falta|double fault|\bbreaks?\b|jugador|player|goleador|scorer|\banota|asisten|assist|rebote|rebound|\btriples?\b|\bparte\b|mitad|half|\b1h\b|\b2h\b|periodo|period|cuarto|quarter|inning|entrada|\bset \d|\d\s*(?:er|o|º|ª|st|nd|rd|th)?\s*set\b|primer|segund|tercer|first|second|third|exact|correct|marcador|par\/impar|impar|odd\/even|tie.?break|del equipo|team total|equipo local|equipo visitante|minuto|minute|metodo|method|clasifica|qualif|\bpasa\b|avanza|sin recibir|clean sheet|a cero|carrera|margen|margin|intervalo|race to|primero en/;
+// one leg → 'win' | 'lose' | 'push' | null (can't tell)
+function arLeg(kind,res,m,A,B,unit,market){
+  const r=arNorm(res);
+  const val=c=>unit==='games'?c.games:unit==='sets'?c.sets:c.score;
+  if(kind==='btts'){
+    const yes=/^(si|yes|s)$/.test(r),no=/^(no|n)$/.test(r);if(!yes&&!no)return null;
+    const both=A.score>0&&B.score>0;return (yes===both)?'win':'lose';
+  }
+  if(kind==='total'){
+    const t=r.match(/^(mas de|mas|over|o|\+|menos de|menos|under|u|-)\s*(\d+(?:\.\d+)?)/);if(!t)return null;
+    const line=+t[2];if(Math.abs(line*4%2)===1)return null; // quarter lines (2.25) settle half — leave it
+    const tot=val(A)+val(B);if(isNaN(tot))return null;
+    const over=/^(mas|over|o|\+)/.test(t[1]);
+    return tot===line?'push':((tot>line)===over?'win':'lose');
+  }
+  // which side (or draw) the selection names
+  const sideOf=txt=>{
+    const x=arNorm(txt).replace(/\s*[+\-]\d+(\.\d+)?$/,'').trim();
+    if(/^(1|local|home|casa)$/.test(x))return [A];
+    if(/^(2|visitante|away|fuera)$/.test(x))return [B];
+    if(/^(x|empate|draw|tie)$/.test(x))return ['draw'];
+    if(/^(1x|1 x|local o empate|home or draw)$/.test(x))return [A,'draw'];
+    if(/^(x2|x 2|empate o visitante|draw or away)$/.test(x))return ['draw',B];
+    if(/^(12|1 2|local o visitante|home or away)$/.test(x))return [A,B];
+    const a=arNameScore(x,A),bb=arNameScore(x,B);
+    if(a>=0.5&&a>bb)return [A];if(bb>=0.5&&bb>a)return [B];
+    // "Empate o Real Madrid", "Real Madrid o empate"
+    const dc=x.match(/^(.+)\s+o\s+(.+)$/);if(dc){const p=[dc[1],dc[2]].map(s=>sideOf(s));if(p.every(q=>q&&q.length===1))return p.flat();}
+    return null;
+  };
+  if(kind==='hcp'){
+    const h=r.match(/^(.*?)\s*([+\-]\d+(?:\.\d+)?)$/);if(!h)return null;
+    const line=+h[2];if(Math.abs(line*4%2)===1)return null;
+    const s=sideOf(h[1]||'');if(!s||s.length!==1||s[0]==='draw')return null;
+    const me=s[0],op=me===A?B:A;const d=val(me)-val(op)+line;if(isNaN(d))return null;
+    return d===0?'push':d>0?'win':'lose';
+  }
+  // winner / 1X2 / double chance / draw no bet
+  const s=sideOf(res);if(!s)return null;
+  const draw=A.score===B.score&&m.sport!=='tennis';
+  if(draw&&/no apuesta|no bet|dnb|sin empate/.test(market))return 'push';
+  const won=m.sport==='tennis'?(A.winner?A:B.winner?B:A.sets>B.sets?A:B.sets>A.sets?B:null):draw?'draw':A.score>B.score?A:B;
+  if(!won)return null;
+  return s.includes(won)?'win':'lose';
+}
+// → {leg, score} when exactly one leg won and the rest lost; otherwise {why}
+function arSettle(b,hit){
+  const {m,A,B}=hit;
+  if(!m.done)return {why:'not finished'};
+  if(/ret|walk|w\/o|abandon|aband|cancel|postpon|aplaz|susp|aet|pen|extra|forfeit|default/i.test(m.odd))return {why:'retired / extra time / penalties'};
+  if(m.sport==='tennis'&&Math.max(A.sets,B.sets)<2)return {why:'incomplete score'};
+  if(!arCoverable(b))return {why:'market not covered'};
+  const market=arNorm(b.market);
+  const legs=b.legs||[];
+  const unit=/juego|game/.test(market)?'games':/\bsets?\b/.test(market)?'sets':m.sport==='tennis'&&!/ganador|winner|partido|match|moneyline|vencedor/.test(market)?'games':'score';
+  const isTot=l=>/^(mas de|mas|over|o|menos de|menos|under|u)\s*\d/.test(arNorm(l.result))||/^[+\-]\s*\d/.test(arNorm(l.result))&&/total|mas|menos|over|under/.test(market);
+  const kind=/ambos|both teams|btts/.test(market)?'btts':legs.every(isTot)?'total':legs.every(l=>/[+\-]\d+(\.\d+)?$/.test(arNorm(l.result)))?'hcp':'win';
+  if(kind==='win'&&market&&/total|mas|menos|over|under|handicap|spread|linea|asiatic/.test(market))return {why:'market not understood'};
+  const res=legs.map(l=>arLeg(kind,l.result,m,A,B,unit,market));
+  const wins=res.map((x,i)=>x==='win'?i:-1).filter(i=>i>=0);
+  if(wins.length!==1||res.some(x=>x!=='win'&&x!=='lose'))return {why:'outcome not clear'};
+  const score=m.sport==='tennis'?A.ls.map((x,k)=>x+'-'+(B.ls[k]??'')).join(' '):A.score+'-'+B.score;
+  return {leg:wins[0],score};
+}
+function arCoverable(b){return !AR_SKIP.test(arNorm(b.market))&&!(b.legs||[]).some(l=>AR_SKIP.test(arNorm(l.result)));}
+function arCandidates(manual){
+  const today=shiftedISO(0),oldest=shiftedISO(-AR_MAX_DAYS);
+  return D.bets.filter(b=>b.status==='pending'&&b.pendMark==null&&(b.legs||[]).length>=2&&b.date&&b.date>=oldest&&b.date<=today&&(manual||pendEnded(b)&&Date.now()-(arTried.get(b.id)||0)>AR_RETRY_MIN*60000)&&arCoverable(b)
+    &&String(b.event||'').split(/\s+(?:vs\.?|v\.?|-|–|—|x|@)\s+/i).length===2);
+}
+async function pendAutoResults(manual){
+  if(arBusy)return;
+  if(!manual&&Date.now()-arLast<AR_EVERY_MIN*60000)return;
+  const cands=arCandidates(manual);
+  if(!cands.length){if(manual)toast('Nothing to check: no finished pending surebets on main markets (winner, totals, handicaps) without a result');return;}
+  arBusy=true;arLast=Date.now();arBtnState();
+  try{
+    // ESPN groups by US date: ask for the kick-off day and the day before
+    const days=new Set();
+    cands.forEach(b=>{const k=new Date(Date.parse(b.date+'T'+(b.time||'23:00')+':00')-SPORT_HOURS*3600000);
+      [0,-1].forEach(n=>{const d=new Date(k);d.setDate(d.getDate()+n);days.add(localISO(d).replace(/-/g,''));});});
+    const jobs=[];days.forEach(ymd=>AR_FEEDS.forEach(([sport,path])=>jobs.push(arFetch(path,ymd).then(ev=>ev?arMatches(sport,ev):null))));
+    const got=await Promise.all(jobs);
+    if(got.every(x=>x===null)){if(manual)toast("Couldn't reach the results service — try again in a minute");return;}
+    const seen=new Set();const pool=[];
+    got.forEach(list=>(list||[]).forEach(m=>{const k=m.sport+':'+m.id;if(!seen.has(k)){seen.add(k);pool.push(m);}}));
+    let marked=0,notFound=0,skipped=0;
+    cands.forEach(b=>{
+      if(b.pendMark!=null)return;
+      const hit=arFindMatch(b,pool);if(!hit){notFound++;arTried.set(b.id,Date.now());return;}
+      const r=arSettle(b,hit);if(r.leg==null){skipped++;arTried.set(b.id,Date.now());return;}
+      b.pendMark=r.leg;b.autoRes={leg:r.leg,score:r.score,at:Date.now()};marked++;
+    });
+    if(marked){save();renderPendientes();}
+    if(marked||manual){
+      const rest=[notFound?`${notFound} not found`:'',skipped?`${skipped} unclear or not over yet`:''].filter(Boolean).join(' · ');
+      toast(marked?`${marked} marked from results — check them and Resolve${rest?' · '+rest:''}`:`No results to mark${rest?' · '+rest:''}`);
+    }
+  }finally{arBusy=false;arBtnState();}
+}
+function arBtnState(){const b=document.getElementById('arBtn');if(b){b.classList.toggle('busy',arBusy);b.disabled=arBusy;}}
+function arLine(b,sub){
+  const a=b.autoRes;if(!a||a.leg!==b.pendMark)return '';
+  return `<span class="ar-tag${sub?' ar-sub':''}" title="Marked automatically from the final score — check it before you Resolve">Result ${esc(a.score)}</span>`;
+}
+setInterval(()=>{if(document.visibilityState==='visible'&&Array.isArray(D.bets))pendAutoResults(false);},AR_EVERY_MIN*60000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Array.isArray(D.bets))setTimeout(()=>pendAutoResults(false),1500);});
+
+// ══════════════════════════════════════════
 //  TELEGRAM INBOX — forward surebets to your own bot, they show up here
 //  (the browser polls the Bot API directly; no server needed)
 // ══════════════════════════════════════════
@@ -6685,7 +6877,7 @@ function navTo(page){
     if(page==='calc')setBetType(newBetType);
     else if(page==='bets'){renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);}
     else if(page==='profit')renderProfit();
-    else if(page==='pendientes')renderPendientes();
+    else if(page==='pendientes'){renderPendientes();pendAutoResults(false);}
     else if(page==='casas')renderCasas();
     else if(page==='notas')renderNotas();
     else if(page==='categorias')renderCategorias();
