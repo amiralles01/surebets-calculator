@@ -2766,7 +2766,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 // ══════════════════════════════════════════
 //  STORE — Firestore-backed
 // ══════════════════════════════════════════
-let saveVer=0; // bumped on every save: cached views (bookmaker ledger) know the data changed
+let saveVer=0; // bumped whenever the data changes (here or from another device): cached views (bookmaker ledger) know to recompute
 function save(){saveVer++;return window.__fsSave ? window.__fsSave() : Promise.resolve();}
 
 let D = {bets:[],normals:[],casas:[],notes:[],notesFolders:[],categories:[],hidden:{},bkProfiles:[],poker:[],presets:[]};
@@ -2776,45 +2776,510 @@ function ensureShape(){
 }
 // ── Cloud layout ──
 // Firestore refuses any document over 1 MiB (≈2,600 surebets, under two months at 45 a day).
-// Settled bets older than ARC_KEEP_DAYS go to half-month archive documents
-// (arc-YYYY-MM-1 = days 1–15, arc-YYYY-MM-2 = 16–31); the main document keeps the rest plus
-// an index {part:{h,n}} of them. In memory D is still one object with every bet.
+// users/{email}/app/data holds the settings, bookmakers, notes… and the bets still in play:
+// pending, or settled within the last ARC_KEEP_DAYS days. Older settled bets live in half-month
+// archive documents (arc-YYYY-MM-1 = days 1–15, arc-YYYY-MM-2 = 16–31) listed in data.arc
+// {part:{h,n}}, where h changes every time that part is written. In memory D is one object with
+// every bet, newest first.
 const ARC_KEEP_DAYS=3;
+const isoDay=d=>typeof d==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(d);
 function arcKey(x,cut){
-  if(!x||x.status==='pending')return null;
-  const d=x.date;if(typeof d!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(d)||d>=cut)return null;
-  return 'arc-'+d.slice(0,7)+(+d.slice(8,10)<=15?'-1':'-2');
+  if(!x||x.status==='pending'||!isoDay(x.date)||x.date>=cut)return null;
+  if(isoDay(x.resolveDate)&&x.resolveDate>=cut)return null; // settled lately: may still get corrected
+  return arcPart(x.date);
 }
+const arcPart=d=>'arc-'+d.slice(0,7)+(+d.slice(8,10)<=15?'-1':'-2');
+// the part an older bet could be in, whatever its status (another device may have settled and archived it)
+const arcLookup=(x,cut)=>x&&isoDay(x.date)&&x.date<cut?arcPart(x.date):null;
 // same text for the same content whatever the key order (Firestore hands keys back sorted)
 function canonJSON(v){
   if(Array.isArray(v))return '['+v.map(x=>x===undefined?'null':canonJSON(x)).join(',')+']';
   if(v&&typeof v==='object')return '{'+Object.keys(v).filter(k=>v[k]!==undefined).sort().map(k=>JSON.stringify(k)+':'+canonJSON(v[k])).join(',')+'}';
   return JSON.stringify(v)??'null';
 }
-function arcHash(s){let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193);}return (h>>>0).toString(36)+'.'+s.length.toString(36);}
-function partHash(p){return arcHash(canonJSON({bets:p.bets||[],normals:p.normals||[]}));}
-// D → {main, parts: Map part → {bets, normals, h}}; keepAll puts everything in main
-function cloudSplit(data,keepAll){
-  const main={...data};delete main.arc;
-  const parts=new Map();
-  if(keepAll)return {main,parts};
-  const cut=shiftedISO(-ARC_KEEP_DAYS);
-  main.bets=[];main.normals=[];
-  const put=(k,f,x)=>{let p=parts.get(k);if(!p){p={bets:[],normals:[]};parts.set(k,p);}p[f].push(x);};
-  (data.bets||[]).forEach(b=>{const k=arcKey(b,cut);if(k)put(k,'bets',b);else main.bets.push(b);});
-  (data.normals||[]).forEach(n=>{const k=arcKey(n,cut);if(k)put(k,'normals',n);else main.normals.push(n);});
-  parts.forEach((p,k)=>{const s=JSON.stringify(p),m=partMemo.get(k);if(m&&m.s===s)p.h=m.h;else{p.h=partHash(p);partMemo.set(k,{s,h:p.h});}});
-  return {main,parts};
+const sameJ=(a,b)=>canonJSON(a)===canonJSON(b);
+// two copies of one bet (same id, match and date), maybe edited differently
+const sameBet=(a,b)=>sameJ(a,b)||(a.event===b.event&&a.date===b.date);
+const jclone=v=>v===undefined?undefined:JSON.parse(JSON.stringify(v));
+const byIdDesc=(a,b)=>(+b.id||0)-(+a.id||0);
+
+// ── Sync ──
+// A save doesn't upload the whole state. It becomes a few small changes against the last cloud
+// state this device saw (the "base"): this bet is new, these fields of that bet changed, this
+// bookmaker was deleted… and they are applied inside a transaction on top of whatever the cloud
+// holds at that moment, so the PC and the phone saving at the same time never undo each other's
+// work. Base, per bet (it.bets / it.normals) and per element of a list field (el, see SYNC_LISTS):
+// sj = the cloud's JSON of it, lj = this device's JSON of it when it last matched the cloud (a
+// cheap "untouched since" test); fd = the same for every other field, taken whole. loc and docs =
+// which document holds each bet, parts = archive part → h, rev = the main document's revision,
+// seen = device → the newest {s, t} of its saves this device has seen in data.sync.
+const SYNC_LISTS={casas:'id',notes:'id',notesFolders:'id',categories:'id',bkProfiles:'id',presets:'id',tgInbox:'uid',software:'id',promoRules:'id'};
+const SYNC_INTERNAL=new Set(['bets','normals','arc','rev','sync']);
+const SYNC_COLLS=['bets','normals'];
+function syncBase(){
+  const col=()=>({sj:new Map(),lj:new Map()});
+  return {it:{bets:col(),normals:col()},el:new Map(),fd:col(),loc:new Map(),docs:new Map(),parts:new Map(),rev:0,seen:new Map(),fix:new Set(),due:false,check:false};
 }
-const partMemo=new Map(); // part → {s: its plain JSON, h} so unchanged parts aren't re-hashed on every save
-function memoPart(k,p){partMemo.set(k,{s:JSON.stringify({bets:p.bets,normals:p.normals}),h:p.h});}
-// main document + archive parts → one D (newest first)
-function cloudJoin(main,parts){
-  const d={...main};delete d.arc;
-  const byId=(a,b)=>(+b.id||0)-(+a.id||0);
-  d.bets=[...(main.bets||[]),...parts.flatMap(p=>p.bets||[])].sort(byId);
-  d.normals=[...(main.normals||[]),...parts.flatMap(p=>p.normals||[])].sort(byId);
-  return d;
+const emptyVal=v=>v===undefined||v===null||(Array.isArray(v)?!v.length:typeof v==='object'&&!Object.keys(v).length);
+// a key nobody uses yet for an element that has none, or shares one
+function freeId(id,taken){
+  if(typeof id==='string'){let i=2;while(taken(id+'-'+i))i++;return id+'-'+i;}
+  let n=typeof id==='number'&&isFinite(id)?id+1:Date.now();
+  while(taken(n))n++;
+  return n;
+}
+// fields of x that differ from the cloud copy b → {set, del}, or null when there are none
+function propPatch(b,x){
+  let set=null,del=null;
+  for(const p of Object.keys(x)){const v=x[p];if(v!==undefined&&(!(p in b)||!sameJ(v,b[p])))(set||(set={}))[p]=jclone(v);}
+  for(const p of Object.keys(b))if(x[p]===undefined)(del||(del=[])).push(p);
+  return set||del?{set,del}:null;
+}
+function patchObj(o,op){
+  if(op.set)for(const p of Object.keys(op.set))o[p]=jclone(op.set[p]);
+  if(op.del)op.del.forEach(p=>{delete o[p];});
+  return o;
+}
+// one collection (bets, or a list field) against its base → changes, through emit(op, element, index)
+function diffColl(arr,col,key,emit){
+  const seen=new Set();let ids=null;
+  arr.forEach((x,i)=>{
+    if(!x||typeof x!=='object')return;
+    let k=x[key]==null?null:JSON.stringify(x[key]);
+    if(k===null||seen.has(k)){ // no key, or one used twice: this one gets its own
+      if(!ids)ids=new Set(arr.map(y=>y&&typeof y==='object'?JSON.stringify(y[key]):''));
+      x[key]=freeId(x[key],id=>{const s=JSON.stringify(id);return ids.has(s)||col.sj.has(s);});
+      k=JSON.stringify(x[key]);ids.add(k);
+    }
+    seen.add(k);
+    const j=JSON.stringify(x);
+    if(col.lj.get(k)===j)return;
+    const s=col.sj.get(k);
+    if(s===undefined){emit({id:x[key],v:JSON.parse(j)},x,i);return;}
+    const p=propPatch(JSON.parse(s),x);
+    if(p)emit({id:x[key],...p},x,i);else col.lj.set(k,j); // same content, keys in another order
+  });
+  col.sj.forEach((s,k)=>{if(!seen.has(k))emit({id:JSON.parse(k),rm:1},null,-1);});
+}
+// While a save is on its way (flight = its changes), what changes meanwhile is worked out against
+// the base as it will be once that save is in, so it holds whether or not that save gets through
+function flightOverlay(B,flight){
+  const ov=new Map(); // 'bets' | 'normals' | 'e.'+list field | 'fd' → Map key → JSON (null = gone)
+  const get=n=>{let m=ov.get(n);if(!m){m=new Map();ov.set(n,m);}return m;};
+  flight.forEach(op=>{
+    if(op.t==='fd'){get('fd').set(op.f,op.rm?null:JSON.stringify(op.v));return;}
+    const m=get(op.t==='it'?op.c:'e.'+op.f),col=op.t==='it'?B.it[op.c]:B.el.get(op.f),k=JSON.stringify(op.id);
+    if(op.rm)m.set(k,null);
+    else if(op.v)m.set(k,JSON.stringify(op.v));
+    else{const cur=m.has(k)?m.get(k):col&&col.sj.get(k);if(cur!=null)m.set(k,JSON.stringify(patchObj(JSON.parse(cur),op)));}
+  });
+  return ov;
+}
+function flightView(col,ov){
+  if(!ov||!ov.size)return col;
+  return {
+    sj:{get:k=>ov.has(k)?ov.get(k)??undefined:col.sj.get(k),has:k=>ov.has(k)?ov.get(k)!=null:col.sj.has(k),
+      forEach:fn=>{col.sj.forEach((s,k)=>{if(!ov.has(k))fn(s,k);});ov.forEach((s,k)=>{if(s!=null)fn(s,k);});}},
+    lj:{get:k=>ov.has(k)?undefined:col.lj.get(k),set:(k,j)=>{if(!ov.has(k))col.lj.set(k,j);}}
+  };
+}
+// everything this device changed and the cloud doesn't have yet
+function syncDiff(D,B,flight){
+  const ops=[],ov=flight&&flight.length?flightOverlay(B,flight):null;
+  const view=(col,n)=>ov?flightView(col,ov.get(n)):col;
+  const where=x=>({status:x.status,date:x.date,resolveDate:x.resolveDate});
+  SYNC_COLLS.forEach(c=>{
+    if(!Array.isArray(D[c]))D[c]=[];
+    const col=view(B.it[c],c);
+    diffColl(D[c],col,'id',(o,x)=>{
+      o.t='it';o.c=c;
+      if(!o.v){
+        // where the cloud's copy should be (the document it was in, or its archive part if another
+        // device has archived it since), and where it goes now
+        const k=JSON.stringify(o.id),at=B.loc.get(c+':'+k),b=col.sj.get(k);
+        if(at)o.at=at;
+        if(b)o.kb=where(JSON.parse(b));
+        if(x)o.k=where(x);
+      }
+      ops.push(o);
+    });
+  });
+  Object.keys(SYNC_LISTS).forEach(f=>{
+    const col=B.el.get(f)||{sj:new Map(),lj:new Map()};
+    diffColl(Array.isArray(D[f])?D[f]:[],view(col,'e.'+f),SYNC_LISTS[f],(o,x,i)=>{
+      o.t='el';o.f=f;
+      if(o.v)o.after=i>0&&D[f][i-1]&&typeof D[f][i-1]==='object'?D[f][i-1][SYNC_LISTS[f]]:null;
+      ops.push(o);
+    });
+  });
+  const fd=view(B.fd,'fd');
+  const fields=new Set(Object.keys(D).filter(f=>!SYNC_INTERNAL.has(f)&&!SYNC_LISTS[f]));
+  fd.sj.forEach((s,f)=>fields.add(f));
+  fields.forEach(f=>{
+    const v=D[f],j=JSON.stringify(v),s=fd.sj.get(f);
+    if(s===undefined){if(!emptyVal(v))ops.push({t:'fd',f,v:JSON.parse(j)});return;} // empty defaults aren't worth creating
+    if(fd.lj.get(f)===j)return;
+    if(j!==undefined&&sameJ(v,JSON.parse(s))){fd.lj.set(f,j);return;}
+    ops.push(j===undefined?{t:'fd',f,rm:1}:{t:'fd',f,v:JSON.parse(j)});
+  });
+  return ops;
+}
+const opKey=op=>(op.t==='it'?op.c:'e.'+op.f)+':'+JSON.stringify(op.id);
+// what a confirmed save did: deleted (rm) and uploaded as new (v); rekeyed = bets of ours that
+// got a new id because another device had used theirs
+function opsOwn(ops,rekeyed){
+  const own={rm:new Set(),v:new Set()};
+  ops.forEach(op=>{if(op.t==='fd')return;if(op.rm)own.rm.add(opKey(op));else if(op.v)own.v.add(opKey(op));});
+  (rekeyed||[]).forEach(r=>{own.v.delete(r.c+':'+JSON.stringify(r.from));own.v.add(r.c+':'+JSON.stringify(r.to));});
+  return own;
+}
+// settled bets in the main document that are due for the archive (checked again when the day changes)
+function syncDue(B,D){
+  const cut=shiftedISO(-ARC_KEEP_DAYS);
+  if(B.dueCut!==cut){B.dueCut=cut;B.due=SYNC_COLLS.some(c=>(D[c]||[]).some(x=>x&&typeof x==='object'&&arcKey(x,cut)&&B.loc.get(c+':'+JSON.stringify(x.id))==='data'));}
+  return B.due;
+}
+// one change to a list field (bookmakers, notes…) of a document
+function applyEl(arr,op,key){
+  const k=JSON.stringify(op.id),i=arr.findIndex(e=>e&&typeof e==='object'&&JSON.stringify(e[key])===k);
+  if(op.rm){if(i>=0)arr.splice(i,1);return;}
+  if(op.v){
+    if(i>=0){arr[i]=jclone(op.v);return;}
+    const a=op.after==null?-1:arr.findIndex(e=>e&&typeof e==='object'&&JSON.stringify(e[key])===JSON.stringify(op.after));
+    arr.splice(op.after==null?0:a>=0?a+1:arr.length,0,jclone(op.v));
+  }else if(i>=0)arr[i]=patchObj({...arr[i]},op);
+}
+// the archive parts a transaction has to read: where the changed bets are and where they go,
+// and where the main document's settled bets are due to move
+function syncNeed(main,ops,cut,B,arcOff,back){
+  const need=new Set();
+  ops.forEach(op=>{
+    if(op.t!=='it')return;
+    if(op.at&&op.at!=='data')need.add(op.at);
+    if(!arcOff)[op.kb,op.v||op.k].forEach(x=>{const k=arcLookup(x,cut);if(k)need.add(k);});
+  });
+  if(main&&!arcOff){
+    SYNC_COLLS.forEach(c=>(Array.isArray(main[c])?main[c]:[]).forEach(x=>{const k=arcKey(x,cut);if(k)need.add(k);}));
+    // parts this device knows of that the main document doesn't list: emptied, or left out when an
+    // older version of the app saved over it (they get listed again)
+    B.parts.forEach((h,k)=>{if(!(main.arc&&main.arc[k]))need.add(k);});
+    // and when it went back to an older state, the parts it lists as they were then
+    if(back&&main.arc)Object.keys(main.arc).forEach(k=>{if(!main.arc[k]||main.arc[k].h!==B.parts.get(k))need.add(k);});
+  }
+  B.fix.forEach(dk=>{if(dk!=='data')need.add(dk);});
+  return need;
+}
+// Each save counts up its device's entry in data.sync and keeps the others, so no entry ever goes
+// down. When one is lower than this device has seen (or gone while recent), or the revision is,
+// the main document went back to an older state: a version of the app from before this sync saved
+// everything it had over it, without what was added since.
+const SYNC_KEEP=200; // entries kept in data.sync (the newest, up to 30 days old)
+function syncBack(main,B,now){
+  if(!main)return false;
+  if((+main.rev||0)<B.rev)return true;
+  const ms=main.sync&&typeof main.sync==='object'?main.sync:{},n=Object.keys(ms).length;
+  for(const [d,e] of B.seen){
+    const m=ms[d];
+    if(m?(+m.s||0)<e.s:n<SYNC_KEEP-20&&now-e.t<25*864e5)return true;
+  }
+  return false;
+}
+// mine = the main document as this device last had it (its cache): is the cloud's older than it?
+function syncAhead(mine,cloud,now){
+  const B={rev:+mine.rev||0,seen:new Map()};
+  Object.entries(mine.sync&&typeof mine.sync==='object'?mine.sync:{}).forEach(([d,e])=>B.seen.set(d,{s:+(e&&e.s)||0,t:+(e&&e.t)||0}));
+  return syncBack(cloud,B,now);
+}
+// Then the bets this device last saw there, still has and that are missing now go back. What
+// that version changed or deleted stands.
+function syncLost(main,B,D,back){
+  if(!main||!back)return [];
+  const ops=[];
+  SYNC_COLLS.forEach(c=>{
+    const there=new Set((Array.isArray(main[c])?main[c]:[]).map(x=>x&&typeof x==='object'?JSON.stringify(x.id):''));
+    (Array.isArray(D[c])?D[c]:[]).forEach(x=>{
+      if(!x||typeof x!=='object')return;
+      const k=JSON.stringify(x.id);
+      if(!there.has(k)&&B.loc.get(c+':'+k)==='data'&&B.it[c].sj.has(k))ops.push({t:'it',c,id:x.id,v:jclone(x),re:1});
+    });
+  });
+  return ops;
+}
+// Inside the transaction: the cloud's documents as they are now + this device's changes →
+// the documents to write. o = {cut, arcOff, dev, seq, now, tok, and from the base: rev, seen, back}
+function syncApply(mainIn,partsIn,ops,o){
+  const main={...(mainIn||{})};
+  const docs=new Map([['data',mainIn||{}]]);
+  partsIn.forEach((p,k)=>docs.set(k,p||{}));
+  const W={bets:new Map(),normals:new Map()}; // id → {dk: its document, x}
+  const dirty=new Set(),rekeyed=[];
+  docs.forEach((d,dk)=>SYNC_COLLS.forEach(c=>{
+    (Array.isArray(d[c])?d[c]:[]).forEach(x=>{
+      if(!x||typeof x!=='object'){dirty.add(dk);return;}
+      let k=x.id==null?null:JSON.stringify(x.id);
+      const cur=k===null?null:W[c].get(k);
+      if(cur&&cur.dk!==dk&&sameBet(cur.x,x)){
+        // the same bet in the main document and in a part (a version of the app from before this
+        // sync saved everything it had): one copy, the archived one
+        if(cur.dk==='data'){W[c].set(k,{dk,x});dirty.add('data');}else dirty.add(dk);
+        return;
+      }
+      if(k===null||cur){x={...x,id:freeId(x.id,id=>W[c].has(JSON.stringify(id)))};k=JSON.stringify(x.id);dirty.add(dk);} // repeated id
+      W[c].set(k,{dk,x});
+    });
+  }));
+  const place=x=>{const k=o.arcOff?null:arcKey(x,o.cut);return k&&docs.has(k)?k:'data';};
+  const lists=new Set();
+  ops.forEach(op=>{
+    if(op.t==='it'){
+      const M=W[op.c];if(!M)return;
+      const k=JSON.stringify(op.id),cur=M.get(k);
+      if(op.rm){if(cur){M.delete(k);dirty.add(cur.dk);}return;}
+      let x;
+      if(op.v){
+        if(op.re&&cur)return; // put back only if it is missing
+        x=jclone(op.v);
+        if(cur&&!sameBet(cur.x,op.v)){ // another device has a different bet under the same id: ours gets a new one
+          x.id=freeId(op.id,id=>M.has(JSON.stringify(id)));
+          rekeyed.push({c:op.c,from:op.id,to:x.id});
+          const dk=place(x);M.set(JSON.stringify(x.id),{dk,x});dirty.add(dk);return;
+        }
+      }else{
+        if(!cur)return; // deleted elsewhere: the delete wins
+        x=patchObj({...cur.x},op);
+      }
+      const dk=place(x);
+      if(cur&&cur.dk!==dk)dirty.add(cur.dk);
+      M.set(k,{dk,x});dirty.add(dk);
+    }else if(op.t==='el'){
+      const key=SYNC_LISTS[op.f];if(!key)return;
+      if(!lists.has(op.f)){lists.add(op.f);main[op.f]=Array.isArray(main[op.f])?main[op.f].slice():[];}
+      applyEl(main[op.f],op,key);
+    }else if(op.t==='fd'){
+      if(op.rm)delete main[op.f];else main[op.f]=jclone(op.v);
+    }
+  });
+  // list fields: no repeated or missing keys, no junk
+  let fixed=false;
+  Object.keys(SYNC_LISTS).forEach(f=>{
+    const key=SYNC_LISTS[f],arr=main[f];if(!Array.isArray(arr))return;
+    const ids=new Set();let bad=false;
+    const out=arr.filter(e=>e&&typeof e==='object').map(e=>{
+      let k=e[key]==null?null:JSON.stringify(e[key]);
+      if(k===null||ids.has(k)){bad=true;e={...e,[key]:freeId(e[key],id=>ids.has(JSON.stringify(id))||arr.some(y=>y&&JSON.stringify(y[key])===JSON.stringify(id)))};k=JSON.stringify(e[key]);}
+      ids.add(k);return e;
+    });
+    if(bad||out.length!==arr.length){main[f]=out;fixed=true;}
+  });
+  // settled bets that are due move from the main document to their archive part
+  if(!o.arcOff)SYNC_COLLS.forEach(c=>W[c].forEach(e=>{
+    if(e.dk!=='data')return;
+    const k=arcKey(e.x,o.cut);
+    if(k&&docs.has(k)){e.dk=k;dirty.add('data');dirty.add(k);}
+  }));
+  // a part read here that the main document lists wrong (or not at all, or that is empty but
+  // listed) is written again and listed as it is
+  partsIn.forEach((p,k)=>{
+    if(!p)return;
+    const n=SYNC_COLLS.reduce((a,c)=>a+(Array.isArray(p[c])?p[c].length:0),0),e=mainIn&&mainIn.arc&&mainIn.arc[k];
+    if(n?!(e&&e.h===p.h&&e.n===n):!!e)dirty.add(k);
+  });
+  // nothing to write (a check that found the cloud as this device left it)
+  if(mainIn&&!ops.length&&!dirty.size&&!fixed&&!o.back&&(+mainIn.rev||0)>=(+o.rev||0))return {main:mainIn,parts:new Map(),rekeyed,noop:true};
+  const out=new Map();
+  dirty.forEach(dk=>out.set(dk,{bets:[],normals:[]}));
+  SYNC_COLLS.forEach(c=>W[c].forEach(e=>{const L=out.get(e.dk);if(L)L[c].push(e.x);}));
+  const parts=new Map();
+  out.forEach((L,dk)=>{
+    L.bets.sort(byIdDesc);L.normals.sort(byIdDesc);
+    if(dk==='data'){main.bets=L.bets;main.normals=L.normals;}else parts.set(dk,L);
+  });
+  if(!Array.isArray(main.bets))main.bets=[];
+  if(!Array.isArray(main.normals))main.normals=[];
+  const arc={...(main.arc&&typeof main.arc==='object'?main.arc:{})};
+  parts.forEach((L,k)=>{
+    const n=L.bets.length+L.normals.length;
+    if(n){L.h=o.tok();arc[k]={h:L.h,n};}else{L.h='';delete arc[k];}
+  });
+  main.arc=arc;
+  main.rev=Math.max(+main.rev||0,+o.rev||0)+1; // never below what this device has seen
+  // which saves of each device are in: a change kept on a device while offline isn't applied twice.
+  // After going back to an older state it holds again what this device had seen (and put back).
+  const all={...(main.sync&&typeof main.sync==='object'?main.sync:{})};
+  if(o.seen)o.seen.forEach((e,d)=>{if(!all[d]||(+all[d].s||0)<e.s)all[d]={s:e.s,t:e.t};});
+  const sync={};
+  Object.entries(all)
+    .filter(([d,s])=>s&&o.now-(+s.t||0)<30*864e5).sort((a,b)=>(+b[1].t||0)-(+a[1].t||0)).slice(0,SYNC_KEEP-1)
+    .forEach(([d,s])=>{sync[d]=s;});
+  sync[o.dev]={s:o.seq,t:o.now};
+  main.sync=sync;
+  return {main,parts,rekeyed};
+}
+// changes kept on this device from a session that ended before the cloud confirmed them → D
+function applyOpsLocal(D,ops){
+  ops.forEach(op=>{
+    if(op.t==='it'){
+      if(!Array.isArray(D[op.c]))D[op.c]=[];
+      const arr=D[op.c],k=JSON.stringify(op.id),i=arr.findIndex(x=>x&&JSON.stringify(x.id)===k);
+      if(op.rm){if(i>=0)arr.splice(i,1);}
+      else if(op.v){if(i>=0)arr[i]=jclone(op.v);else arr.push(jclone(op.v));}
+      else if(i>=0)patchObj(arr[i],op);
+    }else if(op.t==='el'){
+      const key=SYNC_LISTS[op.f];if(!key)return;
+      if(!Array.isArray(D[op.f]))D[op.f]=[];
+      applyEl(D[op.f],op,key);
+    }else if(op.t==='fd'){
+      if(op.rm)delete D[op.f];else D[op.f]=jclone(op.v);
+    }
+  });
+  SYNC_COLLS.forEach(c=>{if(Array.isArray(D[c]))D[c].sort(byIdDesc);});
+}
+// L = this device's copy, x = the cloud's, old = the cloud's JSON last time, lj = L's JSON when it
+// matched it → L takes what changed in the cloud and keeps what was changed here since.
+// Returns true when L changed.
+function syncMerge(L,x,old,lj){
+  const clean=lj!==undefined&&JSON.stringify(L)===lj;
+  if(old===undefined&&!clean)return false; // ours and not confirmed yet: it stays and gets sent
+  const b=clean?null:JSON.parse(old);
+  let ch=false;
+  new Set([...Object.keys(L),...Object.keys(x)]).forEach(p=>{
+    if(sameJ(L[p],x[p]))return;
+    if(b&&!sameJ(L[p],b[p]))return; // changed here too: ours stays
+    if(x[p]===undefined)delete L[p];else L[p]=x[p];
+    ch=true;
+  });
+  return ch;
+}
+// What the cloud holds now → base + D, keeping this device's changes the cloud doesn't have yet.
+// docs = document → its data, for the documents that changed ('data' is the main one).
+// own = what this device's save that the cloud just confirmed did (opsOwn). Returns true when D changed.
+function syncAbsorb(B,D,docs,own){
+  let changed=false;
+  const cut=shiftedISO(-ARC_KEEP_DAYS);
+  docs.forEach((d,dk)=>B.fix.delete(dk));
+  if(docs.has('data')){B.due=false;B.dueCut=cut;}
+  SYNC_COLLS.forEach(c=>{
+    const col=B.it[c];
+    if(!Array.isArray(D[c]))D[c]=[];
+    const arr=D[c];
+    let at=null;
+    const local=k=>{
+      if(!at){at=new Map();arr.forEach(x=>{if(x&&typeof x==='object'&&x.id!=null){const s=JSON.stringify(x.id);if(!at.has(s))at.set(s,x);}});}
+      return at.get(k);
+    };
+    const seen=new Set(),prev=new Set(),adds=[],drop=new Set();
+    docs.forEach((d,dk)=>{
+      const was=B.docs.get(dk);if(was&&was[c])was[c].forEach(k=>prev.add(k));
+      const keys=new Set();
+      (Array.isArray(d&&d[c])?d[c]:[]).forEach(x=>{
+        if(!x||typeof x!=='object'||x.id==null){B.fix.add(dk);return;}
+        const k=JSON.stringify(x.id);
+        if(seen.has(k)){B.fix.add(dk);return;} // the same id twice: the next save gives one its own
+        seen.add(k);keys.add(k);B.loc.set(c+':'+k,dk);
+        if(dk==='data'&&arcKey(x,cut))B.due=true;
+        const sJ=JSON.stringify(x),old=col.sj.get(k);
+        if(old===sJ)return;
+        col.sj.set(k,sJ);
+        const L=local(k);
+        if(!L){
+          // new from another device, unless it is ours and was deleted here since
+          if(old===undefined&&!col.lj.has(k)&&!(own&&own.v.has(c+':'+k))){adds.push(x);col.lj.set(k,sJ);changed=true;}
+          else col.lj.delete(k); // deleted here, the delete is on its way (an Undo now puts back this device's copy)
+          return;
+        }
+        if(syncMerge(L,x,old,col.lj.get(k)))changed=true;
+        if(sameJ(L,x))col.lj.set(k,JSON.stringify(L));else col.lj.delete(k);
+      });
+      const slot=B.docs.get(dk)||{};slot[c]=keys;B.docs.set(dk,slot);
+    });
+    // in one of these documents before and in none of them now: deleted (or archived elsewhere)
+    prev.forEach(k=>{
+      if(seen.has(k))return;
+      col.sj.delete(k);B.loc.delete(c+':'+k);
+      const L=local(k);
+      if(L&&!(own&&own.rm.has(c+':'+k))){drop.add(L);changed=true;} // deleted on another device: that wins
+      col.lj.delete(k); // ours deleted it and it was added back here since: it goes up again as new
+    });
+    if(drop.size){let w=0;for(let i=0;i<arr.length;i++)if(!drop.has(arr[i]))arr[w++]=arr[i];arr.length=w;}
+    if(adds.length){adds.forEach(x=>arr.push(x));arr.sort(byIdDesc);}
+  });
+  const main=docs.get('data');
+  if(main){
+    const now=Date.now();
+    Object.entries(main.sync&&typeof main.sync==='object'?main.sync:{}).forEach(([d,e])=>{
+      const s=+(e&&e.s)||0,t=+(e&&e.t)||0,w=B.seen.get(d);
+      if(!w||w.s<s)B.seen.set(d,{s,t});
+    });
+    B.seen.forEach((e,d)=>{if(now-e.t>30*864e5)B.seen.delete(d);});
+    Object.keys(SYNC_LISTS).forEach(f=>{if(absorbList(B,D,f,main[f],own))changed=true;});
+    const fields=new Set(Object.keys(main).filter(f=>!SYNC_INTERNAL.has(f)&&!SYNC_LISTS[f]));
+    B.fd.sj.forEach((s,f)=>fields.add(f));
+    fields.forEach(f=>{
+      const sv=main[f],sJ=JSON.stringify(sv),old=B.fd.sj.get(f);
+      if(old===sJ)return;
+      const lv=D[f],lJ=JSON.stringify(lv);
+      // untouched here (or only an empty default): take the cloud's
+      const clean=old===undefined?emptyVal(lv):lJ!==undefined&&(B.fd.lj.get(f)===lJ||sameJ(lv,JSON.parse(old)));
+      if(sJ===undefined)B.fd.sj.delete(f);else B.fd.sj.set(f,sJ);
+      if(clean){
+        if(sJ===undefined){if(f in D){delete D[f];changed=true;}}
+        else if(lJ!==sJ){D[f]=sv;changed=true;}
+        if(sJ===undefined)B.fd.lj.delete(f);else B.fd.lj.set(f,sJ);
+      }else if(sJ!==undefined&&lJ!==undefined&&sameJ(lv,sv))B.fd.lj.set(f,lJ);
+      else B.fd.lj.delete(f);
+    });
+  }
+  return changed;
+}
+// one list field of the main document (bookmakers, notes…), element by element, in the cloud's
+// order; elements only this device has so far stay where they are
+function absorbList(B,D,f,sv,own){
+  const key=SYNC_LISTS[f];
+  let col=B.el.get(f);if(!col){col={sj:new Map(),lj:new Map()};B.el.set(f,col);}
+  const arr=Array.isArray(D[f])?D[f]:[];
+  const at=new Map();
+  arr.forEach(x=>{if(x&&typeof x==='object'&&x[key]!=null){const s=JSON.stringify(x[key]);if(!at.has(s))at.set(s,x);}});
+  let ch=false;
+  const seen=new Set(),out=[],drop=new Set();
+  (Array.isArray(sv)?sv:[]).forEach(x=>{
+    if(!x||typeof x!=='object'||x[key]==null)return;
+    const k=JSON.stringify(x[key]);if(seen.has(k))return;seen.add(k);
+    const sJ=JSON.stringify(x),old=col.sj.get(k);col.sj.set(k,sJ);
+    const L=at.get(k);
+    if(!L){
+      if(old===undefined&&!col.lj.has(k)&&!(own&&own.v.has('e.'+f+':'+k))){out.push(x);col.lj.set(k,sJ);ch=true;} // new from another device
+      else if(old!==sJ)col.lj.delete(k); // deleted here (an Undo now puts back this device's copy)
+      return;
+    }
+    if(old!==sJ){
+      if(syncMerge(L,x,old,col.lj.get(k)))ch=true;
+      if(sameJ(L,x))col.lj.set(k,JSON.stringify(L));else col.lj.delete(k);
+    }
+    out.push(L);
+  });
+  [...col.sj.keys()].forEach(k=>{
+    if(seen.has(k))return;
+    col.sj.delete(k);
+    const L=at.get(k);
+    if(L&&!(own&&own.rm.has('e.'+f+':'+k))){drop.add(L);ch=true;}
+    col.lj.delete(k);
+  });
+  // what only this device has goes back after the element it followed here
+  const after=new Map();let prev=null;
+  arr.forEach(x=>{
+    const k=x&&typeof x==='object'&&x[key]!=null?JSON.stringify(x[key]):null;
+    if(k!==null&&seen.has(k)&&at.get(k)===x){prev=x;return;}
+    if(drop.has(x))return;
+    if(!after.has(prev))after.set(prev,[]);
+    after.get(prev).push(x);
+  });
+  const res=[...(after.get(null)||[])];
+  out.forEach(x=>{res.push(x);const a=after.get(x);if(a)res.push(...a);});
+  if(res.length!==arr.length||res.some((x,i)=>x!==arr[i])){
+    if(Array.isArray(D[f])){D[f].length=0;D[f].push(...res);}else D[f]=res;
+    ch=true;
+  }else if(!Array.isArray(D[f])&&Array.isArray(sv)){D[f]=res;}
+  return ch;
 }
 // A "void" surebet neither wins nor loses: it contributes no profit and doesn't count as money
 // at risk in any aggregate stat (ROI, wagered, monthly profit, charts, etc).
@@ -6846,29 +7311,40 @@ let newBetType='Surebet', newBetCat=null, nfSels=[];
 let toastTimer=null;
 // Cloud sync status: hidden while saves go through; shows up when they wait for a
 // connection, fail, or are paused because part of the data couldn't be loaded.
-let syncSlowT=null,syncState='ok';
+// Saving state for the bar at the top. state: 'saving' (an upload started), 'progress' (one got in,
+// more to go), 'ok', 'slow' (waiting for connection), 'failed'; lasting notices: 'arcoff',
+// 'parts' (an archive part didn't load; 'partsok' clears it)
+let syncSlowT=null,syncState='ok',syncCode='',syncNote='',syncNoteCode='';
 const SYNC_WHY={'permission-denied':'access denied — sign in again','unauthenticated':'you are signed out','invalid-argument':'the data is too big for one save',
-  'resource-exhausted':'the daily cloud limit was reached','unavailable':'no connection','deadline-exceeded':'the connection is too slow'};
+  'resource-exhausted':'the daily cloud limit was reached','unavailable':'no connection','deadline-exceeded':'the connection is too slow','failed-precondition':'the cloud refused the save'};
 function syncUI(state,code){
+  if(state==='arcoff'||state==='parts'){if(syncNote===state&&syncNoteCode===(code||''))return;syncNote=state;syncNoteCode=code||'';}
+  else if(state==='partsok'){if(syncNote!=='parts')return;syncNote='';}
+  else if(state==='saving'){if(!syncSlowT&&syncState==='ok')syncSlowT=setTimeout(()=>{syncSlowT=null;syncState='slow';paintSync();},6000);return;}
+  else{
+    clearTimeout(syncSlowT);syncSlowT=null;
+    if(state==='progress'){syncState='ok';paintSync();syncUI('saving');return;}
+    syncState=state;syncCode=code||'';
+  }
+  paintSync();
+}
+function paintSync(){
   const el=document.getElementById('syncBar');if(!el)return;
-  // 'slow' = saves are waiting and none has got through for 6 s
-  if(state==='saving'){if(!syncSlowT&&(syncState==='ok'||syncState==='slow'))syncSlowT=setTimeout(()=>{syncSlowT=null;syncUI('slow');},6000);return;}
-  clearTimeout(syncSlowT);syncSlowT=null;
-  if(state==='progress'){if(syncState==='slow'||syncState==='failed')syncUI('ok');syncUI('saving');return;}
-  if(syncState==='blocked'&&state!=='blocked')return;
-  syncState=state;
-  const why=code?(SYNC_WHY[code]||code):'';
-  if(state==='ok'){el.classList.remove('show');return;}
-  el.classList.toggle('bad',state!=='slow');
-  el.innerHTML=state==='slow'?`<i class="sync-dot"></i><span><b>Waiting for connection</b><small>Your changes are kept on this device and upload by themselves.</small></span>`
-    :state==='failed'?`<i class="sync-dot"></i><span><b>Not saved to the cloud</b><small>${esc(why)} · your last changes are only on this device</small></span><button data-sync="retry">Try again</button>`
-    :`<i class="sync-dot"></i><span><b>Your older bets didn't load</b><small>${why?esc(why)+' · ':''}saving is paused so nothing gets overwritten</small></span><button data-sync="reload">Reload</button>`;
+  const s=syncState!=='ok'?syncState:syncNote;
+  if(!s){el.classList.remove('show');return;}
+  const why=c=>c?esc(SYNC_WHY[c]||c):'';
+  el.classList.toggle('bad',s==='failed'||s==='parts');
+  el.innerHTML=s==='slow'?`<i class="sync-dot"></i><span><b>Waiting for connection</b><small>Your changes are kept on this device and upload by themselves.</small></span>`
+    :s==='failed'?`<i class="sync-dot"></i><span><b>Not saved to the cloud</b><small>${why(syncCode)} · your changes are kept on this device until it works</small></span><button data-sync="retry">Try again</button>`
+    :s==='parts'?`<i class="sync-dot"></i><span><b>Some older bets didn't load</b><small>${syncNoteCode==='permission-denied'?'your Firebase rules block the archive':why(syncNoteCode)} · they're left out of the totals for now; new changes still save</small></span><button data-sync="reload">Reload</button>`
+    :`<i class="sync-dot"></i><span><b>Older bets can't be archived</b><small>Your Firebase rules only allow one document. Everything still saves, up to about 2,600 bets in total.</small></span><button data-sync="ok">Got it</button>`;
   el.classList.add('show');
 }
 document.getElementById('syncBar').addEventListener('click',e=>{
   const b=e.target.closest('[data-sync]');if(!b)return;
   if(b.dataset.sync==='reload')location.reload();
-  else if(window.__fsRetry){syncState='ok';document.getElementById('syncBar').classList.remove('show');window.__fsRetry();}
+  else if(b.dataset.sync==='ok'){syncNote='';paintSync();}
+  else if(window.__fsRetry){syncState='ok';paintSync();window.__fsRetry();}
 });
 function toast(msg,actLabel,actFn){
   const t=document.getElementById('toast');
@@ -7178,16 +7654,17 @@ function emailToPath(email) {
   const { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } =
     await import('https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js');
   const { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
-    doc, getDoc, getDocFromCache, setDoc, onSnapshot, writeBatch } =
+    doc, getDoc, getDocFromCache, onSnapshot, runTransaction } =
     await import('https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js');
 
   const fbApp = initializeApp(firebaseConfig);
   const auth = getAuth(fbApp);
-  // Changes are kept on the device until the cloud has them, so nothing is lost
-  // if the app is closed without connection (falls back to memory if the browser can't).
+  // What the cloud sends is kept on the device too (quick start, the archive isn't downloaded
+  // again). Every write is a transaction, and those never wait in that cache: nothing stale can
+  // be replayed over newer data later. Falls back to memory if the browser can't keep it.
   let dbFs;
   try {
-    dbFs = initializeFirestore(fbApp, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+    dbFs = initializeFirestore(fbApp, { ignoreUndefinedProperties: true, localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
   } catch (e) {
     console.warn('[Firestore] offline cache unavailable, using memory', e);
     dbFs = getFirestore(fbApp);
@@ -7216,90 +7693,155 @@ function emailToPath(email) {
 
   googleLoginBtn.addEventListener('click', () => window.signIn());
 
-  // ── Sync state (see "Cloud layout" above) ──
+  // ── Sync (see "Cloud layout" and "Sync" above) ──
   let userPath = null;                 // users/{email}/app
   const partRef = k => doc(dbFs, 'users', userPath, 'app', k);
-  let arcConfirmed = new Map();        // archive part → hash the cloud is known to hold
-  let arcOff = false;                  // archive parts can't be written → everything goes in the main document
-  let loadBroken = false;              // an archive part couldn't be read → saving stays off (it would drop those bets)
-  let inflight = 0, saveFailed = false, snapSeq = 0, lastMainH = '';
+  let B = syncBase();
+  let arcOff = false;                  // the rules don't allow archive documents: everything stays in the main one
+  let flight = null;                   // the save on its way: {ops, seq}
+  let syncWanted = false, syncBusy = false, retryT = null, retryMs = 0, dirtyT = 0, lastNeed = [];
+  let snapBack = false, checkT = null; // the listener's last snapshot was older than what this device has; the check
+  // this session; what the cloud hasn't confirmed is kept in localStorage under it, and every
+  // save tells the cloud the last seq of it that got in (data.sync), so nothing goes up twice
+  const tabId = Math.random().toString(36).slice(2, 10);
+  const keepKey = () => 'sb_keep_' + userPath + '_' + tabId;
+  let opsSeq = 0, restoredKeys = [];
+  let chain = Promise.resolve();       // what comes from the cloud and the saves take turns
+  const serial = fn => { const r = chain.then(fn); chain = r.catch(() => {}); return r; };
 
-  // the archive parts the index lists → [{k, h, bets, normals}]; a part this device already holds
-  // with the same hash isn't downloaded again, nor one in the offline cache
-  async function loadParts(idx, mine) {
-    return Promise.all(Object.keys(idx || {}).map(async k => {
-      const want = idx[k] && idx[k].h;
-      const m = mine && mine.get(k);
-      if (m && m.h === want) return { k, h: m.h, bets: m.bets, normals: m.normals };
-      // each part carries its own hash (h), so a cached copy is checked without re-hashing it
-      const pack = d => { const x = { k, bets: (d && d.bets) || [], normals: (d && d.normals) || [], h: (d && d.h) || '' }; if (!x.h) x.h = partHash(x); memoPart(k, x); return x; };
-      try { const c = await getDocFromCache(partRef(k)); if (c.exists() && c.data().h === want) return pack(c.data()); } catch (e) {}
-      const s = await getDoc(partRef(k));
-      if (!s.exists()) console.warn('[Firestore] archive part listed but missing:', k);
-      return pack(s.exists() ? s.data() : null);
-    }));
+  // the changes the cloud hasn't confirmed yet, kept on the device: if the app closes now they go up next time
+  function keepOps(ops) {
+    const segs = [];
+    if (flight) segs.push({ seq: flight.seq, ops: flight.ops });
+    if (ops.length) segs.push({ seq: opsSeq = Math.max(Date.now(), opsSeq + 1), ops });
+    try {
+      if (segs.length) localStorage.setItem(keepKey(), JSON.stringify({ dev: tabId, segs }));
+      else localStorage.removeItem(keepKey());
+    } catch (e) { console.warn('[sync] could not keep the changes on this device', e); }
   }
-  function useCloud(raw, parts) {
-    D = cloudJoin(raw, parts); ensureShape();
-    arcConfirmed = new Map(parts.map(p => [p.k, p.h]));
+  function dropKept(seq) {
+    try {
+      const st = JSON.parse(localStorage.getItem(keepKey()) || 'null');
+      if (!st || !Array.isArray(st.segs)) return;
+      st.segs = st.segs.filter(g => g.seq > seq);
+      if (st.segs.length) localStorage.setItem(keepKey(), JSON.stringify(st)); else localStorage.removeItem(keepKey());
+    } catch (e) {}
+  }
+  // changes kept by sessions that ended before the cloud confirmed them (closed offline, killed
+  // mid-save…) → D; the parts the cloud already has are skipped
+  function restoreKept(raw) {
+    restoredKeys = [];
+    const pre = 'sb_keep_' + userPath + '_', done = (raw && raw.sync) || {};
+    try {
+      for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith(pre) && k !== keepKey()) restoredKeys.push(k); }
+    } catch (e) { return; }
+    restoredKeys.forEach(k => {
+      try {
+        const st = JSON.parse(localStorage.getItem(k) || 'null');
+        if (!st || !Array.isArray(st.segs)) return;
+        const got = done[st.dev];
+        st.segs.forEach(g => { if (!(got && +got.s >= +g.seq)) applyOpsLocal(D, g.ops || []); });
+      } catch (e) { console.warn('[sync] could not read changes kept from before', e); }
+    });
+  }
+  // they're now part of this session's own changes (and in the cloud, or kept under this session)
+  function forgetRestored() {
+    restoredKeys.forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+    restoredKeys = [];
+  }
+
+  async function loadPart(k, want) {
+    // each part carries its version (h): the copy on the device is used when it is current
+    try { const c = await getDocFromCache(partRef(k)); if (c.exists() && c.data().h === want) return c.data(); } catch (e) {}
+    const s = await getDoc(partRef(k));
+    if (!s.exists()) console.warn('[Firestore] archive part listed but missing:', k);
+    return s.exists() ? s.data() : {};
+  }
+  // the main document → the documents to take in: itself, every archive part whose version
+  // changed (have = parts already in hand) and the parts that are gone
+  async function cloudDocs(raw, have) {
+    const docs = new Map([['data', raw]]);
+    const idx = raw.arc && typeof raw.arc === 'object' ? raw.arc : {};
+    if (have) have.forEach((p, k) => { if (p && idx[k] && p.h === idx[k].h) docs.set(k, p); });
+    let failed = null;
+    await Promise.all(Object.keys(idx).filter(k => !docs.has(k) && B.parts.get(k) !== (idx[k] && idx[k].h)).map(async k => {
+      try { docs.set(k, await loadPart(k, idx[k] && idx[k].h)); }
+      catch (e) { console.error('[Firestore] could not read archive part', k, e); failed = (e && e.code) || 'unknown'; }
+    }));
+    B.parts.forEach((h, k) => { if (!idx[k]) docs.set(k, {}); });
+    syncUI(failed ? 'parts' : 'partsok', failed);
+    return docs;
+  }
+  // what the cloud holds → base + D; true when D changed
+  function takeCloud(raw, docs, own) {
+    const ch = syncAbsorb(B, D, docs, own);
+    const idx = raw.arc && typeof raw.arc === 'object' ? raw.arc : {};
+    const parts = new Map();
+    Object.keys(idx).forEach(k => {
+      if (docs.has(k)) parts.set(k, idx[k] && idx[k].h);
+      else if (B.parts.has(k)) parts.set(k, B.parts.get(k)); // unchanged, or couldn't be read (tried again next time)
+    });
+    B.parts = parts;
+    [...B.docs.keys()].forEach(k => { if (k !== 'data' && !idx[k]) B.docs.delete(k); });
+    B.rev = +raw.rev || 0;
+    if (ch) saveVer++;
+    return ch;
   }
 
   async function bootApp() {
     const LOCAL_STORE_KEY = 'sb_v3';
-    arcConfirmed = new Map(); arcOff = false; loadBroken = false; saveFailed = false; lastMainH = '';
+    B = syncBase(); arcOff = false; flight = null; syncWanted = false; retryMs = 0; snapBack = false;
+    let mine = null; // the main document as this device last had it (before reading the cloud updates it)
+    try { const c = await getDocFromCache(docRef); if (c.exists()) mine = c.data(); } catch (e) {}
     const snap = await getDoc(docRef);
-    let fresh = false;
-    if (snap.exists()) {
-      const raw = snap.data();
-      try { useCloud(raw, await loadParts(raw.arc)); }
-      catch (e) {
-        console.error('[Firestore] could not read the archive', e);
-        loadBroken = true; D = cloudJoin(raw, []); ensureShape();
-        syncUI('blocked', e && e.code);
-      }
-      lastMainH = arcHash(canonJSON(raw));
-    } else {
-      let migrated = null;
-      try {
-        const raw = localStorage.getItem(LOCAL_STORE_KEY);
-        if (raw) migrated = JSON.parse(raw);
-      } catch (e) {}
-      D = migrated || { bets: [], normals: [], casas: [], notes: [], notesFolders: [], categories: [], hidden: {}, bkProfiles: [], poker: [], presets: [] };
-      ensureShape();
-      fresh = true;
+    const raw = snap.exists() ? snap.data() : null;
+    D = { bets: [], normals: [] };
+    // the cloud went back to an older state while this device was away (a version of the app from
+    // before this sync saved over it): start from what this device had; the first save puts back
+    // what is missing
+    const ahead = !!(raw && mine && syncAhead(mine, raw, Date.now()));
+    if (ahead) {
+      console.warn('[sync] the cloud went back to an older state; putting back what this device had');
+      takeCloud(mine, await cloudDocs(mine, null), null);
+      B.check = true;
+    } else if (raw) takeCloud(raw, await cloudDocs(raw, null), null);
+    else {
+      // first time in the cloud: bring what this browser had saved before
+      try { const old = localStorage.getItem(LOCAL_STORE_KEY); if (old) D = JSON.parse(old); } catch (e) {}
     }
-
+    ensureShape();
+    restoreKept(ahead ? mine : raw);
     try { localStorage.removeItem(LOCAL_STORE_KEY); } catch (e) {}
 
     firestoreReady = true;
-    if (fresh) await window.__fsSave();
-    else if (!loadBroken) {
-      // move settled bets that are now a few days old into the archive straight away
-      const { parts } = cloudSplit(D, false);
-      if ([...parts].some(([k, p]) => arcConfirmed.get(k) !== p.h) || [...arcConfirmed.keys()].some(k => !parts.has(k))) save();
-    }
+    requestSync(); // changes kept from last time, the first upload, settled bets due for the archive
 
-    // Another device (or tab) saved: take its data. Our own writes echo back with pending
-    // writes or with the content we just wrote, and are skipped; while one of our saves is
-    // on its way or has failed, what's on screen is newer than the cloud and wins.
-    unsubscribeSnapshot = onSnapshot(docRef, { includeMetadataChanges: true }, async (docSnap) => {
-      if (!docSnap.exists() || docSnap.metadata.hasPendingWrites) return;
-      if (inflight > 0 || saveFailed || loadBroken) return;
-      const raw = docSnap.data();
-      const h = arcHash(canonJSON(raw));
-      if (h === lastMainH) return;
-      const seq = ++snapSeq, ver = saveVer;
-      let parts;
-      try { parts = await loadParts(raw.arc, cloudSplit(D, false).parts); }
-      catch (e) { console.error('[Firestore] could not read the archive', e); return; }
-      if (seq !== snapSeq || ver !== saveVer || inflight > 0 || saveFailed) return; // something newer happened meanwhile
-      useCloud(raw, parts); lastMainH = h;
-      refreshCurrentView();
-    });
+    // Another device (or tab) saved. This device's own saves come back here too and change nothing.
+    unsubscribeSnapshot = onSnapshot(docRef, s => serial(() => fromCloud(s)), e => console.error('[Firestore] listener', e));
 
     updateBadges();
     render();
     renderTgCard();tgStart();
+  }
+  async function fromCloud(s) {
+    if (!s.exists() || s.metadata.hasPendingWrites || !docRef) return;
+    const raw = s.data();
+    const back = syncBack(raw, B, Date.now()); // older than what this device already has
+    if (!s.metadata.fromCache) snapBack = back;
+    if (back) { if (!s.metadata.fromCache) checkSoon(); return; }
+    const docs = await cloudDocs(raw, null);
+    if (syncBack(raw, B, Date.now())) return;
+    if (takeCloud(raw, docs, null)) refreshCurrentView();
+  }
+  // A snapshot older than what this device has is usually one that was still on its way. If nothing
+  // newer follows, a version of the app from before this sync saved over the main document with
+  // what it had: a save that reads the cloud puts it right (syncBack, syncLost, syncApply).
+  function checkSoon() {
+    if (checkT) return;
+    checkT = setTimeout(() => {
+      checkT = null;
+      if (firestoreReady && docRef && snapBack) { B.check = true; requestSync(); }
+    }, 3000);
   }
 
   function refreshCurrentView() {
@@ -7316,52 +7858,90 @@ function emailToPath(email) {
     else if (activePage === 'presets') renderPresets();
   }
 
-  // One write per save: the main document, plus — in the same all-or-nothing batch — every
-  // archive part that changed or that the cloud hasn't confirmed yet, so the main document
-  // never lists a part the cloud doesn't have.
-  window.__fsSave = function () {
-    if (!firestoreReady || !docRef) return Promise.resolve();
-    if (loadBroken) { syncUI('blocked'); return Promise.resolve(); }
-    const { main, parts } = cloudSplit(D, arcOff);
-    const idx = {};
-    parts.forEach((p, k) => { idx[k] = { h: p.h, n: p.bets.length + p.normals.length }; });
-    main.arc = idx;
-    const changed = [...parts].filter(([k, p]) => arcConfirmed.get(k) !== p.h);
-    const emptied = [...arcConfirmed.keys()].filter(k => !parts.has(k));
-    lastMainH = arcHash(canonJSON(main));
-    let w;
-    if (!changed.length && !emptied.length) w = setDoc(docRef, main);
-    else {
-      const b = writeBatch(dbFs);
-      changed.forEach(([k, p]) => b.set(partRef(k), { bets: p.bets, normals: p.normals, h: p.h }));
-      emptied.forEach(k => b.set(partRef(k), { bets: [], normals: [], h: '' }));
-      b.set(docRef, main);
-      w = b.commit();
-    }
-    const withParts = changed.length + emptied.length > 0;
-    inflight++; syncUI('saving');
-    return w.then(() => {
-      changed.forEach(([k, p]) => arcConfirmed.set(k, p.h));
-      emptied.forEach(k => { if (!parts.has(k)) arcConfirmed.delete(k); });
-      saveFailed = false;
-    }).catch(e => {
+  // Saves take turns: the changes are worked out against what this device last got from the
+  // cloud, kept on the device, and applied in a transaction on top of what the cloud holds now.
+  function requestSync() {
+    syncWanted = true;
+    if (syncBusy || retryT || !firestoreReady || !docRef) return;
+    syncBusy = true;
+    serial(syncRun).finally(() => { syncBusy = false; if (syncWanted && !retryT) requestSync(); });
+  }
+  async function syncRun() {
+    if (!syncWanted || !docRef) return;
+    syncWanted = false;
+    const ops = syncDiff(D, B, null);
+    if (!ops.length && !(!arcOff && syncDue(B, D)) && !B.fix.size && !B.check) { keepOps([]); forgetRestored(); syncUI('ok'); return; }
+    flight = { ops, seq: opsSeq = Math.max(Date.now(), opsSeq + 1) };
+    keepOps([]);
+    forgetRestored();
+    syncUI('saving');
+    const ref = docRef;
+    try {
+      const ch = await commitOps(flight.ops, flight.seq);
+      dropKept(flight.seq);
+      retryMs = 0;
+      if (ref === docRef && ch) refreshCurrentView();
+      syncUI(syncWanted ? 'progress' : 'ok');
+    } catch (e) {
       const code = (e && e.code) || '';
-      if (withParts && code === 'permission-denied') {
-        if (arcOff) return; // already switched: a save without archive parts is on its way
+      syncWanted = true;
+      if (code === 'permission-denied' && !arcOff && lastNeed.length) {
         // the database rules only allow the main document: keep everything there, as before
         console.warn('[Firestore] archive documents not allowed by the rules — keeping everything in the main document');
-        arcOff = true; arcConfirmed = new Map();
-        return window.__fsSave();
+        arcOff = true; syncUI('arcoff');
+        return;
       }
-      console.error('Error guardando en Firestore', e);
-      saveFailed = true;
-      syncUI('failed', code);
-    }).finally(() => {
-      inflight--;
-      if (!saveFailed) syncUI(inflight ? 'progress' : 'ok');
-    });
+      console.error('[Firestore] save failed', e);
+      if (code === 'unavailable' || code === 'deadline-exceeded' || code === 'cancelled' || navigator.onLine === false) syncUI('slow');
+      else if (code !== 'aborted') syncUI('failed', code);
+      retryLater(code === 'aborted');
+    } finally { flight = null; }
+  }
+  // the transaction: read what the cloud has now, apply this device's changes, write
+  async function commitOps(ops, seq) {
+    const cut = shiftedISO(-ARC_KEEP_DAYS), now = Date.now();
+    let res = null, read = null, all = ops;
+    await runTransaction(dbFs, async tx => {
+      const ms = await tx.get(docRef);
+      const main = ms.exists() ? ms.data() : null;
+      const back = syncBack(main, B, now);
+      all = ops.concat(syncLost(main, B, D, back));
+      const need = lastNeed = [...syncNeed(main, all, cut, B, arcOff, back)];
+      const got = await Promise.all(need.map(k => tx.get(partRef(k))));
+      read = new Map(need.map((k, i) => [k, got[i].exists() ? got[i].data() : null]));
+      res = syncApply(main, read, all, { cut, arcOff, dev: tabId, seq, now, rev: B.rev, seen: B.seen, back, tok: () => now.toString(36) + Math.random().toString(36).slice(2, 7) });
+      if (res.noop) return;
+      res.parts.forEach((p, k) => tx.set(partRef(k), p));
+      tx.set(docRef, res.main);
+    }, { maxAttempts: 8 });
+    B.check = false; B.fix.clear();
+    // the cloud now holds what was just written: take it in, with any part another device changed
+    res.rekeyed.forEach(r => { const L = (D[r.c] || []).find(x => x && JSON.stringify(x.id) === JSON.stringify(r.from)); if (L) L.id = r.to; });
+    const have = new Map(read);
+    res.parts.forEach((p, k) => have.set(k, p));
+    return takeCloud(res.main, await cloudDocs(res.main, have), opsOwn(all, res.rekeyed));
+  }
+  function retryLater(soon) {
+    clearTimeout(retryT);
+    retryMs = soon ? 500 : Math.min(60000, retryMs ? retryMs * 2 : 2000);
+    retryT = setTimeout(() => { retryT = null; requestSync(); }, retryMs);
+  }
+  const retryNow = () => { if (retryT) { clearTimeout(retryT); retryT = null; retryMs = 0; requestSync(); } };
+  window.addEventListener('online', retryNow);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') retryNow(); });
+
+  window.__fsSave = function () {
+    if (!firestoreReady || !docRef) return Promise.resolve();
+    // once the current handler is done: on its way at once, or kept on the device while another save runs
+    if (!dirtyT) dirtyT = setTimeout(() => {
+      dirtyT = 0;
+      if (!firestoreReady || !docRef) return;
+      if (syncBusy) { keepOps(syncDiff(D, B, flight && flight.ops)); syncWanted = true; }
+      else requestSync();
+    }, 0);
+    return Promise.resolve();
   };
-  window.__fsRetry = () => { saveFailed = false; return save(); };
+  window.__fsRetry = () => { retryMs = 0; if (retryT) { clearTimeout(retryT); retryT = null; } requestSync(); };
 
   onAuthStateChanged(auth, async (user) => {
     if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
@@ -7395,6 +7975,8 @@ function emailToPath(email) {
       clearProfileUI();
       docRef = null;
       firestoreReady = false;
+      clearTimeout(retryT); retryT = null;
+      clearTimeout(checkT); checkT = null;
       appRoot.classList.remove('ready');
       authScreen.classList.remove('hidden');
       authStatus.textContent = '';
