@@ -2038,7 +2038,9 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .th-pace span{display:flex;flex-direction:column}
 .th-pace small{font-size:11.5px;color:rgba(255,255,255,.6)}
 .th-pace b{font-size:15px;font-weight:700;color:#fff}.th-pace b.pos{color:#8fdcae}.th-pace b.neg{color:#ff9a90}
-@media(max-width:600px){.th-pace{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px}.th-sub-val{font-size:clamp(13px,4vw,16px)!important;white-space:nowrap}}
+@media(max-width:600px){.th-pace{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px}.th-sub-val{font-size:clamp(11px,3.3vw,16px)!important;white-space:nowrap;letter-spacing:-.02em}
+  /* big totals (5–6 figures) stay on one line */
+  .th-val{font-size:clamp(34px,11.5vw,58px);white-space:nowrap}.th-sub-item{padding:8px;overflow:hidden}}
 .sc-names{display:block;font-size:11.5px;font-weight:500;color:var(--faint);letter-spacing:0;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:inherit}
 .bk-secs{display:contents}.bk-morebtn{display:none}
 @media(max-width:600px){
@@ -2072,6 +2074,24 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
   .stats3 .statbox-val{font-size:clamp(15px,4.6vw,19px);white-space:nowrap;letter-spacing:-.6px}
   .stats3 .statbox-label{font-size:11px}
 }
+.bets-more{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin:10px 0 4px;padding:12px;border:1px dashed var(--border2);border-radius:var(--r);
+  background:transparent;color:var(--accent);font:inherit;font-weight:650;font-size:13.5px;cursor:pointer}
+.bets-more span{color:var(--faint);font-weight:500;font-size:12px}
+.bets-more:hover{background:var(--adim)}
+/* cloud sync status: only on screen when something needs attention */
+.sync-bar{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top));transform:translate(-50%,-14px);z-index:600;width:max-content;max-width:min(560px,calc(100vw - 24px));
+  display:flex;align-items:center;gap:12px;padding:10px 12px 10px 14px;border-radius:12px;background:var(--surface);color:var(--text);
+  border:1px solid var(--border2);border-left:4px solid var(--yellow);box-shadow:var(--shadow-lg);font-size:13.5px;line-height:1.35;
+  opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+.sync-bar.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.sync-bar.bad{border-left-color:var(--red)}
+.sync-bar b{font-weight:650}
+.sync-bar small{display:block;color:var(--muted);font-size:12px;margin-top:1px}
+.sync-bar button{flex-shrink:0;border:none;border-radius:9px;background:var(--pitch);color:#fff;font:inherit;font-weight:650;font-size:13px;padding:8px 12px;cursor:pointer}
+.sync-dot{flex-shrink:0;width:8px;height:8px;border-radius:50%;background:var(--yellow);animation:syncPulse 1.4s ease-in-out infinite}
+.sync-bar.bad .sync-dot{background:var(--red);animation:none}
+@keyframes syncPulse{50%{opacity:.35}}
+@media(min-width:601px){.sync-bar{top:76px}}
 </style>
 </head>
 <body>
@@ -2565,6 +2585,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 
 <nav class="tabbar" id="tabbar" aria-label="Main"><button class="tab" data-tab="bets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg><span>Bets</span></button><button class="tab" data-tab="pendientes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg><span>Pending</span><i class="tab-badge" id="tabPendCount"></i></button><button class="tab tab-new active" data-tab="calc"><span class="tab-fab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span><span>New bet</span></button><button class="tab" data-tab="profit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Profit</span></button><button class="tab" data-tab="more"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></button></nav>
 <div class="toast" id="toast"><span id="toastMsg"></span><button id="toastAct"></button></div>
+<div class="sync-bar" id="syncBar" role="status" aria-live="polite"></div>
 
 <!-- ══ EDIT NORMAL/FREEBET/COMBI MODAL ══ -->
 <div id="addModal" class="modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
@@ -2749,6 +2770,52 @@ let saveVer=0; // bumped on every save: cached views (bookmaker ledger) know the
 function save(){saveVer++;return window.__fsSave ? window.__fsSave() : Promise.resolve();}
 
 let D = {bets:[],normals:[],casas:[],notes:[],notesFolders:[],categories:[],hidden:{},bkProfiles:[],poker:[],presets:[]};
+function ensureShape(){
+  ['bets','normals','casas','notes','notesFolders','categories','bkProfiles','poker','presets','tgInbox'].forEach(k=>{if(!Array.isArray(D[k]))D[k]=[];});
+  if(!D.hidden||typeof D.hidden!=='object')D.hidden={};
+}
+// ── Cloud layout ──
+// Firestore refuses any document over 1 MiB (≈2,600 surebets, under two months at 45 a day).
+// Settled bets older than ARC_KEEP_DAYS go to half-month archive documents
+// (arc-YYYY-MM-1 = days 1–15, arc-YYYY-MM-2 = 16–31); the main document keeps the rest plus
+// an index {part:{h,n}} of them. In memory D is still one object with every bet.
+const ARC_KEEP_DAYS=3;
+function arcKey(x,cut){
+  if(!x||x.status==='pending')return null;
+  const d=x.date;if(typeof d!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(d)||d>=cut)return null;
+  return 'arc-'+d.slice(0,7)+(+d.slice(8,10)<=15?'-1':'-2');
+}
+// same text for the same content whatever the key order (Firestore hands keys back sorted)
+function canonJSON(v){
+  if(Array.isArray(v))return '['+v.map(x=>x===undefined?'null':canonJSON(x)).join(',')+']';
+  if(v&&typeof v==='object')return '{'+Object.keys(v).filter(k=>v[k]!==undefined).sort().map(k=>JSON.stringify(k)+':'+canonJSON(v[k])).join(',')+'}';
+  return JSON.stringify(v)??'null';
+}
+function arcHash(s){let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193);}return (h>>>0).toString(36)+'.'+s.length.toString(36);}
+function partHash(p){return arcHash(canonJSON({bets:p.bets||[],normals:p.normals||[]}));}
+// D → {main, parts: Map part → {bets, normals, h}}; keepAll puts everything in main
+function cloudSplit(data,keepAll){
+  const main={...data};delete main.arc;
+  const parts=new Map();
+  if(keepAll)return {main,parts};
+  const cut=shiftedISO(-ARC_KEEP_DAYS);
+  main.bets=[];main.normals=[];
+  const put=(k,f,x)=>{let p=parts.get(k);if(!p){p={bets:[],normals:[]};parts.set(k,p);}p[f].push(x);};
+  (data.bets||[]).forEach(b=>{const k=arcKey(b,cut);if(k)put(k,'bets',b);else main.bets.push(b);});
+  (data.normals||[]).forEach(n=>{const k=arcKey(n,cut);if(k)put(k,'normals',n);else main.normals.push(n);});
+  parts.forEach((p,k)=>{const s=JSON.stringify(p),m=partMemo.get(k);if(m&&m.s===s)p.h=m.h;else{p.h=partHash(p);partMemo.set(k,{s,h:p.h});}});
+  return {main,parts};
+}
+const partMemo=new Map(); // part → {s: its plain JSON, h} so unchanged parts aren't re-hashed on every save
+function memoPart(k,p){partMemo.set(k,{s:JSON.stringify({bets:p.bets,normals:p.normals}),h:p.h});}
+// main document + archive parts → one D (newest first)
+function cloudJoin(main,parts){
+  const d={...main};delete d.arc;
+  const byId=(a,b)=>(+b.id||0)-(+a.id||0);
+  d.bets=[...(main.bets||[]),...parts.flatMap(p=>p.bets||[])].sort(byId);
+  d.normals=[...(main.normals||[]),...parts.flatMap(p=>p.normals||[])].sort(byId);
+  return d;
+}
 // A "void" surebet neither wins nor loses: it contributes no profit and doesn't count as money
 // at risk in any aggregate stat (ROI, wagered, monthly profit, charts, etc).
 // Manual balance adjustments count as profit/loss on the day they are made
@@ -3319,7 +3386,35 @@ function renderBetsDays(){
 function rerenderBets(){renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);}
 document.getElementById('betsDays').addEventListener('click',e=>{const c=e.target.closest('[data-bday]');if(!c)return;betsDay=c.dataset.bday;rerenderBets();});
 document.getElementById('betsDays').addEventListener('change',e=>{if(e.target.id!=='betsDayPick')return;betsDay=e.target.value||'all';rerenderBets();});
+// My bets lists only build what's on screen: a page of cards at a time (more load as you
+// scroll), and nothing at all while the list is hidden — it is rebuilt when you open it.
+const BETS_PAGE=60;
+const betsLimit={sb:BETS_PAGE,nb:BETS_PAGE},betsLimitKey={sb:'',nb:''};
+function betsListShown(sub){
+  const p=document.getElementById('page-bets'),s=document.getElementById(sub);
+  return !!p&&p.style.display!=='none'&&!!s&&s.style.display!=='none';
+}
+function betsPageOf(kind,filter,list){
+  const k=filter+'|'+betsDay;if(betsLimitKey[kind]!==k){betsLimitKey[kind]=k;betsLimit[kind]=BETS_PAGE;}
+  return list.slice(0,betsLimit[kind]);
+}
+function betsMoreHtml(kind,total,shown){
+  const rest=total-shown;if(rest<=0)return '';
+  return `<button class="bets-more" data-bets-more="${kind}">Show ${Math.min(rest,BETS_PAGE)} more<span>${shown} of ${total}</span></button>`;
+}
+let betsMoreObs=null;
+function watchBetsMore(listEl){
+  const b=listEl.querySelector('[data-bets-more]');if(!b||!('IntersectionObserver' in window))return;
+  if(!betsMoreObs)betsMoreObs=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){betsMoreObs.unobserve(en.target);betsShowMore(en.target.dataset.betsMore);}}),{rootMargin:'0px 0px 700px 0px'});
+  betsMoreObs.observe(b);
+}
+function betsShowMore(kind){
+  betsLimit[kind]+=BETS_PAGE;
+  if(kind==='sb')renderSurebets(document.getElementById('sbSearch').value);else renderNormals(document.getElementById('nbSearch').value);
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-bets-more]');if(b)betsShowMore(b.dataset.betsMore);});
 function renderSurebets(filter=''){
+  if(!betsListShown('page-surebets'))return;
   const myTw=twinInfo(D.bets);
   const bets=D.bets.filter(b=>betsDayMatch(b.date)).filter(b=>!filter||b.event.toLowerCase().includes(filter.toLowerCase())||(b.market||'').toLowerCase().includes(filter.toLowerCase())||b.legs.some(l=>l.house&&l.house.toLowerCase().includes(filter.toLowerCase())));
   const vBets=visibleBets().filter(b=>betsDayMatch(b.date));
@@ -3335,7 +3430,8 @@ function renderSurebets(filter=''){
   const visible=bets.filter(b=>!isHidden('sb:'+b.id));
   const hidden=bets.filter(b=>isHidden('sb:'+b.id));
   if(!visible.length&&!hidden.length){list.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>${betsDay==='all'?'No surebets registered yet.':'No surebets for '+betsDayLabel()+'.'}</p></div></div>`;return;}
-  list.innerHTML=visible.map(b=>{
+  const page=betsPageOf('sb',filter,visible);
+  list.innerHTML=page.map(b=>{
     const isVoid=b.status==='anulada';
     const s=b.profitPct>=0?'+':'';
     const sLabel={pending:'Pending',won:'Won',lost:'Lost',anulada:'Void'}[b.status]||b.status;
@@ -3354,7 +3450,8 @@ function renderSurebets(filter=''){
       (winnerIdx>=0&&!isVoid?`<div class="real-profit-row"><span class="real-profit-label">✓ ${esc(b.legs[winnerIdx].house)} won — real profit</span><span class="real-profit-val">+${fmt(realProfit)} €</span></div>`:'')
     : `<div style="padding:8px 15px;font-size:12px;color:var(--faint)">No leg breakdown (pre-loaded surebet)</div>`;
     return`<div class="bi"><div class="bih"><div><div class="bie">${sbTagHtml(b,myTw)}${esc(b.event)}</div>${sbSubHtml(b,myTw)}${b.notes?`<div class="bi-note">${PEND_NOTE_IC}${esc(b.notes)}</div>`:''}<div class="bid">${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}${b.categoryId?` · <span class="type-badge-kind">${esc(catName(b.categoryId))}</span>`:''}</div></div><div class="bim"><span class="pp2 ${pctCls}">${pctLabel}</span><span class="sb2 ${sCls}">${sLabel}</span><select class="ss" data-sid="${b.id}"><option value="pending" ${b.status==='pending'?'selected':''}>Pending</option><option value="won" ${b.status==='won'?'selected':''}>Won</option><option value="lost" ${b.status==='lost'?'selected':''}>Lost</option><option value="anulada" ${b.status==='anulada'?'selected':''}>Void</option></select><button class="bd2" data-edit-bid="${b.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>${hideBtnHtml('sb:'+b.id)}<button class="bd2" data-bid="${b.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div><div class="bl">${legsHtml}</div><div class="bf"><span class="bfl">Staked: ${fmt(b.totalStake||0)} € · Min. return: ${fmt(b.minReturn||0)} €</span><span class="bfr ${isVoid?'neu':(displayProfit>=0?'pos':'neg')}">${displayProfit>=0?'+':''}${fmt(displayProfit)} €</span></div></div>`;
-  }).join('')+hiddenPanelHtml('sb',hidden.map(b=>({key:'sb:'+b.id,label:b.event||'(No event)'})));
+  }).join('')+betsMoreHtml('sb',visible.length,page.length)+hiddenPanelHtml('sb',hidden.map(b=>({key:'sb:'+b.id,label:b.event||'(No event)'})));
+  watchBetsMore(list);
 }
 
 // ══════════════════════════════════════════
@@ -3367,6 +3464,7 @@ function typePill(t){
 }
 function houseTag(h){return h?`<span>${esc(h)}</span>`:'';}
 function renderNormals(filter=''){
+  if(!betsListShown('page-normales'))return;
   const items=D.normals.filter(n=>betsDayMatch(n.date)).filter(n=>!filter||n.event.toLowerCase().includes(filter.toLowerCase()));
   const vNorm=visibleNormals().filter(n=>betsDayMatch(n.date));
   renderBetsDays();
@@ -3383,7 +3481,8 @@ function renderNormals(filter=''){
   const visible=items.filter(n=>!isHidden('nm:'+n.id));
   const hidden=items.filter(n=>isHidden('nm:'+n.id));
   if(!visible.length&&!hidden.length){list.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>${betsDay==='all'?'No bets registered yet.':'No bets for '+betsDayLabel()+'.'}</p></div></div>`;return;}
-  list.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">`+visible.map(n=>{
+  const page=betsPageOf('nb',filter,visible);
+  list.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">`+page.map(n=>{
     const hasStatus=!!n.status;
     const isPending=n.status==='pending';
     const sLabel={pending:'Pending',won:'Won',lost:'Lost',anulada:'Void'}[n.status]||'';
@@ -3400,7 +3499,8 @@ function renderNormals(filter=''){
     }
     const statusSelect=hasStatus?`<select class="ns" data-nid="${n.id}"><option value="pending" ${n.status==='pending'?'selected':''}>Pending</option><option value="won" ${n.status==='won'?'selected':''}>Won</option><option value="lost" ${n.status==='lost'?'selected':''}>Lost</option><option value="anulada" ${n.status==='anulada'?'selected':''}>Void</option></select>`:'';
     return`<div class="ni2"><div class="ni2-left"><div class="ni2-ev">${esc(n.event)}${n.house?` <span style="font-weight:500;color:var(--faint);font-size:12px">· ${esc(n.house)}</span>`:''}</div><div class="ni2-meta"><span>${fmtWhen(n.date,n.time)}</span>${typePill(n.type)}${hasStatus?`<span class="sb2 ${sCls}">${sLabel}</span>`:''}${n.categoryId?`<span class="type-badge-kind">${esc(catName(n.categoryId))}</span>`:''}</div>${oddStakeLine}${n.notes?`<div class="ni2-note">${esc(n.notes)}</div>`:''}</div><div class="ni2-right">${statusSelect}${pnlHtml}</div><div style="display:flex;gap:4px;margin-top:2px"><button class="bd2" data-edit-nid="${n.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>${hideBtnHtml('nm:'+n.id)}<button class="bd2" data-nid="${n.id}" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div>`;
-  }).join('')+`</div>`+hiddenPanelHtml('nb',hidden.map(n=>({key:'nm:'+n.id,label:n.event||'(No event)'})));
+  }).join('')+`</div>`+betsMoreHtml('nb',visible.length,page.length)+hiddenPanelHtml('nb',hidden.map(n=>({key:'nm:'+n.id,label:n.event||'(No event)'})));
+  watchBetsMore(list);
 }
 
 // ══════════════════════════════════════════
@@ -3587,6 +3687,7 @@ function paceHtml(all){
   return `<div class="th-pace">${it('Today',today)}${it('Last 7 days',week)}${it('This month',month)}${it('Per day this month',avg)}</div>`;
 }
 function renderProfit(){
+  const pg=document.getElementById('page-profit');if(pg&&pg.style.display==='none')return; // rebuilt when you open it
   renderBkStats();
   // Combine all entries with dates
   const all=[];
@@ -4545,6 +4646,55 @@ function pendResolveAll(){
   list.forEach(({kind,item})=>pendResolveItem(kind,item));
   save();updateBadges();refreshAfterPend();
 }
+// ── One result, every twin: marking the winning leg of a surebet also marks the other pending
+// surebets of the same match and market — the leg with the same outcome, or (2 legs) the one
+// opposite a loser; for totals a different line too when the result decides it
+// (Over 8.5 won → Over 7.5 won; Under 8.5 won → Under 9.5 won).
+function lkTotal(res){
+  const m=arNorm(res).match(/^(mas de|mas|over|o|\+|menos de|menos|under|u|-)\s*(\d+(?:\.\d+)?)$/);if(!m)return null;
+  const line=+m[2];if(Math.abs(line*4%2)===1)return null; // quarter lines settle half
+  return {over:/^(mas|over|o|\+)/.test(m[1]),line};
+}
+function linkedMarks(src){ // → [{b, leg}] for the other pending surebets this mark decides
+  const w=src.legs&&src.legs[src.pendMark];if(!w)return [];
+  const ev=matchName(src.event);if(!ev)return [];
+  const mk=arNorm(src.market),win=arNorm(w.result);if(!win)return [];
+  const lose=src.legs.filter((l,i)=>i!==src.pendMark).map(l=>arNorm(l.result));
+  const wt=lkTotal(w.result);
+  // without a market name only a selection that says what it is counts ("Gana Alcaraz", not "Más de 2.5")
+  if(!mk&&(wt||win.split(' ').length<2))return [];
+  const day=d=>Date.parse(d+'T00:00:00')/864e5;
+  const out=[];
+  D.bets.forEach(b=>{
+    if(b===src||b.status!=='pending'||b.pendMark!=null||!(b.legs||[]).length)return;
+    if(matchName(b.event)!==ev||arNorm(b.market)!==mk)return;
+    if(src.date&&b.date&&Math.abs(day(b.date)-day(src.date))>MATCH_DAYS)return;
+    const rs=b.legs.map(l=>arNorm(l.result));
+    let leg=-1;
+    const same=rs.map((r,i)=>r===win?i:-1).filter(i=>i>=0);
+    if(same.length===1)leg=same[0];
+    else if(!same.length&&rs.length===2){const lo=rs.map((r,i)=>lose.includes(r)?i:-1).filter(i=>i>=0);if(lo.length===1)leg=1-lo[0];}
+    if(leg<0&&wt&&mk&&rs.length===2){
+      const t=b.legs.map(l=>lkTotal(l.result));
+      if(t[0]&&t[1]&&t[0].line===t[1].line&&t[0].over!==t[1].over){
+        const L=t[0].line;
+        const overWins=wt.over?(L<=wt.line?true:null):(L>=wt.line?false:null);
+        if(overWins!==null)leg=t.findIndex(x=>x.over===overWins);
+      }
+    }
+    if(leg>=0)out.push({b,leg});
+  });
+  return out;
+}
+function applyLinkedMarks(src){
+  const out=linkedMarks(src);
+  out.forEach(({b,leg})=>{b.pendMark=leg;b.autoRes={leg,via:src.id,at:Date.now()};});
+  return out;
+}
+// marks this bet handed to others (and nobody touched since) are taken back with it
+function dropLinkedMarks(src){
+  D.bets.forEach(b=>{const a=b.autoRes;if(a&&a.via===src.id&&b.status==='pending'&&b.pendMark===a.leg){delete b.pendMark;delete b.autoRes;}});
+}
 function pendNoteTarget(key){const [k,i]=key.split(':');return (k==='nm'?D.normals:D.bets).find(x=>x.id===+i);}
 document.getElementById('pendList').addEventListener('change',e=>{
   const inp=e.target.closest('[data-note]');if(!inp)return;
@@ -4579,9 +4729,14 @@ document.getElementById('pendList').addEventListener('click',e=>{
   if(winLegBtn){
     const bid=+winLegBtn.dataset.pwinbid,li=+winLegBtn.dataset.pwinleg;
     const b=D.bets.find(x=>x.id===bid);if(!b||!b.legs||!b.legs[li])return;
+    dropLinkedMarks(b);
     if(b.pendMark===li)delete b.pendMark;else b.pendMark=li;
     delete b.autoRes;
+    const linked=b.pendMark!=null?applyLinkedMarks(b):[];
     save();renderPendientes();
+    if(linked.length)toast(`${linked.length} more of this match marked too`,'Undo',()=>{
+      linked.forEach(({b:x,leg})=>{if(x.pendMark===leg&&x.autoRes&&x.autoRes.via===b.id){delete x.pendMark;delete x.autoRes;}});
+      save();renderPendientes();});
     return;
   }
   const btn=e.target.closest('[data-pid]');if(!btn)return;
@@ -5718,7 +5873,7 @@ function applyLastBet(){
     document.getElementById('q-event').value=b.event||'';document.getElementById('q-market').value=b.market||'';
     document.getElementById('q-date').value=b.date||todayISO();document.getElementById('q-hour').value=hourOnly(b.time);
     fillCategorySelect(document.getElementById('q-cat'),b.categoryId??null);
-    setTimeout(()=>{const f=document.querySelector('#outcomesList .oi');if(f)f.focus();},50);
+    {const f=document.querySelector('#outcomesList .oi');if(f)f.focus();} // straight away, so the phone keyboard opens
   }else{
     sbPrefill=null;
     setBetType(b.type||'Normal');
@@ -5728,7 +5883,7 @@ function applyLastBet(){
     fillCategorySelect(document.getElementById('nf-category'),b.categoryId??null);
     if(b.type==='Combi'&&Array.isArray(b.selections)){nfSels=b.selections.map(x=>({name:x.name||'',odd:''}));renderNfSels();}
     renderNfResult();
-    setTimeout(()=>{const f=document.querySelector(b.type==='Combi'?'#nf-sels [data-selo]':'#nf-odd');if(f)f.focus();},50);
+    {const f=document.querySelector(b.type==='Combi'?'#nf-sels [data-selo]':'#nf-odd');if(f)f.focus();}
   }
   toast('Copied from your last bet — just enter the odds');
 }
@@ -5771,7 +5926,7 @@ function quickRegister(){
   const mw=bet.time?syncMatchWhen(bet):[];
   save();updateBadges();render();renderRepeatSel();fillQuickDefaults();
   const queued=tgNext();
-  if(!queued)setTimeout(()=>{const f=document.querySelector('#outcomesList .oi');if(f)f.focus();},30);
+  if(!queued){const f=document.querySelector('#outcomesList .oi');if(f)f.focus();}
   const n=D.bets.filter(b=>b.status==='pending'&&evKey(b)===evKey(bet)).length;
   toast(`Saved${n>1?` · #${n} on this match`:''} · ${res.profit>=0?'+':''}${fmt(res.profit)} €${matchWhenMsg(mw)}`,'Undo',()=>{
     D.bets=D.bets.filter(b=>b.id!==bet.id);undoMatchWhen(mw);
@@ -6100,6 +6255,7 @@ async function pendAutoResults(manual){
 function arBtnState(){const b=document.getElementById('arBtn');if(b){b.classList.toggle('busy',arBusy);b.disabled=arBusy;}}
 function arLine(b,sub){
   const a=b.autoRes;if(!a||a.leg!==b.pendMark)return '';
+  if(a.via)return `<span class="ar-tag${sub?' ar-sub':''}" title="Marked from your other bet on this match and market — check it before you Resolve">Auto · same match</span>`;
   return `<span class="ar-tag${sub?' ar-sub':''}" title="Marked automatically from the final score — check it before you Resolve">Result ${esc(a.score)}</span>`;
 }
 setInterval(()=>{if(document.visibilityState==='visible'&&Array.isArray(D.bets))pendAutoResults(false);},AR_EVERY_MIN*60000);
@@ -6175,8 +6331,9 @@ function renderTgCard(){
 // Everything comes from the message; the only thing left to type is the stake.
 function focusStake(){
   const el=document.getElementById('totalInv');if(!el)return;
+  // focus inside the tap itself: iPhone only opens the keyboard for a focus that comes straight from a tap
+  try{el.focus({preventScroll:true});el.select();}catch(e){}
   el.scrollIntoView({behavior:'smooth',block:'center'});
-  setTimeout(()=>{el.focus();el.select();},250);
   const k=window.innerWidth<600?'Register':'Enter';
   toast(activePreset()?`Saved stakes applied — press ${k}`:`Type your stake and press ${k}`);
 }
@@ -6687,6 +6844,32 @@ function renderPerfil(){
 // ══════════════════════════════════════════
 let newBetType='Surebet', newBetCat=null, nfSels=[];
 let toastTimer=null;
+// Cloud sync status: hidden while saves go through; shows up when they wait for a
+// connection, fail, or are paused because part of the data couldn't be loaded.
+let syncSlowT=null,syncState='ok';
+const SYNC_WHY={'permission-denied':'access denied — sign in again','unauthenticated':'you are signed out','invalid-argument':'the data is too big for one save',
+  'resource-exhausted':'the daily cloud limit was reached','unavailable':'no connection','deadline-exceeded':'the connection is too slow'};
+function syncUI(state,code){
+  const el=document.getElementById('syncBar');if(!el)return;
+  // 'slow' = saves are waiting and none has got through for 6 s
+  if(state==='saving'){if(!syncSlowT&&(syncState==='ok'||syncState==='slow'))syncSlowT=setTimeout(()=>{syncSlowT=null;syncUI('slow');},6000);return;}
+  clearTimeout(syncSlowT);syncSlowT=null;
+  if(state==='progress'){if(syncState==='slow'||syncState==='failed')syncUI('ok');syncUI('saving');return;}
+  if(syncState==='blocked'&&state!=='blocked')return;
+  syncState=state;
+  const why=code?(SYNC_WHY[code]||code):'';
+  if(state==='ok'){el.classList.remove('show');return;}
+  el.classList.toggle('bad',state!=='slow');
+  el.innerHTML=state==='slow'?`<i class="sync-dot"></i><span><b>Waiting for connection</b><small>Your changes are kept on this device and upload by themselves.</small></span>`
+    :state==='failed'?`<i class="sync-dot"></i><span><b>Not saved to the cloud</b><small>${esc(why)} · your last changes are only on this device</small></span><button data-sync="retry">Try again</button>`
+    :`<i class="sync-dot"></i><span><b>Your older bets didn't load</b><small>${why?esc(why)+' · ':''}saving is paused so nothing gets overwritten</small></span><button data-sync="reload">Reload</button>`;
+  el.classList.add('show');
+}
+document.getElementById('syncBar').addEventListener('click',e=>{
+  const b=e.target.closest('[data-sync]');if(!b)return;
+  if(b.dataset.sync==='reload')location.reload();
+  else if(window.__fsRetry){syncState='ok';document.getElementById('syncBar').classList.remove('show');window.__fsRetry();}
+});
 function toast(msg,actLabel,actFn){
   const t=document.getElementById('toast');
   document.getElementById('toastMsg').textContent=msg;
@@ -6968,7 +7151,6 @@ const firebaseConfig = {
 
 let docRef = null;
 let unsubscribeSnapshot = null;
-let suppressNextSnapshot = false;
 let firestoreReady = false;
 
 const authScreen = document.getElementById('authScreen');
@@ -6995,12 +7177,21 @@ function emailToPath(email) {
   const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js');
   const { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } =
     await import('https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js');
-  const { getFirestore, doc, getDoc, setDoc, onSnapshot } =
+  const { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+    doc, getDoc, getDocFromCache, setDoc, onSnapshot, writeBatch } =
     await import('https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js');
 
   const fbApp = initializeApp(firebaseConfig);
   const auth = getAuth(fbApp);
-  const dbFs = getFirestore(fbApp);
+  // Changes are kept on the device until the cloud has them, so nothing is lost
+  // if the app is closed without connection (falls back to memory if the browser can't).
+  let dbFs;
+  try {
+    dbFs = initializeFirestore(fbApp, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+  } catch (e) {
+    console.warn('[Firestore] offline cache unavailable, using memory', e);
+    dbFs = getFirestore(fbApp);
+  }
   const provider = new GoogleAuthProvider();
 
   // Sustituye el stub inicial por la implementación real ahora que Firebase está listo.
@@ -7025,23 +7216,48 @@ function emailToPath(email) {
 
   googleLoginBtn.addEventListener('click', () => window.signIn());
 
+  // ── Sync state (see "Cloud layout" above) ──
+  let userPath = null;                 // users/{email}/app
+  const partRef = k => doc(dbFs, 'users', userPath, 'app', k);
+  let arcConfirmed = new Map();        // archive part → hash the cloud is known to hold
+  let arcOff = false;                  // archive parts can't be written → everything goes in the main document
+  let loadBroken = false;              // an archive part couldn't be read → saving stays off (it would drop those bets)
+  let inflight = 0, saveFailed = false, snapSeq = 0, lastMainH = '';
+
+  // the archive parts the index lists → [{k, h, bets, normals}]; a part this device already holds
+  // with the same hash isn't downloaded again, nor one in the offline cache
+  async function loadParts(idx, mine) {
+    return Promise.all(Object.keys(idx || {}).map(async k => {
+      const want = idx[k] && idx[k].h;
+      const m = mine && mine.get(k);
+      if (m && m.h === want) return { k, h: m.h, bets: m.bets, normals: m.normals };
+      // each part carries its own hash (h), so a cached copy is checked without re-hashing it
+      const pack = d => { const x = { k, bets: (d && d.bets) || [], normals: (d && d.normals) || [], h: (d && d.h) || '' }; if (!x.h) x.h = partHash(x); memoPart(k, x); return x; };
+      try { const c = await getDocFromCache(partRef(k)); if (c.exists() && c.data().h === want) return pack(c.data()); } catch (e) {}
+      const s = await getDoc(partRef(k));
+      if (!s.exists()) console.warn('[Firestore] archive part listed but missing:', k);
+      return pack(s.exists() ? s.data() : null);
+    }));
+  }
+  function useCloud(raw, parts) {
+    D = cloudJoin(raw, parts); ensureShape();
+    arcConfirmed = new Map(parts.map(p => [p.k, p.h]));
+  }
+
   async function bootApp() {
     const LOCAL_STORE_KEY = 'sb_v3';
+    arcConfirmed = new Map(); arcOff = false; loadBroken = false; saveFailed = false; lastMainH = '';
     const snap = await getDoc(docRef);
-
+    let fresh = false;
     if (snap.exists()) {
-      D = snap.data();
-      if (!Array.isArray(D.bets)) D.bets = [];
-      if (!Array.isArray(D.normals)) D.normals = [];
-      if (!Array.isArray(D.casas)) D.casas = [];
-      if (!Array.isArray(D.notes)) D.notes = [];
-      if (!Array.isArray(D.notesFolders)) D.notesFolders = [];
-      if (!Array.isArray(D.categories)) D.categories = [];
-      if (!D.hidden || typeof D.hidden !== 'object') D.hidden = {};
-      if (!Array.isArray(D.bkProfiles)) D.bkProfiles = [];
-      if (!Array.isArray(D.poker)) D.poker = [];
-      if (!Array.isArray(D.presets)) D.presets = [];
-      if (!Array.isArray(D.tgInbox)) D.tgInbox = [];
+      const raw = snap.data();
+      try { useCloud(raw, await loadParts(raw.arc)); }
+      catch (e) {
+        console.error('[Firestore] could not read the archive', e);
+        loadBroken = true; D = cloudJoin(raw, []); ensureShape();
+        syncUI('blocked', e && e.code);
+      }
+      lastMainH = arcHash(canonJSON(raw));
     } else {
       let migrated = null;
       try {
@@ -7049,39 +7265,35 @@ function emailToPath(email) {
         if (raw) migrated = JSON.parse(raw);
       } catch (e) {}
       D = migrated || { bets: [], normals: [], casas: [], notes: [], notesFolders: [], categories: [], hidden: {}, bkProfiles: [], poker: [], presets: [] };
-      if (!Array.isArray(D.bets)) D.bets = [];
-      if (!Array.isArray(D.normals)) D.normals = [];
-      if (!Array.isArray(D.casas)) D.casas = [];
-      if (!Array.isArray(D.notes)) D.notes = [];
-      if (!Array.isArray(D.notesFolders)) D.notesFolders = [];
-      if (!Array.isArray(D.categories)) D.categories = [];
-      if (!D.hidden || typeof D.hidden !== 'object') D.hidden = {};
-      if (!Array.isArray(D.bkProfiles)) D.bkProfiles = [];
-      if (!Array.isArray(D.poker)) D.poker = [];
-      if (!Array.isArray(D.presets)) D.presets = [];
-      if (!Array.isArray(D.tgInbox)) D.tgInbox = [];
-      await setDoc(docRef, D);
+      ensureShape();
+      fresh = true;
     }
 
     try { localStorage.removeItem(LOCAL_STORE_KEY); } catch (e) {}
 
     firestoreReady = true;
+    if (fresh) await window.__fsSave();
+    else if (!loadBroken) {
+      // move settled bets that are now a few days old into the archive straight away
+      const { parts } = cloudSplit(D, false);
+      if ([...parts].some(([k, p]) => arcConfirmed.get(k) !== p.h) || [...arcConfirmed.keys()].some(k => !parts.has(k))) save();
+    }
 
-    unsubscribeSnapshot = onSnapshot(docRef, (docSnap) => {
-      if (suppressNextSnapshot) { suppressNextSnapshot = false; return; }
-      if (!docSnap.exists()) return;
-      D = docSnap.data();
-      if (!Array.isArray(D.bets)) D.bets = [];
-      if (!Array.isArray(D.normals)) D.normals = [];
-      if (!Array.isArray(D.casas)) D.casas = [];
-      if (!Array.isArray(D.notes)) D.notes = [];
-      if (!Array.isArray(D.notesFolders)) D.notesFolders = [];
-      if (!Array.isArray(D.categories)) D.categories = [];
-      if (!D.hidden || typeof D.hidden !== 'object') D.hidden = {};
-      if (!Array.isArray(D.bkProfiles)) D.bkProfiles = [];
-      if (!Array.isArray(D.poker)) D.poker = [];
-      if (!Array.isArray(D.presets)) D.presets = [];
-      if (!Array.isArray(D.tgInbox)) D.tgInbox = [];
+    // Another device (or tab) saved: take its data. Our own writes echo back with pending
+    // writes or with the content we just wrote, and are skipped; while one of our saves is
+    // on its way or has failed, what's on screen is newer than the cloud and wins.
+    unsubscribeSnapshot = onSnapshot(docRef, { includeMetadataChanges: true }, async (docSnap) => {
+      if (!docSnap.exists() || docSnap.metadata.hasPendingWrites) return;
+      if (inflight > 0 || saveFailed || loadBroken) return;
+      const raw = docSnap.data();
+      const h = arcHash(canonJSON(raw));
+      if (h === lastMainH) return;
+      const seq = ++snapSeq, ver = saveVer;
+      let parts;
+      try { parts = await loadParts(raw.arc, cloudSplit(D, false).parts); }
+      catch (e) { console.error('[Firestore] could not read the archive', e); return; }
+      if (seq !== snapSeq || ver !== saveVer || inflight > 0 || saveFailed) return; // something newer happened meanwhile
+      useCloud(raw, parts); lastMainH = h;
       refreshCurrentView();
     });
 
@@ -7104,15 +7316,52 @@ function emailToPath(email) {
     else if (activePage === 'presets') renderPresets();
   }
 
-  window.__fsSave = async function () {
-    if (!firestoreReady || !docRef) return;
-    suppressNextSnapshot = true;
-    try {
-      await setDoc(docRef, D);
-    } catch (e) {
-      console.error('Error guardando en Firestore', e);
+  // One write per save: the main document, plus — in the same all-or-nothing batch — every
+  // archive part that changed or that the cloud hasn't confirmed yet, so the main document
+  // never lists a part the cloud doesn't have.
+  window.__fsSave = function () {
+    if (!firestoreReady || !docRef) return Promise.resolve();
+    if (loadBroken) { syncUI('blocked'); return Promise.resolve(); }
+    const { main, parts } = cloudSplit(D, arcOff);
+    const idx = {};
+    parts.forEach((p, k) => { idx[k] = { h: p.h, n: p.bets.length + p.normals.length }; });
+    main.arc = idx;
+    const changed = [...parts].filter(([k, p]) => arcConfirmed.get(k) !== p.h);
+    const emptied = [...arcConfirmed.keys()].filter(k => !parts.has(k));
+    lastMainH = arcHash(canonJSON(main));
+    let w;
+    if (!changed.length && !emptied.length) w = setDoc(docRef, main);
+    else {
+      const b = writeBatch(dbFs);
+      changed.forEach(([k, p]) => b.set(partRef(k), { bets: p.bets, normals: p.normals, h: p.h }));
+      emptied.forEach(k => b.set(partRef(k), { bets: [], normals: [], h: '' }));
+      b.set(docRef, main);
+      w = b.commit();
     }
+    const withParts = changed.length + emptied.length > 0;
+    inflight++; syncUI('saving');
+    return w.then(() => {
+      changed.forEach(([k, p]) => arcConfirmed.set(k, p.h));
+      emptied.forEach(k => { if (!parts.has(k)) arcConfirmed.delete(k); });
+      saveFailed = false;
+    }).catch(e => {
+      const code = (e && e.code) || '';
+      if (withParts && code === 'permission-denied') {
+        if (arcOff) return; // already switched: a save without archive parts is on its way
+        // the database rules only allow the main document: keep everything there, as before
+        console.warn('[Firestore] archive documents not allowed by the rules — keeping everything in the main document');
+        arcOff = true; arcConfirmed = new Map();
+        return window.__fsSave();
+      }
+      console.error('Error guardando en Firestore', e);
+      saveFailed = true;
+      syncUI('failed', code);
+    }).finally(() => {
+      inflight--;
+      if (!saveFailed) syncUI(inflight ? 'progress' : 'ok');
+    });
   };
+  window.__fsRetry = () => { saveFailed = false; return save(); };
 
   onAuthStateChanged(auth, async (user) => {
     if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
@@ -7126,9 +7375,20 @@ function emailToPath(email) {
         console.warn('[Firestore] El usuario no tiene email, usando UID como respaldo:', user.uid);
         emailId = user.uid;
       }
+      userPath = emailId;
       docRef = doc(dbFs, 'users', emailId, 'app', 'data');
       authStatus.textContent = 'Sincronizando datos…';
-      await bootApp();
+      for (let tries = 1; ; tries++) {
+        try { await bootApp(); break; }
+        catch (e) {
+          console.error('[Firestore] could not load your data', e);
+          if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+          firestoreReady = false;
+          if (auth.currentUser !== user) return;
+          authStatus.textContent = `Can't reach your data (${(e && e.code) || 'no connection'}). Trying again…`;
+          await new Promise(r => setTimeout(r, Math.min(30000, 2000 * tries)));
+        }
+      }
       authScreen.classList.add('hidden');
       appRoot.classList.add('ready');
     } else {
