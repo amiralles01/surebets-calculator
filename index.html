@@ -4712,7 +4712,7 @@ function renderPendTools(allVisible){
     <div class="seg pend-sort"><button class="seg-b${pendSort==='day'?' active':''}" data-psort="day"><span class="ps-by">By </span>day</button><button class="seg-b${pendSort==='house'?' active':''}" data-psort="house"><span class="ps-by">By </span>bookmaker</button></div>
     <div class="seg pend-view" role="group" aria-label="View"><button class="seg-b${pendView==='compact'?' active':''}" data-pview="compact" title="Compact list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg><span>Compact</span></button><button class="seg-b${pendView==='full'?' active':''}" data-pview="full" title="Detailed cards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="7" rx="2"/><rect x="3.5" y="14" width="17" height="6" rx="2"/></svg><span>Detailed</span></button></div>
     <button class="promo-btn${promoPanelOpen?' on':''}${live?' live':''}" data-promo-open><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l-6 6v3h9l3-3"/><path d="M22 12l-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>Promos${live?` <span class="pd-n">${live}</span>`:''}</button>
-    <button class="promo-btn ar-btn${arBusy?' busy':''}" id="arBtn" data-ar-check title="Look up final scores and mark the winning leg of finished surebets (winner, totals, handicaps)"${arBusy?' disabled':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>Check results</button>`;
+    <button class="promo-btn ar-btn${arBusy?' busy':''}" id="arBtn" data-ar-check title="Look up the scores and mark the winning leg as soon as it's decided (winner, totals, handicaps, 1st set…)"${arBusy?' disabled':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>Check results</button>`;
 }
 document.getElementById('pendTools').addEventListener('click',e=>{
   const b=e.target.closest('[data-psort]');if(b){pendSort=b.dataset.psort;renderPendientes();return;}
@@ -5195,6 +5195,8 @@ document.getElementById('pendList').addEventListener('click',e=>{
     const bid=+winLegBtn.dataset.pwinbid,li=+winLegBtn.dataset.pwinleg;
     const b=D.bets.find(x=>x.id===bid);if(!b||!b.legs||!b.legs[li])return;
     dropLinkedMarks(b);
+    // you changed or took back what the scores marked: the automatic check leaves this one to you
+    if(b.autoRes&&!b.autoRes.via&&b.autoRes.leg===b.pendMark)b.arNo=1;
     if(b.pendMark===li)delete b.pendMark;else b.pendMark=li;
     delete b.autoRes;
     const linked=b.pendMark!=null?applyLinkedMarks(b):[];
@@ -6541,22 +6543,27 @@ document.getElementById('qPaste').addEventListener('input',e=>{
 
 
 // ══════════════════════════════════════════
-//  AUTO RESULTS — once a match is over, mark which leg won from ESPN's free public scores
-//  (main markets only: winner / 1X2 / double chance, totals, handicaps, both teams to score).
+//  AUTO RESULTS — mark which leg won from ESPN's free public scores as soon as it's decided:
+//  when the match ends, when a set ends ("1er Set - Ganador / Total de Juegos / Hándicap"), or the
+//  moment a "Más de" line is passed while it's still being played (so its "Menos de" lost).
+//  Main markets only: winner / 1X2 / double chance / draw no bet, totals, handicaps, both teams to score.
 //  It only MARKS the leg; "Resolve" still settles it.
 // ══════════════════════════════════════════
 const AR_BASE='https://site.api.espn.com/apis/site/v2/sports/';
-const AR_FEEDS=[['tennis','tennis/atp'],['tennis','tennis/wta'],['basket','basketball/nba'],['soccer','soccer/all'],
-  ...['esp.1','esp.2','esp.copa_del_rey','eng.1','eng.2','eng.fa','eng.league_cup','ita.1','ger.1','fra.1','por.1','ned.1','bel.1','tur.1','sco.1',
-  'uefa.champions','uefa.europa','uefa.europa.conf','usa.1','mex.1','arg.1','bra.1','fifa.world','uefa.nations'].map(l=>['soccer','soccer/'+l])];
+const AR_FEEDS=[['tennis','tennis/atp'],['tennis','tennis/wta'],['basket','basketball/nba']];
+// football one league at a time: ESPN's "all" scoreboard keeps every match as scheduled, without its result
+const AR_SOCCER=['esp.1','esp.2','esp.copa_del_rey','eng.1','eng.2','eng.fa','eng.league_cup','ita.1','ita.2','ger.1','ger.2','fra.1','fra.2','por.1','ned.1','bel.1','tur.1','sco.1','gre.1','aut.1','sui.1','den.1','ksa.1',
+  'uefa.champions','uefa.europa','uefa.europa.conf','uefa.nations','fifa.world','fifa.worldq.uefa','conmebol.libertadores','conmebol.sudamericana','usa.1','mex.1','arg.1','bra.1'].map(l=>['soccer','soccer/'+l]);
 const AR_MAX_DAYS=10;      // older pending bets aren't looked up
-const AR_EVERY_MIN=10;     // automatic check while the app is open
+const AR_EVERY_MIN=5;      // automatic check while the app is open
+const AR_RETRY_MIN=30;     // a match ESPN doesn't list is looked up again after this, then twice as long each time
 const arCache=new Map();   // url → {t, events}
 let arBusy=false,arLast=0;
-const arTried=new Map(); // bet id → when it was last looked up without a result (auto checks wait AR_RETRY_MIN)
-const AR_RETRY_MIN=30;
+const arTried=new Map();   // bet id → {t, wait}: automatic checks leave it alone for `wait` minutes
+const arWhere=new Map();   // bet id → {f, d}: the feed and day its match turned up in, so later checks only ask that one
 const arNorm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9.+\- ]+/g,' ').replace(/\s+/g,' ').trim();
 const AR_STOP=new Set('fc cf cd ud sd rc ac sc afc sv fk sk club de del la el los las the and vs real'.split(' '));
+const AR_VS=/\s+(?:vs\.?|v\.?|-|–|—|x|@)\s+/i;
 const arToks=s=>arNorm(s).replace(/[.+\-]/g,' ').split(' ').filter(t=>t.length>=3&&!AR_STOP.has(t)&&!/^\d+$/.test(t));
 function arTokMatch(a,b){return a===b||(a.length>=4&&b.length>=4&&(a.startsWith(b)||b.startsWith(a)));}
 // how well a piece of text ("Mensik", "Atlético Madrid") names a competitor (0 = not at all)
@@ -6564,36 +6571,51 @@ function arNameScore(txt,comp){
   const t=arToks(txt);if(!t.length)return 0;
   return t.filter(x=>comp.toks.some(y=>arTokMatch(x,y))).length/t.length;
 }
+// ESPN files a match under its US Eastern day
+function arDayKey(t){
+  try{return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(t)).replace(/\D/g,'');}
+  catch(e){return localISO(new Date(t)).replace(/-/g,'');}
+}
 async function arFetch(path,ymd){
   const url=`${AR_BASE}${path}/scoreboard?dates=${ymd}&limit=500`;
-  const c=arCache.get(url);if(c&&Date.now()-c.t<AR_EVERY_MIN*60000)return c.events;
-  const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),12000);
+  // finished days don't change; today's are asked again on every check, past ESPN's cache
+  const old=ymd<arDayKey(Date.now()-36*3600000);
+  const c=arCache.get(url);if(c&&Date.now()-c.t<(old||!c.events.length?3600000:AR_EVERY_MIN*60000-20000))return c.events;
+  const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),15000);
   try{
-    const r=await fetch(url,{signal:ctl.signal});if(!r.ok)throw new Error(r.status);
+    const r=await fetch(old?url:url+'&_='+Math.floor(Date.now()/60000),{signal:ctl.signal});if(!r.ok)throw new Error(r.status);
     const events=await r.json().then(j=>j.events||[]);
     arCache.set(url,{t:Date.now(),events});return events;
   }catch(e){return null;}finally{clearTimeout(tm);}
 }
-// ESPN events → flat list of finished matches {sport, date, comps:[{toks,score,games,sets,winner}], status}
-function arMatches(sport,events){
+// a tennis set is over at 6-4, 7-5, 7-6… — not while it's being played, and not when someone retires at 5-2
+function arSetDone(a,b){const hi=Math.max(a,b),lo=Math.min(a,b);return hi>=6&&(hi-lo>=2||hi===7&&lo===6);}
+// ESPN events → flat list of matches {sport, id, date, comps:[{toks,score,ls,games,sets,winner}], done, live, bad, et}
+function arMatches(sport,events,feed,day){
   const out=[];
   const one=(cp,ev)=>{
-    const st=(cp.status||ev.status||{}).type||{};
+    const st=cp.status||ev.status||{},ty=st.type||{};
     const cs=(cp.competitors||[]);if(cs.length!==2)return;
     const comps=cs.map(c=>{
       const who=c.athlete||c.team||(c.roster&&c.roster.athletes&&c.roster.athletes[0])||{};
       const names=[who.displayName,who.shortDisplayName,who.name,who.location,who.fullName,who.shortName].filter(Boolean);
       const ls=(c.linescores||[]).map(x=>+(x.value!=null?x.value:x.displayValue)).filter(x=>!isNaN(x));
       const sc=typeof c.score==='object'&&c.score?c.score.value:c.score;
-      return {name:names[0]||'',toks:[...new Set(names.flatMap(arToks))],score:sc!=null&&sc!==''?+sc:NaN,ls,winner:c.winner===true,home:c.homeAway==='home'};
+      return {name:names[0]||'',toks:[...new Set(names.flatMap(arToks))],score:sc!=null&&sc!==''?+sc:NaN,ls,winner:c.winner===true};
     });
     if(sport==='tennis'){
+      // games per set (the one being played too); a set only counts as won once it's over
       const n=Math.min(comps[0].ls.length,comps[1].ls.length);
-      comps.forEach((c,i)=>{const o=comps[1-i];c.games=c.ls.slice(0,n).reduce((a,x)=>a+x,0);c.sets=c.ls.slice(0,n).filter((x,k)=>x>o.ls[k]).length;c.score=c.sets;});
+      comps.forEach(c=>{c.ls=c.ls.slice(0,n);c.games=c.ls.reduce((a,x)=>a+x,0);});
+      comps.forEach((c,i)=>{const o=comps[1-i];c.sets=c.ls.filter((x,k)=>arSetDone(x,o.ls[k])&&x>o.ls[k]).length;c.score=c.sets;});
     }
-    out.push({sport,id:cp.id||ev.id,date:Date.parse(cp.date||ev.date||''),comps,
-      done:st.completed===true||st.state==='post',
-      odd:[st.name,st.description,st.detail,st.shortDetail,cp.status&&cp.status.type&&cp.status.type.detail].join(' ')});
+    const per=+st.period||0,odd=[ty.name,ty.description,ty.detail,ty.shortDetail].join(' ');
+    out.push({sport,feed,day,id:cp.id||ev.id,date:Date.parse(cp.date||ev.date||''),comps,
+      done:ty.completed===true||ty.state==='post',live:ty.state==='in',
+      // retired, walkover, abandoned…: only what was already decided before it stopped counts
+      bad:/retir|walk|w\/o|abandon|cancel|postpon|aplaz|susp|forfeit|default/i.test(odd),
+      // football in or after extra time / penalties: the score isn't the 90 minutes bets are settled on
+      et:sport==='soccer'&&(per>2||/aet|pen|extra|shootout|overtime/i.test(odd))});
   };
   (events||[]).forEach(ev=>{
     (ev.competitions||[]).forEach(cp=>one(cp,ev));
@@ -6601,9 +6623,9 @@ function arMatches(sport,events){
   });
   return out;
 }
-// the finished match a surebet is about: both sides of "A vs B" must name its two competitors
+// the match a surebet is about: both sides of "A vs B" must name its two competitors
 function arFindMatch(b,pool){
-  const parts=String(b.event||'').split(/\s+(?:vs\.?|v\.?|-|–|—|x|@)\s+/i);if(parts.length!==2)return null;
+  const parts=String(b.event||'').split(AR_VS);if(parts.length!==2)return null;
   const end=Date.parse(b.date+'T'+(b.time||'23:00')+':00');
   let best=null;
   pool.forEach(m=>{
@@ -6616,104 +6638,195 @@ function arFindMatch(b,pool){
   });
   return best;
 }
-const AR_SKIP=/corner|tarjeta|card|booking|\btiros?\b|\bshots?\b|\baces?\b|doble falta|double fault|\bbreaks?\b|jugador|player|goleador|scorer|\banota|asisten|assist|rebote|rebound|\btriples?\b|\bparte\b|mitad|half|\b1h\b|\b2h\b|periodo|period|cuarto|quarter|inning|entrada|\bset \d|\d\s*(?:er|o|º|ª|st|nd|rd|th)?\s*set\b|primer|segund|tercer|first|second|third|exact|correct|marcador|par\/impar|impar|odd\/even|tie.?break|del equipo|team total|equipo local|equipo visitante|minuto|minute|metodo|method|clasifica|qualif|\bpasa\b|avanza|sin recibir|clean sheet|a cero|carrera|margen|margin|intervalo|race to|primero en/;
-// one leg → 'win' | 'lose' | 'push' | null (can't tell)
-function arLeg(kind,res,m,A,B,unit,market){
-  const r=arNorm(res);
-  const val=c=>unit==='games'?c.games:unit==='sets'?c.sets:c.score;
-  if(kind==='btts'){
-    const yes=/^(si|yes|s)$/.test(r),no=/^(no|n)$/.test(r);if(!yes&&!no)return null;
-    const both=A.score>0&&B.score>0;return (yes===both)?'win':'lose';
+const AR_SKIP=/corner|tarjeta|\bcards?\b|booking|\btiros?\b|\bshots?\b|\baces?\b|doble falta|double fault|\bbreaks?\b|jugador|player|goleador|scorer|\banota|asisten|assist|rebote|rebound|\btriples?\b|\bparte\b|mitad|half|\b1h\b|\b2h\b|descanso|periodo|period|\bcuartos?\b|quarter|inning|\bentradas?\b|\bprimer[oa]?s?\b|\bsegund[oa]s?\b|\btercer[oa]?s?\b|\bfirst\b|\bsecond\b|\bthird\b|exact|correct|marcador|impar|odd even|tie.?break|del equipo|team total|equipo local|equipo visitante|minuto|minute|metodo|method|clasifica|qualif|\bpasa\b|avanza|sin recibir|sin encajar|to nil|clean sheet|a cero|carrera|margen|margin|intervalo|race to|primero en|europe[oa]|european|apuesta de sets?|set betting|\bjuego \d|\bgame \d|\d-\d/;
+// "1er Set", "Set 1", "primer set", "1st set" → that set; without one the market is on the whole match
+const AR_SET=/\b([1-5])\s*(?:er|ro|do|to|o|a|st|nd|rd|th)?\s*set\b|\bset\s*([1-5])\b|\b(primer|first|segundo|second|tercer|third|cuarto|fourth|quinto|fifth)\s+set\b/;
+const AR_SET_N={primer:1,first:1,segundo:2,second:2,tercer:3,third:3,cuarto:4,fourth:4,quinto:5,fifth:5};
+// what one leg is on, from the market and its selection ("1er Set - Total de Juegos" · "Más de 9.5");
+// null = a market this doesn't read (props, halves and quarters, exact scores…)
+function arLegSpec(b,l){
+  const parts=[b.market,l.result].filter(Boolean).join(' - ').split(/\s+[-–]\s+/);
+  const sel=arNorm(parts.pop()),mk0=arNorm(parts.join(' '));
+  const sm=mk0.match(AR_SET);
+  const per=sm?(+(sm[1]||sm[2])||AR_SET_N[sm[3]]):0;
+  const mk=sm?mk0.replace(AR_SET,' ').replace(/\s+/g,' ').trim():mk0;
+  const all=(mk+' '+sel).trim();
+  if(!sel||AR_SKIP.test(all)||/\bset\b/.test(all))return null; // "Ganador del set" without saying which one
+  // "Total de Goles - Arsenal", "Total de Juegos - Fils": one side's own total, not the match's
+  const ev=arToks(String(b.event||'').split(AR_VS).join(' '));
+  if(arToks(mk).some(x=>ev.some(y=>arTokMatch(x,y))))return null;
+  const s={per,mk,sel,unit:/\bjuegos\b|\bgames\b/.test(all)?'games':/\bsets\b/.test(all)?'sets':/\bgol(es)?\b|\bgoals?\b|\bpuntos\b|\bpoints\b/.test(all)?'score':''};
+  if(/ambos|both teams|btts/.test(mk)){
+    if(/^(si|yes|s)$/.test(sel))s.yes=true;else if(!/^(no|n)$/.test(sel))return null;
+    s.kind='btts';return s;
   }
-  if(kind==='total'){
-    const t=r.match(/^(mas de|mas|over|o|\+|menos de|menos|under|u|-)\s*(\d+(?:\.\d+)?)/);if(!t)return null;
-    const line=+t[2];if(Math.abs(line*4%2)===1)return null; // quarter lines (2.25) settle half — leave it
-    const tot=val(A)+val(B);if(isNaN(tot))return null;
-    const over=/^(mas|over|o|\+)/.test(t[1]);
-    return tot===line?'push':((tot>line)===over?'win':'lose');
+  let t=sel.match(/^(mas de|mas|over|o|menos de|menos|under|u)\s*(\d+(?:\.\d+)?)/);
+  if(!t&&/total|mas|menos|over|under/.test(mk))t=sel.match(/^([+\-])\s*(\d+(?:\.\d+)?)$/);
+  const h=t?null:sel.match(/^(.+?)\s*([+\-]\d+(?:\.\d+)?)$/);
+  if(t){s.kind='total';s.over=/^(mas|over|o|\+)/.test(t[1]);s.line=+t[2];}
+  else if(h){s.kind='hcp';s.who=h[1];s.line=+h[2];}
+  else if(/total|handicap|spread|linea|asiatic/.test(mk))return null; // a line market whose line it can't find
+  else{s.kind='win';s.dnb=/no apuesta|no bet|dnb|sin empate|empate no/.test(mk);}
+  if(s.line!=null&&Math.abs(s.line*4%2)===1)return null; // quarter lines (2.25) settle half — left to you
+  return s;
+}
+// which side (or the draw) a selection names: "Alcaraz", "1", "Empate", "Empate o Chelsea"…
+function arSide(txt,A,B){
+  const x=arNorm(txt).replace(/\s*[+\-]\d+(\.\d+)?$/,'').trim();
+  if(/^(1|local|home|casa)$/.test(x))return [A];
+  if(/^(2|visitante|away|fuera)$/.test(x))return [B];
+  if(/^(x|empate|draw|tie)$/.test(x))return ['draw'];
+  if(/^(1x|1 x|local o empate|home or draw)$/.test(x))return [A,'draw'];
+  if(/^(x2|x 2|empate o visitante|draw or away)$/.test(x))return ['draw',B];
+  if(/^(12|1 2|local o visitante|home or away)$/.test(x))return [A,B];
+  // "Empate o Chelsea" before the names: "Chelsea" alone would score it as Chelsea
+  const dc=x.match(/^(.+?)\s+(?:o|or)\s+(.+)$/);
+  if(dc){const p=[dc[1],dc[2]].map(s=>arSide(s,A,B));if(p.every(q=>q&&q.length===1))return p.flat();}
+  const a=arNameScore(x,A),bb=arNameScore(x,B);
+  if(a>=0.5&&a>bb)return [A];if(bb>=0.5&&bb>a)return [B];
+  return null;
+}
+// one leg against the score → 'win' | 'lose' | 'push', or null while it isn't decided (or can't be told)
+function arLegState(s,m,A,B){
+  const ten=m.sport==='tennis';
+  if(ten?(s.unit==='score'||s.kind==='btts'):(s.per||s.unit==='games'||s.unit==='sets'))return null; // another sport's market
+  if(!m.live&&!m.done)return null; // not started
+  let a,b,done,cnt;
+  if(ten){
+    if(s.per){
+      if(s.unit==='sets'||A.ls.length<s.per)return null; // that set hasn't started
+      a=A.ls[s.per-1];b=B.ls[s.per-1];done=arSetDone(a,b);
+    }else{
+      // "Más de 9.5" without "juegos"/"sets" or a set number: only a whole-match line (14+) can be its games
+      if(!s.unit&&s.kind!=='win'&&Math.abs(s.line)<(s.kind==='total'?14:2))return null;
+      const u=s.unit||(s.kind==='win'?'sets':'games');
+      a=u==='sets'?A.sets:A.games;b=u==='sets'?B.sets:B.games;done=m.done&&!m.bad;
+      if(u==='sets'&&s.kind==='total'&&!done)cnt=A.ls.length; // a set that has started counts
+    }
+  }else{
+    if(m.et)return null;
+    a=A.score;b=B.score;done=m.done&&!m.bad;
   }
-  // which side (or draw) the selection names
-  const sideOf=txt=>{
-    const x=arNorm(txt).replace(/\s*[+\-]\d+(\.\d+)?$/,'').trim();
-    if(/^(1|local|home|casa)$/.test(x))return [A];
-    if(/^(2|visitante|away|fuera)$/.test(x))return [B];
-    if(/^(x|empate|draw|tie)$/.test(x))return ['draw'];
-    if(/^(1x|1 x|local o empate|home or draw)$/.test(x))return [A,'draw'];
-    if(/^(x2|x 2|empate o visitante|draw or away)$/.test(x))return ['draw',B];
-    if(/^(12|1 2|local o visitante|home or away)$/.test(x))return [A,B];
-    const a=arNameScore(x,A),bb=arNameScore(x,B);
-    if(a>=0.5&&a>bb)return [A];if(bb>=0.5&&bb>a)return [B];
-    // "Empate o Real Madrid", "Real Madrid o empate"
-    const dc=x.match(/^(.+)\s+o\s+(.+)$/);if(dc){const p=[dc[1],dc[2]].map(s=>sideOf(s));if(p.every(q=>q&&q.length===1))return p.flat();}
-    return null;
-  };
-  if(kind==='hcp'){
-    const h=r.match(/^(.*?)\s*([+\-]\d+(?:\.\d+)?)$/);if(!h)return null;
-    const line=+h[2];if(Math.abs(line*4%2)===1)return null;
-    const s=sideOf(h[1]||'');if(!s||s.length!==1||s[0]==='draw')return null;
-    const me=s[0],op=me===A?B:A;const d=val(me)-val(op)+line;if(isNaN(d))return null;
+  if(isNaN(a)||isNaN(b))return null;
+  if(s.kind==='total'){
+    if(cnt==null)cnt=a+b;
+    if(cnt>s.line)return s.over?'win':'lose'; // the line is already passed
+    if(!done)return null;
+    return cnt===s.line?'push':s.over?'lose':'win';
+  }
+  if(s.kind==='btts'){
+    if(a>0&&b>0)return s.yes?'win':'lose';
+    return done?(s.yes?'lose':'win'):null;
+  }
+  if(!done)return null; // winners and handicaps wait for the end (of the set)
+  if(s.kind==='hcp'){
+    const me=arSide(s.who,A,B);if(!me||me.length!==1||me[0]==='draw')return null;
+    const d=(me[0]===A?a-b:b-a)+s.line;
     return d===0?'push':d>0?'win':'lose';
   }
-  // winner / 1X2 / double chance / draw no bet
-  const s=sideOf(res);if(!s)return null;
-  const draw=A.score===B.score&&m.sport!=='tennis';
-  if(draw&&/no apuesta|no bet|dnb|sin empate/.test(market))return 'push';
-  const won=m.sport==='tennis'?(A.winner?A:B.winner?B:A.sets>B.sets?A:B.sets>A.sets?B:null):draw?'draw':A.score>B.score?A:B;
+  const side=arSide(s.sel,A,B);if(!side)return null;
+  const won=ten?(s.per?(a>b?A:B):A.winner?A:B.winner?B:a>b?A:b>a?B:null):a===b?'draw':a>b?A:B;
+  if(won==='draw'&&s.dnb)return 'push';
   if(!won)return null;
-  return s.includes(won)?'win':'lose';
+  return side.includes(won)?'win':'lose';
 }
-// → {leg, score} when exactly one leg won and the rest lost; otherwise {why}
+function arScore(m,A,B){return m.sport==='tennis'?A.ls.map((x,k)=>x+'-'+(B.ls[k]??'')).join(' '):A.score+'-'+B.score;}
+// → {leg, score, live} once exactly one leg has won and the rest lost; otherwise {why, wait (min)}
 function arSettle(b,hit){
   const {m,A,B}=hit;
-  if(!m.done)return {why:'not finished'};
-  if(/ret|walk|w\/o|abandon|aband|cancel|postpon|aplaz|susp|aet|pen|extra|forfeit|default/i.test(m.odd))return {why:'retired / extra time / penalties'};
-  if(m.sport==='tennis'&&Math.max(A.sets,B.sets)<2)return {why:'incomplete score'};
-  if(!arCoverable(b))return {why:'market not covered'};
-  const market=arNorm(b.market);
-  const legs=b.legs||[];
-  const unit=/juego|game/.test(market)?'games':/\bsets?\b/.test(market)?'sets':m.sport==='tennis'&&!/ganador|winner|partido|match|moneyline|vencedor/.test(market)?'games':'score';
-  const isTot=l=>/^(mas de|mas|over|o|menos de|menos|under|u)\s*\d/.test(arNorm(l.result))||/^[+\-]\s*\d/.test(arNorm(l.result))&&/total|mas|menos|over|under/.test(market);
-  const kind=/ambos|both teams|btts/.test(market)?'btts':legs.every(isTot)?'total':legs.every(l=>/[+\-]\d+(\.\d+)?$/.test(arNorm(l.result)))?'hcp':'win';
-  if(kind==='win'&&market&&/total|mas|menos|over|under|handicap|spread|linea|asiatic/.test(market))return {why:'market not understood'};
-  const res=legs.map(l=>arLeg(kind,l.result,m,A,B,unit,market));
+  const specs=(b.legs||[]).map(l=>arLegSpec(b,l));
+  if(specs.some(s=>!s))return {why:'unclear',wait:720};
+  const res=specs.map(s=>arLegState(s,m,A,B));
   const wins=res.map((x,i)=>x==='win'?i:-1).filter(i=>i>=0);
-  if(wins.length!==1||res.some(x=>x!=='win'&&x!=='lose'))return {why:'outcome not clear'};
-  const score=m.sport==='tennis'?A.ls.map((x,k)=>x+'-'+(B.ls[k]??'')).join(' '):A.score+'-'+B.score;
-  return {leg:wins[0],score};
+  if(wins.length===1&&res.every(x=>x==='win'||x==='lose'))return {leg:wins[0],score:arScore(m,A,B),live:!(m.done&&!m.bad)};
+  if(!m.done&&wins.length<2&&!res.includes('push'))return {why:'playing',wait:AR_EVERY_MIN};
+  return {why:'unclear',wait:720};
 }
-function arCoverable(b){return !AR_SKIP.test(arNorm(b.market))&&!(b.legs||[]).some(l=>AR_SKIP.test(arNorm(l.result)));}
+function arCoverable(b){return (b.legs||[]).every(l=>arLegSpec(b,l));}
+// started: the estimated end minus the match length has passed (without a time, from its day on)
+function arStarted(b){
+  const end=b.time?Date.parse(b.date+'T'+b.time+':00'):NaN;
+  return isNaN(end)?b.date<=shiftedISO(0):Date.now()>=end-SPORT_HOURS*3600000;
+}
 function arCandidates(manual){
-  const today=shiftedISO(0),oldest=shiftedISO(-AR_MAX_DAYS);
-  return D.bets.filter(b=>b.status==='pending'&&b.pendMark==null&&(b.legs||[]).length>=2&&b.date&&b.date>=oldest&&b.date<=today&&(manual||pendEnded(b)&&Date.now()-(arTried.get(b.id)||0)>AR_RETRY_MIN*60000)&&arCoverable(b)
-    &&String(b.event||'').split(/\s+(?:vs\.?|v\.?|-|–|—|x|@)\s+/i).length===2);
+  const oldest=shiftedISO(-AR_MAX_DAYS),now=Date.now();
+  return D.bets.filter(b=>{
+    // arNo: you changed or took back what the scores marked, so that one is left to you
+    if(b.status!=='pending'||b.pendMark!=null||b.arNo||(b.legs||[]).length<2||!b.date||b.date<oldest||!arStarted(b))return false;
+    if(!manual){const t=arTried.get(b.id);if(t&&now-t.t<t.wait*60000)return false;}
+    return String(b.event||'').split(AR_VS).length===2&&arCoverable(b);
+  });
+}
+// the ESPN days a bet's match can be filed under
+function arDays(b){
+  const end=b.time?Date.parse(b.date+'T'+b.time+':00'):NaN;
+  if(isNaN(end)){const t=Date.parse(b.date+'T12:00:00');return [...new Set([arDayKey(t),arDayKey(t-864e5)])];}
+  const k=end-SPORT_HOURS*3600000;
+  return [...new Set([arDayKey(k-3*3600000),arDayKey(k),arDayKey(k+3*3600000)])];
+}
+// the sport of each match you have bets on, from what they're on: one "Aces" or "1er Set" says tennis
+const AR_SPORTS=[['tennis',/\bjuegos\b|\bgames\b|\bsets?\b|\baces?\b|doble falta|double fault|tie.?break|\bbreaks?\b/],
+  ['basket',/\bpuntos\b|\bpoints\b|rebote|rebound|\btriples?\b/],
+  ['soccer',/\bgol(es)?\b|\bgoals?\b|corner|tarjeta|\bcards?\b|ambos|both teams|btts|empate|\bdraw\b|\bdnb\b|1x2|\b(1x|x2|x)\b|doble oportunidad|double chance|asiatic|fuera de juego|offside/]];
+function arSports(){
+  const seen=new Map(),oldest=shiftedISO(-AR_MAX_DAYS-2);
+  D.bets.forEach(b=>{
+    if(!b.date||b.date<oldest)return;
+    const k=arNorm(b.event),txt=arNorm([b.market,...(b.legs||[]).map(l=>l.result)].join(' '));
+    let s=seen.get(k);if(!s)seen.set(k,s=new Set());
+    AR_SPORTS.forEach(([sp,re])=>{if(re.test(txt))s.add(sp);});
+  });
+  const out=new Map();seen.forEach((s,k)=>{if(s.size===1)out.set(k,[...s][0]);});
+  return out;
+}
+// where to look for a bet's match → {first, then, days}: the feed and day it turned up in before, or its sport's
+// feeds; when nothing says the sport ("Ganador" alone) tennis and the NBA first, then football
+function arPlan(b,sports){
+  const w=arWhere.get(b.id);if(w)return {first:[w.f],then:[],days:[w.d]};
+  const sp=sports.get(arNorm(b.event)),days=arDays(b);
+  if(sp==='tennis'||sp==='basket')return {first:AR_FEEDS.filter(f=>f[0]===sp),then:[],days};
+  if(sp==='soccer')return {first:AR_SOCCER,then:[],days};
+  return {first:AR_FEEDS,then:AR_SOCCER,days};
 }
 async function pendAutoResults(manual){
   if(arBusy)return;
-  if(!manual&&Date.now()-arLast<AR_EVERY_MIN*60000)return;
+  if(!manual&&Date.now()-arLast<AR_EVERY_MIN*60000-15000)return;
   const cands=arCandidates(manual);
-  if(!cands.length){if(manual)toast('Nothing to check: no finished pending surebets on main markets (winner, totals, handicaps) without a result');return;}
+  if(!cands.length){if(manual)toast('Nothing to check: no started pending surebets on markets it can read (winner, totals, handicaps, 1st set…) without a result');return;}
   arBusy=true;arLast=Date.now();arBtnState();
   try{
-    // ESPN groups by US date: ask for the kick-off day and the day before
-    const days=new Set();
-    cands.forEach(b=>{const k=new Date(Date.parse(b.date+'T'+(b.time||'23:00')+':00')-SPORT_HOURS*3600000);
-      [0,-1].forEach(n=>{const d=new Date(k);d.setDate(d.getDate()+n);days.add(localISO(d).replace(/-/g,''));});});
-    const jobs=[];days.forEach(ymd=>AR_FEEDS.forEach(([sport,path])=>jobs.push(arFetch(path,ymd).then(ev=>ev?arMatches(sport,ev):null))));
-    const got=await Promise.all(jobs);
-    if(got.every(x=>x===null)){if(manual)toast("Couldn't reach the results service — try again in a minute");return;}
-    const seen=new Set();const pool=[];
-    got.forEach(list=>(list||[]).forEach(m=>{const k=m.sport+':'+m.id;if(!seen.has(k)){seen.add(k);pool.push(m);}}));
-    let marked=0,notFound=0,skipped=0;
+    // one copy per match: the furthest on (the same tournament comes back for each day asked)
+    const best=new Map();
+    const rank=m=>(m.done?2e6:m.live?1e6:0)+m.comps.reduce((a,c)=>a+((m.sport==='tennis'?c.games:c.score)||0),0);
+    const ask=async list=>{
+      const want=new Map();
+      list.forEach(([fs,days])=>days.forEach(d=>fs.forEach(f=>want.set(f[1]+'|'+d,[f,d]))));
+      const got=await Promise.all([...want.values()].map(([f,d])=>arFetch(f[1],d).then(ev=>ev?arMatches(f[0],ev,f,d):null)));
+      got.forEach(l=>(l||[]).forEach(m=>{const k=m.sport+':'+m.id,o=best.get(k);if(!o||rank(m)>rank(o))best.set(k,m);}));
+      return got.some(x=>x!==null);
+    };
+    const sports=arSports();
+    const plan=cands.map(b=>[b,arPlan(b,sports)]);
+    let reached=await ask(plan.map(([b,p])=>[p.first,p.days]));
+    const later=plan.filter(([b,p])=>p.then.length&&!arFindMatch(b,[...best.values()]));
+    if(later.length)reached=await ask(later.map(([b,p])=>[p.then,p.days]))||reached;
+    if(!reached){if(manual)toast("Couldn't reach the results service — try again in a minute");return;}
+    const pool=[...best.values()];
+    let marked=0,playing=0,notFound=0,unclear=0;
     cands.forEach(b=>{
       if(b.pendMark!=null)return;
-      const hit=arFindMatch(b,pool);if(!hit){notFound++;arTried.set(b.id,Date.now());return;}
-      const r=arSettle(b,hit);if(r.leg==null){skipped++;arTried.set(b.id,Date.now());return;}
-      b.pendMark=r.leg;b.autoRes={leg:r.leg,score:r.score,at:Date.now()};marked++;
+      const hit=arFindMatch(b,pool);
+      // not listed: looked up again after 30 min, then 1 h, 2 h… up to 12 h
+      if(!hit){notFound++;const t=arTried.get(b.id);arTried.set(b.id,{t:Date.now(),nf:1,wait:t&&t.nf?Math.min(t.wait*2,720):AR_RETRY_MIN});return;}
+      arWhere.set(b.id,{f:hit.m.feed,d:hit.m.day});
+      const r=arSettle(b,hit);
+      if(r.leg==null){r.why==='playing'?playing++:unclear++;arTried.set(b.id,{t:Date.now(),wait:r.wait});return;}
+      b.pendMark=r.leg;b.autoRes={leg:r.leg,score:r.score,at:Date.now()};if(r.live)b.autoRes.live=1;marked++;
     });
     if(marked){save();renderPendientes();}
     if(marked||manual){
-      const rest=[notFound?`${notFound} not found`:'',skipped?`${skipped} unclear or not over yet`:''].filter(Boolean).join(' · ');
-      toast(marked?`${marked} marked from results — check them and Resolve${rest?' · '+rest:''}`:`No results to mark${rest?' · '+rest:''}`);
+      const rest=[playing?`${playing} still being played`:'',notFound?`${notFound} not in ESPN's scores`:'',unclear?`${unclear} unclear`:''].filter(Boolean).join(' · ');
+      toast(marked?`${marked} marked from results — check them and Resolve${rest?' · '+rest:''}`:`Nothing decided yet${rest?' · '+rest:''}`);
     }
   }finally{arBusy=false;arBtnState();}
 }
@@ -6721,6 +6834,7 @@ function arBtnState(){const b=document.getElementById('arBtn');if(b){b.classList
 function arLine(b,sub){
   const a=b.autoRes;if(!a||a.leg!==b.pendMark)return '';
   if(a.via)return `<span class="ar-tag${sub?' ar-sub':''}" title="Marked from your other bet on this match and market — check it before you Resolve">Auto · same match</span>`;
+  if(a.live)return `<span class="ar-tag${sub?' ar-sub':''}" title="Already decided while the match was still on, marked from the live score — check it before you Resolve">Live ${esc(a.score)}</span>`;
   return `<span class="ar-tag${sub?' ar-sub':''}" title="Marked automatically from the final score — check it before you Resolve">Result ${esc(a.score)}</span>`;
 }
 setInterval(()=>{if(document.visibilityState==='visible'&&Array.isArray(D.bets))pendAutoResults(false);},AR_EVERY_MIN*60000);
