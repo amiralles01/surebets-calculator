@@ -1834,6 +1834,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .promo-btn:hover{color:var(--text)}
 .ar-tag{display:inline-flex;align-items:center;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--gdim);color:var(--green);font-size:11.5px;font-weight:650;white-space:nowrap;vertical-align:1px}
 .ar-tag.ar-sub{margin:3px 0 0;align-self:flex-start}
+#q-cat-w.auto .fl::after{content:' · auto';color:var(--green);text-transform:none}
 .ar-btn.busy svg{animation:arSpin 1s linear infinite}.ar-btn:disabled{opacity:.6;cursor:default}
 @keyframes arSpin{to{transform:rotate(360deg)}}
 .promo-btn.live{color:var(--text)}.promo-btn.live svg{color:#B98A00}
@@ -2247,7 +2248,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
               <div class="q-mk"><label class="fl">Market / line</label><input type="text" id="q-market" placeholder="Optional · Vinicius 1.5+ shots" autocomplete="off"></div>
               <div><label class="fl">Date</label><input type="date" id="q-date"></div>
               <div><label class="fl">Ends ~</label><select id="q-hour" class="hour-sel"><option value="">--</option><option value="00:00">00h</option><option value="01:00">01h</option><option value="02:00">02h</option><option value="03:00">03h</option><option value="04:00">04h</option><option value="05:00">05h</option><option value="06:00">06h</option><option value="07:00">07h</option><option value="08:00">08h</option><option value="09:00">09h</option><option value="10:00">10h</option><option value="11:00">11h</option><option value="12:00">12h</option><option value="13:00">13h</option><option value="14:00">14h</option><option value="15:00">15h</option><option value="16:00">16h</option><option value="17:00">17h</option><option value="18:00">18h</option><option value="19:00">19h</option><option value="20:00">20h</option><option value="21:00">21h</option><option value="22:00">22h</option><option value="23:00">23h</option></select></div>
-              <div><label class="fl">Category</label><select id="q-cat"><option value="">No category</option></select></div>
+              <div id="q-cat-w"><label class="fl">Category</label><select id="q-cat"><option value="">No category</option></select></div>
             </div>
 
             <div class="sbx-sec"><span class="sbx-n">2</span>Odds<small class="kbd-hint">Enter on the last odds registers it</small></div>
@@ -6340,6 +6341,7 @@ function applyLastBet(){
     document.getElementById('q-event').value=b.event||'';document.getElementById('q-market').value=b.market||'';
     document.getElementById('q-date').value=b.date||todayISO();document.getElementById('q-hour').value=hourOnly(b.time);
     fillCategorySelect(document.getElementById('q-cat'),b.categoryId??null);
+    qComp=b.comp?{ev:(b.event||'').trim(),comp:b.comp}:null;document.getElementById('q-cat-w').classList.remove('auto');
     {const f=document.querySelector('#outcomesList .oi');if(f)f.focus();} // straight away, so the phone keyboard opens
   }else{
     sbPrefill=null;
@@ -6376,6 +6378,7 @@ function registerCurrent(){
     profitPct:res.profitPct,profit:res.profit,expectedProfit:res.profit,totalStake:res.actualTotal,minReturn:res.minReturn,status:'pending',
     categoryId:catVal?+catVal:null,
     legs:res.valid.map((o,i)=>({house:o.house||`Bookmaker ${i+1}`,result:o.result||`Outcome ${i+1}`,odd:o.odd,stake:res.stakes[i],minReturn:res.returns[i]}))};
+  if(qComp&&qComp.ev===ev)bet.comp=qComp.comp;
   D.bets.unshift(bet);
   // keep event, market, bookmakers, outcomes, hour & category — only clear odds (and stakes that came from a preset)
   const wasPreset=outcomes.some(o=>o.fromPreset);
@@ -6395,7 +6398,7 @@ function quickRegister(){
   const queued=tgNext();
   if(!queued){const f=document.querySelector('#outcomesList .oi');if(f)f.focus();}
   const n=D.bets.filter(b=>b.status==='pending'&&evKey(b)===evKey(bet)).length;
-  toast(`Saved${n>1?` · #${n} on this match`:''} · ${res.profit>=0?'+':''}${fmt(res.profit)} €${matchWhenMsg(mw)}`,'Undo',()=>{
+  toast(`Saved${n>1?` · #${n} on this match`:''} · ${res.profit>=0?'+':''}${fmt(res.profit)} €${bet.categoryId?' · '+catName(bet.categoryId):''}${matchWhenMsg(mw)}`,'Undo',()=>{
     D.bets=D.bets.filter(b=>b.id!==bet.id);undoMatchWhen(mw);
     bet.legs.forEach((l,i)=>{if(outcomes[i]){outcomes[i].odd=l.odd;}});
     save();updateBadges();render();toast('Registration undone');});
@@ -6470,7 +6473,10 @@ function parseBotFormat(txt,at){
   const e=txt.match(/empieza en:\s*([^\n]*)/i);
   const end=new Date(((e&&kickoffFrom(base,e[1]))||base).getTime()+SPORT_HOURS*3600000);
   if(e||h||at){date=`${end.getFullYear()}-${String(end.getMonth()+1).padStart(2,'0')}-${String(end.getDate()).padStart(2,'0')}`;time=String(end.getHours()+(end.getMinutes()>=30?1:0)).padStart(2,'0')+':00';if(time==='24:00')time='23:00';}
-  return {legs:ok.map(l=>({house:l.house,odd:l.odd,stake:l.stake??null,result:l.result})),ev,market:pre.replace(/\s*-\s*$/,''),date,time};
+  // the competition line as the bot writes it, sport emoji included: "🏆 ⚽ England Premier League"
+  const tr=txt.match(/🏆\uFE0F?[ \t]*(?:torneo:[ \t]*)?([^\n]*)/i);
+  const comp=tr?tr[1].replace(/\s+/g,' ').trim().slice(0,80):'';
+  return {legs:ok.map(l=>({house:l.house,odd:l.odd,stake:l.stake??null,result:l.result})),ev,market:pre.replace(/\s*-\s*$/,''),date,time,comp};
 }
 function parseSurebetText(txt,at){
   txt=String(txt||'');
@@ -6527,7 +6533,7 @@ document.getElementById('qPasteBtn').addEventListener('click',()=>{
     if(navigator.clipboard&&navigator.clipboard.readText){navigator.clipboard.readText().then(x=>{if(x&&!t.value){t.value=x;t.dispatchEvent(new Event('input'));}}).catch(()=>{});}}
 });
 document.getElementById('qPaste').addEventListener('input',e=>{
-  const {legs,ev,market,date,time}=parseSurebetText(e.target.value);
+  const p=parseSurebetText(e.target.value);const {legs,ev,market,date,time}=p;
   if(legs.length<2){if(e.target.value.trim())toast('Could not find 2 of your bookmakers with odds in that text');return;}
   if(tgRequeue())save();
   clearPresetStakes();
@@ -6536,6 +6542,7 @@ document.getElementById('qPaste').addEventListener('input',e=>{
   if(time)document.getElementById('q-hour').value=time;
   const evEl=document.getElementById('q-event');if(ev)evEl.value=ev;
   const mkEl=document.getElementById('q-market');if(market)mkEl.value=market;
+  if(p.comp)qAutoCat(p);
   render();document.getElementById('qPasteWrap').style.display='none';
   toast(`Detected ${legs.map(l=>l.house+' @'+fmt(l.odd)).join(' · ')}`);
   setTimeout(()=>document.getElementById('q-event').value.trim()?document.getElementById('regBtn')?.focus():document.getElementById('q-event').focus(),30);
@@ -6841,6 +6848,89 @@ setInterval(()=>{if(document.visibilityState==='visible'&&Array.isArray(D.bets))
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Array.isArray(D.bets))setTimeout(()=>pendAutoResults(false),1500);});
 
 // ══════════════════════════════════════════
+//  AUTO CATEGORY — the category a surebet from Telegram goes in, from its competition line
+//  ("🏆 ⚽ England Premier League"): where your last bet on that competition went, so a change
+//  you make is followed from then on; else the category named after its sport (Football, Tennis…)
+//  and, inside it, the one named like the competition ("Premier League") or after its kind
+//  (World Cup, Nations League, Champions / Europa, Cups, Leagues)
+// ══════════════════════════════════════════
+// [sport, emoji on the competition line, words in a competition, words in a category name, names that aren't it]
+const CAT_SPORTS=[
+  ['tennis','🎾',/\b(atp|wta|itf|challenger|davis cup|copa davis|billie jean king)\b/,/\b(tennis|tenis)\b/,/table|mesa/],
+  ['basket','🏀',/\b(nba|wnba|euroleague|euroliga|eurocup|acb|ncaa|basketball|baloncesto)\b/,/\b(basket|basketball|baloncesto|nba)\b/],
+  ['football','⚽',/\b(soccer|futbol|football)\b/,/\b(football|futbol|soccer)\b/,/americ|nfl/],
+  ['amfootball','🏈',/\bnfl\b/,/american football|futbol americano|\bnfl\b/],
+  ['hockey','🏒',/\b(nhl|khl|hockey)\b/,/\bhockey\b/],
+  ['baseball','⚾',/\b(mlb|baseball|beisbol)\b/,/\b(baseball|beisbol)\b/],
+  ['volley','🏐',/\b(volleyball|voleibol)\b/,/\b(volley|volleyball|voleibol|voley)\b/],
+  ['tabletennis','🏓',/table tennis|tenis de mesa/,/table tennis|tenis de mesa|ping ?pong/],
+  ['esports','🎮',/\b(esports?|cs ?2|dota|valorant)\b/,/\be ?sports?\b/],
+  ['darts','🎯',/\b(pdc|darts|dardos)\b/,/\b(darts|dardos)\b/],
+  ['handball','🤾',/\b(handball|balonmano)\b/,/\b(handball|balonmano)\b/],
+  ['combat','🥊',/\b(ufc|mma|boxing|boxeo)\b/,/\b(ufc|mma|boxing|boxeo|combat|combate)\b/],
+];
+// kinds of football competition: [words in a competition, words in a category name]
+const CAT_KINDS={
+  world:[/world cup|mundial|copa del mundo/,/\bworld\b|mundial/],
+  nations:[/nations league|liga de naciones/,/nations|naciones/],
+  euro:[/\beuro\b|eurocopa|european championship/,/\beuro\b|eurocopa/],
+  europe:[/\bchampions\b|europa league|conference league|\buefa\b|libertadores|sudamericana/,/\bchampions\b|europa|europe|uefa|conference|libertadores/],
+  friendly:[/friendl|amistos/,/friendl|amistos/],
+  cup:[/\bcup\b|\bcopa\b|coppa|coupe|pokal|\btaca\b|beker|supercopa|super ?cup|shield|trophy|trofeo/,/\bcups?\b|\bcopas?\b|coppa|coupe|pokal/],
+  league:[/./,/\bleagues?\b|\bligas?\b|\bligue\b/],
+};
+// a competition is the first kind it fits; a category too, but "Champions, Euro…" is Champions
+const catKind=(s,i,order)=>order.find(k=>CAT_KINDS[k][i].test(s))||null;
+const CAT_COMP_ORDER=['world','nations','euro','europe','friendly','cup','league'],CAT_NAME_ORDER=['world','nations','europe','euro','friendly','cup','league'];
+const catWords=s=>' '+arNorm(s).replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim()+' ';
+// its sport: the emoji or the name of the competition, else what the bet is on ("Total de Juegos", "Córners"…)
+function catSportOf(comp,txt){
+  const c=arNorm(comp);
+  const s=CAT_SPORTS.find(x=>comp.includes(x[1]))||CAT_SPORTS.find(x=>x[2].test(c));if(s)return s[0];
+  const t=arNorm(txt),hit=AR_SPORTS.filter(([,re])=>re.test(t));
+  return hit.length===1?{tennis:'tennis',basket:'basket',soccer:'football'}[hit[0][0]]:null;
+}
+function catSubtree(id){
+  const out=[];const walk=p=>D.categories.forEach(c=>{if((c.parentId||null)===p&&!out.includes(c)){out.push(c);walk(c.id);}});
+  walk(id);return out;
+}
+// → a category id, or null when nothing says where it goes
+function autoCategory(comp,txt){
+  const cats=D.categories||[];comp=String(comp||'');if(!cats.length)return null;
+  const k=arNorm(comp);
+  if(k){
+    let last=null;
+    D.bets.forEach(b=>{if(b.comp&&b.categoryId&&(!last||b.id>last.id)&&arNorm(b.comp)===k&&cats.some(c=>c.id===b.categoryId))last=b;});
+    if(last)return last.categoryId;
+  }
+  const S=CAT_SPORTS.find(x=>x[0]===catSportOf(comp,txt));
+  const isSport=c=>S[3].test(arNorm(c.name))&&!(S[4]&&S[4].test(arNorm(c.name)));
+  const root=S?cats.find(c=>!c.parentId&&isSport(c))||cats.find(isSport):null;
+  const pool=root?catSubtree(root.id):cats;
+  // one named like the competition: "Premier League", "NBA", "Roland Garros"
+  const w=catWords(comp);
+  const named=pool.filter(c=>{const n=catWords(c.name);return n.length>=5&&w.includes(n);}).sort((a,b)=>b.name.length-a.name.length)[0];
+  if(named)return named.id;
+  if(!root)return null;
+  if(S[0]==='football'){
+    const kind=catKind(k,0,CAT_COMP_ORDER);
+    const kc=pool.find(c=>catKind(arNorm(c.name),1,CAT_NAME_ORDER)===kind);
+    if(kc)return kc.id;
+  }
+  return root.id;
+}
+// the surebet just loaded into New bet (from Telegram or pasted): its competition, and the category it goes in
+let qComp=null; // {ev, comp} — kept with the bet only while the event is still that one
+function qAutoCat(p){
+  qComp=p.comp?{ev:(p.ev||'').trim(),comp:p.comp}:null;
+  if(newBetCat!=null)return; // you came from a category's "Add bet"
+  const id=autoCategory(p.comp,[p.market,...(p.legs||[]).map(l=>l.result)].join(' '));
+  fillCategorySelect(document.getElementById('q-cat'),id);
+  document.getElementById('q-cat-w').classList.toggle('auto',id!=null);
+}
+document.getElementById('q-cat').addEventListener('change',()=>document.getElementById('q-cat-w').classList.remove('auto'));
+
+// ══════════════════════════════════════════
 //  TELEGRAM INBOX — forward surebets to your own bot, they show up here
 //  (the browser polls the Bot API directly; no server needed)
 // ══════════════════════════════════════════
@@ -6941,6 +7031,7 @@ function tgLoad(uid,quiet){
   document.getElementById('q-market').value=p.market||'';
   if(!document.getElementById('q-date').value)document.getElementById('q-date').value=todayISO();
   if(newBetType!=='Surebet')setBetType('Surebet');
+  qAutoCat(p);
   D.tgInbox=D.tgInbox.filter(x=>x.uid!==uid);
   if(quiet){autoPreset();return true;}
   save();render();renderTgCard();return true;
