@@ -1834,6 +1834,16 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .promo-btn:hover{color:var(--text)}
 .ar-tag{display:inline-flex;align-items:center;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--gdim);color:var(--green);font-size:11.5px;font-weight:650;white-space:nowrap;vertical-align:1px}
 .ar-tag.ar-sub{margin:3px 0 0;align-self:flex-start}
+.lv-slot:empty{display:none}
+.lv-tag{display:inline-flex;align-items:center;gap:5px;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--rdim);color:var(--red);font-size:11.5px;font-weight:700;white-space:nowrap;vertical-align:1px;font-variant-numeric:tabular-nums}
+.pc-ev .lv-tag{margin-left:0}
+.lv-tag.end{background:var(--raised);color:var(--muted);font-weight:650}
+.lv-tag.pre{background:var(--raised);color:var(--muted);font-weight:600}
+.lv-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--red);flex:none;animation:lvPulse 1.6s ease-in-out infinite}
+@keyframes lvPulse{0%,100%{opacity:1}50%{opacity:.3}}
+.pd-chip.lv{color:var(--red)}.pd-chip.lv .lv-dot{margin-right:5px;vertical-align:1px}.pd-chip.lv.active{background:var(--rdim);border-color:rgba(210,65,43,.4)}
+.pc-row.lv-on:not(.marked):not(.promo){box-shadow:inset 4px 0 0 var(--red),var(--lift)}
+.pend-item.lv-on:not(.marked):not(.promo){box-shadow:inset 3px 0 0 var(--red)}
 #q-cat-w.auto .fl::after{content:' · auto';color:var(--green);text-transform:none}
 .cat-sort{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 9px 9px 14px;border:1px solid var(--border);border-radius:var(--r);background:var(--gdim);font-size:13px}
 .cs-sub{font-size:12.5px;color:var(--muted);margin-bottom:10px}
@@ -4763,6 +4773,7 @@ function pendDayLabel(iso){
 }
 // the estimated end (date + "ends ~" time) has already passed → it can be settled
 function pendEnded(item){
+  const lv=lvOf(item);if(lv)return lv.st==='post'; // ESPN knows: on or not started yet → not ended
   const d=item.date||'';if(!d)return false;
   const today=shiftedISO(0);
   if(d<today)return true;
@@ -4773,6 +4784,7 @@ function pendEnded(item){
 function pendMatchesDay(date,item){
   if(pendDayFilter==='all')return true;
   if(pendDayFilter==='done')return !!item&&pendEnded(item);
+  if(pendDayFilter==='live')return !!item&&lvIsLive(item);
   if(pendDayFilter==='marked')return !!item&&item.pendMark!=null;
   if(pendDayFilter==='overdue')return !!date&&date<shiftedISO(0);
   if(pendDayFilter==='nodate')return !date;
@@ -4780,12 +4792,13 @@ function pendMatchesDay(date,item){
 }
 function renderPendDays(allVisible){
   const today=shiftedISO(0);
-  const counts={};let overdue=0,nodate=0,done=0,promo=0,marked=0;
-  allVisible.forEach(({kind,item})=>{const d=item.date||'';if(!d)nodate++;else if(d<today)overdue++;else counts[d]=(counts[d]||0)+1;if(pendEnded(item))done++;if(itemPromo(kind,item))promo++;if(item.pendMark!=null)marked++;});
+  const counts={};let overdue=0,nodate=0,done=0,promo=0,marked=0,live=0;
+  allVisible.forEach(({kind,item})=>{const d=item.date||'';if(!d)nodate++;else if(d<today)overdue++;else counts[d]=(counts[d]||0)+1;if(pendEnded(item))done++;if(itemPromo(kind,item))promo++;if(item.pendMark!=null)marked++;if(lvIsLive(item))live++;});
   if(!promoLive().length)pendOnlyPromo=false;
   const chip=(key,label,n,extra='')=>`<button class="pd-chip ${extra}${pendDayFilter===key?' active':''}" data-pday="${key}">${label}${n!=null?` <span class="pd-n">${n}</span>`:''}</button>`;
   let html=promoLive().length?`<button class="pd-chip promo-chip${pendOnlyPromo?' active':''}" data-ppromo title="Show only bets that match a promo highlight"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>Promo <span class="pd-n">${promo}</span></button><span class="pd-sep"></span>`:'';
   html+=chip('all','All',allVisible.length);
+  if(live||pendDayFilter==='live')html+=chip('live','<i class="lv-dot"></i>Live now',live,'lv');
   if(marked||pendDayFilter==='marked')html+=chip('marked','Marked · not resolved',marked,'mk');
   if(done)html+=chip('done','Ready to settle',done,'done');
   if(overdue)html+=chip('overdue','Overdue',overdue,'od');
@@ -4857,9 +4870,9 @@ function pendCompactHtml(kind,item,tw){
         <span class="pc-h"><mark>${esc(l.house||'—')}</mark></span><span class="pc-o"><mark>${fmt(l.odd||0)}</mark></span><span class="pc-r">${esc(l.result||'')}</span></button>`;}).join('')
       :`<button class="pc-mk won pc-act${mk==='won'?' on':''}" data-pid="${b.id}" data-kind="sb" data-action="won">Won</button>`;
     const p=typeof mk==='number'&&legs[mk]?(legs[mk].minReturn||0)-(b.totalStake||0):(b.profit||0);
-    return `<div class="pc-row sb${marked?' marked':''}${pr?' promo':''}${tw.has(b.id)?' twin':''}"${pr?` style="--hl:${pr.color}"`:''}>
+    return `<div class="pc-row sb${lvIsLive(b)?' lv-on':''}${marked?' marked':''}${pr?' promo':''}${tw.has(b.id)?' twin':''}"${pr?` style="--hl:${pr.color}"`:''}>
       ${pendTimeHtml(b,withDate)}
-      <div class="pc-ev"><span class="pc-ttl"><b>${sbTagHtml(b,tw)}${esc(b.event)}</b>${promoTag(pr)}</span>${arLine(b,true)}${pendNoteLine('sb',b)}</div>
+      <div class="pc-ev"><span class="pc-ttl"><b>${sbTagHtml(b,tw)}${esc(b.event)}</b>${promoTag(pr)}</span>${lvSlot('sb',b)}${arLine(b,true)}${pendNoteLine('sb',b)}</div>
       <span class="pc-profit ${p>=0?'pos':'neg'}">${p>=0?'+':''}${fmt(p)} €</span>
       <div class="pc-legs${marked?' has-res':''}" style="--n:${Math.max(legs.length,1)}">${legsHtml}${marked?PEND_RESOLVE('sb',b.id):''}</div>
       <span class="pc-tail">${more}</span>
@@ -4870,9 +4883,9 @@ function pendCompactHtml(kind,item,tw){
   const n=item;const pr=itemPromo('nm',n);
   const win=n.potentialWin!=null?n.potentialWin:+(((n.stake||0)*((n.odd||1)-1)).toFixed(2));
   const loss=n.potentialLoss!=null?n.potentialLoss:(n.type==='Freebet'?0:-(n.stake||0));
-  return `<div class="pc-row nm${n.pendMark!=null?' marked':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
+  return `<div class="pc-row nm${lvIsLive(n)?' lv-on':''}${n.pendMark!=null?' marked':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
     ${pendTimeHtml(n,withDate)}
-    <div class="pc-ev"><span class="pc-ttl"><b>${esc(n.event)}</b> ${typePill(n.type)}${promoTag(pr)}</span><span class="pc-sub"><span class="pc-nmh${pr?' promo':''}"><mark>${esc(n.house||'No bookmaker')}</mark> @ <mark>${fmt(n.odd||0)}</mark></span> · ${fmt(n.stake||0)} €</span>${pendNoteLine('nm',n)}</div>
+    <div class="pc-ev"><span class="pc-ttl"><b>${esc(n.event)}</b> ${typePill(n.type)}${promoTag(pr)}</span>${lvSlot('nm',n)}<span class="pc-sub"><span class="pc-nmh${pr?' promo':''}"><mark>${esc(n.house||'No bookmaker')}</mark> @ <mark>${fmt(n.odd||0)}</mark></span> · ${fmt(n.stake||0)} €</span>${pendNoteLine('nm',n)}</div>
     <span class="pc-profit ${n.pendMark==='lost'?'neg':'pos'}" title="If it wins +${fmt(win)} € · if it loses ${fmt(loss)} €">${n.pendMark==='lost'?fmt(loss):'+'+fmt(win)} €</span>
     <div class="pc-legs pc-nm-btns">${pendMarkBtns(n,' pc-act')}${n.pendMark!=null?PEND_RESOLVE('nm',n.id):''}</div>
     <span class="pc-tail">${more}</span>
@@ -4939,7 +4952,7 @@ function renderPendientesInner(){
   };
   if(!visible.length&&!hidden.length){
     const filtered=pendQuery.trim()||pendOnlyPromo||pendHouse!=='all';
-    list.innerHTML=emptyStateHtml(filtered?'Nothing matches these filters.':pendDayFilter==='all'?'You have no pending bets right now.':pendDayFilter==='done'?'Nothing has finished yet — all your pending bets are still being played.':`No pending bets for ${pendDayFilter==='overdue'?'past days':pendDayFilter==='nodate'?'bets without a date':pendDayLabel(pendDayFilter).toLowerCase()==='today'?'today':pendDayLabel(pendDayFilter)}.`);
+    list.innerHTML=emptyStateHtml(filtered?'Nothing matches these filters.':pendDayFilter==='all'?'You have no pending bets right now.':pendDayFilter==='done'?'Nothing has finished yet — all your pending bets are still being played.':pendDayFilter==='live'?'None of your pending matches is being played right now.':`No pending bets for ${pendDayFilter==='overdue'?'past days':pendDayFilter==='nodate'?'bets without a date':pendDayLabel(pendDayFilter).toLowerCase()==='today'?'today':pendDayLabel(pendDayFilter)}.`);
     return;
   }
   const mkN=shown.filter(x=>pendHasMark(x.kind,x.item)).length;
@@ -4974,10 +4987,10 @@ function renderPendientesInner(){
           <span class="pl-nums"><span>${l.stake!=null?fmt(l.stake)+' € @ ':'Odds '}<mark>${fmt(l.odd||0)}</mark></span><span class="pl-profit ${realProfit>=0?'pos':'neg'}">${realProfit>=0?'+':''}${fmt(realProfit)} €</span></span>
         </button>`;
       }).join('')}</div>`:'';
-      return`<div class="pend-item sb${b.pendMark!=null?' marked':''}${pendTw.has(b.id)?' twin':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
+      return`<div class="pend-item sb${lvIsLive(b)?' lv-on':''}${b.pendMark!=null?' marked':''}${pendTw.has(b.id)?' twin':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
         <div class="pend-top">
           <div>
-            <div class="pend-ev">${sbTagHtml(b,pendTw)}${esc(b.event)} <span class="type-badge-kind">Surebet</span>${promoTag(pr)}${arLine(b)}</div>${sbSubHtml(b,pendTw)}
+            <div class="pend-ev">${sbTagHtml(b,pendTw)}${esc(b.event)} <span class="type-badge-kind">Surebet</span>${promoTag(pr)}${lvSlot('sb',b)}${arLine(b)}</div>${sbSubHtml(b,pendTw)}
             <div class="pend-meta">${pendHouseChip([...new Set((b.legs||[]).map(l=>l.house))])}<span>${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}</span>${b.totalStake?`<span>Staked: ${fmt(b.totalStake)} €</span>`:''}</div>
             ${pendOpen.has('sb:'+b.id)?pendNoteEdit('sb',b):pendNoteLine('sb',b)}
           </div>
@@ -4991,9 +5004,9 @@ function renderPendientesInner(){
     const pr=itemPromo('nm',n);
     const win=n.potentialWin!=null?n.potentialWin:+(((n.stake||0)*((n.odd||1)-1)).toFixed(2));
     const loss=n.potentialLoss!=null?n.potentialLoss:(n.type==='Freebet'?0:-(n.stake||0));
-    return`<div class="pend-item${n.pendMark!=null?' marked':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
+    return`<div class="pend-item${lvIsLive(n)?' lv-on':''}${n.pendMark!=null?' marked':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
       <div class="pend-left">
-        <div class="pend-ev">${esc(n.event)} ${typePill(n.type)}${promoTag(pr)}</div>
+        <div class="pend-ev">${esc(n.event)} ${typePill(n.type)}${promoTag(pr)}${lvSlot('nm',n)}</div>
         <div class="pend-meta">${pendHouseChip([n.house])}<span>${fmtWhen(n.date,n.time)}${n.resolveDate?' → '+fmtDate(n.resolveDate):''}</span><span class="pc-nmh${pr?' promo':''}">Odds <mark>${fmt(n.odd||0)}</mark></span><span>Staked: ${fmt(n.stake||0)} €</span></div>
         ${pendOpen.has('nm:'+n.id)?pendNoteEdit('nm',n):pendNoteLine('nm',n)}
       </div>
@@ -6707,11 +6720,11 @@ function arDayKey(t){
   try{return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(t)).replace(/\D/g,'');}
   catch(e){return localISO(new Date(t)).replace(/-/g,'');}
 }
-async function arFetch(path,ymd){
+async function arFetch(path,ymd,maxAge=AR_EVERY_MIN*60000-20000){
   const url=`${AR_BASE}${path}/scoreboard?dates=${ymd}&limit=500`;
   // finished days don't change; today's are asked again on every check, past ESPN's cache
   const old=ymd<arDayKey(Date.now()-36*3600000);
-  const c=arCache.get(url);if(c&&Date.now()-c.t<(old||!c.events.length?3600000:AR_EVERY_MIN*60000-20000))return c.events;
+  const c=arCache.get(url);if(c&&Date.now()-c.t<(old||!c.events.length?3600000:maxAge))return c.events;
   const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),15000);
   try{
     const r=await fetch(old?url:url+'&_='+Math.floor(Date.now()/60000),{signal:ctl.signal});if(!r.ok)throw new Error(r.status);
@@ -6743,6 +6756,8 @@ function arMatches(sport,events,feed,day){
     const per=+st.period||0,odd=[ty.name,ty.description,ty.detail,ty.shortDetail].join(' ');
     out.push({sport,feed,day,id:cp.id||ev.id,date:Date.parse(cp.date||ev.date||''),comps,
       done:ty.completed===true||ty.state==='post',live:ty.state==='in',
+      // what ESPN shows on the clock: "73'", "HT", "45'+2'", "Q3 5:21"… (tennis has none)
+      clock:String(ty.shortDetail||st.displayClock||'').trim(),
       // retired, walkover, abandoned…: only what was already decided before it stopped counts
       bad:/retir|walk|w\/o|abandon|cancel|postpon|aplaz|susp|forfeit|default/i.test(odd),
       // football in or after extra time / penalties: the score isn't the 90 minutes bets are settled on
@@ -6912,12 +6927,22 @@ function arSports(){
 }
 // where to look for a bet's match → {first, then, days}: the feed and day it turned up in before, or its sport's
 // feeds; when nothing says the sport ("Ganador" alone) tennis and the NBA first, then football
-function arPlan(b,sports){
-  const w=arWhere.get(b.id);if(w)return {first:[w.f],then:[],days:[w.d]};
+function arPlan(b,sports,w=arWhere.get(b.id)){
+  if(w)return {first:[w.f],then:[],days:[w.d]};
   const sp=sports.get(arNorm(b.event)),days=arDays(b);
   if(sp==='tennis'||sp==='basket')return {first:AR_FEEDS.filter(f=>f[0]===sp),then:[],days};
   if(sp==='soccer')return {first:AR_SOCCER,then:[],days};
   return {first:AR_FEEDS,then:AR_SOCCER,days};
+}
+// asks ESPN for each [feeds, days] in the list and keeps one copy per match in `best`: the furthest on
+// (the same tournament comes back for each day asked) → false when none of the feeds could be reached
+async function arAsk(best,list,maxAge){
+  const rank=m=>(m.done?2e6:m.live?1e6:0)+m.comps.reduce((a,c)=>a+((m.sport==='tennis'?c.games:c.score)||0),0);
+  const want=new Map();
+  list.forEach(([fs,days])=>days.forEach(d=>fs.forEach(f=>want.set(f[1]+'|'+d,[f,d]))));
+  const got=await Promise.all([...want.values()].map(([f,d])=>arFetch(f[1],d,maxAge).then(ev=>ev?arMatches(f[0],ev,f,d):null)));
+  got.forEach(l=>(l||[]).forEach(m=>{const k=m.sport+':'+m.id,o=best.get(k);if(!o||rank(m)>rank(o))best.set(k,m);}));
+  return got.some(x=>x!==null);
 }
 async function pendAutoResults(manual){
   if(arBusy)return;
@@ -6926,16 +6951,7 @@ async function pendAutoResults(manual){
   if(!cands.length){if(manual)toast('Nothing to check: no started pending surebets on markets it can read (winner, totals, handicaps, 1st set…) without a result');return;}
   arBusy=true;arLast=Date.now();arBtnState();
   try{
-    // one copy per match: the furthest on (the same tournament comes back for each day asked)
-    const best=new Map();
-    const rank=m=>(m.done?2e6:m.live?1e6:0)+m.comps.reduce((a,c)=>a+((m.sport==='tennis'?c.games:c.score)||0),0);
-    const ask=async list=>{
-      const want=new Map();
-      list.forEach(([fs,days])=>days.forEach(d=>fs.forEach(f=>want.set(f[1]+'|'+d,[f,d]))));
-      const got=await Promise.all([...want.values()].map(([f,d])=>arFetch(f[1],d).then(ev=>ev?arMatches(f[0],ev,f,d):null)));
-      got.forEach(l=>(l||[]).forEach(m=>{const k=m.sport+':'+m.id,o=best.get(k);if(!o||rank(m)>rank(o))best.set(k,m);}));
-      return got.some(x=>x!==null);
-    };
+    const best=new Map(),ask=list=>arAsk(best,list);
     const sports=arSports();
     const plan=cands.map(b=>[b,arPlan(b,sports)]);
     let reached=await ask(plan.map(([b,p])=>[p.first,p.days]));
@@ -6970,6 +6986,98 @@ function arLine(b,sub){
 }
 setInterval(()=>{if(document.visibilityState==='visible'&&Array.isArray(D.bets))pendAutoResults(false);},AR_EVERY_MIN*60000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Array.isArray(D.bets))setTimeout(()=>pendAutoResults(false),1500);});
+
+// ══════════════════════════════════════════
+//  LIVE NOW — which pending matches are being played right now, with the minute and the score,
+//  from the same ESPN scores: only what ESPN says is on counts as live, not the estimated time
+// ══════════════════════════════════════════
+const LV_EVERY_SEC=60;     // how often the live scores are asked again while Pending is open
+const LV_RETRY_MIN=15;     // a match ESPN doesn't list is looked up again after this, then twice as long (up to 2 h)
+var lvState=new Map();     // 'sb:id' / 'nm:id' → {st:'in'|'post'|'pre', clock, score, start}
+const lvWhere=new Map();   // key → {f, d}: the feed and day its match turned up in
+const lvTried=new Map();   // key → {t, wait}
+let lvBusy=false,lvLast=0;
+function lvOf(item){return item&&item.id!=null?lvState.get('sb:'+item.id)||lvState.get('nm:'+item.id)||null:null;}
+function lvIsLive(item){const v=lvOf(item);return !!v&&v.st==='in';}
+// pending bets whose match can be on now: from a while before its estimated start until hours after its estimated end
+function lvCands(){
+  const now=Date.now(),today=shiftedISO(0),out=[];
+  const add=(kind,item)=>{
+    const key=kind+':'+item.id,v=lvState.get(key);
+    if(item.status!=='pending'||!item.date||String(item.event||'').split(AR_VS).length!==2)return;
+    if(v&&v.st==='post')return; // finished: it won't change
+    if(!(v&&v.st==='in')){
+      const end=item.time?Date.parse(item.date+'T'+item.time+':00'):NaN;
+      if(isNaN(end)){if(item.date!==today)return;}
+      else if(now<end-SPORT_HOURS*3600000-20*60000||now>end+4*3600000)return;
+      const t=lvTried.get(key);if(t&&now-t.t<t.wait*60000)return;
+    }
+    out.push({kind,item,key});
+  };
+  D.bets.forEach(b=>add('sb',b));
+  (D.normals||[]).forEach(n=>add('nm',n));
+  return out;
+}
+async function lvRefresh(force){
+  if(lvBusy||!Array.isArray(D.bets))return;
+  if(!force&&Date.now()-lvLast<LV_EVERY_SEC*1000-10000)return;
+  // forget bets that aren't pending any more
+  [...lvState.keys()].forEach(k=>{const [kd,id]=k.split(':');const it=(kd==='sb'?D.bets:D.normals||[]).find(x=>String(x.id)===id);if(!it||it.status!=='pending')lvState.delete(k);});
+  const cands=lvCands();
+  if(!cands.length){lvPaint();return;}
+  lvBusy=true;lvLast=Date.now();
+  const before=lvSig();
+  try{
+    const best=new Map(),sports=arSports(),age=LV_EVERY_SEC*1000-15000;
+    const plan=cands.map(c=>[c,arPlan(c.item,sports,lvWhere.get(c.key)||(c.kind==='sb'?arWhere.get(c.item.id):undefined))]);
+    let reached=await arAsk(best,plan.map(([c,p])=>[p.first,p.days]),age);
+    const later=plan.filter(([c,p])=>p.then.length&&!arFindMatch(c.item,[...best.values()]));
+    if(later.length)reached=await arAsk(best,later.map(([c,p])=>[p.then,p.days]),age)||reached;
+    if(!reached)return;
+    const pool=[...best.values()];
+    cands.forEach(({item,key})=>{
+      const hit=arFindMatch(item,pool);
+      if(!hit){
+        const t=lvTried.get(key);lvTried.set(key,{t:Date.now(),wait:t?Math.min(t.wait*2,120):LV_RETRY_MIN});
+        if(lvState.has(key)&&lvState.get(key).st!=='in')lvState.delete(key);
+        return;
+      }
+      lvTried.delete(key);lvWhere.set(key,{f:hit.m.feed,d:hit.m.day});
+      const {m,A,B}=hit,ten=m.sport==='tennis';
+      const st=m.done?'post':m.live?'in':'pre';
+      const score=ten?(A.ls.length?arScore(m,A,B):'0-0'):(isNaN(A.score)||isNaN(B.score)?'':A.score+'-'+B.score);
+      const clock=ten?(A.ls.length?'Set '+A.ls.length:''):(/^(in progress|en curso|live)$/i.test(m.clock)?'':m.clock);
+      lvState.set(key,{st,clock,score,start:m.date,sport:m.sport});
+    });
+  }finally{
+    lvBusy=false;
+    // which bets are live / finished changed → redraw the list (chips, filters, "Ready to settle"); else just the tags
+    const pg=document.getElementById('page-pendientes'),ae=document.activeElement;
+    const typing=ae&&pg&&pg.contains(ae)&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName);
+    if(lvSig()!==before&&pg&&pg.style.display!=='none'&&!typing)renderPendientes();else lvPaint();
+  }
+}
+function lvSig(){return [...lvState].map(([k,v])=>k+v.st).sort().join();}
+function lvInner(key){
+  const v=lvState.get(key);if(!v)return '';
+  if(v.st==='in'){
+    const txt=[v.clock,v.score].filter(Boolean).map(esc).join(' · ');
+    return `<span class="lv-tag" title="Being played right now — live score from ESPN, updated every minute"><i class="lv-dot"></i>LIVE${txt?' '+txt:''}</span>`;
+  }
+  if(v.st==='post')return `<span class="lv-tag end" title="ESPN says this match has finished">Finished${v.score?' '+esc(v.score):''}</span>`;
+  const t=!isNaN(v.start)?new Date(v.start):null;
+  return `<span class="lv-tag pre" title="ESPN still lists it as not started">${t&&t.getTime()>Date.now()-60000?'Starts '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'):'Not started yet'}</span>`;
+}
+function lvSlot(kind,item){const k=kind+':'+item.id;return `<span class="lv-slot" data-lv="${k}">${lvInner(k)}</span>`;}
+// update the tags in place, so a refresh doesn't close what you have open
+function lvPaint(){
+  document.querySelectorAll('#pendList [data-lv]').forEach(el=>{
+    const h=lvInner(el.dataset.lv);if(el.innerHTML!==h)el.innerHTML=h;
+    const row=el.closest('.pc-row,.pend-item');if(row)row.classList.toggle('lv-on',(lvState.get(el.dataset.lv)||{}).st==='in');
+  });
+}
+setInterval(()=>{const pg=document.getElementById('page-pendientes');if(document.visibilityState==='visible'&&pg&&pg.style.display!=='none')lvRefresh(false);},LV_EVERY_SEC*1000);
+document.addEventListener('visibilitychange',()=>{const pg=document.getElementById('page-pendientes');if(document.visibilityState==='visible'&&pg&&pg.style.display!=='none')setTimeout(()=>lvRefresh(true),800);});
 
 // ══════════════════════════════════════════
 //  AUTO CATEGORY — the category a surebet from Telegram goes in, from its competition line
@@ -7869,7 +7977,7 @@ function navTo(page){
     if(page==='calc')setBetType(newBetType);
     else if(page==='bets'){renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);}
     else if(page==='profit')renderProfit();
-    else if(page==='pendientes'){renderPendientes();pendAutoResults(false);}
+    else if(page==='pendientes'){renderPendientes();pendAutoResults(false);lvRefresh(false);}
     else if(page==='casas')renderCasas();
     else if(page==='notas')renderNotas();
     else if(page==='categorias')renderCategorias();
