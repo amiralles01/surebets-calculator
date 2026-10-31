@@ -1739,6 +1739,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .tg-raw{font-size:12px;color:var(--faint)}
 .tg-dup{font-size:11px;font-weight:700;margin-left:6px;padding:1px 6px;border-radius:6px;background:var(--ydim,#fff3c4);border:1px solid color-mix(in srgb,var(--yellow,#e8b400) 50%,transparent);white-space:nowrap}
 .tg-it.dup{opacity:.62}
+.tg-age.old{color:var(--red);font-weight:600}
 .tg-btns{display:flex;gap:6px;align-items:center;flex-shrink:0}
 .tg-btns .btn-reg{width:auto;margin:0;padding:8px 16px;font-size:13px}
 .tg-x{width:30px;height:30px;border-radius:8px;border:none;background:none;color:var(--faint);cursor:pointer;font-size:13px}
@@ -7281,7 +7282,7 @@ function renderTgCard(){
       return `<div class="tg-it${ok?'':' bad'}${dup?' dup':''}">
         <div class="tg-main">
           <div class="tg-ev">${esc(p.ev||'(no event)')}${ok?`<span class="tg-roi ${roi>=0?'pos':'neg'}">${roi>=0?'+':''}${fmt(roi)}%</span>`:''}${dup?`<span class="tg-dup" title="Same match, market, bookmakers and odds as a pending bet">Already registered${addedAt(dup)?' '+addedAt(dup):''}</span>`:''}</div>
-          ${p.market||p.time?`<div class="tg-mk">${[p.market?esc(p.market):'',p.time?'ends ~'+parseInt(p.time,10)+'h':''].filter(Boolean).join(' · ')}</div>`:''}
+          <div class="tg-mk">${[p.market?esc(p.market):'',p.time?'ends ~'+parseInt(p.time,10)+'h':'',it.at?`<span class="tg-age${Date.now()-it.at>15*60000?' old':''}" data-tgage="${+it.at}">${tgAge(it.at)}</span>`:''].filter(Boolean).join(' · ')}</div>
           <div class="tg-legs">${ok?p.legs.map(l=>`<span class="tg-leg">${esc(l.house)} <b>${fmt(l.odd)}</b></span>`).join('')+(pr?`<span class="tg-pre" title="Your saved stakes will be used">⚡ ${pr.legs.map(l=>fmt(l.stake,l.stake%1?2:0)).join('/')} €</span>`:''):`<span class="tg-raw">Bookmakers not recognised · ${esc(it.text.slice(0,70))}…</span>`}</div>
         </div>
         <div class="tg-btns">${ok?`<button class="btn-reg" data-tgload="${it.uid}">Use</button>`:''}<button class="tg-x" data-tgdel="${it.uid}" title="Discard">✕</button></div></div>`;
@@ -7290,6 +7291,9 @@ function renderTgCard(){
   }
   card.innerHTML=html+'</div>';
 }
+// how long ago the surebet was sent: odds that old may have moved
+function tgAge(at){const m=Math.max(0,Math.floor((Date.now()-at)/60000));return m<1?'just now':m<60?m+' min ago':Math.floor(m/60)+' h ago';}
+setInterval(()=>{if(document.hidden)return;document.querySelectorAll('#tgCard [data-tgage]').forEach(e=>{const at=+e.dataset.tgage,t=tgAge(at);if(e.textContent!==t)e.textContent=t;e.classList.toggle('old',Date.now()-at>15*60000);});},30000);
 // Everything comes from the message; the only thing left to type is the stake.
 function focusStake(){
   const el=document.getElementById('totalInv');if(!el)return;
