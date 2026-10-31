@@ -1198,6 +1198,8 @@ input[type=checkbox]{accent-color:var(--accent)}
   .tab.tab-new{color:var(--muted)}
   .tab.tab-new.active{color:var(--text)}
   .toast{bottom:calc(84px + env(safe-area-inset-bottom))}
+  /* the Register bar is showing: the toast goes above it, so it never covers the Register button */
+  body:has(#page-calc[style*="contents"] .q-bar.on) .toast{bottom:calc(150px + env(safe-area-inset-bottom))}
 
   /* New bet: compact type switcher */
   .nbt-wrap{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
@@ -1703,6 +1705,9 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .q-grid{border-bottom:none;padding-bottom:0;margin-bottom:0}
 .stake-row{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
 .stake-tot{width:150px}.stake-rnd{flex:1;min-width:220px}.stake-rnd .rp{margin:0}
+.stk-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.stk-chips:empty{display:none}
+.stk-chip{font:inherit;font-size:13px;font-weight:650;font-variant-numeric:tabular-nums;padding:5px 10px;border-radius:999px;border:1px solid var(--border2,var(--border));background:var(--raised);color:var(--text);cursor:pointer;line-height:1.2}
+.stk-chip:hover{border-color:var(--accent)}.stk-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .ps-quick{margin:14px 0 0}
 .psq-empty{font-size:12px;color:var(--faint);line-height:1.5}
 #psBanner:empty{display:none}
@@ -2286,7 +2291,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 
             <div class="sbx-sec"><span class="sbx-n">3</span>Stake</div>
             <div class="stake-row">
-              <div class="stake-tot"><label class="fl">Total</label><div class="iw"><input type="number" class="ii" id="totalInv" value="100" min="0" step="1"><span class="isuf">€</span></div></div>
+              <div class="stake-tot"><label class="fl">Total</label><div class="iw"><input type="number" class="ii" id="totalInv" value="100" min="0" step="1"><span class="isuf">€</span></div><div class="stk-chips" id="stkChips"></div></div>
               <div class="stake-rnd"><label class="fl">Rounding</label>
                 <div class="rp" id="roundPills">
                   <button class="rpb active" data-mode="exact">Exact</button>
@@ -3681,6 +3686,7 @@ function renderOutcomes(){
 }
 
 function renderResult(){
+  renderStakeChips();
   const panel=document.getElementById('resultPanel');
   const res=calculate();
   if(!res){const qb=document.getElementById('qBar');if(qb)qb.classList.remove('on');panel.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>Add at least 2 odds &gt; 1.00.</p></div></div>`;return;}
@@ -3756,6 +3762,25 @@ function fitToBalance(){
 }
 
 function render(){autoPreset();renderOutcomes();renderResult();renderPsQuick();renderPsBanner();}
+// ── The totals you use most, as one-tap chips under Total (from your last 300 surebets)
+let _stkTop=null;
+function topTotals(){
+  if(_stkTop&&_stkTop.v===saveVer&&_stkTop.d===D)return _stkTop.list;
+  const n=new Map();
+  (D.bets||[]).slice().sort((a,b)=>b.id-a.id).slice(0,300).forEach(b=>{const t=Math.round(+b.totalStake||0);if(t>0)n.set(t,(n.get(t)||0)+1);});
+  const list=[...n].filter(x=>x[1]>=2).sort((a,b)=>b[1]-a[1]).slice(0,5).map(x=>x[0]).sort((a,b)=>a-b);
+  _stkTop={v:saveVer,d:D,list};return list;
+}
+function renderStakeChips(){
+  const el=document.getElementById('stkChips');if(!el)return;
+  const list=activePreset()?[]:topTotals();
+  el.innerHTML=list.map(t=>`<button type="button" class="stk-chip${Math.abs(totalInv-t)<0.005?' on':''}" data-stk="${t}">${t} €</button>`).join('');
+}
+document.getElementById('stkChips').addEventListener('mousedown',e=>{if(e.target.closest('[data-stk]'))e.preventDefault();}); // keep the keyboard / focus where it is
+document.getElementById('stkChips').addEventListener('click',e=>{
+  const b=e.target.closest('[data-stk]');if(!b)return;
+  setTotal(+b.dataset.stk);fitBaseTotal=null;renderResult();
+});
 
 let editingSbId=null;
 function renderSbrLegs(legs,editable){
