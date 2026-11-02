@@ -7073,7 +7073,7 @@ const afDays=new Map();    // 'YYYY-MM-DD' → {t, list:[{id, date, comps}]}
 const afFix=new Map();     // fixture id → {t, m}: finished ones are kept
 const afTried=new Map();   // fixture id / 'day:YYYY-MM-DD' → {t, wait}
 function afKey(){try{return (localStorage.getItem('sb_af_key')||'').trim();}catch(e){return '';}}
-function afSetKey(k){try{k?localStorage.setItem('sb_af_key',k.trim()):localStorage.removeItem('sb_af_key');}catch(e){}afQuota=null;afErr='';afTried.clear();}
+function afSetKey(k){try{k?localStorage.setItem('sb_af_key',k.trim()):localStorage.removeItem('sb_af_key');}catch(e){}afQuota=null;afErr='';afTried.clear();arTried.clear();}
 function afTz(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'Europe/Madrid';}catch(e){return 'Europe/Madrid';}}
 async function afGet(path){
   const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),20000);
@@ -7243,7 +7243,8 @@ async function afAskKey(){
   if(!r){toast("That key didn't work: "+afErr);return;}
   const q=r.requests||{};afQuota={left:(+q.limit_day||0)-(+q.current||0),at:Date.now()};
   toast(`API-Football key works · ${afQuota.left} of ${q.limit_day} requests left today`);
-  pendAutoResults(true);
+  // look up what's waiting now, without its own toast covering this one
+  arLast=0;setTimeout(()=>pendAutoResults(false),4500);
 }
 function arBtnState(){const b=document.getElementById('arBtn');if(b){b.classList.toggle('busy',arBusy);b.disabled=arBusy;}}
 function arLine(b,sub){
