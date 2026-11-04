@@ -406,6 +406,7 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,
   font-size:10px;font-weight:600;letter-spacing:.3px;flex-shrink:0}
 .tp-normal{background:var(--bdim);color:var(--blue);border:1px solid rgba(47,104,168,.25)}
 .tp-freebet{background:var(--ydim);color:var(--yellow);border:1px solid rgba(244,197,61,.3)}
+.tg-evb{margin-left:6px;font-size:10.5px;font-weight:600;padding:1px 6px;border-radius:5px;background:rgba(168,85,247,.16);color:#c084fc;vertical-align:1px}
 .tp-combi{background:rgba(138,74,140,.12);color:#9467bd;border:1px solid rgba(138,74,140,.3)}
 
 /* ── PROFIT PAGE ── */
@@ -6659,6 +6660,46 @@ function parseBotFormat(txt,at){
   const comp=tr?tr[1].replace(/\s+/g,' ').trim().slice(0,80):'';
   return {legs:ok.map(l=>({house:l.house,odd:l.odd,stake:l.stake??null,result:l.result})),ev,market:pre.replace(/\s*-\s*$/,''),date,time,comp};
 }
+// A +EV (value bet) message from the "Apuestas +EV → Telegram" script: ONE bet, registered as a Normal bet.
+// "💎 +EV · ⚔️ A vs B · 📈 EV 5.85%" / "🏆 ⚽ Liga" / "⏳ Empieza en: 28m" / "🎯 Mercado - Selección" /
+// "📈 Cuota: 2.10 en 🏦 bet365" / "⚖️ Cuota justa: 1.98 …" / "🕒 Hora: 4/11/2026, 23:10:40"
+function parseEvFormat(txt,at){
+  txt=String(txt||'');
+  const lines=txt.split(/\n/);
+  if(!/^\W*\+EV\b/i.test((lines[0]||'').trim())||!/cuota:\s*\d/i.test(txt))return null;
+  const clean=l=>l.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{20E3}\u{2B50}]/gu,'').replace(/\s+/g,' ').trim();
+  const head=clean(lines[0]).split(/\s·\s/).map(x=>x.trim()).filter(Boolean);
+  const ev=head.find(x=>!/^\+?EV\b/i.test(x))||'';
+  const pm=txt.match(/\bEV\s*([+-]?\d+(?:[.,]\d+)?)\s*%/i);
+  const evPct=pm?parseFloat(pm[1].replace(',','.')):null;
+  const pl=lines.find(l=>/^\s*🎯/u.test(l));
+  const pick=pl?clean(pl):'';
+  const cl=lines.map(clean).find(l=>/^cuota:/i.test(l));
+  const c=cl&&cl.match(/^cuota:\s*(\d+(?:[.,]\d+)?)\s*en\s*(.+)$/i);
+  if(!ev||!pick||!c)return null;
+  const odd=parseFloat(c[1].replace(',','.'));
+  const known=trackedBookmakers();
+  const houses=c[2].replace(/\(.*?\)/g,'').split(',').map(x=>x.trim()).filter(Boolean);
+  const find=raw=>{const r=raw.toLowerCase();return known.find(n=>n.toLowerCase()===r)||known.find(n=>r.includes(n.toLowerCase())||n.toLowerCase().includes(r));};
+  const house=houses.map(find).find(Boolean)||houses[0]||'';
+  if(!(odd>1)||!house)return null;
+  const fm=txt.match(/cuota justa:\s*(\d+(?:[.,]\d+)?)/i);
+  const w=botWhen(txt,at);
+  return {single:true,legs:[{house,odd,stake:null,result:pick}],ev,market:pick,pick,evPct,fair:fm?parseFloat(fm[1].replace(',','.')):null,date:w.date,time:w.time,comp:w.comp};
+}
+// when it ends ≈ kick-off (counted from the message's "Hora:", not from now) + match length, and the 🏆 competition line
+function botWhen(txt,at){
+  let date='',time='';
+  const h=txt.match(/hora:\s*(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s*(\d{1,2}):(\d{2})/i);
+  const base=h?new Date(+h[3],+h[2]-1,+h[1],+h[4],+h[5]):at?new Date(at):new Date();
+  const e=txt.match(/empieza en:\s*([^\n]*)/i);
+  const end=new Date(((e&&kickoffFrom(base,e[1]))||base).getTime()+SPORT_HOURS*3600000);
+  if(e||h||at){date=`${end.getFullYear()}-${String(end.getMonth()+1).padStart(2,'0')}-${String(end.getDate()).padStart(2,'0')}`;time=String(end.getHours()+(end.getMinutes()>=30?1:0)).padStart(2,'0')+':00';if(time==='24:00')time='23:00';}
+  const tr=txt.match(/🏆\uFE0F?[ \t]*(?:torneo:[ \t]*)?([^\n]*)/i);
+  return {date,time,comp:tr?tr[1].replace(/\s+/g,' ').trim().slice(0,80):''};
+}
+// a message is usable: a surebet (2+ legs) or a +EV single bet
+const tgUsable=p=>!!p&&(p.single?p.legs.length===1:p.legs.length>=2);
 function parseSurebetText(txt,at){
   txt=String(txt||'');
   const bot=parseBotFormat(txt,at);if(bot)return bot;
@@ -6714,6 +6755,8 @@ document.getElementById('qPasteBtn').addEventListener('click',()=>{
     if(navigator.clipboard&&navigator.clipboard.readText){navigator.clipboard.readText().then(x=>{if(x&&!t.value){t.value=x;t.dispatchEvent(new Event('input'));}}).catch(()=>{});}}
 });
 document.getElementById('qPaste').addEventListener('input',e=>{
+  const pe=parseEvFormat(e.target.value);
+  if(pe){if(tgRequeue())save();loadEvNormal(pe);document.getElementById('qPasteWrap').style.display='none';setTimeout(focusStake,30);return;}
   const p=parseSurebetText(e.target.value);const {legs,ev,market,date,time}=p;
   if(legs.length<2){if(e.target.value.trim())toast('Could not find 2 of your bookmakers with odds in that text');return;}
   if(tgRequeue())save();
@@ -7408,7 +7451,7 @@ function autoCategory(comp,txt){
   const k=arNorm(comp);
   if(k){
     let last=null;
-    D.bets.forEach(b=>{if(b.comp&&b.categoryId&&(!last||b.id>last.id)&&arNorm(b.comp)===k&&cats.some(c=>c.id===b.categoryId))last=b;});
+    [...D.bets,...(D.normals||[])].forEach(b=>{if(b.comp&&b.categoryId&&(!last||b.id>last.id)&&arNorm(b.comp)===k&&cats.some(c=>c.id===b.categoryId))last=b;});
     if(last)return last.categoryId;
   }
   const sp=catSportOf(comp,txt),root=catSportRoot(sp);
@@ -7474,7 +7517,7 @@ const _tgParsed=new Map();
 function tgParse(it){
   const bk=trackedBookmakers().join('|');const c=_tgParsed.get(it.uid);
   if(c&&c.text===it.text&&c.bk===bk)return c.p;
-  const p=parseSurebetText(it.text,it.at);if(_tgParsed.size>300)_tgParsed.clear();_tgParsed.set(it.uid,{text:it.text,bk,p});return p;
+  const p=parseEvFormat(it.text,it.at)||parseSurebetText(it.text,it.at);if(_tgParsed.size>300)_tgParsed.clear();_tgParsed.set(it.uid,{text:it.text,bk,p});return p;
 }
 // same match + market + bookmakers + odds as a pending bet you already registered (Telegram sends some twice)
 function dupKey(ev,mk,legs){return matchName(ev)+'#'+String(mk||'').trim().toLowerCase()+'#'+legSig(legs);}
@@ -7482,7 +7525,13 @@ function tgDupIndex(){
   const m=new Map();(D.bets||[]).forEach(b=>{if(b.status!=='pending'||!(b.legs||[]).length)return;const k=dupKey(b.event,b.market,b.legs);const o=m.get(k);if(!o||b.id>o.id)m.set(k,b);});
   return m;
 }
-function tgDupOf(p,idx){return p.legs.length>=2&&p.ev?(idx||tgDupIndex()).get(dupKey(p.ev,p.market,p.legs))||null:null;}
+function tgDupOf(p,idx){
+  if(p.single){ // same match + bookmaker + odds + pick as a pending normal bet / freebet
+    const l=p.legs[0],k=matchName(p.ev);
+    return (D.normals||[]).filter(n=>n.status==='pending'&&matchName(n.event)===k&&bkKey(n.house||'')===bkKey(l.house)&&Math.abs((n.odd||0)-l.odd)<1e-6&&(!n.pick||n.pick===p.pick)).sort((a,b)=>b.id-a.id)[0]||null;
+  }
+  return p.legs.length>=2&&p.ev?(idx||tgDupIndex()).get(dupKey(p.ev,p.market,p.legs))||null:null;
+}
 function tgStart(){clearInterval(tgTimer);if(tgToken()){tgPoll();tgTimer=setInterval(()=>{if(!document.hidden)tgPoll();},4000);}}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)tgPoll();});
 function renderTgCard(){
@@ -7501,14 +7550,14 @@ function renderTgCard(){
   if(!tgOpenCfg){
     const idx=tgDupIndex();
     const parsed=items.map(it=>{const p=tgParse(it);return {it,p,dup:tgDupOf(p,idx)};});
-    const okCount=parsed.filter(x=>x.p.legs.length>=2).length,dupN=parsed.filter(x=>x.dup).length;
+    const okCount=parsed.filter(x=>tgUsable(x.p)).length,dupN=parsed.filter(x=>x.dup).length;
     html+=parsed.map(({it,p,dup})=>{
-      const ok=p.legs.length>=2;
-      const sum=ok?p.legs.reduce((a,l)=>a+1/l.odd,0):0;const roi=ok?(1/sum-1)*100:0;
-      const pr=ok?findPreset(p.legs.map(l=>l.odd)):null;
+      const ok=tgUsable(p);
+      const sum=ok&&!p.single?p.legs.reduce((a,l)=>a+1/l.odd,0):0;const roi=p.single?(p.evPct||0):ok?(1/sum-1)*100:0;
+      const pr=ok&&!p.single?findPreset(p.legs.map(l=>l.odd)):null;
       return `<div class="tg-it${ok?'':' bad'}${dup?' dup':''}">
         <div class="tg-main">
-          <div class="tg-ev">${esc(p.ev||'(no event)')}${ok?`<span class="tg-roi ${roi>=0?'pos':'neg'}">${roi>=0?'+':''}${fmt(roi)}%</span>`:''}${dup?`<span class="tg-dup" title="Same match, market, bookmakers and odds as a pending bet">Already registered${addedAt(dup)?' '+addedAt(dup):''}</span>`:''}</div>
+          <div class="tg-ev">${esc(p.ev||'(no event)')}${ok?`<span class="tg-roi ${roi>=0?'pos':'neg'}">${p.single?'EV ':''}${roi>=0?'+':''}${fmt(roi)}%</span>`:''}${p.single&&ok?'<span class="tg-evb" title="Value bet: one single bet, saved as a Normal bet">Normal bet</span>':''}${dup?`<span class="tg-dup" title="Same match, market, bookmakers and odds as a pending bet">Already registered${addedAt(dup)?' '+addedAt(dup):''}</span>`:''}</div>
           <div class="tg-mk">${[p.market?esc(p.market):'',p.time?'ends ~'+parseInt(p.time,10)+'h':'',it.at?`<span class="tg-age${Date.now()-it.at>15*60000?' old':''}" data-tgage="${+it.at}">${tgAge(it.at)}</span>`:''].filter(Boolean).join(' · ')}</div>
           <div class="tg-legs">${ok?p.legs.map(l=>`<span class="tg-leg">${esc(l.house)} <b>${fmt(l.odd)}</b></span>`).join('')+(pr?`<span class="tg-pre" title="Your saved stakes will be used">⚡ ${pr.legs.map(l=>fmt(l.stake,l.stake%1?2:0)).join('/')} €</span>`:''):`<span class="tg-raw">Bookmakers not recognised · ${esc(it.text.slice(0,70))}…</span>`}</div>
         </div>
@@ -7523,6 +7572,8 @@ function tgAge(at){const m=Math.max(0,Math.floor((Date.now()-at)/60000));return 
 setInterval(()=>{if(document.hidden)return;document.querySelectorAll('#tgCard [data-tgage]').forEach(e=>{const at=+e.dataset.tgage,t=tgAge(at);if(e.textContent!==t)e.textContent=t;e.classList.toggle('old',Date.now()-at>15*60000);});},30000);
 // Everything comes from the message; the only thing left to type is the stake.
 function focusStake(){
+  if(newBetType!=='Surebet'){const s=document.getElementById('nf-stake');try{s.focus({preventScroll:true});s.select();}catch(e){}s.scrollIntoView({behavior:'smooth',block:'center'});
+    toast('Value bet loaded as a Normal bet — type your stake');return;}
   const el=document.getElementById('totalInv');if(!el)return;
   // focus inside the tap itself: iPhone only opens the keyboard for a focus that comes straight from a tap
   try{el.focus({preventScroll:true});el.select();}catch(e){}
@@ -7533,7 +7584,7 @@ function focusStake(){
 function calcIdle(){return newBetType==='Surebet'&&(document.querySelector('.ni.active')?.dataset.page||'calc')==='calc'&&!outcomes.some(o=>o.odd>1);}
 function tgNext(){
   const idx=tgDupIndex(); // ones you already registered wait in the list (tap Use if you really placed it twice)
-  const next=(D.tgInbox||[]).slice().reverse().find(it=>{const p=tgParse(it);return p.legs.length>=2&&!tgDupOf(p,idx);});
+  const next=(D.tgInbox||[]).slice().reverse().find(it=>{const p=tgParse(it);return tgUsable(p)&&!tgDupOf(p,idx);});
   if(!next||!calcIdle())return false;
   tgLoad(next.uid);focusStake();return true;
 }
@@ -7541,12 +7592,31 @@ function tgNext(){
 // registered yet goes back into the queue (in its original order) instead of being lost.
 function tgRequeue(){
   const c=tgCur;tgCur=null;
-  if(!c||!outcomes.some(o=>o.odd>1)||D.tgInbox.some(x=>x.uid===c.uid))return false;
+  const loaded=c&&(c.single?newBetType!=='Surebet'&&parseFloat(document.getElementById('nf-odd').value)>1:outcomes.some(o=>o.odd>1));
+  if(!c||!loaded||D.tgInbox.some(x=>x.uid===c.uid))return false;
+  delete c.single;
   D.tgInbox.push(c);D.tgInbox.sort((a,b)=>b.uid-a.uid);renderTgCard();return true;
+}
+// +EV single bet → New bet · Normal, everything filled in except the stake (switch to Freebet before saving if it is one)
+let nfTg=null; // {ev, comp, pick, evPct, fair} — kept with the bet only while the event is still that one
+function loadEvNormal(p){
+  const l=p.legs[0];
+  setBetType('Normal');
+  document.getElementById('nf-event').value=p.ev;
+  document.getElementById('nf-odd').value=l.odd;
+  const nfH=document.getElementById('nf-house');nfH.innerHTML=houseOptionsHtml(l.house,'Choose bookmaker…');nfH.value=nfH.querySelector('option[selected]')?.value||l.house;
+  if(p.date)document.getElementById('nf-date').value=p.date;
+  document.getElementById('nf-time').value=p.time||'';
+  document.getElementById('nf-notes').value=[p.evPct!=null?`+EV ${fmt(p.evPct)}%`:'+EV',p.pick].filter(Boolean).join(' · ');
+  document.getElementById('nf-stake').value='';
+  if(newBetCat==null){const id=autoCategory(p.comp,p.pick);fillCategorySelect(document.getElementById('nf-category'),id);}
+  nfTg={ev:p.ev,comp:p.comp||'',pick:p.pick||'',evPct:p.evPct,fair:p.fair};
+  renderNfResult();
 }
 function tgLoad(uid,quiet){
   const it=D.tgInbox.find(x=>x.uid===uid);if(!it)return false;
-  const p=tgParse(it);if(p.legs.length<2)return false;
+  const p=tgParse(it);if(!tgUsable(p))return false;
+  if(p.single){tgRequeue();tgCur=it;it.single=true;loadEvNormal(p);D.tgInbox=D.tgInbox.filter(x=>x.uid!==uid);if(!quiet)save();renderTgCard();return true;}
   tgRequeue();tgCur=it;
   clearPresetStakes();
   outcomes=p.legs.map(l=>({id:nextId++,house:l.house,result:l.result||'',odd:l.odd,manualStake:null}));
@@ -8169,6 +8239,8 @@ function renderNfResult(){
   document.getElementById('nfReset').addEventListener('click',resetNfForm);
 }
 function resetNfForm(){
+  if(tgCur&&tgCur.single&&tgRequeue())save(); // a Telegram value bet that wasn't saved goes back to the inbox
+  nfTg=null;
   ['nf-event','nf-odd','nf-stake','nf-notes','nf-time'].forEach(id=>document.getElementById(id).value='');
   nfSels=newBetType==='Combi'?[{name:'',odd:''},{name:'',odd:''}]:[];
   renderNfSels();syncComboOdd();renderNfResult();
@@ -8193,11 +8265,15 @@ function saveNewNormal(){
     notes:document.getElementById('nf-notes').value.trim(),
     categoryId:catVal?+catVal:null};
   if(sels.length)bet.selections=sels;
+  if(nfTg&&nfTg.ev===ev){if(nfTg.comp)bet.comp=nfTg.comp;if(nfTg.pick)bet.pick=nfTg.pick;if(nfTg.evPct!=null)bet.evPct=nfTg.evPct;if(nfTg.fair)bet.fair=nfTg.fair;}
+  const fromTg=!!nfTg;nfTg=null;if(tgCur&&tgCur.single)tgCur=null;
   D.normals.unshift(bet);const mw=bet.time?syncMatchWhen(bet):[];
   save();updateBadges();renderPendientes();renderNormals(document.getElementById('nbSearch').value);renderProfit();
   newBetCat=null;
   resetNfForm();renderRepeatSel();
   toast(`${type} saved to pending · +${fmt(bet.potentialWin)} € if it wins${matchWhenMsg(mw)}`,'View pending',()=>navTo('pendientes'));
+  // registered from Telegram: back to the calculator with the next message waiting there
+  if(fromTg&&(D.tgInbox||[]).length){setBetType('Surebet');if(tgNext())setTimeout(focusStake,0);}
 }
 // open the New bet page (optionally on a type and with a category preselected)
 function goNewBet(type,catId){
