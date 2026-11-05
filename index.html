@@ -75,13 +75,14 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   background:var(--gdim);color:var(--green);font-size:12.5px;font-weight:650;font-family:inherit;cursor:pointer;white-space:nowrap;transition:background var(--t),border-color var(--t)}
 .ph-new:hover{background:rgba(35,130,75,.2);border-color:var(--green)}
 .ph-new svg{width:14px;height:14px}
-.nbt-wrap{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.nbt-wrap{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
 .nbt{--ac:var(--green);--acd:var(--gdim);display:flex;align-items:center;gap:11px;padding:11px 13px;background:var(--surface);
   border:1px solid var(--border);border-radius:var(--r);cursor:pointer;text-align:left;color:var(--text);font-family:inherit;
   transition:border-color var(--t),background var(--t);min-width:0;position:relative}
 .nbt[data-bt="Normal"]{--ac:var(--blue);--acd:var(--bdim)}
 .nbt[data-bt="Freebet"]{--ac:var(--yellow);--acd:var(--ydim)}
 .nbt[data-bt="Combi"]{--ac:var(--purple);--acd:var(--pdim)}
+.nbt[data-bt="Middle"]{--ac:#B8621B;--acd:rgba(184,98,27,.12)}
 .nbt:hover{border-color:var(--ac)}
 .nbt-ic{width:34px;height:34px;border-radius:9px;background:var(--raised);display:grid;place-items:center;flex-shrink:0;color:var(--muted);transition:background var(--t),color var(--t)}
 .nbt-ic svg{width:18px;height:18px}
@@ -116,7 +117,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   transition:opacity .2s ease,transform .2s ease;display:flex;align-items:center;gap:12px;box-shadow:0 8px 30px rgba(0,0,0,.4);max-width:calc(100% - 32px)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
 .toast button{background:none;border:none;color:var(--green);font-weight:650;cursor:pointer;font-family:inherit;font-size:12.5px;padding:0}
-@media(max-width:900px){.nbt-wrap{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:900px){.nbt-wrap{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
 /* ── PENDING DAY FILTER ── */
 .fw{min-width:0}
@@ -1203,7 +1204,7 @@ input[type=checkbox]{accent-color:var(--accent)}
   body:has(#page-calc[style*="contents"] .q-bar.on) .toast{bottom:calc(150px + env(safe-area-inset-bottom))}
 
   /* New bet: compact type switcher */
-  .nbt-wrap{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .nbt-wrap{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
   .nbt{flex-direction:column;gap:6px;padding:10px 4px 9px;text-align:center;border-radius:12px}
   .nbt-ic{width:32px;height:32px;border-radius:9px}
   .nbt-ic svg{width:17px;height:17px}
@@ -1416,6 +1417,17 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .nbt.active{background:var(--surface);border-color:var(--ac);box-shadow:var(--lift)}
 .nbt.active .nbt-ic{background:var(--ac);color:#fff}
 .nbt.active[data-bt="Surebet"] .nbt-ic{background:var(--pitch);color:var(--ball)}
+/* ── MIDDLES ── */
+.mid-pill{display:inline-flex;align-items:center;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#B8621B;background:rgba(184,98,27,.12);border:1px solid rgba(184,98,27,.3);border-radius:6px;padding:1px 6px;margin-right:6px;vertical-align:1px}
+.mid-win{font-size:12.5px;color:var(--muted);margin-top:6px}
+.mid-win b{color:#B8621B}
+.mid-hint{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 13px;border-radius:10px;border:1px dashed rgba(184,98,27,.45);background:rgba(184,98,27,.07);font-size:12.5px;margin-top:10px}
+.mid-hint b{color:#B8621B}
+.card.ph2.mid{border-color:rgba(184,98,27,.45)}
+.badge.bm{background:rgba(184,98,27,.12);color:#B8621B;border:1px solid rgba(184,98,27,.3)}
+.pend-leg.both,.pc-leg.both{border-style:dashed}
+.pc-leg.both .pc-h mark,.pend-leg.both .pl-house mark{color:#B8621B}
+.tg-mid{font-size:10px;font-weight:700;color:#B8621B;background:rgba(184,98,27,.12);border-radius:5px;padding:1px 6px;margin-left:6px}
 .nbt.active .nbt-t{color:var(--text)}
 .cl{font-size:12px;font-weight:600;color:var(--faint)}
 .oi{font-weight:700;font-size:16px}
@@ -2217,7 +2229,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
   <div class="ph">
     <div style="min-width:0">
       <div class="ph-title" id="pgTitle">New bet</div>
-      <div class="ph-sub" id="pgSub">Surebets, normal bets, freebets and combis — all from one place</div>
+      <div class="ph-sub" id="pgSub">Surebets, middles, normal bets, freebets and combis — all from one place</div>
     </div>
     <button class="ph-new" id="phNewBet" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>New bet</span></button>
   </div>
@@ -2231,6 +2243,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
         <button class="nbt" data-bt="Normal"><span class="nbt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg></span><span class="nbt-tx"><span class="nbt-t">Normal</span><span class="nbt-d">Single bet, own money</span></span></button>
         <button class="nbt" data-bt="Freebet"><span class="nbt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></span><span class="nbt-tx"><span class="nbt-t">Freebet</span><span class="nbt-d">Bonus bet, stake not returned</span></span></button>
         <button class="nbt" data-bt="Combi"><span class="nbt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span><span class="nbt-tx"><span class="nbt-t">Combi</span><span class="nbt-d">Accumulator of selections</span></span></button>
+        <button class="nbt" data-bt="Middle"><span class="nbt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 8 3 12 7 16"/><polyline points="17 8 21 12 17 16"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="6" x2="12" y2="18"/></svg></span><span class="nbt-tx"><span class="nbt-t">Middle</span><span class="nbt-d">Two lines, both can win</span></span></button>
       </div>
       <div style="display:flex;flex-direction:column;gap:13px">
         <div class="card tg-card" id="tgCard" style="display:none"></div>
@@ -2261,7 +2274,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
         </div>
         <div class="card sbx" id="sbCalcCard">
           <div class="sbx-h">
-            <span class="ct">Surebet</span>
+            <span class="ct" id="sbCalcTitle">Surebet</span>
             <div class="sbx-tools">
               <button class="tool" id="repBtn" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg><span>Same as last</span></button>
               <button class="tool" id="qPasteBtn" title="Paste the text of a surebet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg><span>Paste</span></button>
@@ -2498,6 +2511,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
           <div class="tb">
             <div class="cat-chip active" data-typef="all">All</div>
             <div class="cat-chip" data-typef="surebet">Surebets</div>
+            <div class="cat-chip" data-typef="middle">Middles</div>
             <div class="cat-chip" data-typef="normal">Normal</div>
             <div class="cat-chip" data-typef="freebet">Freebets</div>
             <button class="btn-s" id="catAddBetBtn" style="margin-left:auto">
@@ -3645,6 +3659,38 @@ function houseOptionsHtml(current,placeholder){
   return html;
 }
 
+// ══ MIDDLES — two lines that can BOTH win: "Más de 2.5" at one bookmaker + "Menos de 3.5" at another.
+// Stored with the surebets (D.bets) with mid:1; the stakes are split like a surebet (same return whichever wins),
+// so one winning leg ≈ a small loss / small profit (profit) and both winning = midProfit.
+// The result can be one leg (0 / 1) or 'both' (pendMark / winnerLeg).
+function sbMode(){return newBetType==='Surebet'||newBetType==='Middle';}
+const MID_TOT=/^(mas de|mas|over|o|\+|menos de|menos|under|u|-)\s*(\d+(?:\.\d+)?)$/;
+function midTotal(res){
+  const m=String(res||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/,/g,'.').replace(/[^a-z0-9.+\- ]+/g,' ').replace(/\s+/g,' ').trim().match(MID_TOT);
+  return m?{over:/^(mas|over|o|\+)/.test(m[1]),line:+m[2]}:null;
+}
+// the totals on which both legs win: Más de 2.5 + Menos de 3.5 → [3] · Más de 2 + Menos de 3 → none (pushes, not a middle)
+function midWindow(legs){
+  if(!legs||legs.length!==2)return null;
+  const t=legs.map(l=>midTotal(l.result));
+  if(!t[0]||!t[1]||t[0].over===t[1].over)return null;
+  const o=t[0].over?t[0]:t[1],u=t[0].over?t[1]:t[0];
+  const vals=[];for(let v=Math.ceil(o.line+0.5);v<=Math.floor(u.line-0.5)&&vals.length<30;v++)vals.push(v);
+  return vals.length?{lo:o.line,hi:u.line,vals}:null;
+}
+function midWindowTxt(w){return w?(w.vals.length===1?String(w.vals[0]):w.vals[0]+'–'+w.vals[w.vals.length-1]):'';}
+// profit if both legs win
+function midBoth(b){return cents((b.legs||[]).reduce((a,l)=>a+(l.minReturn!=null?l.minReturn:payOdd(l.house,l.odd||0)*(l.stake||0)),0)-(b.totalStake||0));}
+function midBothRes(res){return cents(res.returns.reduce((a,x)=>a+x,0)-res.actualTotal);}
+const MID_PILL='<span class="mid-pill" title="Middle: both legs can win">Middle</span>';
+function midPill(b){return b&&b.mid?MID_PILL:'';}
+// what a surebet / middle made with this result (a leg index, 'both', or nothing = expected)
+function sbResultProfit(b,w){
+  if(w==='both'&&b.mid)return midBoth(b);
+  if(typeof w==='number'&&b.legs&&b.legs[w])return cents((b.legs[w].minReturn||0)-(b.totalStake||0));
+  return null;
+}
+
 function calculate(){
   const valid=outcomes.filter(o=>o.odd>1);
   if(valid.length<2)return null;
@@ -3696,6 +3742,7 @@ function renderResult(){
   if(!res){const qb=document.getElementById('qBar');if(qb)qb.classList.remove('on');panel.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>Add at least 2 odds &gt; 1.00.</p></div></div>`;return;}
   const{isSurebet,stakes,returns,minReturn,actualTotal,profit,profitPct,sumPct,valid}=res;
   const s=profit>=0?'+':'';
+  const isMid=newBetType==='Middle',both=midBothRes(res),win=midWindow(valid),winTxt=midWindowTxt(win);
   const led=cachedLedger();
   // a negative balance means that bookmaker's money isn't really being tracked → no figure, no warning
   const bal=valid.map(o=>{const c=casaFor(o.house);const b=c?casaMoney(c,led).balance:null;return b!=null&&b>=0?b:null;});
@@ -3703,25 +3750,31 @@ function renderResult(){
   const shortIdx=short.map((x,i)=>x?i:-1).filter(i=>i>=0);
   const canFit=shortIdx.length&&shortIdx.every(i=>bal[i]>=1);
   const balWarn=shortIdx.length?`<div class="reg-warn"><div><b>Not enough balance</b>${shortIdx.map(i=>`<span>${esc(valid[i].house)} needs ${fmt(stakes[i])}&nbsp;€ · has ${fmt(bal[i])}&nbsp;€</span>`).join('')}</div>${canFit?`<button class="tool" id="fitBalBtn" title="Lowers the total so every stake fits in its bookmaker">Fit to balance</button>`:''}</div>`:'';
-  const badgeHtml=isSurebet?`<div class="badge bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Surebet</div>`:
+  const badgeHtml=isMid?`<div class="badge bm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 8 3 12 7 16"/><polyline points="17 8 21 12 17 16"/><line x1="3" y1="12" x2="21" y2="12"/></svg>Middle</div>`:isSurebet?`<div class="badge bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Surebet</div>`:
     `<div class="badge br"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>No surebet</div>`;
   const bkHtml=valid.map((o,i)=>`<div class="bkr"><div><div class="bkn">${esc(o.house||`Bookmaker ${i+1}`)}</div><div class="bks">${esc(o.result||`Outcome ${i+1}`)} · Odds ${fmt(o.odd)}${fractionLabel(o.house,o.odd)?` <span class="frac-tag" title="This bookmaker pays with the exact fraction behind the odds it shows">pays ${fractionLabel(o.house,o.odd)}</span>`:''}</div>${bal[i]!=null?`<div class="bk-left${short[i]?' short':''}">${short[i]?'Only ':''}${fmt(bal[i])} € available</div>`:''}</div><div class="bkv"><div class="bkst">${fmt(stakes[i])} €${o.manualStake>0?` <span style="color:var(--yellow);font-size:10px;font-weight:600">${o.fromPreset?'SAVED':'MANUAL'}</span>`:''}</div><div class="bkr2">return ${fmt(returns[i])} €</div><div class="bkm">min. ${fmt(returns[i])} €</div></div></div>`).join('');
   const bW=Math.min(sumPct/1.3,100);
+  const head=isMid?`<div class="card ph2 mid">${badgeHtml}<div class="pp ${both>=0?'pos':'neg'}">${both>=0?'+':''}${fmt(both)} €</div><div class="ps">If both win${winTxt?` (it ends on <b>${winTxt}</b>)`:''} · if only one wins: <span class="hi ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span></div></div>`
+    :`<div class="card ph2 ${isSurebet?'sb':''}">${badgeHtml}<div class="pp ${profit>=0?'pos':'neg'}">${s}${fmt(profitPct)} %</div><div class="ps">Guaranteed profit: <span class="hi ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span></div></div>`;
+  // a surebet whose lines leave a gap is a middle too (Más de 2.5 / Menos de 3.5): offer to register it as one
+  const midHint=!isMid&&win?`<div class="mid-hint"><span>This is also a <b>middle</b>: both win if it ends on <b>${winTxt}</b> → <b>${both>=0?'+':''}${fmt(both)} €</b></span><button class="tool" id="toMidBtn">Register as middle</button></div>`:'';
   panel.innerHTML=`
-    <div class="card ph2 ${isSurebet?'sb':''}">${badgeHtml}<div class="pp ${profit>=0?'pos':'neg'}">${s}${fmt(profitPct)} %</div><div class="ps">Guaranteed profit: <span class="hi ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span></div></div>
+    ${head}
     <div class="card">${bkHtml}
       <div class="sr"><span class="sl">Total stake</span><span class="sv">${fmt(actualTotal)} €</span></div>
       <div class="sr"><span class="sl">Minimum return</span><span class="sv ${profit>=0?'pos':'neg'}">${fmt(minReturn)} €</span></div>
-      <div class="sr"><span class="sl">Profit</span><span class="sv ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span></div>
+      <div class="sr"><span class="sl">${isMid?'Profit if only one wins':'Profit'}</span><span class="sv ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span></div>
+      ${isMid?`<div class="sr"><span class="sl">Profit if both win</span><span class="sv ${both>=0?'pos':'neg'}">${both>=0?'+':''}${fmt(both)} €</span></div>`:''}
       <div class="pw"><div class="pl"><span>Sum of implied probabilities</span><span>${fmt(sumPct)} %</span></div><div class="pt"><div class="pf ${sumPct>100?'over':''}" style="width:${bW}%"></div></div></div>
     </div>
-    ${balWarn}<div id="dupWarn"></div>
-    <button class="btn-reg" id="regBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>${isSurebet?'Register':'Register anyway (negative ROI)'} <kbd class="kbd">Enter</kbd></button>
+    ${midHint}${balWarn}<div id="dupWarn"></div>
+    <button class="btn-reg" id="regBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>${isMid?'Register middle':isSurebet?'Register':'Register anyway (negative ROI)'} <kbd class="kbd">Enter</kbd></button>
     ${presetHitHtml(valid,stakes)}`;
   document.getElementById('regBtn').addEventListener('click',quickRegister);
   const fb=document.getElementById('fitBalBtn');if(fb)fb.addEventListener('click',fitToBalance);
+  const tm=document.getElementById('toMidBtn');if(tm)tm.addEventListener('click',()=>{setBetType('Middle');toast('Switched to Middle — press Register');});
   const qb=document.getElementById('qBar');
-  if(qb){qb.innerHTML=`<div class="q-bar-info"><b class="${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</b><span>${valid.map((o,i)=>`<i class="${short[i]?'q-short':''}">${fmt(stakes[i])}€</i>`).join(' / ')}</span><em class="q-dup" id="qDup"></em></div>${canFit?`<button class="tool" id="qFitBtn">Fit</button>`:''}<button class="btn-reg" id="qBarBtn">Register</button>`;
+  if(qb){qb.innerHTML=`<div class="q-bar-info"><b class="${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €${isMid?` · <span class="${both>=0?'pos':'neg'}" title="If both win">↔ ${both>=0?'+':''}${fmt(both)} €</span>`:''}</b><span>${valid.map((o,i)=>`<i class="${short[i]?'q-short':''}">${fmt(stakes[i])}€</i>`).join(' / ')}</span><em class="q-dup" id="qDup"></em></div>${canFit?`<button class="tool" id="qFitBtn">Fit</button>`:''}<button class="btn-reg" id="qBarBtn">Register</button>`;
     const qf=document.getElementById('qFitBtn');if(qf){qf.addEventListener('mousedown',e=>e.preventDefault());qf.addEventListener('click',fitToBalance);}
     document.getElementById('qBarBtn').addEventListener('mousedown',e=>e.preventDefault());document.getElementById('qBarBtn').addEventListener('click',quickRegister);qb.classList.add('on');}
   wirePresetHit();
@@ -3817,7 +3870,7 @@ function openSbEditModal(id){
   const b=D.bets.find(x=>x.id===id);if(!b)return;
   editingSbId=id;
   refreshBookmakerList();
-  document.getElementById('sbRegModalTitle').textContent='Edit surebet';
+  document.getElementById('sbRegModalTitle').textContent=b.mid?'Edit middle':'Edit surebet';
   document.getElementById('sbr-save').textContent='Save changes';
   document.getElementById('sbr-event').value=b.event||'';
   document.getElementById('sbr-market').value=b.market||'';
@@ -3842,6 +3895,7 @@ function registerBet(){
     categoryId:catVal?+catVal:null,
     ...(document.getElementById('sbr-notes').value.trim()?{notes:document.getElementById('sbr-notes').value.trim()}:{}),
     legs:res.valid.map((o,i)=>({house:houses[i]||o.house||`Bookmaker ${i+1}`,result:o.result||`Outcome ${i+1}`,odd:o.odd,stake:res.stakes[i],minReturn:res.returns[i]}))};
+  if(newBetType==='Middle'){bet.mid=1;bet.midProfit=midBothRes(res);}
   D.bets.unshift(bet);const mw=timeVal?syncMatchWhen(bet):[];save();updateBadges();renderPendientes();
   document.getElementById('sbRegModal').style.display='none';
   newBetCat=null;sbPrefill=null;renderRepeatSel();
@@ -3878,8 +3932,9 @@ document.getElementById('sbr-save').addEventListener('click',()=>{
       const exp=+(b.minReturn-b.totalStake).toFixed(2);
       b.expectedProfit=exp;
       b.profitPct=b.totalStake>0?+(exp/b.totalStake*100).toFixed(2):0;
+      if(b.mid)b.midProfit=midBoth(b);
       if(b.status==='pending')b.profit=exp;
-      else if(b.status==='won'&&b.winnerLeg!=null&&b.legs[b.winnerLeg])b.profit=+(b.legs[b.winnerLeg].minReturn-b.totalStake).toFixed(2);
+      else if(b.status==='won'&&sbResultProfit(b,b.winnerLeg)!=null)b.profit=sbResultProfit(b,b.winnerLeg);
     }
     save();updateBadges();
     renderSurebets(document.getElementById('sbSearch').value);renderProfit();renderPendientes();
@@ -3975,19 +4030,20 @@ function renderSurebets(filter=''){
     const sLabel={pending:'Pending',won:'Won',lost:'Lost',anulada:'Void'}[b.status]||b.status;
     const sCls={pending:'sp',won:'sw',lost:'sl3',anulada:'sa'}[b.status]||'';
     const hasLegs=b.legs&&b.legs.length;
-    const winnerIdx=b.winnerLeg!=null?b.winnerLeg:-1;
-    const realProfit=winnerIdx>=0&&hasLegs?((b.legs[winnerIdx].minReturn||0)-(b.totalStake||0)):null;
+    const winnerIdx=b.winnerLeg!=null?b.winnerLeg:-1,bothWon=winnerIdx==='both'&&!!b.mid;
+    const realProfit=hasLegs?sbResultProfit(b,winnerIdx):null;
     const displayProfit=isVoid?0:(realProfit!=null?realProfit:b.profit);
     const displayProfitPct=isVoid?0:(realProfit!=null&&(b.totalStake||0)>0?(realProfit/(b.totalStake||1))*100:b.profitPct);
     const hasPct=typeof displayProfitPct==='number'&&!isNaN(displayProfitPct);
     const pctCls=isVoid?'neu':(hasPct?(displayProfitPct>=0?'pos':'neg'):'neu');
     const pctLabel=hasPct?(displayProfitPct>=0?'+':'')+fmt(displayProfitPct)+' %':'—';
     const legsHtml=hasLegs?`<div class="leg-head"><span>Bookmaker</span><span>Outcome</span><span style="text-align:right">Odds</span><span style="text-align:right">Stake</span><span style="text-align:right">Return</span><span></span></div>`+
-      b.legs.map((l,li)=>`<div class="leg${winnerIdx===li?' leg-winner':''}"><span class="lh">${esc(l.house)}</span><span class="lr">${esc(l.result)}</span><span class="lo">${fmt(l.odd||0)}</span><span class="lk">${fmt(l.stake||0)} €</span><span class="lm">${fmt(l.minReturn||0)} €</span><button class="win-btn${winnerIdx===li?' selected':''}" data-wbid="${b.id}" data-wleg="${li}" title="Mark as the winning outcome">${winnerIdx===li?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Won`:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Won`}</button></div>`).join('')+
+      b.legs.map((l,li)=>`<div class="leg${winnerIdx===li||bothWon?' leg-winner':''}"><span class="lh">${esc(l.house)}</span><span class="lr">${esc(l.result)}</span><span class="lo">${fmt(l.odd||0)}</span><span class="lk">${fmt(l.stake||0)} €</span><span class="lm">${fmt(l.minReturn||0)} €</span><button class="win-btn${winnerIdx===li?' selected':''}" data-wbid="${b.id}" data-wleg="${li}" title="Mark as the winning outcome">${winnerIdx===li?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Won`:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Won`}</button></div>`).join('')+
+      (b.mid?`<div class="leg${bothWon?' leg-winner':''}"><span class="lh">Both</span><span class="lr">Middle hit${(w=>w?' · ends on '+midWindowTxt(w):'')(midWindow(b.legs))}</span><span class="lo"></span><span class="lk"></span><span class="lm">${fmt(midBoth(b)+(b.totalStake||0))} €</span><button class="win-btn${bothWon?' selected':''}" data-wbid="${b.id}" data-wleg="both" title="Both legs won (the middle hit)">${bothWon?'✓ ':''}Both</button></div>`:'')+
       (b.cashOut!=null&&!isVoid?`<div class="real-profit-row"><span class="real-profit-label">Cash out${Array.isArray(b.cashOutLegs)?' · '+b.legs.map((l,i)=>`${esc(l.house)} ${fmt(b.cashOutLegs[i]||0)} €`).join(' · '):` · ${fmt(b.cashOut)} €`}</span><span class="real-profit-val ${(b.profit||0)>=0?'':'neg'}">${(b.profit||0)>=0?'+':''}${fmt(b.profit||0)} €</span></div>`:'')+
-      (winnerIdx>=0&&!isVoid?`<div class="real-profit-row"><span class="real-profit-label">✓ ${esc(b.legs[winnerIdx].house)} won — real profit</span><span class="real-profit-val">+${fmt(realProfit)} €</span></div>`:'')
+      (realProfit!=null&&!isVoid?`<div class="real-profit-row"><span class="real-profit-label">✓ ${bothWon?'Middle hit · both':esc(b.legs[winnerIdx].house)} won — real profit</span><span class="real-profit-val${realProfit<0?' neg':''}">${realProfit>=0?'+':''}${fmt(realProfit)} €</span></div>`:'')
     : `<div style="padding:8px 15px;font-size:12px;color:var(--faint)">No leg breakdown (pre-loaded surebet)</div>`;
-    return`<div class="bi"><div class="bih"><div><div class="bie">${sbTagHtml(b,myTw)}${esc(b.event)}</div>${sbSubHtml(b,myTw)}${b.notes?`<div class="bi-note">${PEND_NOTE_IC}${esc(b.notes)}</div>`:''}<div class="bid">${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}${b.categoryId?` · <span class="type-badge-kind">${esc(catName(b.categoryId))}</span>`:''}</div></div><div class="bim"><span class="pp2 ${pctCls}">${pctLabel}</span><span class="sb2 ${sCls}">${sLabel}</span><select class="ss" data-sid="${b.id}"><option value="pending" ${b.status==='pending'?'selected':''}>Pending</option><option value="won" ${b.status==='won'?'selected':''}>Won</option><option value="lost" ${b.status==='lost'?'selected':''}>Lost</option><option value="anulada" ${b.status==='anulada'?'selected':''}>Void</option></select><button class="bd2" data-edit-bid="${b.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>${hideBtnHtml('sb:'+b.id)}<button class="bd2" data-bid="${b.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div><div class="bl">${legsHtml}</div><div class="bf"><span class="bfl">Staked: ${fmt(b.totalStake||0)} € · Min. return: ${fmt(b.minReturn||0)} €</span><span class="bfr ${isVoid?'neu':(displayProfit>=0?'pos':'neg')}">${displayProfit>=0?'+':''}${fmt(displayProfit)} €</span></div></div>`;
+    return`<div class="bi"><div class="bih"><div><div class="bie">${sbTagHtml(b,myTw)}${midPill(b)}${esc(b.event)}</div>${sbSubHtml(b,myTw)}${b.notes?`<div class="bi-note">${PEND_NOTE_IC}${esc(b.notes)}</div>`:''}<div class="bid">${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}${b.categoryId?` · <span class="type-badge-kind">${esc(catName(b.categoryId))}</span>`:''}</div></div><div class="bim"><span class="pp2 ${pctCls}">${pctLabel}</span><span class="sb2 ${sCls}">${sLabel}</span><select class="ss" data-sid="${b.id}"><option value="pending" ${b.status==='pending'?'selected':''}>Pending</option><option value="won" ${b.status==='won'?'selected':''}>Won</option><option value="lost" ${b.status==='lost'?'selected':''}>Lost</option><option value="anulada" ${b.status==='anulada'?'selected':''}>Void</option></select><button class="bd2" data-edit-bid="${b.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>${hideBtnHtml('sb:'+b.id)}<button class="bd2" data-bid="${b.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div><div class="bl">${legsHtml}</div><div class="bf"><span class="bfl">Staked: ${fmt(b.totalStake||0)} € · Min. return: ${fmt(b.minReturn||0)} €</span><span class="bfr ${isVoid?'neu':(displayProfit>=0?'pos':'neg')}">${displayProfit>=0?'+':''}${fmt(displayProfit)} €</span></div></div>`;
   }).join('')+betsMoreHtml('sb',visible.length,page.length)+hiddenPanelHtml('sb',hidden.map(b=>({key:'sb:'+b.id,label:b.event||'(No event)'})));
   watchBetsMore(list);
 }
@@ -4057,7 +4113,7 @@ function renderProfitRange(all){
   if(from&&to&&from>to){box.innerHTML=`<div style="font-size:12.5px;color:var(--red)">The start date must be before the end date.</div>`;return;}
   const sel=profitRangeEntries.filter(e=>!isHidden('month:'+e.date.slice(0,7))&&(!from||e.date>=from)&&(!to||e.date<=to));
   const sum=c=>sel.filter(e=>e.cat===c).reduce((a,e)=>a+e.profit,0);
-  const sb=sum('surebet'),nm=sum('normal'),fb=sum('freebet'),adj=sum('adjust'),cst=sum('cost'),exp=sum('expense'),sw=sum('software'),tot=sb+nm+fb+adj+cst+exp+sw;
+  const sb=sum('surebet'),md=sum('middle'),nm=sum('normal'),fb=sum('freebet'),adj=sum('adjust'),cst=sum('cost'),exp=sum('expense'),sw=sum('software'),tot=sb+md+nm+fb+adj+cst+exp+sw;
   const sg=v=>(v>=0?'+':'')+fmt(v)+' €';
   const label=from&&to?`${fmtDate(from)} → ${fmtDate(to)}`:(from?`From ${fmtDate(from)}`:`Until ${fmtDate(to)}`);
   box.innerHTML=`<div class="total-hero" style="margin:0">
@@ -4065,6 +4121,7 @@ function renderProfitRange(all){
     <div class="th-val ${tot>=0?'pos':'neg'}">${sg(tot)}</div>
     <div class="th-sub">
       <div class="th-sub-item"><div class="th-sub-label">Surebets</div><div class="th-sub-val" style="color:var(--green)">${sg(sb)}</div></div>
+      ${md?`<div class="th-sub-item"><div class="th-sub-label">Middles</div><div class="th-sub-val" style="color:${md>=0?'#B8621B':'var(--red)'}">${sg(md)}</div></div>`:''}
       <div class="th-sub-item"><div class="th-sub-label">Normal</div><div class="th-sub-val" style="color:${nm>=0?'var(--blue)':'var(--red)'}">${sg(nm)}</div></div>
       <div class="th-sub-item"><div class="th-sub-label">Freebets</div><div class="th-sub-val" style="color:var(--yellow)">${sg(fb)}</div></div>
       ${exp?`<div class="th-sub-item"><div class="th-sub-label">Bank expenses</div><div class="th-sub-val">${sg(exp)}</div></div>`:''}
@@ -4146,7 +4203,7 @@ function bankrollCardHtml(all){
   const pre=preAll.reduce((a,e)=>a+e.profit,0),preSw=preAll.filter(e=>e.cat==='software').reduce((a,e)=>a+e.profit,0);
   const since=all.filter(e=>e.date>=t.from&&!isHidden('month:'+e.date.slice(0,7)));
   const cat=c=>since.filter(e=>e.cat===c).reduce((a,e)=>a+e.profit,0);
-  const bets=cat('surebet')+cat('normal')+cat('freebet'),corr=cat('adjust'),exp=cat('expense'),cost=cat('cost'),sw=cat('software');
+  const bets=cat('surebet')+cat('middle')+cat('normal')+cat('freebet'),corr=cat('adjust'),exp=cat('expense'),cost=cat('cost'),sw=cat('software');
   const sinceSum=Math.round(since.reduce((a,e)=>a+e.profit,0)*100)/100+0,total=Math.round((pre+sinceSum)*100)/100+0;
   const br=bankrollSummary();const now=br.bankroll+br.inTransit;
   const c2=x=>Math.round(x*100)/100+0;
@@ -4229,7 +4286,7 @@ function renderProfit(){
   renderBkStats();
   // Combine all entries with dates
   const all=[];
-  visibleBets().forEach(b=>{const rd=b.date||b.resolveDate;if(rd&&b.profit!==undefined)all.push({date:rd,profit:betProfit(b),cat:'surebet'})});
+  visibleBets().forEach(b=>{const rd=b.date||b.resolveDate;if(rd&&b.profit!==undefined)all.push({date:rd,profit:betProfit(b),cat:b.mid?'middle':'surebet'})});
   visibleNormals().forEach(n=>{const rd=n.date||n.resolveDate;if(rd&&n.profit!==undefined&&n.profit!==0)all.push({date:rd,profit:n.profit,cat:n.type==='Freebet'?'freebet':'normal'})});
   trackedCosts().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'cost'}));
   softwareCharges().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'software'}));
@@ -4241,19 +4298,20 @@ function renderProfit(){
   const months={};
   all.forEach(e=>{
     const m=e.date.slice(0,7);
-    if(!months[m])months[m]={surebet:0,normal:0,freebet:0,adjust:0,cost:0,expense:0,software:0};
+    if(!months[m])months[m]={surebet:0,middle:0,normal:0,freebet:0,adjust:0,cost:0,expense:0,software:0};
     months[m][e.cat]+=e.profit;
   });
 
   const keys=Object.keys(months).sort();
   const visibleKeys=keys.filter(k=>!isHidden('month:'+k));
   const hiddenKeys=keys.filter(k=>isHidden('month:'+k));
-  const totalAll=visibleKeys.reduce((a,k)=>a+months[k].surebet+months[k].normal+months[k].freebet+months[k].adjust+months[k].cost+months[k].expense+months[k].software,0);
+  const totalAll=visibleKeys.reduce((a,k)=>a+months[k].surebet+months[k].middle+months[k].normal+months[k].freebet+months[k].adjust+months[k].cost+months[k].expense+months[k].software,0);
   const totalSw=visibleKeys.reduce((a,k)=>a+months[k].software,0);
   const totalExp=visibleKeys.reduce((a,k)=>a+months[k].expense,0);
   const totalCost=visibleKeys.reduce((a,k)=>a+months[k].cost,0);
   const totalAdj=visibleKeys.reduce((a,k)=>a+months[k].adjust,0);
   const totalSB=visibleKeys.reduce((a,k)=>a+months[k].surebet,0);
+  const totalMid=visibleKeys.reduce((a,k)=>a+months[k].middle,0);
   const totalNorm=visibleKeys.reduce((a,k)=>a+months[k].normal,0);
   const totalFB=visibleKeys.reduce((a,k)=>a+months[k].freebet,0);
 
@@ -4266,6 +4324,7 @@ function renderProfit(){
       ${paceHtml(all)}
       <div class="th-sub">
         <div class="th-sub-item"><div class="th-sub-label">Surebets</div><div class="th-sub-val" style="color:var(--green)">${totalSB>=0?'+':''}${fmt(totalSB)} €</div></div>
+        ${totalMid?`<div class="th-sub-item"><div class="th-sub-label">Middles</div><div class="th-sub-val" style="color:${totalMid>=0?'#B8621B':'var(--red)'}">${totalMid>=0?'+':''}${fmt(totalMid)} €</div></div>`:''}
         <div class="th-sub-item"><div class="th-sub-label">Normal</div><div class="th-sub-val" style="color:${totalNorm>=0?'var(--blue)':'var(--red)'}">${totalNorm>=0?'+':''}${fmt(totalNorm)} €</div></div>
         <div class="th-sub-item"><div class="th-sub-label">Freebets</div><div class="th-sub-val" style="color:var(--yellow)">${totalFB>=0?'+':''}${fmt(totalFB)} €</div></div>
         ${totalExp?`<div class="th-sub-item"><div class="th-sub-label">Bank expenses</div><div class="th-sub-val" style="color:var(--red)">${fmt(totalExp)} €</div></div>`:''}
@@ -4280,10 +4339,11 @@ function renderProfit(){
   const hiddenKeysDesc=[...hiddenKeys].reverse();
 
   document.getElementById('monthList').innerHTML=visibleKeysDesc.map(k=>{
-    const m=months[k];const tot=m.surebet+m.normal+m.freebet+m.adjust+m.cost+m.expense+m.software;
+    const m=months[k];const tot=m.surebet+m.middle+m.normal+m.freebet+m.adjust+m.cost+m.expense+m.software;
     return`<div class="month-card">
       <div class="mc-head"><span class="mc-month">${mName(k)}</span><div style="display:flex;align-items:center;gap:6px"><span class="mc-total ${tot>=0?'pos':'neg'}">${tot>=0?'+':''}${fmt(tot)} €</span>${hideBtnHtml('month:'+k)}</div></div>
       ${m.surebet!==0?`<div class="mc-row"><span class="mc-cat">Surebets</span><span class="mc-val ${m.surebet>=0?'pos':'neg'}">${m.surebet>=0?'+':''}${fmt(m.surebet)} €</span></div>`:''}
+      ${m.middle!==0?`<div class="mc-row"><span class="mc-cat">Middles</span><span class="mc-val ${m.middle>=0?'pos':'neg'}">${m.middle>=0?'+':''}${fmt(m.middle)} €</span></div>`:''}
       ${m.normal!==0?`<div class="mc-row"><span class="mc-cat">Normal</span><span class="mc-val ${m.normal>=0?'pos':'neg'}">${m.normal>=0?'+':''}${fmt(m.normal)} €</span></div>`:''}
       ${m.freebet!==0?`<div class="mc-row"><span class="mc-cat">Freebets</span><span class="mc-val ${m.freebet>=0?'pos':'neg'}">${m.freebet>=0?'+':''}${fmt(m.freebet)} €</span></div>`:''}
       ${m.expense!==0?`<div class="mc-row"><span class="mc-cat">Bank expenses</span><span class="mc-val neg">${fmt(m.expense)} €</span></div>`:''}
@@ -4344,8 +4404,8 @@ document.getElementById('sbList').addEventListener('click',e=>{
   // Winner leg selection
   const winBtn=e.target.closest('[data-wbid]');
   if(winBtn){
-    const bid=+winBtn.dataset.wbid,li=+winBtn.dataset.wleg;
-    const b=D.bets.find(x=>x.id===bid);if(!b)return;
+    const bid=+winBtn.dataset.wbid,li=winBtn.dataset.wleg==='both'?'both':+winBtn.dataset.wleg;
+    const b=D.bets.find(x=>x.id===bid);if(!b||sbResultProfit(b,li)==null)return;
     delete b.cashOut;delete b.cashOutLegs; // picking a winner replaces a cash out
     // Toggle: click same leg again to deselect
     if(b.winnerLeg===li){
@@ -4353,7 +4413,7 @@ document.getElementById('sbList').addEventListener('click',e=>{
       b.profit=cents(b.minReturn-(b.totalStake||0));
     } else {
       b.winnerLeg=li;
-      b.profit=cents((b.legs[li].minReturn||0)-(b.totalStake||0));
+      b.profit=sbResultProfit(b,li);
     }
     save();renderSurebets(document.getElementById('sbSearch').value);renderProfit();
     return;
@@ -4387,12 +4447,12 @@ document.getElementById('sbCsv').addEventListener('click',()=>{
   const list=visibleBets().filter(b=>betsDayMatch(b.date)).sort((a,b)=>(a.date||'').localeCompare(b.date||'')||a.id-b.id);
   if(!list.length){toast('No surebets to export');return;}
   const maxL=Math.max(2,...list.map(b=>(b.legs||[]).length));
-  const head=['Date','Time','Event','Market','Status','Total stake','Profit','ROI %','Winner'];
+  const head=['Date','Time','Type','Event','Market','Status','Total stake','Profit','ROI %','Winner'];
   for(let i=1;i<=maxL;i++)head.push('Bookmaker '+i,'Outcome '+i,'Odds '+i,'Stake '+i);
   head.push('Notes');
   csvDownload(`surebets_${todayLocalISO()}.csv`,head,list.map(b=>{
     const legs=b.legs||[],p=b.status==='pending'?(b.expectedProfit??b.profit??0):betProfit(b);
-    const r=[b.date||'',b.time||'',b.event||'',b.market||'',ST_LABEL[b.status]||b.status||'',b.totalStake||0,p,b.totalStake?p/b.totalStake*100:0,b.winnerLeg!=null&&legs[b.winnerLeg]?legs[b.winnerLeg].house:''];
+    const r=[b.date||'',b.time||'',b.mid?'Middle':'Surebet',b.event||'',b.market||'',ST_LABEL[b.status]||b.status||'',b.totalStake||0,p,b.totalStake?p/b.totalStake*100:0,b.winnerLeg==='both'?'Both (middle)':b.winnerLeg!=null&&legs[b.winnerLeg]?legs[b.winnerLeg].house:''];
     for(let i=0;i<maxL;i++){const l=legs[i];r.push(l?l.house||'':'',l?l.result||'':'',l?+l.odd||0:'',l?+l.stake||0:'');}
     r.push(b.notes||'');return r;}));
 });
@@ -4908,13 +4968,14 @@ function pendCompactHtml(kind,item,tw){
     const mk=b.pendMark;const marked=mk!=null;
     const legsHtml=legs.length?legs.map((l,li)=>{const r=promos[li];return`<button class="pc-leg${r?' promo':''}${mk===li?' marked':''}" data-pwinbid="${b.id}" data-pwinleg="${li}" title="${mk===li?'Marked as the winner — tap to unmark':'Tap to mark this as the outcome that happened'}" aria-pressed="${mk===li}"${r?` style="--hl:${r.color}"`:''}>
         <span class="pc-h"><mark>${esc(l.house||'—')}</mark></span><span class="pc-o"><mark>${fmt(l.odd||0)}</mark></span><span class="pc-r">${esc(l.result||'')}</span></button>`;}).join('')
+      +(b.mid?`<button class="pc-leg both${mk==='both'?' marked':''}" data-pwinbid="${b.id}" data-pwinleg="both" title="${mk==='both'?'Marked: both won — tap to unmark':'The middle hit: both legs won'}" aria-pressed="${mk==='both'}"><span class="pc-h"><mark>Both</mark></span><span class="pc-o"></span><span class="pc-r">Middle ${midBoth(b)>=0?'+':''}${fmt(midBoth(b))} €</span></button>`:'')
       :`<button class="pc-mk won pc-act${mk==='won'?' on':''}" data-pid="${b.id}" data-kind="sb" data-action="won">Won</button>`;
-    const p=typeof mk==='number'&&legs[mk]?(legs[mk].minReturn||0)-(b.totalStake||0):(b.profit||0);
+    const p=sbResultProfit(b,mk)??(b.profit||0);
     return `<div class="pc-row sb${lvIsLive(b)?' lv-on':''}${marked?' marked':''}${pr?' promo':''}${tw.has(b.id)?' twin':''}"${pr?` style="--hl:${pr.color}"`:''}>
       ${pendTimeHtml(b,withDate)}
-      <div class="pc-ev"><span class="pc-ttl"><b>${sbTagHtml(b,tw)}${esc(b.event)}</b>${promoTag(pr)}</span>${lvSlot('sb',b)}${arLine(b,true)}${pendNoteLine('sb',b)}</div>
+      <div class="pc-ev"><span class="pc-ttl"><b>${sbTagHtml(b,tw)}${midPill(b)}${esc(b.event)}</b>${promoTag(pr)}</span>${lvSlot('sb',b)}${arLine(b,true)}${pendNoteLine('sb',b)}</div>
       <span class="pc-profit ${p>=0?'pos':'neg'}">${p>=0?'+':''}${fmt(p)} €</span>
-      <div class="pc-legs${marked?' has-res':''}" style="--n:${Math.max(legs.length,1)}">${legsHtml}${marked?PEND_RESOLVE('sb',b.id):''}</div>
+      <div class="pc-legs${marked?' has-res':''}" style="--n:${Math.max(legs.length+(b.mid?1:0),1)}">${legsHtml}${marked?PEND_RESOLVE('sb',b.id):''}</div>
       <span class="pc-tail">${more}</span>
       ${open?`<div class="pc-extra">${sbSubHtml(b,tw)}<div class="pend-meta">${pendHouseChip([...new Set(legs.map(l=>l.house))])}<span>${fmtWhen(b.date,b.time)}</span>${b.totalStake?`<span>Staked: ${fmt(b.totalStake)} €</span>`:''}${b.minReturn?`<span>Min. return: ${fmt(b.minReturn)} €</span>`:''}</div>
         ${pendNoteEdit('sb',b)}<div class="pc-btns">${PEND_EDIT('sb',b.id)}<button class="btn-void" data-cashout="sb:${b.id}">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`:''}
@@ -5026,11 +5087,16 @@ function renderPendientesInner(){
           <span class="pl-res">${esc(l.result)}</span>
           <span class="pl-nums"><span>${l.stake!=null?fmt(l.stake)+' € @ ':'Odds '}<mark>${fmt(l.odd||0)}</mark></span><span class="pl-profit ${realProfit>=0?'pos':'neg'}">${realProfit>=0?'+':''}${fmt(realProfit)} €</span></span>
         </button>`;
-      }).join('')}</div>`:'';
+      }).join('')}${b.mid?`<button class="pend-leg both${b.pendMark==='both'?' selected':''}" aria-pressed="${b.pendMark==='both'}" data-pwinbid="${b.id}" data-pwinleg="both">
+          <span class="pl-radio"></span>
+          <span class="pl-house"><mark>Both</mark></span>
+          <span class="pl-res">Middle hit${(w=>w?' · ends on '+midWindowTxt(w):'')(midWindow(b.legs))}</span>
+          <span class="pl-nums"><span>both legs win</span><span class="pl-profit ${midBoth(b)>=0?'pos':'neg'}">${midBoth(b)>=0?'+':''}${fmt(midBoth(b))} €</span></span>
+        </button>`:''}</div>`:'';
       return`<div class="pend-item sb${lvIsLive(b)?' lv-on':''}${b.pendMark!=null?' marked':''}${pendTw.has(b.id)?' twin':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
         <div class="pend-top">
           <div>
-            <div class="pend-ev">${sbTagHtml(b,pendTw)}${esc(b.event)} <span class="type-badge-kind">Surebet</span>${promoTag(pr)}${lvSlot('sb',b)}${arLine(b)}</div>${sbSubHtml(b,pendTw)}
+            <div class="pend-ev">${sbTagHtml(b,pendTw)}${esc(b.event)} <span class="type-badge-kind">${b.mid?'Middle':'Surebet'}</span>${promoTag(pr)}${lvSlot('sb',b)}${arLine(b)}</div>${sbSubHtml(b,pendTw)}
             <div class="pend-meta">${pendHouseChip([...new Set((b.legs||[]).map(l=>l.house))])}<span>${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}</span>${b.totalStake?`<span>Staked: ${fmt(b.totalStake)} €</span>`:''}</div>
             ${pendOpen.has('sb:'+b.id)?pendNoteEdit('sb',b):pendNoteLine('sb',b)}
           </div>
@@ -5149,8 +5215,8 @@ function pendHasMark(kind,item){return kind!=='wd'&&item.pendMark!=null;}
 function pendResolveItem(kind,item){
   const m=item.pendMark;if(m==null)return false;
   if(kind==='nm'){resolveNormal(item,m);}
-  else if(typeof m==='number'&&item.legs&&item.legs[m]){
-    item.winnerLeg=m;item.profit=cents((item.legs[m].minReturn||0)-(item.totalStake||0));item.status='won';
+  else if(sbResultProfit(item,m)!=null){
+    item.winnerLeg=m;item.profit=sbResultProfit(item,m);item.status='won';
   }else item.status='won';
   if(!item.resolveDate)item.resolveDate=todayISO();
   delete item.pendMark;
@@ -5159,6 +5225,7 @@ function pendResolveItem(kind,item){
 function pendMarkLabel(kind,item){
   const m=item.pendMark;
   if(kind==='nm')return m==='won'?'Won':'Lost';
+  if(m==='both'&&item.mid)return 'Middle hit · both won';
   return typeof m==='number'&&item.legs&&item.legs[m]?(item.legs[m].house||'Leg '+(m+1))+' won':'Won';
 }
 // Void settles straight away, so it needs two taps on the button: the first one only arms it
@@ -5199,7 +5266,7 @@ function lkTotal(res){
   return {over:/^(mas|over|o|\+)/.test(m[1]),line};
 }
 function linkedMarks(src){ // → [{b, leg}] for the other pending surebets this mark decides
-  const w=src.legs&&src.legs[src.pendMark];if(!w)return [];
+  const w=!src.mid&&src.legs&&src.legs[src.pendMark];if(!w)return [];
   const ev=matchName(src.event);if(!ev)return [];
   const mk=arNorm(src.market),win=arNorm(w.result);if(!win)return [];
   const lose=src.legs.filter((l,i)=>i!==src.pendMark).map(l=>arNorm(l.result));
@@ -5209,7 +5276,7 @@ function linkedMarks(src){ // → [{b, leg}] for the other pending surebets this
   const day=d=>Date.parse(d+'T00:00:00')/864e5;
   const out=[];
   D.bets.forEach(b=>{
-    if(b===src||b.status!=='pending'||b.pendMark!=null||!(b.legs||[]).length)return;
+    if(b===src||b.mid||b.status!=='pending'||b.pendMark!=null||!(b.legs||[]).length)return;
     if(matchName(b.event)!==ev||arNorm(b.market)!==mk)return;
     if(src.date&&b.date&&Math.abs(day(b.date)-day(src.date))>MATCH_DAYS)return;
     const rs=b.legs.map(l=>arNorm(l.result));
@@ -5270,8 +5337,8 @@ document.getElementById('pendList').addEventListener('click',e=>{
   // marking a result: tap to mark, tap the same one again to unmark, tap another to change it
   const winLegBtn=e.target.closest('[data-pwinbid]');
   if(winLegBtn){
-    const bid=+winLegBtn.dataset.pwinbid,li=+winLegBtn.dataset.pwinleg;
-    const b=D.bets.find(x=>x.id===bid);if(!b||!b.legs||!b.legs[li])return;
+    const bid=+winLegBtn.dataset.pwinbid,li=winLegBtn.dataset.pwinleg==='both'?'both':+winLegBtn.dataset.pwinleg;
+    const b=D.bets.find(x=>x.id===bid);if(!b||!b.legs||(li==='both'?!b.mid:!b.legs[li]))return;
     dropLinkedMarks(b);
     // you changed or took back what the scores marked: the automatic check leaves this one to you
     if(b.autoRes&&!b.autoRes.via&&b.autoRes.leg===b.pendMark)b.arNo=1;
@@ -5342,6 +5409,8 @@ function bookmakerLedger(keep){ // keep(item) → only count those items (e.g. o
     const w=b.winnerLeg;
     if(b.cashOut!=null&&Array.isArray(b.cashOutLegs)&&b.cashOutLegs.length===legs.length){ // cash out entered per bookmaker
       legs.forEach((l,i)=>{const e=g(l.house);if(e)e.settled+=(b.cashOutLegs[i]||0)-(l.stake||0);});
+    }else if(b.cashOut==null&&w==='both'&&b.mid){ // a middle that hit: every leg paid
+      legs.forEach(l=>{const e=g(l.house);if(e)e.settled+=(l.minReturn!=null?l.minReturn:(l.odd||0)*(l.stake||0))-(l.stake||0);});
     }else if(b.cashOut==null&&w!=null&&legs[w]){
       legs.forEach((l,i)=>{const e=g(l.house);if(e)e.settled+=i===w?((l.minReturn!=null?l.minReturn:(l.odd||0)*(l.stake||0))-(l.stake||0)):-(l.stake||0);});
     }else{ // cash out / legacy without a winning leg: split the result by stake
@@ -5941,7 +6010,8 @@ function renderCategorias(){
     const cid=item.categoryId||null;
     if(catSelId==='none'&&cid)return false;
     if(catSelId!=='all'&&catSelId!=='none'&&cid!==catSelId)return false;
-    if(catTypeFilter==='surebet'&&kind!=='sb')return false;
+    if(catTypeFilter==='surebet'&&(kind!=='sb'||item.mid))return false;
+    if(catTypeFilter==='middle'&&(kind!=='sb'||!item.mid))return false;
     if(catTypeFilter==='normal'&&(kind!=='nm'||item.type==='Freebet'))return false;
     if(catTypeFilter==='freebet'&&(kind!=='nm'||item.type!=='Freebet'))return false;
     return true;
@@ -6521,7 +6591,7 @@ function applyLastBet(){
     while(outcomes.length<2)outcomes.push({id:nextId++,house:'',result:'',odd:0,manualStake:null});
     if(b.totalStake>0){totalInv=Math.round(b.totalStake*100)/100;document.getElementById('totalInv').value=totalInv;}
     sbPrefill=null;
-    setBetType('Surebet');
+    setBetType(b.mid?'Middle':'Surebet');
     document.getElementById('q-event').value=b.event||'';document.getElementById('q-market').value=b.market||'';
     document.getElementById('q-date').value=b.date||todayISO();document.getElementById('q-hour').value=hourOnly(b.time);
     fillCategorySelect(document.getElementById('q-cat'),b.categoryId??null);
@@ -6563,6 +6633,7 @@ function registerCurrent(){
     categoryId:catVal?+catVal:null,
     legs:res.valid.map((o,i)=>({house:o.house||`Bookmaker ${i+1}`,result:o.result||`Outcome ${i+1}`,odd:o.odd,stake:res.stakes[i],minReturn:res.returns[i]}))};
   if(qComp&&qComp.ev===ev)bet.comp=qComp.comp;
+  if(newBetType==='Middle'){bet.mid=1;bet.midProfit=midBothRes(res);}
   D.bets.unshift(bet);
   // keep event, market, bookmakers, outcomes, hour & category — only clear odds (and stakes that came from a preset)
   const wasPreset=outcomes.some(o=>o.fromPreset);
@@ -6582,7 +6653,7 @@ function quickRegister(){
   const queued=tgNext();
   if(!queued){renderTgCard();const f=document.querySelector('#outcomesList .oi');if(f)f.focus();}
   const n=D.bets.filter(b=>b.status==='pending'&&evKey(b)===evKey(bet)).length;
-  toast(`Saved${n>1?` · #${n} on this match`:''} · ${res.profit>=0?'+':''}${fmt(res.profit)} €${bet.categoryId?' · '+catName(bet.categoryId):''}${matchWhenMsg(mw)}`,'Undo',()=>{
+  toast(`${bet.mid?'Middle saved':'Saved'}${n>1?` · #${n} on this match`:''} · ${res.profit>=0?'+':''}${fmt(res.profit)} €${bet.mid?` · both win ${bet.midProfit>=0?'+':''}${fmt(bet.midProfit)} €`:''}${bet.categoryId?' · '+catName(bet.categoryId):''}${matchWhenMsg(mw)}`,'Undo',()=>{
     D.bets=D.bets.filter(b=>b.id!==bet.id);undoMatchWhen(mw);
     bet.legs.forEach((l,i)=>{if(outcomes[i]){outcomes[i].odd=l.odd;}});
     save();updateBadges();render();toast('Registration undone');});
@@ -6643,12 +6714,15 @@ function tgHouse(raw){
     if(hit)return hit[0];}
   return parts[0]||'';
 }
+// A MIDDLE message is the same with "MIDDLE" on its first line: "↔️ MIDDLE · ⚔️ A vs B · 💰 -0.8%" (it loads on New bet › Middle)
 function parseBotFormat(txt,at){
   txt=tgBody(txt);
   if(!/cuota:\s*\d/i.test(txt))return null;
-  const clean=l=>l.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{20E3}\u{2B50}]/gu,'').replace(/\s+/g,' ').trim();
+  const clean=l=>l.replace(/[\u{1F000}-\u{1FAFF}\u{2190}-\u{21FF}\u{2600}-\u{27BF}\u{FE0F}\u{20E3}\u{2B50}]/gu,'').replace(/\s+/g,' ').trim();
   const lines=txt.split(/\n/);
-  const ev=clean(lines[0]||'').split(/\s·\s/)[0].trim();
+  const head=clean(lines[0]||'').split(/\s·\s/).map(x=>x.trim());
+  const mid=head.some(x=>/^middles?$/i.test(x));
+  const ev=(head.find(x=>x&&!/^middles?$/i.test(x))||'').trim();
   const matchHouse=tgHouse;
   const legs=[];let cur=null;
   lines.forEach(l=>{
@@ -6680,7 +6754,7 @@ function parseBotFormat(txt,at){
   // the competition line as the bot writes it, sport emoji included: "🏆 ⚽ England Premier League"
   const tr=txt.match(/🏆\uFE0F?[ \t]*(?:torneo:[ \t]*)?([^\n]*)/i);
   const comp=tr?tr[1].replace(/\s+/g,' ').trim().slice(0,80):'';
-  return {legs:ok.map(l=>({house:l.house,odd:l.odd,stake:l.stake??null,result:l.result})),ev,market:pre,date,time,comp};
+  return {legs:ok.map(l=>({house:l.house,odd:l.odd,stake:l.stake??null,result:l.result})),ev,market:pre,date,time,comp,...(mid?{mid:true}:{})};
 }
 // A +EV (value bet) message from the "Apuestas +EV → Telegram" script: ONE bet, registered as a Normal bet.
 // "💎 +EV · ⚔️ A vs B · 📈 EV 5.85%" / "🏆 ⚽ Liga" / "⏳ Empieza en: 28m" / "🎯 Mercado - Selección" /
@@ -6786,8 +6860,9 @@ document.getElementById('qPaste').addEventListener('input',e=>{
   const evEl=document.getElementById('q-event');if(ev)evEl.value=ev;
   const mkEl=document.getElementById('q-market');if(market)mkEl.value=market;
   if(p.comp)qAutoCat(p);
+  if(p.mid&&newBetType!=='Middle')setBetType('Middle');
   render();document.getElementById('qPasteWrap').style.display='none';
-  toast(`Detected ${legs.map(l=>l.house+' @'+fmt(l.odd)).join(' · ')}`);
+  toast(`${p.mid?'Middle · ':''}Detected ${legs.map(l=>l.house+' @'+fmt(l.odd)).join(' · ')}`);
   setTimeout(()=>document.getElementById('q-event').value.trim()?document.getElementById('regBtn')?.focus():document.getElementById('q-event').focus(),30);
 });
 
@@ -7068,6 +7143,7 @@ function arSettle(b,hit){
   if(specs.some(s=>!s))return {why:'unclear',wait:720};
   const res=specs.map(s=>arLegState(s,m,A,B));
   const wins=res.map((x,i)=>x==='win'?i:-1).filter(i=>i>=0);
+  if(b.mid&&res.length>=2&&wins.length===res.length)return {leg:'both',score:arScore(m,A,B),live:!(m.done&&!m.bad)};
   if(wins.length===1&&res.every(x=>x==='win'||x==='lose'))return {leg:wins[0],score:arScore(m,A,B),live:!(m.done&&!m.bad)};
   if(!m.done&&wins.length<2&&!res.includes('push'))return {why:'playing',wait:AR_EVERY_MIN};
   return {why:'unclear',wait:720};
@@ -7595,7 +7671,7 @@ function renderTgCard(){
       const pr=ok&&!p.single?findPreset(p.legs.map(l=>l.odd)):null;
       return `<div class="tg-it${ok?'':' bad'}${dup?' dup':''}">
         <div class="tg-main">
-          <div class="tg-ev">${esc(p.ev||'(no event)')}${ok?`<span class="tg-roi ${roi>=0?'pos':'neg'}">${p.single?'EV ':''}${roi>=0?'+':''}${fmt(roi)}%</span>`:''}${p.single&&ok?`<span class="tg-evb" title="Value bet: one single bet — Use loads it as ${esc(evTargetLabel())}">${esc(evTargetLabel())}</span>`:''}${dup?`<span class="tg-dup" title="Same match, market, bookmakers and odds as a pending bet">Already registered${addedAt(dup)?' '+addedAt(dup):''}</span>`:''}</div>
+          <div class="tg-ev">${p.mid&&ok?MID_PILL:''}${esc(p.ev||'(no event)')}${ok?`<span class="tg-roi ${roi>=0?'pos':'neg'}" title="${p.mid?'If only one leg wins':''}">${p.single?'EV ':''}${roi>=0?'+':''}${fmt(roi)}%</span>`:''}${p.mid&&ok?`<span class="tg-mid" title="If both legs win">both ${(2/sum-1)*100>=0?'+':''}${fmt((2/sum-1)*100,0)}%</span>`:''}${p.single&&ok?`<span class="tg-evb" title="Value bet: one single bet — Use loads it as ${esc(evTargetLabel())}">${esc(evTargetLabel())}</span>`:''}${dup?`<span class="tg-dup" title="Same match, market, bookmakers and odds as a pending bet">Already registered${addedAt(dup)?' '+addedAt(dup):''}</span>`:''}</div>
           <div class="tg-mk">${[p.market?esc(p.market):'',p.time?'ends ~'+parseInt(p.time,10)+'h':'',it.at?`<span class="tg-age${Date.now()-it.at>15*60000?' old':''}" data-tgage="${+it.at}">${tgAge(it.at)}</span>`:''].filter(Boolean).join(' · ')}</div>
           <div class="tg-legs">${ok?p.legs.map(l=>`<span class="tg-leg">${esc(l.house)} <b>${fmt(l.odd)}</b></span>`).join('')+(pr?`<span class="tg-pre" title="Your saved stakes will be used">⚡ ${pr.legs.map(l=>fmt(l.stake,l.stake%1?2:0)).join('/')} €</span>`:''):`<span class="tg-raw">Bookmakers not recognised · ${esc(it.text.slice(0,70))}…</span>`}</div>
         </div>
@@ -7610,7 +7686,7 @@ function tgAge(at){const m=Math.max(0,Math.floor((Date.now()-at)/60000));return 
 setInterval(()=>{if(document.hidden)return;document.querySelectorAll('#tgCard [data-tgage]').forEach(e=>{const at=+e.dataset.tgage,t=tgAge(at);if(e.textContent!==t)e.textContent=t;e.classList.toggle('old',Date.now()-at>15*60000);});},30000);
 // Everything comes from the message; the only thing left to type is the stake.
 function focusStake(){
-  if(newBetType!=='Surebet'){const s=document.getElementById('nf-stake');try{s.focus({preventScroll:true});s.select();}catch(e){}s.scrollIntoView({behavior:'smooth',block:'center'});
+  if(!sbMode()){const s=document.getElementById('nf-stake');try{s.focus({preventScroll:true});s.select();}catch(e){}s.scrollIntoView({behavior:'smooth',block:'center'});
     toast(newBetType==='Combi'?`Added to the combi (${nfSels.filter(x=>parseFloat(x.odd)>1).length} selections) — add more or type your stake`:`Value bet loaded as ${newBetType==='Freebet'?'a Freebet':'a Normal bet'} — type your stake`);return;}
   const el=document.getElementById('totalInv');if(!el)return;
   // focus inside the tap itself: iPhone only opens the keyboard for a focus that comes straight from a tap
@@ -7619,7 +7695,7 @@ function focusStake(){
   const k=window.innerWidth<600?'Register':'Enter';
   toast(activePreset()?`Saved stakes applied — press ${k}`:`Type your stake and press ${k}`);
 }
-function calcIdle(){return newBetType==='Surebet'&&(document.querySelector('.ni.active')?.dataset.page||'calc')==='calc'&&!outcomes.some(o=>o.odd>1);}
+function calcIdle(){return sbMode()&&(document.querySelector('.ni.active')?.dataset.page||'calc')==='calc'&&!outcomes.some(o=>o.odd>1);}
 // the Normal / Freebet form is empty: a value bet that arrives can load there by itself (always as a Normal bet)
 function nfIdle(){return (newBetType==='Normal'||newBetType==='Freebet')&&(document.querySelector('.ni.active')?.dataset.page||'calc')==='calc'&&!document.getElementById('nf-event').value.trim()&&!(parseFloat(document.getElementById('nf-odd').value)>1);}
 // afterNf: you just saved a bet from Telegram on the Normal form → the next message loads (a surebet back on the calculator)
@@ -7627,8 +7703,8 @@ function tgNext(afterNf){
   const idx=tgDupIndex(); // ones you already registered wait in the list (tap Use if you really placed it twice)
   const next=(D.tgInbox||[]).slice().reverse().find(it=>{const p=tgParse(it);return tgUsable(p)&&!tgDupOf(p,idx);});
   if(!next)return false;
-  const single=tgParse(next).single;
-  if(afterNf&&!single&&newBetType!=='Surebet')setBetType('Surebet');
+  const np=tgParse(next),single=np.single;
+  if(afterNf&&!single&&!sbMode())setBetType(np.mid?'Middle':'Surebet');
   if(!(calcIdle()||single&&nfIdle()))return false;
   tgLoad(next.uid,false,'Normal');focusStake();return true;
 }
@@ -7636,7 +7712,7 @@ function tgNext(afterNf){
 // registered yet goes back into the queue (in its original order) instead of being lost.
 function tgRequeue(){
   const c=tgCur;tgCur=null;
-  const loaded=c&&(c.single?newBetType!=='Surebet'&&parseFloat(document.getElementById('nf-odd').value)>1:outcomes.some(o=>o.odd>1));
+  const loaded=c&&(c.single?!sbMode()&&parseFloat(document.getElementById('nf-odd').value)>1:outcomes.some(o=>o.odd>1));
   if(!c||!loaded||D.tgInbox.some(x=>x.uid===c.uid))return false;
   delete c.single;
   D.tgInbox.push(c);D.tgInbox.sort((a,b)=>b.uid-a.uid);renderTgCard();return true;
@@ -7691,7 +7767,9 @@ function tgLoad(uid,quiet,type){
   if(p.ev)document.getElementById('q-event').value=p.ev;
   document.getElementById('q-market').value=p.market||'';
   if(!document.getElementById('q-date').value)document.getElementById('q-date').value=todayISO();
-  if(newBetType!=='Surebet')setBetType('Surebet');
+  // a middle loads on Middle, a surebet on Surebet
+  const want=p.mid?'Middle':'Surebet';
+  if(newBetType!==want){if(quiet)newBetType=want;else setBetType(want);}
   qAutoCat(p);
   D.tgInbox=D.tgInbox.filter(x=>x.uid!==uid);
   if(quiet){autoPreset();return true;}
@@ -8230,7 +8308,8 @@ const NF_META={
 function setBetType(type){
   newBetType=type||newBetType;
   document.querySelectorAll('#nbTypes .nbt').forEach(b=>b.classList.toggle('active',b.dataset.bt===newBetType));
-  const isSb=newBetType==='Surebet';
+  const isSb=sbMode();
+  document.getElementById('sbCalcTitle').textContent=newBetType==='Middle'?'Middle':'Surebet';
   document.getElementById('sbCalcCard').style.display=isSb?'':'none';
   document.getElementById('resultPanel').style.display=isSb?'':'none';
   document.getElementById('qBar').style.display=isSb?'':'none';
@@ -8273,7 +8352,7 @@ function syncComboOdd(){
   }
 }
 function renderNfResult(){
-  if(newBetType==='Surebet')return;
+  if(sbMode())return;
   const odd=parseFloat(document.getElementById('nf-odd').value)||0;
   const stake=parseFloat(document.getElementById('nf-stake').value)||0;
   const isFb=newBetType==='Freebet';
@@ -8370,7 +8449,7 @@ document.getElementById('nf-sels').addEventListener('click',e=>{
 document.getElementById('phNewBet').addEventListener('click',()=>goNewBet());
 document.getElementById('betsNewBtn').addEventListener('click',()=>{
   const v=document.querySelector('#betsTabs .seg-b.active')?.dataset.bview;
-  goNewBet(v==='surebets'?'Surebet':(newBetType==='Surebet'?'Normal':newBetType));
+  goNewBet(v==='surebets'?(newBetType==='Middle'?'Middle':'Surebet'):(sbMode()?'Normal':newBetType));
 });
 // My bets sub-tabs
 function setBetsView(v){
@@ -8385,7 +8464,7 @@ document.getElementById('betsTabs').addEventListener('click',e=>{const b=e.targe
 //  NAV
 // ══════════════════════════════════════════
 const pgMeta={
-  calc:{title:'New bet',sub:'Surebets, normal bets, freebets and combis — all from one place'},
+  calc:{title:'New bet',sub:'Surebets, middles, normal bets, freebets and combis — all from one place'},
   bets:{title:'My bets',sub:'Every bet you have registered, by type'},
   profit:{title:'Profit',sub:'Monthly performance and running total'},
   pendientes:{title:'Pending',sub:'Bets waiting for a result'},
@@ -8455,7 +8534,7 @@ function renderTodaySub(){
 // which can be triggered from several different pages.
 function rerenderActivePage(){
   const activePage=document.querySelector('.ni.active')?.dataset.page||'calc';
-  if(activePage==='calc'){if(newBetType==='Surebet')render();else renderNfResult();}
+  if(activePage==='calc'){if(sbMode())render();else renderNfResult();}
   else if(activePage==='bets'){renderSurebets(document.getElementById('sbSearch')?.value||'');renderNormals(document.getElementById('nbSearch')?.value||'');}
   else if(activePage==='profit')renderProfit();
   else if(activePage==='pendientes')renderPendientes();
@@ -8726,7 +8805,7 @@ function emailToPath(email) {
   function refreshCurrentView() {
     updateBadges();
     const activePage = document.querySelector('.ni.active')?.dataset.page || 'calc';
-    if (activePage === 'calc') { if (newBetType === 'Surebet') render(); else renderNfResult(); }
+    if (activePage === 'calc') { if (sbMode()) render(); else renderNfResult(); }
     else if (activePage === 'bets') { renderSurebets(document.getElementById('sbSearch')?.value || ''); renderNormals(document.getElementById('nbSearch')?.value || ''); }
     else if (activePage === 'profit') renderProfit();
     else if (activePage === 'pendientes') renderPendientes();
