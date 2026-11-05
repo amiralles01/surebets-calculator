@@ -2233,6 +2233,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
         <button class="nbt" data-bt="Combi"><span class="nbt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span><span class="nbt-tx"><span class="nbt-t">Combi</span><span class="nbt-d">Accumulator of selections</span></span></button>
       </div>
       <div style="display:flex;flex-direction:column;gap:13px">
+        <div class="card tg-card" id="tgCard" style="display:none"></div>
         <div class="card" id="nfCard" style="display:none">
           <div class="ch"><span class="ct" id="nfTitle">Bet details</span><span style="font-size:11.5px;color:var(--faint)" id="nfHelp"></span></div>
           <div class="cb nf-grid">
@@ -2258,7 +2259,6 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
             <div><label class="fl">Notes (optional)</label><input type="text" id="nf-notes" placeholder="Boosted odds, promo…" autocomplete="off"></div>
           </div>
         </div>
-        <div class="card tg-card" id="tgCard" style="display:none"></div>
         <div class="card sbx" id="sbCalcCard">
           <div class="sbx-h">
             <span class="ct">Surebet</span>
@@ -4925,7 +4925,7 @@ function pendCompactHtml(kind,item,tw){
   const loss=n.potentialLoss!=null?n.potentialLoss:(n.type==='Freebet'?0:-(n.stake||0));
   return `<div class="pc-row nm${lvIsLive(n)?' lv-on':''}${n.pendMark!=null?' marked':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
     ${pendTimeHtml(n,withDate)}
-    <div class="pc-ev"><span class="pc-ttl"><b>${esc(n.event)}</b> ${typePill(n.type)}${promoTag(pr)}</span>${lvSlot('nm',n)}<span class="pc-sub"><span class="pc-nmh${pr?' promo':''}"><mark>${esc(n.house||'No bookmaker')}</mark> @ <mark>${fmt(n.odd||0)}</mark></span> · ${fmt(n.stake||0)} €</span>${pendNoteLine('nm',n)}</div>
+    <div class="pc-ev"><span class="pc-ttl"><b>${esc(n.event)}</b> ${typePill(n.type)}${promoTag(pr)}</span>${lvSlot('nm',n)}${arLine(n,true)}<span class="pc-sub"><span class="pc-nmh${pr?' promo':''}"><mark>${esc(n.house||'No bookmaker')}</mark> @ <mark>${fmt(n.odd||0)}</mark></span> · ${fmt(n.stake||0)} €</span>${pendNoteLine('nm',n)}</div>
     <span class="pc-profit ${n.pendMark==='lost'?'neg':'pos'}" title="If it wins +${fmt(win)} € · if it loses ${fmt(loss)} €">${n.pendMark==='lost'?fmt(loss):'+'+fmt(win)} €</span>
     <div class="pc-legs pc-nm-btns">${pendMarkBtns(n,' pc-act')}${n.pendMark!=null?PEND_RESOLVE('nm',n.id):''}</div>
     <span class="pc-tail">${more}</span>
@@ -5046,7 +5046,7 @@ function renderPendientesInner(){
     const loss=n.potentialLoss!=null?n.potentialLoss:(n.type==='Freebet'?0:-(n.stake||0));
     return`<div class="pend-item${lvIsLive(n)?' lv-on':''}${n.pendMark!=null?' marked':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
       <div class="pend-left">
-        <div class="pend-ev">${esc(n.event)} ${typePill(n.type)}${promoTag(pr)}${lvSlot('nm',n)}</div>
+        <div class="pend-ev">${esc(n.event)} ${typePill(n.type)}${promoTag(pr)}${lvSlot('nm',n)}${arLine(n)}</div>
         <div class="pend-meta">${pendHouseChip([n.house])}<span>${fmtWhen(n.date,n.time)}${n.resolveDate?' → '+fmtDate(n.resolveDate):''}</span><span class="pc-nmh${pr?' promo':''}">Odds <mark>${fmt(n.odd||0)}</mark></span><span>Staked: ${fmt(n.stake||0)} €</span></div>
         ${pendOpen.has('nm:'+n.id)?pendNoteEdit('nm',n):pendNoteLine('nm',n)}
       </div>
@@ -5289,6 +5289,8 @@ document.getElementById('pendList').addEventListener('click',e=>{
   if(act==='won'||act==='lost'){
     const arr=btn.dataset.kind==='nm'?D.normals:D.bets;
     const item=arr.find(x=>x.id===+btn.dataset.pid);if(!item)return;
+    if(item.autoRes&&!item.autoRes.via&&item.autoRes.leg===item.pendMark&&item.pendMark!=null)item.arNo=1;
+    if(btn.dataset.kind==='nm')delete item.autoRes;
     if(item.pendMark===act)delete item.pendMark;else item.pendMark=act;
     save();renderPendientes();
     return;
@@ -6624,14 +6626,30 @@ function kickoffFrom(base,raw){
   }
   return null;
 }
+// the bots' CONTROL channel puts a line before the message ("🔍 NO ENVIADA · …", "📤 ENVIADA → F1 …"): the
+// message starts at its "⚔️ A vs B" / "💎 +EV" line
+function tgBody(txt){
+  txt=String(txt||'');const lines=txt.split(/\n/);
+  const i=lines.findIndex(l=>/⚔️|^\W*\+EV\b/u.test(l.trim()));
+  return i>0&&i<=4&&lines.slice(0,i).every(l=>!/cuota:/i.test(l))?lines.slice(i).join('\n'):txt;
+}
+// "SpeedyBet (ES) (+1 casa más)", "bet365, Codere" → the first of them that is one of your bookmakers (as you named it)
+const bkLoose=s=>String(s||'').toLowerCase().replace(/\(.*?\)/g,'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');
+function tgHouse(raw){
+  const known=trackedBookmakers().map(n=>[n,bkLoose(n)]).filter(x=>x[1]);
+  const parts=String(raw||'').replace(/\(.*?\)/g,'').split(/,|\s\/\s|\s\+\s/).map(x=>x.trim()).filter(Boolean);
+  for(const r of parts){const k=bkLoose(r);if(!k)continue;
+    const hit=known.find(x=>x[0].trim().toLowerCase()===r.toLowerCase())||known.find(x=>x[1]===k)||known.find(x=>Math.min(x[1].length,k.length)>=3&&(k.includes(x[1])||x[1].includes(k)));
+    if(hit)return hit[0];}
+  return parts[0]||'';
+}
 function parseBotFormat(txt,at){
+  txt=tgBody(txt);
   if(!/cuota:\s*\d/i.test(txt))return null;
   const clean=l=>l.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{20E3}\u{2B50}]/gu,'').replace(/\s+/g,' ').trim();
   const lines=txt.split(/\n/);
   const ev=clean(lines[0]||'').split(/\s·\s/)[0].trim();
-  const known=trackedBookmakers();
-  const matchHouse=raw=>{const r=raw.toLowerCase().replace(/\(.*?\)/g,'').trim();
-    return known.find(n=>n.toLowerCase()===r)||known.find(n=>r.includes(n.toLowerCase())||n.toLowerCase().includes(r))||raw.replace(/\(.*?\)/g,'').trim();};
+  const matchHouse=tgHouse;
   const legs=[];let cur=null;
   lines.forEach(l=>{
     const t=clean(l);
@@ -6643,11 +6661,15 @@ function parseBotFormat(txt,at){
   });
   const ok=legs.filter(l=>l.odd>1&&l.house);
   if(ok.length<2)return null;
-  // market = common start of the selections ("Aces del Equipo - Arthur Fils"), outcome = the rest ("Más de 8.5")
-  let pre=ok[0].result;ok.forEach(l=>{while(pre&&!l.result.startsWith(pre))pre=pre.slice(0,-1);});
-  pre=pre.replace(/\s+\S*$/,'').trim();
-  if(pre.length<4)pre='';
-  ok.forEach(l=>{if(pre)l.result=l.result.slice(pre.length).replace(/^[\s\-–:]+/,'').trim();});
+  // market = the " - " pieces every selection starts with ("1er Set - Ganador"), outcome = the rest ("Carlos Alcaraz");
+  // a name that every line is on goes with the market too ("Tiros a puerta del Equipo - Brazil" · "Más de 7.5")
+  const segs=ok.map(l=>l.result.split(/\s+-\s+/));
+  let n=0;while(n<segs[0].length-1&&segs.every(x=>x.length-1>n&&x[n].toLowerCase()===segs[0][n].toLowerCase()))n++;
+  let pre=segs[0].slice(0,n).join(' - ');
+  ok.forEach((l,i)=>{l.result=segs[i].slice(n).join(' - ');});
+  const LN=/^(.+?)\s+((?:más|mas|menos)\s+de|over|under)\s+(\d+(?:[.,]\d+)?)$/i;
+  const nm=ok.map(l=>l.result.match(LN));
+  if(pre&&nm.every(m=>m&&m[1].toLowerCase()===nm[0][1].toLowerCase())){pre+=' - '+nm[0][1];ok.forEach((l,i)=>{l.result=nm[i][2]+' '+nm[i][3];});}
   // when it ends ≈ kick-off (counted from the message's "Hora:", not from now) + match length
   let date='',time='';
   const h=txt.match(/hora:\s*(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s*(\d{1,2}):(\d{2})/i);
@@ -6658,13 +6680,13 @@ function parseBotFormat(txt,at){
   // the competition line as the bot writes it, sport emoji included: "🏆 ⚽ England Premier League"
   const tr=txt.match(/🏆\uFE0F?[ \t]*(?:torneo:[ \t]*)?([^\n]*)/i);
   const comp=tr?tr[1].replace(/\s+/g,' ').trim().slice(0,80):'';
-  return {legs:ok.map(l=>({house:l.house,odd:l.odd,stake:l.stake??null,result:l.result})),ev,market:pre.replace(/\s*-\s*$/,''),date,time,comp};
+  return {legs:ok.map(l=>({house:l.house,odd:l.odd,stake:l.stake??null,result:l.result})),ev,market:pre,date,time,comp};
 }
 // A +EV (value bet) message from the "Apuestas +EV → Telegram" script: ONE bet, registered as a Normal bet.
 // "💎 +EV · ⚔️ A vs B · 📈 EV 5.85%" / "🏆 ⚽ Liga" / "⏳ Empieza en: 28m" / "🎯 Mercado - Selección" /
 // "📈 Cuota: 2.10 en 🏦 bet365" / "⚖️ Cuota justa: 1.98 …" / "🕒 Hora: 4/11/2026, 23:10:40"
 function parseEvFormat(txt,at){
-  txt=String(txt||'');
+  txt=tgBody(txt);
   const lines=txt.split(/\n/);
   if(!/^\W*\+EV\b/i.test((lines[0]||'').trim())||!/cuota:\s*\d/i.test(txt))return null;
   const clean=l=>l.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{20E3}\u{2B50}]/gu,'').replace(/\s+/g,' ').trim();
@@ -6678,10 +6700,7 @@ function parseEvFormat(txt,at){
   const c=cl&&cl.match(/^cuota:\s*(\d+(?:[.,]\d+)?)\s*en\s*(.+)$/i);
   if(!ev||!pick||!c)return null;
   const odd=parseFloat(c[1].replace(',','.'));
-  const known=trackedBookmakers();
-  const houses=c[2].replace(/\(.*?\)/g,'').split(',').map(x=>x.trim()).filter(Boolean);
-  const find=raw=>{const r=raw.toLowerCase();return known.find(n=>n.toLowerCase()===r)||known.find(n=>r.includes(n.toLowerCase())||n.toLowerCase().includes(r));};
-  const house=houses.map(find).find(Boolean)||houses[0]||'';
+  const house=tgHouse(c[2]);
   if(!(odd>1)||!house)return null;
   const fm=txt.match(/cuota justa:\s*(\d+(?:[.,]\d+)?)/i);
   const w=botWhen(txt,at);
@@ -6756,7 +6775,7 @@ document.getElementById('qPasteBtn').addEventListener('click',()=>{
 });
 document.getElementById('qPaste').addEventListener('input',e=>{
   const pe=parseEvFormat(e.target.value);
-  if(pe){if(tgRequeue())save();loadEvNormal(pe);document.getElementById('qPasteWrap').style.display='none';setTimeout(focusStake,30);return;}
+  if(pe){if(tgRequeue())save();loadEvNormal(pe,'Normal');document.getElementById('qPasteWrap').style.display='none';setTimeout(focusStake,30);return;}
   const p=parseSurebetText(e.target.value);const {legs,ev,market,date,time}=p;
   if(legs.length<2){if(e.target.value.trim())toast('Could not find 2 of your bookmakers with odds in that text');return;}
   if(tgRequeue())save();
@@ -7039,6 +7058,12 @@ function arScore(m,A,B){return m.sport==='tennis'?A.ls.map((x,k)=>x+'-'+(B.ls[k]
 // → {leg, score, live} once exactly one leg has won and the rest lost; otherwise {why, wait (min)}
 function arSettle(b,hit){
   const {m,A,B}=hit;
+  if(b._nm){ // a single bet (a +EV one): its pick won or lost
+    const sp=arLegSpec(b,b.legs[0]);const x=sp?arLegState(sp,m,A,B):null;
+    if(x==='win'||x==='lose')return {leg:x==='win'?'won':'lost',score:arScore(m,A,B),live:!(m.done&&!m.bad)};
+    if(!m.done&&x!=='push')return {why:'playing',wait:AR_EVERY_MIN};
+    return {why:'unclear',wait:720};
+  }
   const specs=(b.legs||[]).map(l=>arLegSpec(b,l));
   if(specs.some(s=>!s))return {why:'unclear',wait:720};
   const res=specs.map(s=>arLegState(s,m,A,B));
@@ -7053,14 +7078,23 @@ function arStarted(b){
   const end=b.time?Date.parse(b.date+'T'+b.time+':00'):NaN;
   return isNaN(end)?b.date<=shiftedISO(0):Date.now()>=end-SPORT_HOURS*3600000;
 }
+// a normal bet / freebet that knows what it's on (the pick of a +EV message: "Total de Goles - Más de 2.5"), seen as a
+// one-leg bet; its mark is Won / Lost
+function arNmView(n){
+  const v={id:'nm'+n.id,event:n.event,date:n.date,time:n.time,market:'',legs:[{result:n.pick}],_nm:n};
+  Object.defineProperty(v,'pendMark',{get:()=>n.pendMark});return v;
+}
 function arCandidates(manual){
   const oldest=shiftedISO(-AR_MAX_DAYS),now=Date.now();
-  return D.bets.filter(b=>{
-    // arNo: you changed or took back what the scores marked, so that one is left to you
-    if(b.status!=='pending'||b.pendMark!=null||b.arNo||(b.legs||[]).length<2||!b.date||b.date<oldest||!arStarted(b))return false;
+  const ok=b=>{
     if(!manual){const t=arTried.get(b.id);if(t&&now-t.t<t.wait*60000)return false;}
     return String(b.event||'').split(AR_VS).length===2&&arCoverable(b);
-  });
+  };
+  return [...D.bets.filter(b=>{
+    // arNo: you changed or took back what the scores marked, so that one is left to you
+    if(b.status!=='pending'||b.pendMark!=null||b.arNo||(b.legs||[]).length<2||!b.date||b.date<oldest||!arStarted(b))return false;
+    return ok(b);
+  }),...(D.normals||[]).filter(n=>n.status==='pending'&&n.pendMark==null&&!n.arNo&&n.pick&&n.type!=='Combi'&&n.date&&n.date>=oldest&&arStarted(n)).map(arNmView).filter(ok)];
 }
 // the ESPN days a bet's match can be filed under
 function arDays(b){
@@ -7075,7 +7109,7 @@ const AR_SPORTS=[['tennis',/\bjuegos\b|\bgames\b|\bsets?\b|\baces?\b|doble falta
   ['soccer',/\bgol(es)?\b|\bgoals?\b|corner|tarjeta|\bremates?\b|tiros? a puerta|\bcards?\b|ambos|both teams|btts|empate|\bdraw\b|\bdnb\b|1x2|\b(1x|x2|x)\b|doble oportunidad|double chance|asiatic|fuera de juego|offside/]];
 function arSports(){
   const seen=new Map(),oldest=shiftedISO(-AR_MAX_DAYS-2);
-  D.bets.forEach(b=>{
+  [...D.bets,...(D.normals||[]).filter(n=>n.pick).map(n=>({event:n.event,date:n.date,market:n.pick}))].forEach(b=>{
     if(!b.date||b.date<oldest)return;
     const k=arNorm(b.event),txt=arNorm([b.market,...(b.legs||[]).map(l=>l.result)].join(' '));
     let s=seen.get(k);if(!s)seen.set(k,s=new Set());
@@ -7214,7 +7248,7 @@ async function pendAutoResults(manual){
   if(arBusy)return;
   if(!manual&&Date.now()-arLast<AR_EVERY_MIN*60000-15000)return;
   const cands=arCandidates(manual);
-  if(!cands.length){if(manual)toast('Nothing to check: no started pending surebets on markets it can read (winner, totals, handicaps, 1st set, corners, cards, shots…) without a result');return;}
+  if(!cands.length){if(manual)toast('Nothing to check: no started pending surebets or +EV bets on markets it can read (winner, totals, handicaps, 1st set, corners, cards, shots…) without a result');return;}
   arBusy=true;arLast=Date.now();arBtnState();
   try{
     const best=new Map(),ask=list=>arAsk(best,list);
@@ -7227,9 +7261,10 @@ async function pendAutoResults(manual){
     const pool=[...best.values()];
     let marked=0,playing=0,notFound=0,unclear=0,needKey=0;
     const afq=[],key=!!afKey();
-    const mark=(b,r,hit)=>{
+    const mark=(v,r,hit)=>{
+      const b=v._nm||v;
       b.pendMark=r.leg;b.autoRes={leg:r.leg,score:r.score,at:Date.now()};if(r.live)b.autoRes.live=1;
-      const note=arStatNote(b,hit);if(note)b.autoRes.stat=note;if(hit.m.afId)b.autoRes.src='af';marked++;
+      const note=arStatNote(v,hit);if(note)b.autoRes.stat=note;if(hit.m.afId)b.autoRes.src='af';marked++;
     };
     cands.forEach(b=>{
       if(b.pendMark!=null)return;
@@ -7503,6 +7538,8 @@ async function tgPoll(){
       const m=u.message||u.channel_post;if(!m)return;
       const text=(m.text||m.caption||'').trim();if(!text)return;
       if(D.tgInbox.some(x=>x.uid===u.update_id))return;
+      // the bots' own notices ("Bot iniciado", /estado answers…) aren't bets: left out instead of shown as unreadable
+      if(tgJunk(text))return;
       // a forwarded message keeps the time it was first sent, not the time it was forwarded
       const sent=(m.forward_origin&&m.forward_origin.date)||m.forward_date||m.date||0;
       D.tgInbox.unshift({uid:u.update_id,text,at:sent*1000||Date.now()});added++;
@@ -7511,6 +7548,7 @@ async function tgPoll(){
   }catch(e){tgLastErr='Could not reach Telegram';renderTgCard();}
   finally{tgBusy=false;}
 }
+function tgJunk(text){return !/cuota|odds|@\s*\d/i.test(text)&&!tgUsable(parseEvFormat(text)||parseSurebetText(text));}
 function firestoreReadyFlag(){return Array.isArray(D.tgInbox);}
 // an inbox message is parsed once (again only if your bookmakers change), not on every poll / render
 const _tgParsed=new Map();
@@ -7536,7 +7574,7 @@ function tgStart(){clearInterval(tgTimer);if(tgToken()){tgPoll();tgTimer=setInte
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)tgPoll();});
 function renderTgCard(){
   const card=document.getElementById('tgCard');if(!card)return;
-  const tok=tgToken();const items=(D.tgInbox||[]);
+  const tok=tgToken();const items=(D.tgInbox||[]).filter(it=>!tgJunk(it.text));
   const tb=document.getElementById('tgSetBtn');if(tb)tb.classList.toggle('live',!!tok&&!tgLastErr);
   if((!tok||!items.length)&&!tgOpenCfg&&!tgLastErr){card.style.display='none';return;}
   card.style.display='';
@@ -7557,7 +7595,7 @@ function renderTgCard(){
       const pr=ok&&!p.single?findPreset(p.legs.map(l=>l.odd)):null;
       return `<div class="tg-it${ok?'':' bad'}${dup?' dup':''}">
         <div class="tg-main">
-          <div class="tg-ev">${esc(p.ev||'(no event)')}${ok?`<span class="tg-roi ${roi>=0?'pos':'neg'}">${p.single?'EV ':''}${roi>=0?'+':''}${fmt(roi)}%</span>`:''}${p.single&&ok?'<span class="tg-evb" title="Value bet: one single bet, saved as a Normal bet">Normal bet</span>':''}${dup?`<span class="tg-dup" title="Same match, market, bookmakers and odds as a pending bet">Already registered${addedAt(dup)?' '+addedAt(dup):''}</span>`:''}</div>
+          <div class="tg-ev">${esc(p.ev||'(no event)')}${ok?`<span class="tg-roi ${roi>=0?'pos':'neg'}">${p.single?'EV ':''}${roi>=0?'+':''}${fmt(roi)}%</span>`:''}${p.single&&ok?`<span class="tg-evb" title="Value bet: one single bet — Use loads it as ${esc(evTargetLabel())}">${esc(evTargetLabel())}</span>`:''}${dup?`<span class="tg-dup" title="Same match, market, bookmakers and odds as a pending bet">Already registered${addedAt(dup)?' '+addedAt(dup):''}</span>`:''}</div>
           <div class="tg-mk">${[p.market?esc(p.market):'',p.time?'ends ~'+parseInt(p.time,10)+'h':'',it.at?`<span class="tg-age${Date.now()-it.at>15*60000?' old':''}" data-tgage="${+it.at}">${tgAge(it.at)}</span>`:''].filter(Boolean).join(' · ')}</div>
           <div class="tg-legs">${ok?p.legs.map(l=>`<span class="tg-leg">${esc(l.house)} <b>${fmt(l.odd)}</b></span>`).join('')+(pr?`<span class="tg-pre" title="Your saved stakes will be used">⚡ ${pr.legs.map(l=>fmt(l.stake,l.stake%1?2:0)).join('/')} €</span>`:''):`<span class="tg-raw">Bookmakers not recognised · ${esc(it.text.slice(0,70))}…</span>`}</div>
         </div>
@@ -7573,7 +7611,7 @@ setInterval(()=>{if(document.hidden)return;document.querySelectorAll('#tgCard [d
 // Everything comes from the message; the only thing left to type is the stake.
 function focusStake(){
   if(newBetType!=='Surebet'){const s=document.getElementById('nf-stake');try{s.focus({preventScroll:true});s.select();}catch(e){}s.scrollIntoView({behavior:'smooth',block:'center'});
-    toast('Value bet loaded as a Normal bet — type your stake');return;}
+    toast(newBetType==='Combi'?`Added to the combi (${nfSels.filter(x=>parseFloat(x.odd)>1).length} selections) — add more or type your stake`:`Value bet loaded as ${newBetType==='Freebet'?'a Freebet':'a Normal bet'} — type your stake`);return;}
   const el=document.getElementById('totalInv');if(!el)return;
   // focus inside the tap itself: iPhone only opens the keyboard for a focus that comes straight from a tap
   try{el.focus({preventScroll:true});el.select();}catch(e){}
@@ -7582,11 +7620,17 @@ function focusStake(){
   toast(activePreset()?`Saved stakes applied — press ${k}`:`Type your stake and press ${k}`);
 }
 function calcIdle(){return newBetType==='Surebet'&&(document.querySelector('.ni.active')?.dataset.page||'calc')==='calc'&&!outcomes.some(o=>o.odd>1);}
-function tgNext(){
+// the Normal / Freebet form is empty: a value bet that arrives can load there by itself (always as a Normal bet)
+function nfIdle(){return (newBetType==='Normal'||newBetType==='Freebet')&&(document.querySelector('.ni.active')?.dataset.page||'calc')==='calc'&&!document.getElementById('nf-event').value.trim()&&!(parseFloat(document.getElementById('nf-odd').value)>1);}
+// afterNf: you just saved a bet from Telegram on the Normal form → the next message loads (a surebet back on the calculator)
+function tgNext(afterNf){
   const idx=tgDupIndex(); // ones you already registered wait in the list (tap Use if you really placed it twice)
   const next=(D.tgInbox||[]).slice().reverse().find(it=>{const p=tgParse(it);return tgUsable(p)&&!tgDupOf(p,idx);});
-  if(!next||!calcIdle())return false;
-  tgLoad(next.uid);focusStake();return true;
+  if(!next)return false;
+  const single=tgParse(next).single;
+  if(afterNf&&!single&&newBetType!=='Surebet')setBetType('Surebet');
+  if(!(calcIdle()||single&&nfIdle()))return false;
+  tgLoad(next.uid,false,'Normal');focusStake();return true;
 }
 // Something else is about to replace the calculator: the Telegram surebet loaded there and not
 // registered yet goes back into the queue (in its original order) instead of being lost.
@@ -7599,9 +7643,27 @@ function tgRequeue(){
 }
 // +EV single bet → New bet · Normal, everything filled in except the stake (switch to Freebet before saving if it is one)
 let nfTg=null; // {ev, comp, pick, evPct, fair} — kept with the bet only while the event is still that one
-function loadEvNormal(p){
+// what Use does with a value bet on the type you're on: Normal / Freebet as that, a Combi adds it as a selection
+function evTargetType(){return newBetType==='Freebet'||newBetType==='Combi'?newBetType:'Normal';}
+function evTargetLabel(){return {Normal:'Normal bet',Freebet:'Freebet',Combi:'Add to combi'}[evTargetType()];}
+function loadEvInto(p,type){if((type||evTargetType())==='Combi')loadEvCombi(p);else loadEvNormal(p,type||evTargetType());}
+function loadEvCombi(p){
   const l=p.legs[0];
-  setBetType('Normal');
+  setBetType('Combi');
+  const sel={name:[p.ev,p.pick].filter(Boolean).join(' · '),odd:l.odd};
+  const free=nfSels.findIndex(x=>!(x.name||'').trim()&&!(parseFloat(x.odd)>1));
+  if(free>=0)nfSels[free]=sel;else nfSels.push(sel);
+  const evEl=document.getElementById('nf-event');if(!evEl.value.trim())evEl.value=p.ev;
+  const nfH=document.getElementById('nf-house');if(!nfH.value){nfH.innerHTML=houseOptionsHtml(l.house,'Choose bookmaker…');nfH.value=nfH.querySelector('option[selected]')?.value||l.house;}
+  // a combi ends with its last match
+  const dEl=document.getElementById('nf-date'),tEl=document.getElementById('nf-time');
+  if(p.date&&(p.date+(p.time||''))>(dEl.value+(tEl.value||''))){dEl.value=p.date;tEl.value=p.time||'';}
+  const nt=document.getElementById('nf-notes');nt.value=[nt.value,`+EV ${p.evPct!=null?fmt(p.evPct)+'% ':''}${p.pick||''}`.trim()].filter(Boolean).join(' · ').slice(0,200);
+  nfTg=null;renderNfSels();renderNfResult();
+}
+function loadEvNormal(p,type){
+  const l=p.legs[0];
+  setBetType(type==='Freebet'?'Freebet':'Normal');
   document.getElementById('nf-event').value=p.ev;
   document.getElementById('nf-odd').value=l.odd;
   const nfH=document.getElementById('nf-house');nfH.innerHTML=houseOptionsHtml(l.house,'Choose bookmaker…');nfH.value=nfH.querySelector('option[selected]')?.value||l.house;
@@ -7613,10 +7675,14 @@ function loadEvNormal(p){
   nfTg={ev:p.ev,comp:p.comp||'',pick:p.pick||'',evPct:p.evPct,fair:p.fair};
   renderNfResult();
 }
-function tgLoad(uid,quiet){
+function tgLoad(uid,quiet,type){
   const it=D.tgInbox.find(x=>x.uid===uid);if(!it)return false;
   const p=tgParse(it);if(!tgUsable(p))return false;
-  if(p.single){tgRequeue();tgCur=it;it.single=true;loadEvNormal(p);D.tgInbox=D.tgInbox.filter(x=>x.uid!==uid);if(!quiet)save();renderTgCard();return true;}
+  if(p.single){
+    type=type||evTargetType();
+    if(type==='Combi'){tgRequeue();loadEvCombi(p);} // part of a combi you're building: it isn't put back if you leave it
+    else{tgRequeue();tgCur=it;it.single=true;loadEvNormal(p,type);}
+    D.tgInbox=D.tgInbox.filter(x=>x.uid!==uid);if(!quiet)save();renderTgCard();return true;}
   tgRequeue();tgCur=it;
   clearPresetStakes();
   outcomes=p.legs.map(l=>({id:nextId++,house:l.house,result:l.result||'',odd:l.odd,manualStake:null}));
@@ -8171,8 +8237,8 @@ function setBetType(type){
   document.getElementById('nfCard').style.display=isSb?'none':'';
   document.getElementById('nfResult').style.display=isSb?'none':'';
   renderRepeatSel();
-  document.getElementById('tgCard').style.display=isSb?'':'none';
   if(isSb){fillQuickDefaults();render();renderTgCard();return;}
+  renderTgCard(); // the Telegram inbox shows on Normal / Freebet / Combi too: a value bet loads straight into this type
   const m=NF_META[newBetType];
   document.getElementById('nfTitle').textContent=m.title;
   document.getElementById('nfHelp').textContent=m.help;
@@ -8273,7 +8339,7 @@ function saveNewNormal(){
   resetNfForm();renderRepeatSel();
   toast(`${type} saved to pending · +${fmt(bet.potentialWin)} € if it wins${matchWhenMsg(mw)}`,'View pending',()=>navTo('pendientes'));
   // registered from Telegram: back to the calculator with the next message waiting there
-  if(fromTg&&(D.tgInbox||[]).length){setBetType('Surebet');if(tgNext())setTimeout(focusStake,0);}
+  if(fromTg&&(D.tgInbox||[]).length){if(tgNext(true))setTimeout(focusStake,0);}
 }
 // open the New bet page (optionally on a type and with a category preselected)
 function goNewBet(type,catId){
@@ -8285,6 +8351,11 @@ document.getElementById('nbTypes').addEventListener('click',e=>{
   const b=e.target.closest('.nbt');if(!b)return;setBetType(b.dataset.bt);
 });
 ['nf-odd','nf-stake'].forEach(id=>document.getElementById(id).addEventListener('input',renderNfResult));
+// a +EV message pasted into Event (or Notes) fills in the whole form for this type
+['nf-event','nf-notes'].forEach(id=>document.getElementById(id).addEventListener('paste',e=>{
+  const t=(e.clipboardData||window.clipboardData)?.getData('text')||'';const pe=parseEvFormat(t);if(!pe)return;
+  e.preventDefault();if(tgRequeue())save();loadEvInto(pe);setTimeout(focusStake,30);
+}));
 document.getElementById('nf-addsel').addEventListener('click',()=>{nfSels.push({name:'',odd:''});renderNfSels();renderNfResult();
   const inp=document.querySelector(`#nf-sels [data-seln="${nfSels.length-1}"]`);inp&&inp.focus();});
 document.getElementById('nf-sels').addEventListener('input',e=>{
