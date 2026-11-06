@@ -2134,6 +2134,62 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .sync-bar.bad .sync-dot{background:var(--red);animation:none}
 @keyframes syncPulse{50%{opacity:.35}}
 @media(min-width:601px){.sync-bar{top:76px}}
+
+/* ═════════ GLASS ═════════
+   Same colours and layout; surfaces become frosted glass over a soft pitch/ball glow.
+   Blur only on things that float over content (bars, sheets, toasts) so long lists stay smooth on iPhone. */
+:root{
+  --surface:rgba(255,255,255,.5);--raised:rgba(236,232,222,.55);--inp:rgba(255,255,255,.72);
+  --border:rgba(27,36,32,.085);--border2:rgba(27,36,32,.15);
+  --glass-edge:rgba(255,255,255,.78);
+  --glass-hi:inset 0 1px 0 rgba(255,255,255,.85);
+  --lift:0 1px 2px rgba(27,36,32,.04),0 10px 30px -16px rgba(27,36,32,.28);
+  --blur:saturate(1.7) blur(20px);
+}
+.main{background-color:var(--bg);
+  background-image:
+    radial-gradient(50% 45% at 6% 10%,rgba(37,90,65,.26),transparent 72%),
+    radial-gradient(44% 40% at 94% 20%,rgba(244,197,61,.34),transparent 72%),
+    radial-gradient(55% 45% at 72% 95%,rgba(37,90,65,.2),transparent 72%),
+    radial-gradient(40% 36% at 14% 80%,rgba(244,197,61,.22),transparent 72%)}
+.card,.bi,.ni2,.pend-item,.bk-card,.note-card,.month-card,.notas-folders,.ph2,.sc,.nbt,.bk-panel,.br-card,.promo-panel{
+  border:1px solid var(--glass-edge);box-shadow:var(--lift),var(--glass-hi)}
+.nbt{border-width:2px}
+.total-hero,.profit-mes-box{border-color:rgba(255,255,255,.12)!important;box-shadow:var(--lift),inset 0 1px 0 rgba(255,255,255,.1)}
+.nbt:hover{background:rgba(255,255,255,.72)}
+.nbt.active{background:rgba(255,255,255,.8)}
+.card .card,.card .sc{box-shadow:var(--glass-hi)}
+.btn-s,.btn-reject,.btn-void,.tool,.seg-b,.pd-chip,.bk-btn,.bk-chip,.cal-nav-btn{box-shadow:var(--glass-hi)}
+.btn-s:hover,.btn-void:hover{background:rgba(255,255,255,.8)}
+/* pieces that sit on top of a border or a solid ring need to stay solid */
+.oi-frac{background:#fff}
+.tool-dot{box-shadow:0 0 0 2px #fff}
+.ss option,.ns option,select option{background:#fff}
+/* masthead + page header: same pitch, with a glassy sheen */
+.ph{box-shadow:inset 0 -1px 0 rgba(255,255,255,.08)}
+.ph::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.06),transparent 55%)}
+.ph>*{position:relative;z-index:1}
+/* floating layers: real frosted glass */
+.toast{background:rgba(29,69,50,.9);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  border:1px solid rgba(255,255,255,.14);box-shadow:var(--shadow-lg),inset 0 1px 0 rgba(255,255,255,.12)}
+.modal-ov{background:rgba(16,30,22,.32)!important;-webkit-backdrop-filter:blur(8px)!important;backdrop-filter:blur(8px)!important}
+.modal-inner{background:rgba(255,255,255,.8)!important;-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  box-shadow:var(--shadow-lg),var(--glass-hi)}
+.sync-bar{-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+@media(max-width:600px){
+  .tabbar{background:rgba(255,255,255,.8);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+    border-top:1px solid var(--glass-edge);box-shadow:0 -8px 24px -16px rgba(27,36,32,.3)}
+  .tab-fab{box-shadow:0 0 0 5px rgba(255,255,255,.7),0 6px 14px -4px rgba(27,36,32,.35)}
+  .sb-overlay.open{background:rgba(16,30,22,.3);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+  .sidebar{background:rgba(29,69,50,.9);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-right:1px solid rgba(255,255,255,.1)}
+  .q-bar.on{background:rgba(255,255,255,.8);border-color:var(--glass-edge);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .modal-inner{background:#fff!important}
+  .toast{background:var(--pitch)}
+  @media(max-width:600px){.tabbar{background:#fff}.sidebar{background:var(--pitch)}}
+}
 </style>
 </head>
 <body>
