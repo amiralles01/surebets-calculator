@@ -2220,6 +2220,55 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
   .pc-legs .pc-leg.both{grid-column:1/-1}
   .pc-r{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:1.25}
 }
+/* ═════════ DEPTH ═════════
+   The empty area behind the content becomes a lit pitch: faint chalk markings, mowing stripes and grain under the glass,
+   the header casts a shadow with a yellow edge, and day headers / stat tiles get their own accents. Background only lives on .main (not the scroller), so it costs nothing while scrolling. */
+:root{--chalk:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1060 690' fill='none' stroke='%231D4532' stroke-opacity='.09' stroke-width='2.2'%3E%3Crect x='5' y='5' width='1050' height='680' rx='6'/%3E%3Cline x1='530' y1='5' x2='530' y2='685'/%3E%3Ccircle cx='530' cy='345' r='92'/%3E%3Ccircle cx='530' cy='345' r='4' fill='%231D4532' fill-opacity='.1'/%3E%3Crect x='5' y='143' width='166' height='404'/%3E%3Crect x='5' y='253' width='56' height='184'/%3E%3Cpath d='M171 272a92 92 0 0 1 0 146'/%3E%3Crect x='889' y='143' width='166' height='404'/%3E%3Crect x='999' y='253' width='56' height='184'/%3E%3Cpath d='M889 272a92 92 0 0 0 0 146'/%3E%3Cpath d='M5 17a12 12 0 0 0 12-12M1043 5a12 12 0 0 0 12 12M5 673a12 12 0 0 1 12 12M1043 685a12 12 0 0 1 12-12'/%3E%3C/svg%3E");--grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1  0 0 0 0 .16  0 0 0 0 .12  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.32'/%3E%3C/svg%3E")}
+.main{
+  background-image:
+    var(--grain),
+    var(--chalk),
+    radial-gradient(60% 50% at 50% 0%,rgba(255,255,255,.55),transparent 70%),
+    radial-gradient(50% 45% at 4% 12%,rgba(37,90,65,.3),transparent 72%),
+    radial-gradient(44% 40% at 96% 22%,rgba(244,197,61,.38),transparent 72%),
+    radial-gradient(55% 45% at 74% 98%,rgba(37,90,65,.24),transparent 72%),
+    radial-gradient(40% 36% at 12% 84%,rgba(244,197,61,.26),transparent 72%),
+    repeating-linear-gradient(90deg,rgba(29,69,50,.028) 0 90px,transparent 90px 180px),
+    linear-gradient(180deg,#EFECE4,#F4F2EC 40%,#ECE8DE);
+  background-size:180px 180px,min(1500px,150vw) auto,auto,auto,auto,auto,auto,auto,auto;
+  background-position:0 0,50% calc(50% + 70px),0 0,0 0,0 0,0 0,0 0,50% 0,0 0;
+  background-repeat:repeat,no-repeat,no-repeat,no-repeat,no-repeat,no-repeat,no-repeat,repeat,no-repeat}
+/* header: lifts off the page, with a ball-yellow edge */
+.ph{box-shadow:inset 0 -1px 0 rgba(255,255,255,.08),0 14px 34px -18px rgba(16,40,28,.55);z-index:2}
+.ph::before{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;pointer-events:none;z-index:1;
+  background:linear-gradient(90deg,transparent,rgba(244,197,61,.0) 8%,rgba(244,197,61,.85) 50%,rgba(244,197,61,0) 92%,transparent)}
+.ph-title{text-shadow:0 2px 18px rgba(0,0,0,.18)}
+/* day / bookmaker section headers: a yellow tab, the count as a badge, a line that fades out */
+.pend-day-h{gap:10px}
+.pend-day-h::before{content:'';width:5px;height:18px;border-radius:3px;flex-shrink:0;
+  background:linear-gradient(180deg,var(--ball-hi),var(--ball));box-shadow:0 2px 6px -1px rgba(244,197,61,.6)}
+.pend-day-h.od::before{background:var(--red);box-shadow:0 2px 6px -1px rgba(210,65,43,.5)}
+.pend-day-h .pd-n{font-family:var(--font);font-size:12px;font-weight:650;letter-spacing:0;color:var(--muted);
+  background:rgba(255,255,255,.6);border:1px solid var(--glass-edge);box-shadow:var(--lift);border-radius:999px;padding:1px 9px}
+.pend-day-h::after{height:1px;background:linear-gradient(90deg,var(--border2),transparent)}
+/* stat tiles: a coloured top edge + matching glow from the corner */
+.sc{--tone:var(--pitch2);overflow:hidden;
+  background-image:radial-gradient(120% 90% at 100% 0%,color-mix(in srgb,var(--tone) 12%,transparent),transparent 60%)}
+.sc::before{content:'';position:absolute;left:0;right:0;top:0;height:3px;pointer-events:none;
+  background:linear-gradient(90deg,var(--tone),color-mix(in srgb,var(--tone) 25%,transparent))}
+.sc:has(.sv2.pos){--tone:var(--green)}
+.sc:has(.sv2.neg){--tone:var(--red)}
+.sc:has(.sv2.yel){--tone:var(--ball)}
+/* cards lift a touch under the mouse */
+@media(hover:hover){
+  .pc-row,.pend-item,.bi,.ni2,.bk-card{transition:transform .15s ease,box-shadow .15s ease}
+  .pc-row:hover,.pend-item:hover,.bi:hover,.ni2:hover,.bk-card:hover{transform:translateY(-1px);
+    box-shadow:0 2px 4px rgba(27,36,32,.05),0 16px 34px -18px rgba(27,36,32,.38),var(--glass-hi)}
+}
+@media(max-width:600px){
+  .main{background-size:180px 180px,900px auto,auto,auto,auto,auto,auto,auto,auto;background-position:0 0,50% 62%,0 0,0 0,0 0,0 0,0 0,50% 0,0 0}
+  .pend-day-h::before{height:16px}
+}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
   .modal-inner{background:#fff!important}
   .toast{background:var(--pitch)}
