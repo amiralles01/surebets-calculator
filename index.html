@@ -750,6 +750,34 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shad
 .bk-hist-pending{font-size:11px;font-weight:700;color:var(--yellow);background:var(--ydim);
   padding:2px 8px;border-radius:99px;flex-shrink:0}
 
+/* bookmaker → every bet placed there */
+.bk-btn.bets{color:var(--blue);border-color:rgba(47,104,168,.35);background:var(--bdim)}
+.bkb-sum{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.bkb-sum>div{background:var(--raised);border:1px solid var(--border);border-radius:9px;padding:7px 10px;min-width:0}
+.bkb-sum span{display:block;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--faint)}
+.bkb-sum b{font-family:var(--mono);font-size:14px;font-weight:700;white-space:nowrap}
+.bkb-sum b small{font-size:11px;font-weight:500;color:var(--faint)}
+.bkb-sum .pos,.bkb-pl.pos{color:var(--green)}.bkb-sum .neg,.bkb-pl.neg{color:var(--red)}.bkb-sum .yel{color:var(--yellow)}.bkb-sum em{font-style:normal}
+.bkb-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.bkb-chip{font:inherit;font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;border:1px solid var(--border);background:var(--inp);color:var(--muted);cursor:pointer}
+.bkb-chip i{font-style:normal;font-weight:500;color:var(--faint);margin-left:2px}
+.bkb-chip.on{border-color:var(--focus);color:var(--text);box-shadow:0 0 0 2px rgba(37,90,65,.15)}
+.bkb-list{display:flex;flex-direction:column;gap:6px;max-height:460px;overflow-y:auto;overscroll-behavior:contain}
+.bkb-row{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:9px;background:var(--raised);border:1px solid var(--border);border-left:3px solid var(--border)}
+.bkb-row.r-won{border-left-color:var(--green)}.bkb-row.r-lost{border-left-color:var(--red)}.bkb-row.r-pending{border-left-color:var(--yellow)}
+.bkb-l{flex:1;min-width:0}
+.bkb-ev{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bkb-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:11.5px;color:var(--faint);margin-top:2px}
+.bkb-vs{font-size:11px}
+.bkb-pick{margin-top:4px}.bkb-sels{font-size:11.5px;color:var(--muted);margin-top:3px}
+.bkb-r{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;text-align:right}
+.bkb-os{font-family:var(--mono);font-size:11.5px;color:var(--muted);white-space:nowrap}
+.bkb-pl{font-family:var(--mono);font-size:14px;font-weight:800;white-space:nowrap}
+.bkb-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--faint)}
+.bkb-foot b.pos{color:var(--green)}.bkb-foot b.neg{color:var(--red)}
+.tp-sb{background:var(--gdim);color:var(--green)}.tp-mid{background:rgba(184,98,27,.14);color:#B8621B}
+@media(max-width:600px){.bkb-sum{grid-template-columns:repeat(2,minmax(0,1fr))}.bkb-sum>div:last-child{grid-column:1/-1}.bkb-list{max-height:none}}
+
 @media(max-width:600px){
   .bk-quick-row{grid-template-columns:1fr 1fr}
   .bk-qa-btn{grid-column:1/-1;width:100%!important}
@@ -5655,6 +5683,92 @@ function bookmakerLedger(keep){ // keep(item) → only count those items (e.g. o
   });
   return m;
 }
+// every bet placed at one bookmaker (normals, freebets, combis, surebet and middle legs) with what it did there.
+// pl follows bookmakerLedger, so the settled ones add up to the card's "Bet results".
+function houseBets(c){
+  const key=bkKey((c.name||'').trim());const rows=[];if(!key)return rows;
+  visibleNormals().forEach(n=>{
+    if(bkKey((n.house||'').trim())!==key)return;
+    const st=n.status;
+    const res=st==='pending'?'pending':st==='anulada'?'void':n.cashOut!=null&&(st==='won'||st==='lost')?'cashout':st==='won'?'won':st==='lost'?'lost':'void';
+    rows.push({kind:n.type==='Freebet'?'freebet':'normal',item:n,id:'nm'+n.id,date:n.date||'',time:n.time||'',event:n.event||'',pick:n.pick||'',
+      sels:isCombi(n)?(n.selections||[]):null,odd:n.odd||0,stake:n.stake||0,free:n.type==='Freebet',res,
+      pl:st==='won'||st==='lost'?+(n.profit||0):st==='pending'?null:0});
+  });
+  visibleBets().forEach(b=>{
+    const legs=b.legs||[];if(!legs.length)return;
+    const st=b.status,w=b.winnerLeg,tot=legs.reduce((a,l)=>a+(l.stake||0),0)||legs.length;
+    const coLegs=b.cashOut!=null&&Array.isArray(b.cashOutLegs)&&b.cashOutLegs.length===legs.length;
+    legs.forEach((l,i)=>{
+      if(bkKey((l.house||'').trim())!==key)return;
+      const ret=(l.minReturn!=null?l.minReturn:(l.odd||0)*(l.stake||0));
+      let res,pl;
+      if(st==='pending'){res='pending';pl=null;}
+      else if(st!=='won'&&st!=='lost'){res='void';pl=0;}
+      else if(coLegs){res='cashout';pl=(b.cashOutLegs[i]||0)-(l.stake||0);}
+      else if(b.cashOut==null&&w==='both'&&b.mid){res='won';pl=ret-(l.stake||0);}
+      else if(b.cashOut==null&&w!=null&&legs[w]){res=i===w?'won':'lost';pl=i===w?ret-(l.stake||0):-(l.stake||0);}
+      else{res=b.cashOut!=null?'cashout':'settled';pl=(b.profit||0)*((l.stake||(tot===legs.length?1:0))/tot);}
+      rows.push({kind:b.mid?'middle':'surebet',item:b,id:'sb'+b.id+':'+i,date:b.date||'',time:b.time||'',event:b.event||'',pick:l.result||'',market:b.market||'',
+        sels:l.sels&&l.sels.length?l.sels:null,odd:l.odd||0,stake:l.stake||0,free:false,res,pl:pl==null?null:+pl.toFixed(2),
+        others:legs.filter((x,j)=>j!==i).map(x=>x.house).filter(Boolean)});
+    });
+  });
+  return rows.sort((a,b)=>(b.date+(b.time||'')).localeCompare(a.date+(a.time||''))||String(b.id).localeCompare(String(a.id)));
+}
+let bkBetsRes='all',bkBetsKind='all',bkBetsN=40;
+const BK_RES_LABEL={won:'Won',lost:'Lost',pending:'Pending',void:'Void',cashout:'Cash out',settled:'Settled'};
+const BK_RES_CLS={won:'sw',lost:'sl3',pending:'sp',void:'sa',cashout:'sa',settled:'sa'};
+const BK_KIND_LABEL={normal:'Normal',freebet:'Freebet',surebet:'Surebet',middle:'Middle'};
+function bkBetsPanelHtml(c){
+  const all=houseBets(c);
+  if(!all.length)return `<div class="bk-panel"><div class="bk-panel-title">Bets at ${esc(c.name)}</div><div class="bk-hist-empty">No bets placed at ${esc(c.name)} yet.</div></div>`;
+  const cnt=r=>all.filter(x=>x.res===r).length;
+  const settled=all.filter(x=>x.pl!=null&&x.res!=='void');
+  const net=+settled.reduce((a,x)=>a+x.pl,0).toFixed(2);
+  const staked=+all.filter(x=>!x.free&&x.res!=='void').reduce((a,x)=>a+x.stake,0).toFixed(2);
+  const inPlay=+all.filter(x=>x.res==='pending'&&!x.free).reduce((a,x)=>a+x.stake,0).toFixed(2);
+  const kinds=['normal','freebet','surebet','middle'].filter(k=>all.some(x=>x.kind===k));
+  if(bkBetsKind!=='all'&&!kinds.includes(bkBetsKind))bkBetsKind='all';
+  const byKind=all.filter(x=>bkBetsKind==='all'||x.kind===bkBetsKind);
+  const shown=byKind.filter(x=>bkBetsRes==='all'||x.res===bkBetsRes);
+  const shownNet=+shown.filter(x=>x.pl!=null&&x.res!=='void').reduce((a,x)=>a+x.pl,0).toFixed(2);
+  const sg=v=>(v>0?'+':'')+fmt(v)+' €',cl=v=>v>0?'pos':v<0?'neg':'';
+  const chip=(grp,val,label,n)=>`<button class="bkb-chip${(grp==='res'?bkBetsRes:bkBetsKind)===val?' on':''}" data-bkb-${grp}="${val}" data-cid="${c.id}">${label}${n!=null?` <i>${n}</i>`:''}</button>`;
+  const rc=r=>byKind.filter(x=>x.res===r).length;
+  const resChips=[chip('res','all','All',byKind.length)].concat(['won','lost','pending','void','cashout','settled'].filter(r=>rc(r)).map(r=>chip('res',r,BK_RES_LABEL[r],rc(r)))).join('');
+  const kindChips=kinds.length>1?`<div class="bkb-chips">${[chip('kind','all','All types')].concat(kinds.map(k=>chip('kind',k,BK_KIND_LABEL[k]))).join('')}</div>`:'';
+  const page=shown.slice(0,bkBetsN);
+  const rowsHtml=page.map(x=>{
+    const pill=x.kind==='middle'?`<span class="type-pill tp-mid">Middle</span>`:x.kind==='surebet'?`<span class="type-pill tp-sb">Surebet</span>`:typePill(x.free?'Freebet':'Normal')+(x.sels?typePill('Combi'):'');
+    const pick=x.sels?x.sels.map(s=>esc(s.name||'?')+(s.odd?' @ '+fmt(s.odd):'')).join(' + '):'';
+    return `<div class="bkb-row r-${x.res}">
+      <div class="bkb-l">
+        <div class="bkb-ev">${esc(x.event||'(No event)')}</div>
+        <div class="bkb-meta"><span>${fmtDate(x.date)}${x.time?' '+esc(x.time):''}</span>${pill}${x.others&&x.others.length?`<span class="bkb-vs">vs ${esc(x.others.join(', '))}</span>`:''}</div>
+        ${x.pick?`<div class="bkb-pick">${mktChip(x.pick)}</div>`:''}${pick?`<div class="bkb-sels">${pick}</div>`:''}
+      </div>
+      <div class="bkb-r">
+        <span class="sb2 ${BK_RES_CLS[x.res]}">${BK_RES_LABEL[x.res]}</span>
+        <div class="bkb-os">${fmt(x.odd)} · ${fmt(x.stake)} €${x.free?' FB':''}</div>
+        <div class="bkb-pl ${x.pl==null?'':cl(x.pl)}">${x.pl==null?'—':sg(x.pl)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="bk-panel bkb">
+    <div class="bk-panel-title">Every bet at ${esc(c.name)}</div>
+    <div class="bkb-sum">
+      <div><span>Bets</span><b>${all.length}</b></div>
+      <div><span>Won · Lost</span><b><em class="pos">${cnt('won')}</em> · <em class="neg">${cnt('lost')}</em></b></div>
+      <div><span>Pending</span><b class="${cnt('pending')?'yel':''}">${cnt('pending')}${inPlay?` <small>${fmt(inPlay)} €</small>`:''}</b></div>
+      <div><span>Staked</span><b>${fmt(staked)} €</b></div>
+      <div><span>Result here</span><b class="${cl(net)}">${sg(net)}</b></div>
+    </div>
+    ${kindChips}<div class="bkb-chips">${resChips}</div>
+    ${shown.length?`<div class="bkb-list">${rowsHtml}</div>`:`<div class="bk-hist-empty">No bets with this filter.</div>`}
+    <div class="bkb-foot"><span>${shown.length} shown${bkBetsRes!=='all'||bkBetsKind!=='all'?` · result of these: <b class="${cl(shownNet)}">${sg(shownNet)}</b>`:''}</span>${shown.length>page.length?`<button class="bk-btn" data-bkb-more="${c.id}">Show ${Math.min(40,shown.length-page.length)} more</button>`:''}</div>
+  </div>`;
+}
 let _ledgerCache=null;
 function cachedLedger(){if(!_ledgerCache||_ledgerCache.d!==D||_ledgerCache.v!==saveVer)_ledgerCache={d:D,v:saveVer,m:bookmakerLedger()};return _ledgerCache.m;}
 // the tracked bookmaker (not a bank) behind a leg's name, if any
@@ -5779,6 +5893,8 @@ function renderCasas(filter=''){
           <button class="btn-reg" data-cost-add="${c.id}" style="width:auto;padding:9px 16px;margin:0">Add</button>
         </div>
       </div>`;
+    }else if(mode==='bets'){
+      panelHtml=bkBetsPanelHtml(c);
     }else if(mode==='hist'){
       const hist=(c.history||[]).slice().sort((a,b)=>(b.id||0)-(a.id||0));
       panelHtml=`<div class="bk-panel">
@@ -5797,7 +5913,7 @@ function renderCasas(filter=''){
         }).join('')}</div>`}
       </div>`;
     }
-    return`<div class="bk-card${bkMoreOpen.has(c.id)||(mode&&mode!=='dep'&&mode!=='wd')?' more':''}">
+    return`<div class="bk-card${bkMoreOpen.has(c.id)||(mode&&mode!=='dep'&&mode!=='wd'&&mode!=='bets')?' more':''}">
       <div class="bk-main">
         <div class="bk-avatar">${esc(bkInitials(c.name))}</div>
         <div class="bk-info">
@@ -5815,7 +5931,8 @@ function renderCasas(filter=''){
       <div class="bk-actions">
         <button class="bk-btn dep${mode==='dep'?' on':''}" data-bk-toggle="dep" data-cid="${c.id}">+ Deposit</button>
         <button class="bk-btn wd${mode==='wd'?' on':''}" data-bk-toggle="wd" data-cid="${c.id}">− Withdraw</button>
-        <button class="bk-btn bk-morebtn" data-bk-more="${c.id}">${bkMoreOpen.has(c.id)||(mode&&mode!=='dep'&&mode!=='wd')?'Less':'More'}</button>
+        ${isBank(c)?'':`<button class="bk-btn bets${mode==='bets'?' on':''}" data-bk-toggle="bets" data-cid="${c.id}">Bets</button>`}
+        <button class="bk-btn bk-morebtn" data-bk-more="${c.id}">${bkMoreOpen.has(c.id)||(mode&&mode!=='dep'&&mode!=='wd'&&mode!=='bets')?'Less':'More'}</button>
         <span class="bk-secs">
         ${isBank(c)?'':`<button class="bk-btn${mode==='pending'?' on':''}" data-bk-toggle="pending" data-cid="${c.id}">Pending transfer</button>`}
         <button class="bk-btn${mode==='hist'?' on':''}" data-bk-toggle="hist" data-cid="${c.id}">History</button>
@@ -5900,13 +6017,21 @@ document.getElementById('casasList').addEventListener('click',e=>{
   if(moreBtn){
     const cid=+moreBtn.dataset.bkMore,card=moreBtn.closest('.bk-card');
     const open=!card.classList.contains('more');
-    if(open)bkMoreOpen.add(cid);else{bkMoreOpen.delete(cid);if(openBkPanel&&openBkPanel.cid===cid&&!['dep','wd'].includes(openBkPanel.mode)){openBkPanel=null;renderCasas(document.getElementById('casasSearch').value);return;}}
+    if(open)bkMoreOpen.add(cid);else{bkMoreOpen.delete(cid);if(openBkPanel&&openBkPanel.cid===cid&&!['dep','wd','bets'].includes(openBkPanel.mode)){openBkPanel=null;renderCasas(document.getElementById('casasSearch').value);return;}}
     card.classList.toggle('more',open);moreBtn.textContent=open?'Less':'More';return;
+  }
+  const bkbRes=e.target.closest('[data-bkb-res]'),bkbKind=e.target.closest('[data-bkb-kind]'),bkbMore=e.target.closest('[data-bkb-more]');
+  if(bkbRes||bkbKind||bkbMore){
+    if(bkbRes){bkBetsRes=bkbRes.dataset.bkbRes;bkBetsN=40;}
+    if(bkbKind){bkBetsKind=bkbKind.dataset.bkbKind;bkBetsN=40;}
+    if(bkbMore)bkBetsN+=40;
+    renderCasas(document.getElementById('casasSearch').value);return;
   }
   const toggleBtn=e.target.closest('[data-bk-toggle]');
   if(toggleBtn){
     const cid=+toggleBtn.dataset.cid,mode=toggleBtn.dataset.bkToggle;
     openBkPanel=(openBkPanel&&openBkPanel.cid===cid&&openBkPanel.mode===mode)?null:{cid,mode};
+    if(mode==='bets'){bkBetsRes='all';bkBetsKind='all';bkBetsN=40;}
     renderCasas(document.getElementById('casasSearch').value);
     return;
   }
