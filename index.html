@@ -1916,7 +1916,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .pd-chip.lv{color:var(--red)}.pd-chip.lv .lv-dot{margin-right:5px;vertical-align:1px}.pd-chip.lv.active{background:var(--rdim);border-color:rgba(210,65,43,.4)}
 .pc-row.lv-on:not(.marked):not(.promo){box-shadow:inset 4px 0 0 var(--red),var(--lift)}
 .pend-item.lv-on:not(.marked):not(.promo){box-shadow:inset 3px 0 0 var(--red)}
-#q-cat-w.auto .fl::after{content:' · auto';color:var(--green);text-transform:none}
+#q-cat-w.auto .fl::after,#nf-cat-w.auto .fl::after{content:' · auto';color:var(--green);text-transform:none}
 .cat-sort{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 9px 9px 14px;border:1px solid var(--border);border-radius:var(--r);background:var(--gdim);font-size:13px}
 .cs-sub{font-size:12.5px;color:var(--muted);margin-bottom:10px}
 .cs-list{overflow:auto;min-height:0;flex:1}
@@ -1924,6 +1924,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .cs-ev b{display:block;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cs-ev span{display:block;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cs-pick select{width:100%}
+.cs-ev .cs-now{color:var(--yellow);font-weight:600}
 .cs-pick small{display:block;font-size:11px;color:var(--muted);margin-top:3px}
 .cs-pick.on small{color:var(--green)}
 @media(max-width:600px){.cs-row{grid-template-columns:minmax(0,1fr)}}
@@ -2470,7 +2471,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
             <div><label class="fl">Event</label><input type="text" id="nf-event" placeholder="Spain vs Portugal" autocomplete="off"></div>
             <div class="two-col">
               <div><label class="fl">Bookmaker</label><select id="nf-house"><option value="">Choose bookmaker…</option></select></div>
-              <div><label class="fl">Category (optional)</label><select id="nf-category"><option value="">No category</option></select></div>
+              <div id="nf-cat-w"><label class="fl">Category (optional)</label><select id="nf-category"><option value="">No category</option></select></div>
             </div>
             <label class="cb-sw" id="nf-combi-sw"><input type="checkbox" id="nf-combi"><span class="cb-sw-k"></span><span class="cb-sw-t"><b>Combi</b><small>several selections in one bet — their odds multiply</small></span></label>
             <div id="nf-sels-wrap" style="display:none">
@@ -3025,7 +3026,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 <!-- ══ BETS WITHOUT A CATEGORY: review where each one goes ══ -->
 <div id="catSortModal" class="modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
   <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;width:100%;max-width:580px;margin:16px;max-height:88vh;display:flex;flex-direction:column">
-    <div style="font-size:15px;font-weight:700;margin-bottom:4px">Bets without a category</div>
+    <div class="cs-title" style="font-size:15px;font-weight:700;margin-bottom:4px">Bets without a category</div>
     <div class="cs-sub" id="catSortSub"></div>
     <div class="cs-list" id="catSortList"></div>
     <div style="display:flex;gap:9px;margin-top:14px">
@@ -6611,51 +6612,138 @@ function catRootOf(id){
   return c?c.id:null;
 }
 const catSides=e=>{const p=String(e||'').split(AR_VS).map(matchName).filter(Boolean);return p.length===2?p:[];};
-function catSuggestions(){
+// words that say who plays, not what the bet is on or where it was placed
+const CAT_STOP=new Set(('vs contra tiros remates remate marca marcan marcar gana ganar goles corners corner handicap aces freebet freebets freebte '+
+  'supercuota superaumento aumento combinada combi combined conbined partido algo error primer primera segundo segunda tiempo tiempos mitad mitades '+
+  'ambos ambas puerta outcome resultado result over under menos total jugador equipo player team match bets apuesta apuestas basura special '+
+  'specials anytime scorer score wina winamax bet365 betfair codere william hill speedybet pokerstars bwin betway promo rembolso reembolso hoy ahora '+
+  'para todo tenis tennis futbol football baloncesto basket alt').split(' '));
+const catTokens=s=>[...new Set(matchName(s).split(' ').filter(w=>w.length>=4&&!CAT_STOP.has(w)&&!/^\d/.test(w)))];
+// a football bet that names no match of its own ("Partido argentino", "Liga india goles") doesn't follow the day's other games
+const CAT_LOOSE=/\b(liga|league|partido|futbol|football|femenino|sub ?\d\d|under ?\d\d|amistos\w*|friendly)\b/;
+// your filed bets, looked up by match, matchup, team/player and day
+function catIndex(){
   const has=new Set(D.categories.map(c=>c.id));
-  const byName=new Map(),byPair=new Map(),bySide=new Map();
+  const I={byName:new Map(),byPair:new Map(),bySide:new Map(),byWord:new Map(),byDay:new Map()};
   const add=(m,k,v)=>{if(!k)return;let a=m.get(k);if(!a)m.set(k,a=[]);a.push(v);};
   [...D.bets,...D.normals].forEach(it=>{
     if(!it.categoryId||!has.has(it.categoryId))return;
-    add(byName,matchName(it.event),it);
-    const s=catSides(it.event);if(s.length){add(byPair,s.slice().sort().join('|'),it);s.forEach(z=>add(bySide,z,it));}
+    add(I.byName,matchName(it.event),it);
+    const s=catSides(it.event);if(s.length){add(I.byPair,s.slice().sort().join('|'),it);s.forEach(z=>add(I.bySide,z,it));}
+    catTokens(it.event).forEach(w=>add(I.byWord,w,it));
+    add(I.byDay,it.date,it);
   });
+  return I;
+}
+// what a bet is on: a surebet's market and outcomes, a normal bet's event, picks and notes
+const catTxtOf=(it,kind)=>kind==='sb'?[it.market,...(it.legs||[]).map(l=>l.result)].join(' ')
+  :[String(it.event||'').split(AR_VS).join(' '),...(it.selections||[]).map(x=>x.name),it.notes,it.pick].join(' ');
+const catIsSportRoot=id=>!!id&&CAT_SPORTS.some(S=>{const r=catSportRoot(S[0]);return r&&r.id===id;});
+// → {id, why, how} or null. q = {event, date, txt, words, self (left out of the lookups)}. how: 'match' | 'sport' | 'day'
+function catGuess(q,I){
   const day=d=>Date.parse(d+'T00:00:00')/864e5;
   const near=(a,b)=>!a.date||!b.date||Math.abs(day(a.date)-day(b.date))<=MATCH_DAYS;
-  const one=(list,why)=>{const ids=[...new Set(list.map(i=>i.categoryId))];return ids.length===1?{id:ids[0],why}:null;};
+  const one=(list,why)=>{const ids=[...new Set(list.map(i=>i.categoryId))];return ids.length===1?{id:ids[0],why,how:'match'}:null;};
+  const G=(m,k)=>(m.get(k)||[]).filter(o=>o!==q.self);
+  const nm=matchName(q.event),sides=catSides(q.event);let s=null;
+  if(nm){const same=G(I.byName,nm).filter(o=>near(o,q));if(same.length)s=one(same,'Same match');}
+  if(!s&&sides.length){
+    const pair=G(I.byPair,sides.slice().sort().join('|'));
+    if(pair.length){const last=pair.reduce((a,o)=>(o.date||'')>(a.date||'')?o:a);s=one(pair,last.date?`Same matchup on ${fmtDate(last.date)}`:'Same matchup before');}
+  }
+  if(!s){
+    // only the sport's category: from where its players/teams went before and what the bet is on ("Total de Juegos" → Tennis)
+    const roots=new Set();sides.forEach(z=>G(I.bySide,z).forEach(o=>{const r=catRootOf(o.categoryId);if(r)roots.add(r);}));
+    // names you used before ("Bucks", "Fokina"), when each was only ever in one sport
+    // (at least half of its names, and two bets behind them: one "Alex" doesn't make it tennis)
+    const votes=new Map();
+    (q.words||[]).forEach(w=>{const l=G(I.byWord,w);if(!l.length)return;const rs=new Set(l.map(o=>catRootOf(o.categoryId)));
+      if(rs.size===1){const r=[...rs][0];const v=votes.get(r)||{n:0,w:0};v.n+=l.length;v.w++;votes.set(r,v);}});
+    const v1=votes.size===1?[...votes.entries()][0]:null;
+    const wr=v1&&v1[1].n>=2&&v1[1].w*2>=(q.words||[]).length?v1[0]:null;
+    const mr=catSportRoot(catSportOf('',q.txt||''));
+    if(mr&&(!roots.size||roots.has(mr.id)))s={id:mr.id,why:roots.size?'Its players/teams and market':'Its market',how:'sport'};
+    else if(!mr&&roots.size===1)s={id:[...roots][0],why:'Its players/teams',how:'sport'};
+    else if(!mr&&wr&&(!roots.size||roots.has(wr)))s={id:wr,why:'Names in it you bet on before',how:'sport'};
+  }
+  // only "Football": the folder inside it — named in the bet ("Champions"), else where all your football went that day
+  const fr=catSportRoot('football');
+  if(s&&fr&&s.id===fr.id){
+    const sub=kind=>catSubtree(fr.id).find(c=>c.id!==fr.id&&catKind(arNorm(c.name),1,CAT_NAME_ORDER)===kind);
+    const k=catKind(arNorm(q.event||''),0,CAT_COMP_ORDER.filter(x=>x!=='league'));
+    const named=k&&sub(k);
+    if(named)s={id:named.id,why:s.why+' · '+named.name+' in its name',how:s.how};
+    else if(q.date&&!CAT_LOOSE.test(arNorm(q.event||''))){
+      const subs=new Set(catSubtree(fr.id).filter(c=>c.id!==fr.id).map(c=>c.id));
+      const that=G(I.byDay,q.date).filter(o=>subs.has(o.categoryId));
+      // the folder of (nearly) all of them: one stray bet doesn't hide it
+      const n=new Map();that.forEach(o=>n.set(o.categoryId,(n.get(o.categoryId)||0)+1));
+      const top=[...n.entries()].sort((a,b)=>b[1]-a[1])[0];
+      const c=top&&top[1]>=2&&top[1]>=that.length*0.8&&D.categories.find(x=>x.id===top[0]);
+      // national teams and friendlies share their days: only club folders
+      if(c&&['league','europe','cup'].includes(catKind(arNorm(c.name),1,CAT_NAME_ORDER)))s={id:c.id,why:`${s.why} · that day your football was ${c.name}`,how:s.how,day:top[1]===that.length?that.length:0};
+    }
+  }
+  return s;
+}
+// the guess for one of your bets, from all the others
+function catGuessBet(it,kind,I){
+  const txt=catTxtOf(it,kind);
+  const words=catTokens([it.event,kind==='sb'?(it.legs||[]).map(l=>l.result).join(' '):''].join(' '));
+  return catGuess({event:it.event,date:it.date,txt,words,self:it},I||catIndex());
+}
+// a filed bet that's very likely in the wrong place: another sport, plain "Football" when the folder is clear,
+// or a Champions/league mix-up on a day all your other football was the other one. Never a Telegram bet
+// (its competition decided it) nor anything in a folder that isn't a sport's (Specials, combis…)
+function catMisfiled(it,kind,I){
+  if(it.comp||!it.categoryId||it.catOk)return null; // catOk: you said it stays where it is
+  const cur=it.categoryId,curRoot=catRootOf(cur);
+  if(!catIsSportRoot(curRoot))return null;
+  const g=catGuessBet(it,kind,I);
+  if(!g||g.id===cur)return null;
+  const gRoot=catRootOf(g.id);
+  if(gRoot!==curRoot){
+    // the bet names its sport ("Tenis argentino") → it's where you put it; the market alone isn't enough to move it
+    const own=CAT_SPORTS.find(S=>S[3].test(arNorm(it.event||'')));
+    if(own&&catSportRoot(own[0])?.id===curRoot)return null;
+    return catIsSportRoot(gRoot)&&g.how!=='match'&&g.why!=='Its market'?g:null;
+  }
+  const fr=catSportRoot('football');if(!fr||curRoot!==fr.id)return null;
+  if(cur===fr.id)return g; // plain Football → its folder
+  if(g.how==='match')return null;
+  // Champions ↔ leagues: on a day with 3+ other football bets, all in the other one
+  const kc=catKind(arNorm(catName(cur)),1,CAT_NAME_ORDER),kg=catKind(arNorm(catName(g.id)),1,CAT_NAME_ORDER);
+  const sides=catSides(it.event);
+  if(g.day>=3&&sides.length&&['league','europe'].includes(kc)&&['league','europe'].includes(kg))return g;
+  return null;
+}
+function catSuggestions(){
   const targets=[...visibleBets().filter(b=>!b.categoryId).map(item=>({kind:'sb',item})),...visibleNormals().filter(n=>!n.categoryId).map(item=>({kind:'nm',item}))];
-  targets.forEach(t=>{
-    const it=t.item,sides=catSides(it.event);let s=null;t.nm=matchName(it.event);
-    if(t.nm){const same=(byName.get(t.nm)||[]).filter(o=>near(o,it));if(same.length)s=one(same,'Same match');}
-    if(!s&&sides.length){
-      const pair=byPair.get(sides.slice().sort().join('|'))||[];
-      if(pair.length){const last=pair.reduce((a,o)=>(o.date||'')>(a.date||'')?o:a);s=one(pair,last.date?`Same matchup on ${fmtDate(last.date)}`:'Same matchup before');}
-    }
-    if(!s){
-      const roots=new Set();sides.forEach(z=>(bySide.get(z)||[]).forEach(o=>{const r=catRootOf(o.categoryId);if(r)roots.add(r);}));
-      // what it's on: the market and outcomes of a surebet; a normal bet's event, picks and notes
-      const txt=t.kind==='sb'?[it.market,...(it.legs||[]).map(l=>l.result)].join(' ')
-        :[String(it.event||'').split(AR_VS).join(' '),...(it.selections||[]).map(x=>x.name),it.notes].join(' ');
-      const mr=catSportRoot(catSportOf('',txt));
-      if(mr&&(!roots.size||roots.has(mr.id)))s={id:mr.id,why:roots.size?'Its players/teams and market':'Its market'};
-      else if(!mr&&roots.size===1)s={id:[...roots][0],why:'Its players/teams'};
-    }
-    t.s=s;
-  });
+  const I=catIndex();
+  targets.forEach(t=>{t.nm=matchName(t.item.event);t.s=catGuessBet(t.item,t.kind,I);});
   // no clue of its own: where the other bets on that match in this list are going
+  const day=d=>Date.parse(d+'T00:00:00')/864e5;
+  const near=(a,b)=>!a.date||!b.date||Math.abs(day(a.date)-day(b.date))<=MATCH_DAYS;
   targets.forEach(t=>{
     if(t.s||!t.nm)return;
     const sib=targets.filter(o=>o!==t&&o.s&&!o.s.sib&&o.nm===t.nm&&near(o.item,t.item));
     const ids=[...new Set(sib.map(o=>o.s.id))];if(ids.length===1)t.s={id:ids[0],why:'Same match',sib:1};
   });
-  return targets.sort((a,b)=>(b.s?1:0)-(a.s?1:0)||(b.item.date||'').localeCompare(a.item.date||''));
+  // filed, but very likely in the wrong place
+  const moves=[];
+  [...visibleBets().map(item=>({kind:'sb',item})),...visibleNormals().map(item=>({kind:'nm',item}))].forEach(t=>{
+    const g=catMisfiled(t.item,t.kind,I);if(g)moves.push({...t,s:g,from:t.item.categoryId});
+  });
+  return [...moves.sort((a,b)=>(b.item.date||'').localeCompare(a.item.date||'')),
+    ...targets.sort((a,b)=>(b.s?1:0)-(a.s?1:0)||(b.item.date||'').localeCompare(a.item.date||''))];
 }
 function renderCatSortBar(){
   const el=document.getElementById('catSortBar');if(!el)return;
-  const n=visibleBets().filter(b=>!b.categoryId).length+visibleNormals().filter(x=>!x.categoryId).length;
-  if(!n||!D.categories.length){el.innerHTML='';return;}
-  const k=catSuggestions().filter(x=>x.s).length;
-  el.innerHTML=`<div class="cat-sort"><span><b>${n}</b> without a category${k?` · <b>${k}</b> can be placed from your other bets`:''}</span><button class="btn-s" id="catSortBtn">${k?'Review':'Place them'}</button></div>`;
+  if(!D.categories.length){el.innerHTML='';return;}
+  const rows=catSuggestions(),m=rows.filter(x=>x.from).length,n=rows.length-m,k=rows.filter(x=>x.s&&!x.from).length;
+  if(!rows.length){el.innerHTML='';return;}
+  const parts=[m?`<b>${m}</b> probably in the wrong category`:'',n?`<b>${n}</b> without a category${k?` · <b>${k}</b> can be placed from your other bets`:''}`:''].filter(Boolean);
+  el.innerHTML=`<div class="cat-sort"><span>${parts.join(' · ')}</span><button class="btn-s" id="catSortBtn">${k||m?'Review':'Place them'}</button></div>`;
 }
 function catTreeOptions(){
   const out=[];const walk=(pid,depth,seen)=>{if(depth>50)return;D.categories.filter(c=>(c.parentId||null)===pid&&!seen.has(c.id)).forEach(c=>{seen.add(c.id);out.push(`<option value="${c.id}">${'— '.repeat(depth)}${esc(c.name)}</option>`);walk(c.id,depth+1,seen);});};
@@ -6667,17 +6755,20 @@ function openCatSort(){
   const opts=catTreeOptions();
   document.getElementById('catSortList').innerHTML=catSortRows.map((r,i)=>{
     const it=r.item,sub=[it.date?fmtDate(it.date):'',r.kind==='sb'?'Surebet':(it.type||'Normal'),r.kind==='sb'?it.market:it.house].filter(Boolean).map(esc).join(' · ');
-    return `<div class="cs-row"><div class="cs-ev"><b>${esc(it.event||'(No event)')}</b><span>${sub}</span></div>
-      <div class="cs-pick${r.s?' on':''}"><select data-cs="${i}"><option value="">Leave without category</option>${opts}</select><small>${r.s?esc(r.s.why):'No clue — pick one or leave it'}</small></div></div>`;
+    const keep=r.from?`<option value="">Leave it in ${esc(catName(r.from))}</option>`:'<option value="">Leave without category</option>';
+    return `<div class="cs-row${r.from?' cs-move':''}"><div class="cs-ev"><b>${esc(it.event||'(No event)')}</b><span>${sub}</span>${r.from?`<span class="cs-now">Now in ${esc(catName(r.from))}</span>`:''}</div>
+      <div class="cs-pick${r.s?' on':''}"><select data-cs="${i}">${keep}${opts}</select><small>${r.s?esc(r.s.why):'No clue — pick one or leave it'}</small></div></div>`;
   }).join('');
   catSortRows.forEach((r,i)=>{if(r.s)document.querySelector(`#catSortList [data-cs="${i}"]`).value=String(r.s.id);});
+  if(catSortRows.some(r=>r.from))document.querySelector('#catSortModal .cs-title').textContent=catSortRows.some(r=>!r.from)?'Bets to place or move':'Bets in the wrong category';
+  else document.querySelector('#catSortModal .cs-title').textContent='Bets without a category';
   catSortCount();
   document.getElementById('catSortModal').style.display='flex';
 }
 function catSortCount(){
   const k=[...document.querySelectorAll('#catSortList [data-cs]')].filter(s=>s.value).length;
-  const n=catSortRows.length,f=catSortRows.filter(r=>r.s).length;
-  document.getElementById('catSortSub').textContent=`${n} bet${n>1?'s':''} without a category`+(f?` · ${f} with a place from your other bets`:'')+'. Change any you want, then Place.';
+  const m=catSortRows.filter(r=>r.from).length,n=catSortRows.length-m,f=catSortRows.filter(r=>r.s&&!r.from).length;
+  document.getElementById('catSortSub').textContent=[m?`${m} bet${m>1?'s':''} probably in the wrong category`:'',n?`${n} bet${n>1?'s':''} without a category`+(f?` · ${f} with a place from your other bets`:''):''].filter(Boolean).join(' · ')+'. Change any you want, then Place.';
   const b=document.getElementById('catSortSave');b.textContent=k?`Place ${k}`:'Place';b.disabled=!k;
 }
 document.getElementById('catSortBar').addEventListener('click',e=>{if(e.target.closest('#catSortBtn'))openCatSort();});
@@ -6689,16 +6780,19 @@ document.getElementById('catSortCancel').addEventListener('click',()=>{document.
 document.getElementById('catSortSave').addEventListener('click',()=>{
   // each bet as it is now (another device may have synced it while the list was open)
   const now=(kind,id)=>(kind==='sb'?D.bets:D.normals).find(x=>x.id===id);
-  const done=[];
+  const done=[],kept=[];
   document.querySelectorAll('#catSortList [data-cs]').forEach(s=>{
+    const k=catSortRows[+s.dataset.cs],ki=k&&k.from&&!s.value&&now(k.kind,k.item.id);
+    if(ki&&ki.categoryId===k.from){ki.catOk=1;kept.push(ki);} // left where it is: not asked again
     const r=catSortRows[+s.dataset.cs],it=r&&s.value&&now(r.kind,r.item.id);
-    if(it&&!it.categoryId){it.categoryId=+s.value;done.push({kind:r.kind,id:it.id,cat:it.categoryId});}
+    // only if it's still where it was when the list opened
+    if(it&&(it.categoryId||null)===(r.from||null)&&+s.value!==r.from){it.categoryId=+s.value;done.push({kind:r.kind,id:it.id,cat:it.categoryId,from:r.from||null});}
   });
   document.getElementById('catSortModal').style.display='none';catSortRows=[];
-  if(!done.length)return;
+  if(!done.length){if(kept.length){save();renderCategorias();}return;}
   save();renderCategorias();
   toast(`Placed ${done.length} bet${done.length>1?'s':''} in a category`,'Undo',()=>{
-    done.forEach(d=>{const it=now(d.kind,d.id);if(it&&it.categoryId===d.cat)it.categoryId=null;});save();renderCategorias();
+    done.forEach(d=>{const it=now(d.kind,d.id);if(it&&it.categoryId===d.cat)it.categoryId=d.from;});save();renderCategorias();
   });
 });
 
@@ -7132,7 +7226,8 @@ document.getElementById('repBtn').addEventListener('click',applyLastBet);
 // ══════════════════════════════════════════
 function fillQuickDefaults(){
   const d=document.getElementById('q-date');if(d&&!d.value)d.value=todayISO();
-  const c=document.getElementById('q-cat');if(c){const keep=newBetCat!=null?newBetCat:(c.value?+c.value:null);fillCategorySelect(c,keep);}
+  const c=document.getElementById('q-cat');
+  if(c){const keep=newBetCat!=null?newBetCat:(c.value?+c.value:null);fillCategorySelect(c,keep);if(newBetCat==null)qGuessCat();}
   const dl=document.getElementById('q-evlist');
   if(dl){const seen=new Set();const evs=[];[...D.bets,...D.normals].sort((a,b)=>b.id-a.id).forEach(b=>{const e=(b.event||'').trim();if(e&&!seen.has(e.toLowerCase())&&evs.length<30){seen.add(e.toLowerCase());evs.push(e);}});
     dl.innerHTML=evs.map(e=>`<option value="${esc(e)}">`).join('');}
@@ -7154,7 +7249,7 @@ function registerCurrent(){
   outcomes.forEach(o=>{o.odd=0;if(o.sels)o.sels.forEach(x=>x.odd='');if(o.fromPreset||wasPreset){o.manualStake=null;o.fromPreset=false;}});
   if(wasPreset&&psBaseTotal!=null){setTotal(psBaseTotal);psBaseTotal=null;}
   if(fitBaseTotal!=null){setTotal(fitBaseTotal);fitBaseTotal=null;}
-  psSkipKey=null;newBetCat=null;sbPrefill=null;tgCur=null;
+  psSkipKey=null;newBetCat=null;sbPrefill=null;tgCur=null;document.getElementById('q-cat').dataset.manual='';
   return {bet,res};
 }
 function quickRegister(){
@@ -7373,7 +7468,7 @@ document.getElementById('qPaste').addEventListener('input',e=>{
   if(time)document.getElementById('q-hour').value=time;
   const evEl=document.getElementById('q-event');if(ev)evEl.value=ev;
   const mkEl=document.getElementById('q-market');if(market)mkEl.value=market;
-  if(p.comp)qAutoCat(p);
+  qAutoCat(p);
   if(p.mid&&newBetType!=='Middle')setBetType('Middle');
   render();document.getElementById('qPasteWrap').style.display='none';
   toast(`${p.mid?'Middle · ':''}Detected ${legs.map(l=>l.house+' @'+fmt(l.odd)).join(' · ')}`);
@@ -8098,12 +8193,39 @@ function autoCategory(comp,txt){
 let qComp=null; // {ev, comp} — kept with the bet only while the event is still that one
 function qAutoCat(p){
   qComp=p.comp?{ev:(p.ev||'').trim(),comp:p.comp}:null;
+  document.getElementById('q-cat').dataset.manual='';
   if(newBetCat!=null)return; // you came from a category's "Add bet"
+  if(!p.comp){qGuessCat(p);return;}
   const id=autoCategory(p.comp,[p.market,...(p.legs||[]).map(l=>l.result)].join(' '));
   fillCategorySelect(document.getElementById('q-cat'),id);
   document.getElementById('q-cat-w').classList.toggle('auto',id!=null);
 }
-document.getElementById('q-cat').addEventListener('change',()=>document.getElementById('q-cat-w').classList.remove('auto'));
+// ── A bet without a competition line (typed or pasted by hand): its category from your other bets
+//    (same match, its teams/players, what it's on, that day's football) — never just the last bet's.
+//    Once you pick one yourself, it stays until that bet is saved.
+function catGuessNew(sel,wrap,q){
+  if(!sel||newBetCat!=null||sel.dataset.manual==='1')return;
+  const g=q.event.trim()?catGuess({...q,words:catTokens(q.event+' '+(q.res||''))},catIndex()):null;
+  fillCategorySelect(sel,g?g.id:null);
+  if(wrap)wrap.classList.toggle('auto',!!g);
+  sel.title=g?g.why:'';
+}
+function qGuessCat(p){ // p: the surebet just loaded (Telegram / pasted), else what's on the form
+  if(!p||!p.legs)p=null;
+  const ev=p&&p.ev||document.getElementById('q-event').value;
+  if(qComp&&qComp.ev===ev.trim())return; // its competition line decided it
+  const res=(p?p.legs:outcomes||[]).map(o=>o.result||'').join(' '),mk=p?p.market||'':document.getElementById('q-market').value;
+  catGuessNew(document.getElementById('q-cat'),document.getElementById('q-cat-w'),{event:ev,date:document.getElementById('q-date').value,txt:mk+' '+res,res});
+}
+function nfGuessCat(){
+  const ev=document.getElementById('nf-event').value;
+  if(nfTg&&nfTg.comp&&nfTg.ev===ev)return;
+  const sels=nfIsCombi()?nfSels.map(x=>x.name||'').join(' '):'';
+  catGuessNew(document.getElementById('nf-category'),document.getElementById('nf-cat-w'),
+    {event:ev,date:document.getElementById('nf-date').value,txt:[String(ev).split(AR_VS).join(' '),sels,document.getElementById('nf-notes').value].join(' '),res:sels});
+}
+document.getElementById('q-cat').addEventListener('change',e=>{e.target.dataset.manual='1';document.getElementById('q-cat-w').classList.remove('auto');});
+['q-event','q-market','q-date'].forEach(id=>document.getElementById(id).addEventListener('change',qGuessCat));
 
 // ══════════════════════════════════════════
 //  TELEGRAM INBOX — forward surebets to your own bot, they show up here
@@ -8262,8 +8384,9 @@ function loadEvNormal(p,type){
   document.getElementById('nf-time').value=p.time||'';
   document.getElementById('nf-notes').value=[p.evPct!=null?`+EV ${fmt(p.evPct)}%`:'+EV',p.pick].filter(Boolean).join(' · ');
   document.getElementById('nf-stake').value='';
-  if(newBetCat==null){const id=autoCategory(p.comp,p.pick);fillCategorySelect(document.getElementById('nf-category'),id);}
   nfTg={ev:p.ev,comp:p.comp||'',pick:p.pick||'',evPct:p.evPct,fair:p.fair};
+  const nc=document.getElementById('nf-category');nc.dataset.manual='';
+  if(newBetCat==null){if(p.comp){const id=autoCategory(p.comp,p.pick);fillCategorySelect(nc,id);document.getElementById('nf-cat-w').classList.toggle('auto',id!=null);}else nfGuessCat();}
   renderNfResult();
 }
 function tgLoad(uid,quiet,type){
@@ -8847,6 +8970,7 @@ function setBetType(type){
   const keepCat=newBetCat!=null?newBetCat:(catSel.value?+catSel.value:null);
   fillCategorySelect(catSel,keepCat);
   if(!document.getElementById('nf-date').value)document.getElementById('nf-date').value=todayISO();
+  if(newBetCat==null)nfGuessCat();
   renderNfSels();syncComboOdd();renderNfResult();
 }
 function nfComboOdd(){
@@ -8907,6 +9031,7 @@ function resetNfForm(){
   ['nf-event','nf-odd','nf-stake','nf-notes','nf-time'].forEach(id=>document.getElementById(id).value='');
   nfSels=nfIsCombi()?[{name:'',odd:''},{name:'',odd:''}]:[];
   renderNfSels();syncComboOdd();renderNfResult();
+  document.getElementById('nf-category').dataset.manual='';nfGuessCat();
 }
 function saveNewNormal(){
   const ev=document.getElementById('nf-event').value.trim();
@@ -8959,6 +9084,8 @@ document.getElementById('nf-combi').addEventListener('change',e=>{
   const f=document.querySelector(`#nf-sels [data-seln="0"]`);if(nfCombi&&f)f.focus();
 });
 // a +EV message pasted into Event (or Notes) fills in the whole form for this type
+document.getElementById('nf-category').addEventListener('change',e=>{e.target.dataset.manual='1';document.getElementById('nf-cat-w').classList.remove('auto');});
+['nf-event','nf-date'].forEach(id=>document.getElementById(id).addEventListener('change',nfGuessCat));
 ['nf-event','nf-notes'].forEach(id=>document.getElementById(id).addEventListener('paste',e=>{
   const t=(e.clipboardData||window.clipboardData)?.getData('text')||'';const pe=parseEvFormat(t);if(!pe)return;
   e.preventDefault();if(tgRequeue())save();loadEvInto(pe);setTimeout(focusStake,30);
