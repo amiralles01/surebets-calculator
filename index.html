@@ -4045,7 +4045,7 @@ function findDuplicate(){
   const mk=(document.getElementById('q-market')?.value||'').trim().toLowerCase();
   const valid=outcomes.filter(o=>o.odd>1);if(valid.length<2)return null;
   const sig=legSig(valid);
-  return (D.bets||[]).filter(b=>b.status==='pending'&&matchName(b.event)===ev&&(b.market||'').trim().toLowerCase()===mk&&(b.legs||[]).length===valid.length&&legSig(b.legs)===sig)
+  return (D.bets||[]).filter(b=>b.status==='pending'&&(matchName(b.event)===ev||(b.evAlias&&matchName(b.evAlias)===ev))&&(b.market||'').trim().toLowerCase()===mk&&(b.legs||[]).length===valid.length&&legSig(b.legs)===sig)
     .sort((a,b)=>b.id-a.id)[0]||null;
 }
 function renderDupWarn(){
@@ -4164,10 +4164,10 @@ function registerBet(){
     ...(document.getElementById('sbr-notes').value.trim()?{notes:document.getElementById('sbr-notes').value.trim()}:{}),
     legs:res.valid.map((o,i)=>legOut(o,i,houses[i]||o.house||`Bookmaker ${i+1}`,res))};
   if(newBetType==='Middle'){bet.mid=1;bet.midProfit=midBothRes(res);}
-  D.bets.unshift(bet);const mw=timeVal?syncMatchWhen(bet):[];save();updateBadges();renderPendientes();
+  D.bets.unshift(bet);const uw=unifyMatchName(bet);const mw=timeVal?syncMatchWhen(bet):[];save();updateBadges();renderPendientes();
   document.getElementById('sbRegModal').style.display='none';
   newBetCat=null;sbPrefill=null;renderRepeatSel();
-  toast(`Surebet saved to pending · ${res.profit>=0?'+':''}${fmt(res.profit)} €${matchWhenMsg(mw)}`,'View pending',()=>navTo('pendientes'));
+  toast(`Surebet saved to pending · ${res.profit>=0?'+':''}${fmt(res.profit)} €${matchWhenMsg(mw)}${unifyMsg(uw,bet)}`,'View pending',()=>navTo('pendientes'));
 }
 document.getElementById('sbr-cancel').addEventListener('click',()=>{document.getElementById('sbRegModal').style.display='none';editingSbId=null;});
 document.getElementById('sbr-save').addEventListener('click',()=>{
@@ -5022,7 +5022,7 @@ document.getElementById('m-save').addEventListener('click',()=>{
       resolveDate:'',
       notes:document.getElementById('m-notes').value.trim(),
       categoryId});
-    mwSrc=D.normals[0];if(mwSrc.time)mw=syncMatchWhen(mwSrc);
+    mwSrc=D.normals[0];unifyMatchName(mwSrc);if(mwSrc.time)mw=syncMatchWhen(mwSrc);
   }
   save();updateBadges();
   renderNormals(document.getElementById('nbSearch').value);renderProfit();renderPendientes();
@@ -7126,6 +7126,55 @@ function matchName(e){e=String(e||'');let r=_mnMemo.get(e);if(r!=null)return r;
   r=e.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
   .replace(/\s+(vs\.?|v\.?|-|–|—|x)\s+/g,' vs ').replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();
   if(_mnMemo.size>20000)_mnMemo.clear();_mnMemo.set(e,r);return r;}
+// ── Same match written differently ("SSC Napoli vs Lazio Rome" / "Nápoles vs Lazio"): a new bet takes the name
+// of the pending bets of that match you already have, so Pending, "#2 on this match", linked marks and times stay together.
+// Each side = 4-letter roots of its words (napoli / napoles → napo); both sides must share a root, around the same time.
+const MS_NOISE=new Set(['club','calcio','futbol','football','city','town','united','sporting','athletic','atletico','deportivo','real',
+  'olympique','olympic','union','racing','dynamo','dinamo','sport','sports','saint','internacional','nacional','rovers','wanderers',
+  'albion','county','hotspur','borussia','ciudad','esporte','clube','societa','unione','associazione','vereins','verein']);
+const MS_ALIAS={man:'manchester',utd:'',atl:'',psg:'paris',spurs:'tottenham',wolves:'wolverhampton',gladbach:'monchengladbach',
+  barca:'barcelona',st:'',sv:'',fc:'',cf:'',ac:'',sc:'',ss:'',ssc:'',as:'',rc:'',cd:'',ud:'',sd:'',afc:''};
+// reserve / youth / women's sides: never the same match as the first team
+const MS_TAG=/^(b|ii|iii|w|women|womens|fem|femenino|femenina|feminine|ladies|reserves?|res|u\d{2}|sub\d{2})$/;
+const _msMemo=new Map();
+function matchSides(ev){
+  const nm=matchName(ev);let r=_msMemo.get(nm);if(r!==undefined)return r;
+  const parts=nm.replace(/\bathletic club\b/g,'athletic bilbao').split(' vs ');r=null;
+  if(parts.length===2){
+    const side=p=>{const ws=p.split(' ').filter(Boolean).map(w=>w in MS_ALIAS?MS_ALIAS[w]:w).filter(Boolean);
+      return {roots:[...new Set(ws.filter(w=>w.length>=4&&!MS_NOISE.has(w)&&!/^\d/.test(w)).map(w=>w.slice(0,4)))],nums:ws.filter(w=>/^\d/.test(w)),tags:ws.filter(w=>MS_TAG.test(w)).sort().join(' ')};};
+    const a=side(parts[0]),b=side(parts[1]);if(a.roots.length&&b.roots.length)r=[a,b];
+  }
+  if(_msMemo.size>5000)_msMemo.clear();_msMemo.set(nm,r);return r;
+}
+function sameMatchName(e1,e2){
+  const x=matchSides(e1),y=matchSides(e2);if(!x||!y)return false;
+  const eq=(p,q)=>p.tags===q.tags&&p.roots.some(r=>q.roots.includes(r));
+  return eq(x[0],y[0])&&eq(x[1],y[1]); // same order only: "1" / "2" in the legs must keep meaning the same team
+}
+function sameMatchWhen(a,b){
+  if(!a.date||!b.date)return a.date===b.date;
+  const t=o=>Date.parse(o.date+'T00:00:00')/36e5+(o.time&&/^\d{1,2}/.test(o.time)?parseInt(o.time,10):12);
+  const h=Math.abs(t(a)-t(b));
+  return a.time&&b.time?h<=4:h<=24;
+}
+// a name typed by hand can carry the pick ("Mbappe Spain vs France", "Remates Betis vs Barsa"): it's only swapped for
+// another spelling when it has no word the other lacks; names that came from Telegram (with a competition) are clean
+function nameCovered(e1,e2){const x=matchSides(e1),y=matchSides(e2);return !!x&&!!y&&[0,1].every(i=>x[i].roots.every(r=>y[i].roots.includes(r))&&x[i].nums.every(r=>y[i].nums.includes(r)));}
+function unifyMatchName(src){ // → the name it had before, or '' if it was kept
+  const nm=matchName(src.event);if(!nm||!matchSides(src.event))return '';
+  const pend=[...D.bets,...D.normals].filter(o=>o!==src&&o.status==='pending'&&o.event&&sameMatchWhen(src,o));
+  if(pend.some(o=>matchName(o.event)===nm))return ''; // some pending bet of it is already spelled like this
+  let best=null;
+  pend.forEach(o=>{
+    if(!sameMatchName(src.event,o.event))return;
+    if(!(src.comp||nameCovered(src.event,o.event))||!(o.comp||nameCovered(o.event,src.event)))return;
+    if(!best||(!!o.comp-!!best.comp||best.id-o.id)>0)best=o;
+  });
+  if(!best)return '';
+  const was=src.event;src.event=best.event;src.evAlias=was;return was;
+}
+function unifyMsg(was,item){return was?` · named like your other bets: ${item.event}`:'';}
 const MATCH_DAYS=3; // same name further apart than this = a different match (league vs cup, return leg…)
 function syncMatchWhen(src){ // → list of {item,date,time} with the old values (for undo)
   const nm=matchName(src.event);if(!nm||!src.date)return [];
@@ -7257,12 +7306,13 @@ function quickRegister(){
   const evEl=document.getElementById('q-event');
   if(!evEl.value.trim()){evEl.focus();evEl.classList.add('q-need');setTimeout(()=>evEl.classList.remove('q-need'),1200);toast('Write the event first');return;}
   const r=registerCurrent();if(!r)return;const {bet,res}=r;
+  const uw=unifyMatchName(bet);
   const mw=bet.time?syncMatchWhen(bet):[];
   save();updateBadges();render();renderRepeatSel();fillQuickDefaults();
   const queued=tgNext();
   if(!queued){renderTgCard();const f=document.querySelector('#outcomesList .oi');if(f)f.focus();}
   const n=D.bets.filter(b=>b.status==='pending'&&evKey(b)===evKey(bet)).length;
-  toast(`${bet.mid?'Middle saved':'Saved'}${n>1?` · #${n} on this match`:''} · ${res.profit>=0?'+':''}${fmt(res.profit)} €${bet.mid?` · both win ${bet.midProfit>=0?'+':''}${fmt(bet.midProfit)} €`:''}${bet.categoryId?' · '+catName(bet.categoryId):''}${matchWhenMsg(mw)}`,'Undo',()=>{
+  toast(`${bet.mid?'Middle saved':'Saved'}${n>1?` · #${n} on this match`:''} · ${res.profit>=0?'+':''}${fmt(res.profit)} €${bet.mid?` · both win ${bet.midProfit>=0?'+':''}${fmt(bet.midProfit)} €`:''}${bet.categoryId?' · '+catName(bet.categoryId):''}${matchWhenMsg(mw)}${unifyMsg(uw,bet)}`,'Undo',()=>{
     D.bets=D.bets.filter(b=>b.id!==bet.id);undoMatchWhen(mw);
     bet.legs.forEach((l,i)=>{if(outcomes[i]){outcomes[i].odd=l.odd;if(l.sels&&outcomes[i].sels)outcomes[i].sels=l.sels.map(x=>({name:x.name,odd:x.odd?String(x.odd):''}));}});
     save();updateBadges();render();toast('Registration undone');});
@@ -8273,13 +8323,13 @@ function tgParse(it){
 // same match + market + bookmakers + odds as a pending bet you already registered (Telegram sends some twice)
 function dupKey(ev,mk,legs){return matchName(ev)+'#'+String(mk||'').trim().toLowerCase()+'#'+legSig(legs);}
 function tgDupIndex(){
-  const m=new Map();(D.bets||[]).forEach(b=>{if(b.status!=='pending'||!(b.legs||[]).length)return;const k=dupKey(b.event,b.market,b.legs);const o=m.get(k);if(!o||b.id>o.id)m.set(k,b);});
+  const m=new Map();(D.bets||[]).forEach(b=>{if(b.status!=='pending'||!(b.legs||[]).length)return;[b.event,b.evAlias].forEach(e=>{if(!e)return;const k=dupKey(e,b.market,b.legs);const o=m.get(k);if(!o||b.id>o.id)m.set(k,b);});});
   return m;
 }
 function tgDupOf(p,idx){
   if(p.single){ // same match + bookmaker + odds + pick as a pending normal bet / freebet
     const l=p.legs[0],k=matchName(p.ev);
-    return (D.normals||[]).filter(n=>n.status==='pending'&&matchName(n.event)===k&&bkKey(n.house||'')===bkKey(l.house)&&Math.abs((n.odd||0)-l.odd)<1e-6&&(!n.pick||n.pick===p.pick)).sort((a,b)=>b.id-a.id)[0]||null;
+    return (D.normals||[]).filter(n=>n.status==='pending'&&(matchName(n.event)===k||(n.evAlias&&matchName(n.evAlias)===k))&&bkKey(n.house||'')===bkKey(l.house)&&Math.abs((n.odd||0)-l.odd)<1e-6&&(!n.pick||n.pick===p.pick)).sort((a,b)=>b.id-a.id)[0]||null;
   }
   return p.legs.length>=2&&p.ev?(idx||tgDupIndex()).get(dupKey(p.ev,p.market,p.legs))||null:null;
 }
@@ -9056,12 +9106,12 @@ function saveNewNormal(){
   if(sels.length)bet.selections=sels;
   if(nfTg&&nfTg.ev===ev){if(nfTg.comp)bet.comp=nfTg.comp;if(nfTg.pick)bet.pick=nfTg.pick;if(nfTg.evPct!=null)bet.evPct=nfTg.evPct;if(nfTg.fair)bet.fair=nfTg.fair;}
   const fromTg=!!nfTg;nfTg=null;if(tgCur&&tgCur.single)tgCur=null;
-  D.normals.unshift(bet);const mw=bet.time?syncMatchWhen(bet):[];
+  D.normals.unshift(bet);const uw=unifyMatchName(bet);const mw=bet.time?syncMatchWhen(bet):[];
   save();updateBadges();renderPendientes();renderNormals(document.getElementById('nbSearch').value);renderProfit();
   newBetCat=null;
   if(combi){nfCombi=false;setBetType(type);} // the next bet starts as a single again
   resetNfForm();renderRepeatSel();
-  toast(`${type}${sels.length?' combi':''} saved to pending · +${fmt(bet.potentialWin)} € if it wins${matchWhenMsg(mw)}`,'View pending',()=>navTo('pendientes'));
+  toast(`${type}${sels.length?' combi':''} saved to pending · +${fmt(bet.potentialWin)} € if it wins${matchWhenMsg(mw)}${unifyMsg(uw,bet)}`,'View pending',()=>navTo('pendientes'));
   // registered from Telegram: back to the calculator with the next message waiting there
   if(fromTg&&(D.tgInbox||[]).length){if(tgNext(true))setTimeout(focusStake,0);}
 }
