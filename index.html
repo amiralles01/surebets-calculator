@@ -2102,6 +2102,17 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .co-leg-in input{width:100%;padding-right:26px!important;text-align:right;font-weight:650}
 .co-leg-in span{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--faint);font-size:13px;pointer-events:none}
 .co-quick{grid-area:q;display:flex;gap:6px;flex-wrap:wrap}
+.co-leg-in em{display:none}
+.co-leg.kept{background:var(--ydim);box-shadow:inset 0 0 0 1px rgba(244,197,61,.55)}
+.co-leg.kept .co-leg-in input{color:transparent}.co-leg.kept .co-leg-in input::placeholder{color:transparent}
+.co-leg.kept .co-leg-in em{display:block;position:absolute;inset:0;display:grid;place-items:center;font-style:normal;font-size:12.5px;font-weight:700;color:#8a6a00;pointer-events:none}
+.co-leg.kept .co-leg-in span{display:none}
+.co-quick .co-keep{color:#8a6a00;border-color:rgba(244,197,61,.6)}
+.co-leg.kept .co-keep{background:var(--ball,#F4C53D);color:#1C2A20;border-color:transparent}
+.pend-leg.co-done,.pc-leg.co-done{cursor:default;opacity:.8;border-style:dashed!important;background:var(--ydim)!important}
+.pend-leg.co-done:hover{border-color:inherit}
+.pl-co{font-weight:700;color:#8a6a00}
+.pc-leg.co-done .pc-r{color:#8a6a00;font-weight:700}
 .co-quick button{padding:4px 9px;border-radius:7px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
 .co-quick button:hover{color:var(--text);border-color:var(--faint)}
 .co-sum{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:10px;border:1px dashed var(--border2)}
@@ -4367,6 +4378,7 @@ function renderSurebets(filter=''){
     const legsHtml=hasLegs?`<div class="leg-head"><span>Bookmaker</span><span>Outcome</span><span style="text-align:right">Odds</span><span style="text-align:right">Stake</span><span style="text-align:right">Return</span><span></span></div>`+
       b.legs.map((l,li)=>`<div class="leg${winnerIdx===li||bothWon?' leg-winner':''}"><span class="lh">${esc(l.house)}</span><span class="lr">${legRes(l,'',true)}</span><span class="lo">${fmt(l.odd||0)}</span><span class="lk">${fmt(l.stake||0)} €</span><span class="lm">${fmt(l.minReturn||0)} €</span><button class="win-btn${winnerIdx===li?' selected':''}" data-wbid="${b.id}" data-wleg="${li}" title="Mark as the winning outcome">${winnerIdx===li?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Won`:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Won`}</button></div>`).join('')+
       (b.mid?`<div class="leg${bothWon?' leg-winner':''}"><span class="lh">Both</span><span class="lr">Middle hit${(w=>w?' · ends on '+midWindowTxt(w):'')(midWindow(b.legs))}</span><span class="lo"></span><span class="lk"></span><span class="lm">${fmt(midBoth(b)+(b.totalStake||0))} €</span><button class="win-btn${bothWon?' selected':''}" data-wbid="${b.id}" data-wleg="both" title="Both legs won (the middle hit)">${bothWon?'✓ ':''}Both</button></div>`:'')+
+      (coPartOf(b)?`<div class="real-profit-row"><span class="real-profit-label">Part cashed out · ${b.legs.map((l,i)=>b.coPart[i]!=null?`${esc(l.house)} ${fmt(b.coPart[i])} €`:`${esc(l.house)} still open`).join(' · ')}</span></div>`:'')+
       (b.cashOut!=null&&!isVoid?`<div class="real-profit-row"><span class="real-profit-label">Cash out${Array.isArray(b.cashOutLegs)?' · '+b.legs.map((l,i)=>`${esc(l.house)} ${fmt(b.cashOutLegs[i]||0)} €`).join(' · '):` · ${fmt(b.cashOut)} €`}</span><span class="real-profit-val ${(b.profit||0)>=0?'':'neg'}">${(b.profit||0)>=0?'+':''}${fmt(b.profit||0)} €</span></div>`:'')+
       (realProfit!=null&&!isVoid?`<div class="real-profit-row"><span class="real-profit-label">✓ ${bothWon?'Middle hit · both':esc(b.legs[winnerIdx].house)} won — real profit</span><span class="real-profit-val${realProfit<0?' neg':''}">${realProfit>=0?'+':''}${fmt(realProfit)} €</span></div>`:'')
     : `<div style="padding:8px 15px;font-size:12px;color:var(--faint)">No leg breakdown (pre-loaded surebet)</div>`;
@@ -4754,6 +4766,11 @@ document.getElementById('sbSearch').addEventListener('input',e=>renderSurebets(e
 document.getElementById('sbList').addEventListener('change',e=>{
   const sel=e.target.closest('[data-sid]');if(!sel)return;
   const b=D.bets.find(x=>x.id===+sel.dataset.sid);if(!b)return;
+  if(sel.value!=='pending'&&coPartOf(b)&&(sel.value==='won'||sel.value==='lost'||sel.value==='anulada')){
+    // part already cashed out: Void = stake back on the open legs; Won/Lost = use Pending to say which leg
+    if(sel.value==='anulada'){settleCoPart(b,(i,l)=>l.stake||0);save();updateBadges();renderSurebets(document.getElementById('sbSearch').value);renderProfit();return;}
+    alert('Part of this bet was cashed out. Mark which leg won in Pending (or use Cash out to enter the rest).');sel.value='pending';return;
+  }
   b.status=sel.value;
   if(b.status==='pending'||b.status==='anulada'){delete b.cashOut;delete b.cashOutLegs;}
   if(b.status!=='pending'&&!b.resolveDate)b.resolveDate=todayISO();
@@ -5356,11 +5373,14 @@ function pendCompactHtml(kind,item,tw){
     const b=item;const promos=itemPromos('sb',b);const pr=promos.find(Boolean);
     const legs=b.legs||[];
     const mk=b.pendMark;const marked=mk!=null;
-    const legsHtml=legs.length?legs.map((l,li)=>{const r=promos[li];return`<button class="pc-leg${r?' promo':''}${mk===li?' marked':''}" data-pwinbid="${b.id}" data-pwinleg="${li}" title="${mk===li?'Marked as the winner — tap to unmark':'Tap to mark this as the outcome that happened'}" aria-pressed="${mk===li}"${r?` style="--hl:${r.color}"`:''}>
+    const cpp=coPartOf(b);
+    const legsHtml=legs.length?legs.map((l,li)=>{const r=promos[li];
+      if(cpp&&cpp[li]!=null)return`<span class="pc-leg co-done" title="Cashed out — already in the balance"><span class="pc-h"><mark>${esc(l.house||'—')}</mark></span><span class="pc-o">${fmt(l.odd||0)}</span><span class="pc-r">Cashed ${fmt(cpp[li])} €</span></span>`;
+      return`<button class="pc-leg${r?' promo':''}${mk===li?' marked':''}" data-pwinbid="${b.id}" data-pwinleg="${li}" title="${mk===li?'Marked as the winner — tap to unmark':'Tap to mark this as the outcome that happened'}" aria-pressed="${mk===li}"${r?` style="--hl:${r.color}"`:''}>
         <span class="pc-h"><mark>${esc(l.house||'—')}</mark></span><span class="pc-o"><mark>${fmt(l.odd||0)}</mark></span><span class="pc-r">${legRes(l)}</span></button>`;}).join('')
       +(b.mid?`<button class="pc-leg both${mk==='both'?' marked':''}" data-pwinbid="${b.id}" data-pwinleg="both" title="${mk==='both'?'Marked: both won — tap to unmark':'The middle hit: both legs won'}" aria-pressed="${mk==='both'}"><span class="pc-h"><mark>Both</mark></span><span class="pc-o"></span><span class="pc-r">Middle ${midBoth(b)>=0?'+':''}${fmt(midBoth(b))} €</span></button>`:'')
       :`<button class="pc-mk won pc-act${mk==='won'?' on':''}" data-pid="${b.id}" data-kind="sb" data-action="won">Won</button>`;
-    const p=sbResultProfit(b,mk)??(b.profit||0);
+    const p=cpp?coPartProfit(b,mk==null||mk==='won'?null:mk):sbResultProfit(b,mk)??(b.profit||0);
     return `<div class="pc-row sb${lvIsLive(b)?' lv-on':''}${marked?' marked':''}${pr?' promo':''}${tw.has(b.id)?' twin':''}"${pr?` style="--hl:${pr.color}"`:''}>
       ${pendTimeHtml(b,withDate)}
       <div class="pc-ev"><span class="pc-ttl"><b>${sbTagHtml(b,tw)}${midPill(b)}${esc(b.event)}</b>${promoTag(pr)}</span>${b.market?`<span class="pc-mline">${mktChip(b.market)}</span>`:''}${lvSlot('sb',b)}${arLine(b,true)}${pendNoteLine('sb',b)}${flagTag('sb',b)}</div>
@@ -5468,8 +5488,11 @@ function renderPendientesInner(){
       const b=item;
       const promos=itemPromos('sb',b);const pr=promos.find(Boolean);
       const hasLegs=!!(b.legs&&b.legs.length);
+      const cpp=coPartOf(b);
       const legsHtml=hasLegs?`<div class="pend-legs">${b.legs.map((l,li)=>{
-        const realProfit=(l.minReturn||0)-(b.totalStake||0);
+        if(cpp&&cpp[li]!=null)return`<div class="pend-leg co-done"><span class="pl-house"><mark>${esc(l.house)}</mark></span><span class="pl-res">${legRes(l,'',true)}</span>
+          <span class="pl-nums"><span>${fmt(l.stake||0)} € @ ${fmt(l.odd||0)}</span><span class="pl-co">Cashed out ${fmt(cpp[li])} €</span></span></div>`;
+        const realProfit=cpp?coPartProfit(b,li):(l.minReturn||0)-(b.totalStake||0);
         const r=promos[li];
         return`<button class="pend-leg${r?' promo':''}${b.pendMark===li?' selected':''}" aria-pressed="${b.pendMark===li}" data-pwinbid="${b.id}" data-pwinleg="${li}"${r?` style="--hl:${r.color}"`:''}>
           <span class="pl-radio"></span>
@@ -5493,6 +5516,7 @@ function renderPendientesInner(){
           <div style="display:flex;align-items:center;gap:6px">${PEND_EDIT('sb',b.id)}<button class="btn-void" data-note-open="sb:${b.id}">${b.notes?'Edit note':'Note'}</button>${flagBtn('sb',b)}<button class="btn-void" data-cashout="sb:${b.id}" title="Close early for a manual amount">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada" title="Doesn't count as won or lost">Void</button>${hideBtnHtml('sb:'+b.id,true)}</div>
         </div>
         ${hasLegs?legsHtml:`<div class="pend-hint">No leg breakdown. <button class="pc-mk won${b.pendMark==='won'?' on':''}" data-pid="${b.id}" data-kind="sb" data-action="won">Won</button></div>`}
+        ${cpp&&b.pendMark==null?`<div class="pend-hint co-part-hint">Part cashed out (${fmt(cpp.reduce((a,x)=>a+(x||0),0))} € received) — tap the open leg if it wins, or <b>Cash out</b> again to enter what it paid.</div>`:''}
         ${b.pendMark!=null?`<div class="pend-hint pend-mk-hint"><span><b>${esc(pendMarkLabel('sb',b))}</b> — marked, not resolved yet. It stays here until you resolve it.</span>${PEND_RESOLVE('sb',b.id)}</div>`:hasLegs?`<div class="pend-hint">Tap the outcome that happened to <b>mark</b> it — then <b>Resolve</b> it once it's settled.</div>`:''}
       </div>`;
     }
@@ -5524,14 +5548,40 @@ function cashoutStake(t){
   if(t.kind==='sb')return t.item.totalStake||0;
   return t.item.type==='Freebet'?0:(t.item.stake||0); // freebet stake is not real money
 }
+// ── Partial cash out: some legs cashed out (b.coPart[i] = € received), the others still running (null).
+// The bet stays in Pending; once the rest is decided it settles like a cash out per bookmaker.
+function coPartOf(b){return b&&b.status==='pending'&&Array.isArray(b.coPart)&&b.legs&&b.coPart.length===b.legs.length&&b.coPart.some(x=>x!=null)?b.coPart:null;}
+function coLegRet(l){return l.minReturn!=null?l.minReturn:(l.odd||0)*(l.stake||0);}
+function coPartProfit(b,w){ // w: leg index that won, 'both', or null = worst case of the open legs
+  const cp=b.coPart,got=cp.reduce((a,x)=>a+(x||0),0),open=b.legs.map((l,i)=>i).filter(i=>cp[i]==null);
+  const p=x=>cents(got+open.reduce((a,i)=>a+((x==='both'||x===i)?coLegRet(b.legs[i]):0),0)-(b.totalStake||0));
+  if(w!=null)return p(w);
+  return open.length?Math.min(...open.map(p)):p(null);
+}
+function settleCoPart(b,pay){ // pay(i,leg) → what each still-open leg returned
+  const cp=b.coPart,amts=b.legs.map((l,i)=>cents(cp[i]!=null?cp[i]:pay(i,l)));
+  const amt=cents(amts.reduce((a,x)=>a+x,0));
+  b.cashOut=amt;b.cashOutLegs=amts;delete b.coPart;delete b.winnerLeg;delete b.pendMark;
+  b.profit=cents(amt-(b.totalStake||0));b.status=b.profit>=0?'won':'lost';
+  if(!b.resolveDate)b.resolveDate=todayISO();
+}
 // surebets with legs: the money received at each bookmaker is entered separately
 function coPerLeg(t){return !!(t&&t.kind==='sb'&&t.item.legs&&t.item.legs.length);}
+function coKept(){return [...document.querySelectorAll('#co-legs .co-leg.kept')].map(r=>+r.dataset.i);}
 function coLegAmounts(){return [...document.querySelectorAll('#co-legs [data-coleg]')].map(i=>{const v=parseFloat(String(i.value).replace(',','.'));return isNaN(v)?null:v;});}
 function updateCashoutPreview(){
   if(!cashoutTarget)return;
   const el=document.getElementById('co-preview');
   if(coPerLeg(cashoutTarget)){
-    const legs=cashoutTarget.item.legs,amts=coLegAmounts();
+    const legs=cashoutTarget.item.legs,amts=coLegAmounts(),kept=coKept();
+    if(kept.length){
+      const got=amts.reduce((x,a,i)=>x+(kept.includes(i)?0:(a||0)),0),st=cashoutStake(cashoutTarget);
+      el.innerHTML=kept.length===legs.length?'':`<div class="co-sum">${legs.map((l,i)=>kept.includes(i)
+        ?`<div><span>${esc(l.house||'Leg '+(i+1))} · still open</span><b class="${got+coLegRet(l)-st>=0?'pos':'neg'}">if it wins ${got+coLegRet(l)-st>=0?'+':''}${fmt(got+coLegRet(l)-st)} €</b></div>`
+        :`<div><span>${esc(l.house||'Leg '+(i+1))} · cashed out</span><b>${fmt(amts[i]||0)} €</b></div>`).join('')}
+        <div class="co-tot"><span>Received so far</span><b>${fmt(got)} €</b></div></div>`;
+      return;
+    }
     if(amts.every(a=>a==null)){el.innerHTML='';return;}
     const tot=amts.reduce((x,a)=>x+(a||0),0),p=tot-cashoutStake(cashoutTarget);
     el.innerHTML=`<div class="co-sum">${legs.map((l,i)=>{const net=(amts[i]||0)-(l.stake||0);return`<div><span>${esc(l.house||'Leg '+(i+1))}</span><b class="${net>=0?'pos':'neg'}">${net>=0?'+':''}${fmt(net)} €</b></div>`;}).join('')}
@@ -5552,20 +5602,25 @@ function openCashoutModal(kind,id){
   document.getElementById('co-info').textContent=`${item.event||''} · ${kind==='nm'&&item.type==='Freebet'?'Freebet (stake not counted)':'Staked: '+fmt(st)+' €'}${per?' · enter what you got back at each bookmaker':''}`;
   document.getElementById('co-single').style.display=per?'none':'';
   document.getElementById('co-box').style.maxWidth=per?'460px':'380px';
-  document.getElementById('co-legs').innerHTML=per?item.legs.map((l,i)=>{const ret=l.minReturn!=null?l.minReturn:(l.odd||0)*(l.stake||0);return`<div class="co-leg">
+  const cp=per?coPartOf(item):null;
+  document.getElementById('co-legs').innerHTML=per?item.legs.map((l,i)=>{const ret=l.minReturn!=null?l.minReturn:(l.odd||0)*(l.stake||0);const kept=cp&&cp[i]==null;return`<div class="co-leg${kept?' kept':''}" data-i="${i}">
       <div class="co-leg-info"><b>${esc(l.house||'Leg '+(i+1))}</b><span>${esc(l.result||'')} · ${fmt(l.stake||0)} € @ ${fmt(l.odd||0)}</span></div>
-      <div class="co-leg-in"><input type="number" step="0.01" min="0" inputmode="decimal" data-coleg="${i}" placeholder="0.00" aria-label="Received at ${esc(l.house||'')}"><span>€</span></div>
-      <div class="co-quick"><button type="button" data-cofill="${i}" data-v="0">Lost · 0 €</button><button type="button" data-cofill="${i}" data-v="${ret}">Won · ${fmt(ret)} €</button><button type="button" data-cofill="${i}" data-v="${l.stake||0}">Stake back · ${fmt(l.stake||0)} €</button></div>
+      <div class="co-leg-in"><input type="number" step="0.01" min="0" inputmode="decimal" data-coleg="${i}" placeholder="0.00" value="${cp&&cp[i]!=null?cp[i].toFixed(2):''}" aria-label="Received at ${esc(l.house||'')}"><span>€</span><em>still open</em></div>
+      <div class="co-quick"><button type="button" class="co-keep" data-cokeep="${i}" title="Not paid yet: keep this leg in Pending and settle it later">Keep pending</button><button type="button" data-cofill="${i}" data-v="0">Lost · 0 €</button><button type="button" data-cofill="${i}" data-v="${ret}">Won · ${fmt(ret)} €</button><button type="button" data-cofill="${i}" data-v="${l.stake||0}">Stake back · ${fmt(l.stake||0)} €</button></div>
     </div>`;}).join(''):'';
   document.getElementById('co-amount').value='';
   document.getElementById('co-preview').innerHTML='';
   document.getElementById('cashoutModal').style.display='flex';
+  if(cp)updateCashoutPreview();
   const f=per?document.querySelector('#co-legs [data-coleg]'):document.getElementById('co-amount');f.focus();
 }
 document.getElementById('co-amount').addEventListener('input',updateCashoutPreview);
-document.getElementById('co-legs').addEventListener('input',updateCashoutPreview);
+document.getElementById('co-legs').addEventListener('input',e=>{const r=e.target.closest('.co-leg');if(r)r.classList.remove('kept');updateCashoutPreview();});
 document.getElementById('co-legs').addEventListener('click',e=>{
+  const k=e.target.closest('[data-cokeep]');
+  if(k){const r=k.closest('.co-leg');const on=r.classList.toggle('kept');if(on)r.querySelector('input').value='';updateCashoutPreview();return;}
   const q=e.target.closest('[data-cofill]');if(!q)return;
+  q.closest('.co-leg').classList.remove('kept');
   const inp=document.querySelector(`#co-legs [data-coleg="${q.dataset.cofill}"]`);inp.value=(+q.dataset.v).toFixed(2);updateCashoutPreview();
 });
 document.getElementById('co-cancel').addEventListener('click',()=>{document.getElementById('cashoutModal').style.display='none';cashoutTarget=null;});
@@ -5574,7 +5629,18 @@ document.getElementById('co-save').addEventListener('click',()=>{
   const {kind,item}=cashoutTarget;
   let amt,legAmts=null;
   if(coPerLeg(cashoutTarget)){
-    const a=coLegAmounts();
+    const a=coLegAmounts(),kept=coKept();
+    if(kept.length){ // partial: what was cashed out is kept, the rest stays pending
+      if(kept.length===item.legs.length){alert('Enter what you got back at the bookmaker you cashed out (or tap Lost/Won/Stake back).');return;}
+      if(a.some((x,i)=>!kept.includes(i)&&x!=null&&x<0)){alert('Amounts can\'t be negative.');return;}
+      pendUndoToast([[D.bets,item]],`${item.event||'Bet'} · cashed out ${item.legs.filter((l,i)=>!kept.includes(i)).map(l=>l.house).join(', ')} · the rest stays pending`);
+      item.coPart=item.legs.map((l,i)=>kept.includes(i)?null:cents(a[i]||0));
+      item.status='pending';delete item.cashOut;delete item.cashOutLegs;delete item.winnerLeg;delete item.resolveDate;
+      if(item.pendMark==='both'||typeof item.pendMark==='number'&&!kept.includes(item.pendMark))delete item.pendMark;
+      document.getElementById('cashoutModal').style.display='none';cashoutTarget=null;
+      save();updateBadges();renderPendientes();renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);renderProfit();
+      return;
+    }
     if(a.every(x=>x==null)){alert('Enter what you received at each bookmaker (0 if nothing).');return;}
     if(a.some(x=>x!=null&&x<0)){alert('Amounts can\'t be negative.');return;}
     legAmts=a.map(x=>cents(x||0));amt=cents(legAmts.reduce((x,y)=>x+y,0));
@@ -5584,7 +5650,7 @@ document.getElementById('co-save').addEventListener('click',()=>{
   }
   pendUndoToast([[kind==='sb'?D.bets:D.normals,item]],`${item.event||'Bet'} · cashed out ${fmt(amt)} €`);
   const profit=+(amt-cashoutStake(cashoutTarget)).toFixed(2);
-  item.cashOut=amt;
+  item.cashOut=amt;delete item.coPart;
   if(legAmts)item.cashOutLegs=legAmts;else delete item.cashOutLegs;
   delete item.winnerLeg;delete item.pendMark;
   item.profit=cents(profit);
@@ -5606,6 +5672,7 @@ function pendHasMark(kind,item){return kind!=='wd'&&item.pendMark!=null;}
 function pendResolveItem(kind,item){
   const m=item.pendMark;if(m==null)return false;
   if(kind==='nm'){resolveNormal(item,m);}
+  else if(coPartOf(item)){settleCoPart(item,(i,l)=>(m==='both'||m===i)?coLegRet(l):0);return true;}
   else if(sbResultProfit(item,m)!=null){
     item.winnerLeg=m;item.profit=sbResultProfit(item,m);item.status='won';
   }else item.status='won';
@@ -5762,6 +5829,11 @@ document.getElementById('pendList').addEventListener('click',e=>{
     return;
   }
   const bet=D.bets.find(b=>b.id===+btn.dataset.pid);if(!bet)return;
+  if(coPartOf(bet)){ // part cashed out: only the open legs are void (stake back)
+    pendUndoToast([[D.bets,bet]],`${bet.event||'Surebet'} · open leg void, stake back`);
+    settleCoPart(bet,(i,l)=>l.stake||0);
+    save();updateBadges();refreshAfterPend();return;
+  }
   pendUndoToast([[D.bets,bet]],`${bet.event||'Surebet'} · Void`);
   bet.status=act;delete bet.pendMark;
   if(!bet.resolveDate)bet.resolveDate=todayISO();
@@ -5795,7 +5867,9 @@ function bookmakerLedger(keep){ // keep(item) → only count those items (e.g. o
     const legs=b.legs||[];if(!legs.length)return;
     if(keep&&!keep(b))return;
     if(b.status==='won'||b.status==='lost')legs.forEach(l=>{const e=g(l.house);if(e){e.n++;e.vol+=l.stake||0;}});
-    if(b.status==='pending'){legs.forEach(l=>{const e=g(l.house);if(e){e.inPlay+=l.stake||0;e.open++;}});return;}
+    if(b.status==='pending'){const cp=coPartOf(b);legs.forEach((l,i)=>{const e=g(l.house);if(!e)return;
+      if(cp&&cp[i]!=null)e.settled+=cp[i]-(l.stake||0); // already cashed out: the money is in the account
+      else{e.inPlay+=l.stake||0;e.open++;}});return;}
     if(b.status!=='won'&&b.status!=='lost')return;
     const w=b.winnerLeg;
     if(b.cashOut!=null&&Array.isArray(b.cashOutLegs)&&b.cashOutLegs.length===legs.length){ // cash out entered per bookmaker
@@ -5831,7 +5905,8 @@ function houseBets(c){
       if(bkKey((l.house||'').trim())!==key)return;
       const ret=(l.minReturn!=null?l.minReturn:(l.odd||0)*(l.stake||0));
       let res,pl;
-      if(st==='pending'){res='pending';pl=null;}
+      if(st==='pending'&&coPartOf(b)&&b.coPart[i]!=null){res='cashout';pl=b.coPart[i]-(l.stake||0);}
+      else if(st==='pending'){res='pending';pl=null;}
       else if(st!=='won'&&st!=='lost'){res='void';pl=0;}
       else if(coLegs){res='cashout';pl=(b.cashOutLegs[i]||0)-(l.stake||0);}
       else if(b.cashOut==null&&w==='both'&&b.mid){res='won';pl=ret-(l.stake||0);}
