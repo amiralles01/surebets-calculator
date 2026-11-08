@@ -2204,7 +2204,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
     radial-gradient(44% 40% at 94% 20%,rgba(244,197,61,.34),transparent 72%),
     radial-gradient(55% 45% at 72% 95%,rgba(37,90,65,.2),transparent 72%),
     radial-gradient(40% 36% at 14% 80%,rgba(244,197,61,.22),transparent 72%)}
-.card,.bi,.ni2,.pend-item,.bk-card,.note-card,.month-card,.notas-folders,.ph2,.sc,.nbt,.bk-panel,.br-card,.promo-panel{
+.card,.bi,.ni2,.pend-item,.bk-card,.bk-tile,.note-card,.month-card,.notas-folders,.ph2,.sc,.nbt,.bk-panel,.br-card,.promo-panel{
   border:1px solid var(--glass-edge);box-shadow:var(--lift),var(--glass-hi)}
 .nbt{border-width:2px}
 .total-hero,.profit-mes-box{border-color:rgba(255,255,255,.12)!important;box-shadow:var(--lift),inset 0 1px 0 rgba(255,255,255,.1)}
@@ -2271,6 +2271,55 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
   .pc-legs:has(.pc-leg.both){grid-template-columns:repeat(2,minmax(0,1fr))}
   .pc-legs .pc-leg.both{grid-column:1/-1}
   .pc-r{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:1.25}
+}
+/* ═════════ BOOKMAKERS: GRID OVERVIEW ═════════ */
+.bk-vbar{display:flex;align-items:center;gap:8px 10px;flex-wrap:wrap;margin-bottom:12px}
+.bk-vbar .bks-per{background:rgba(255,255,255,.45);box-shadow:var(--glass-hi);border:1px solid var(--glass-edge,var(--border))}
+.bk-vtot{margin-left:auto;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.bk-vtot b{font-family:var(--mono);font-size:14.5px;color:var(--text)}.bk-vtot b.pos{color:var(--green)}.bk-vtot b.neg{color:var(--red)}
+.bk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px}
+.bk-tile{--tone:var(--border2);position:relative;overflow:hidden;cursor:pointer;min-width:0;padding:11px 12px 13px;
+  background:var(--surface);border-radius:12px;box-shadow:var(--lift);
+  background-image:radial-gradient(120% 90% at 100% 0%,color-mix(in srgb,var(--tone) 11%,transparent),transparent 62%);
+  transition:transform .15s ease,box-shadow .15s ease;-webkit-tap-highlight-color:transparent;outline:none}
+.bk-tile.pos{--tone:var(--green)}.bk-tile.neg{--tone:var(--red)}
+.bk-tile::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--tone);opacity:.85}
+.bk-tile.zer::before{opacity:.35}
+.bk-tile.on{box-shadow:0 0 0 2px var(--pitch2),var(--lift)}
+.bk-tile:focus-visible{box-shadow:0 0 0 2px var(--focus),var(--lift)}
+.bkt-top{display:flex;align-items:center;gap:6px;min-width:0}
+.bkt-name{font-size:13px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+.bk-tile.idle .bkt-name::after{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ball,var(--yellow));margin-left:5px;vertical-align:middle}
+.bkt-pend{flex:none;font-size:10.5px;font-weight:700;color:#8a6a00;background:var(--ydim);border-radius:99px;padding:1px 6px;font-family:var(--mono)}
+.bkt-bal{font-family:var(--mono);font-size:18px;font-weight:800;letter-spacing:-.5px;margin-top:4px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.bkt-bal.pos{color:var(--green)}.bkt-bal.neg{color:var(--red)}.bkt-bal.zer{color:var(--muted)}
+.bkt-sub{font-size:11.5px;color:var(--faint);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bkt-sub .yel{color:#9a7400;font-weight:600}
+.bkt-bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(0,0,0,.04)}
+.bkt-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--pitch2),var(--green));border-radius:0 3px 3px 0}
+.bk-open{grid-column:1/-1;animation:fi .2s ease}
+@media(hover:hover){.bk-tile:hover{transform:translateY(-1px);box-shadow:0 2px 4px rgba(27,36,32,.05),0 14px 28px -16px rgba(27,36,32,.38),var(--glass-hi)}
+  .bk-tile.on:hover{box-shadow:0 0 0 2px var(--pitch2),0 14px 28px -16px rgba(27,36,32,.38)}}
+@media(max-width:600px){
+  .bk-vbar{gap:6px}
+  .bk-vbar .bks-per button{padding:5px 8px;font-size:11.5px}
+  .bk-vtot{margin-left:0;width:100%;order:-1;font-size:12.5px}
+  .bk-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+  .bk-tile{padding:8px 8px 10px 10px;border-radius:10px}
+  .bkt-name{font-size:11.5px}
+  .bkt-bal{font-size:14px;letter-spacing:-.6px;margin-top:2px}
+  .bkt-sub{font-size:10px}
+  .bkt-pend{display:none}
+}
+@media(max-width:360px){.bk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* Bookmakers stats: smaller so the grid of houses starts higher up */
+#casasStats .sv2{font-size:clamp(20px,1.85vw,28px);white-space:nowrap}
+@media(max-width:600px){
+  #casasStats{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  #casasStats .sc{padding:8px 9px 9px;border-radius:12px}
+  #casasStats .sl2{font-size:10.5px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #casasStats .sv2{font-size:clamp(13px,4.1vw,17px);letter-spacing:-.04em}
+  #casasStats .sc-names{font-size:10px}
 }
 /* ═════════ DEPTH ═════════
    The empty area behind the content becomes a lit pitch: faint chalk markings, mowing stripes and grain under the glass,
@@ -5897,7 +5946,7 @@ function renderCasas(filter=''){
   document.getElementById('casasStats').innerHTML=`
     <div class="sc"><div class="sl2">Balance available</div><div class="sv2 ${totBal>=0?'pos':'neg'}">${fmt(totBal)} €</div></div>
     <div class="sc"><div class="sl2">In pending bets</div><div class="sv2 ${totPlay>0?'yel':''}">${fmt(totPlay)} €</div></div>
-    <div class="sc"><div class="sl2">Bookmakers tracked</div><div class="sv2">${vCasas.length}</div></div>
+    <div class="sc"><div class="sl2">Bookmakers</div><div class="sv2">${vCasas.length}</div></div>
     <div class="sc"><div class="sl2">Total deposited</div><div class="sv2">${fmt(total)} €</div></div>
     <div class="sc"><div class="sl2">Pending to receive</div><div class="sv2 ${totalPending>0?'yel':''}">${fmt(totalPending)} €</div></div>
     <div class="sc" title="${esc(idleList.map(c=>c.name).join(', '))}"><div class="sl2">Idle ${IDLE_DAYS}+ days</div><div class="sv2 ${idleList.length?'yel':''}">${idleList.length}<small class="sc-names">${idleList.length?esc(idleList.slice(0,3).map(c=>c.name).join(', '))+(idleList.length>3?'…':''):'all active'}</small></div></div>`;
@@ -5905,8 +5954,8 @@ function renderCasas(filter=''){
   const visible=items.filter(c=>!isHidden('casa:'+c.id));
   const hidden=items.filter(c=>isHidden('casa:'+c.id));
   if(!visible.length&&!hidden.length){list.innerHTML=emptyStateHtml(D.casas.length?'No bookmakers match this view.':'You have no bookmakers tracked yet.');return;}
-  const sorted=[...visible].sort((a,b)=>casaMoney(b,ledger).balance-casaMoney(a,ledger).balance);
-  list.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px">`+sorted.map(c=>{
+  const sorted=bkSortList(visible,ledger,act);
+  const cardHtml=c=>{
     const mny=casaMoney(c,ledger),amt=mny.balance,pCls=amt>0?'pos':amt<0?'neg':'zer';
     const pend=c.pendingTransfer||0;
     const pendWdCount=(c.history||[]).filter(h=>h.type==='wd'&&h.status==='pending').length;
@@ -6029,8 +6078,60 @@ function renderCasas(filter=''){
       </div>
       ${panelHtml}
     </div>`;
-  }).join('')+`</div>`+hiddenPanelHtml('casas',hidden.map(c=>({key:'casa:'+c.id,label:c.name||'(Unnamed)'})));
+  };
+  if(bkFocus!=null&&!sorted.some(c=>c.id===bkFocus))bkFocus=null;
+  const visTot=sorted.reduce((a,c)=>a+casaMoney(c,ledger).balance,0);
+  const bar=`<div class="bk-vbar">
+    <div class="bks-per" id="bkViewSeg"><button data-bkview="grid" class="${bkView==='grid'?'on':''}">Grid</button><button data-bkview="cards" class="${bkView==='cards'?'on':''}">Cards</button></div>
+    <div class="bks-per" id="bkSortSeg">${BK_SORTS.map(([k,l])=>`<button data-bksort="${k}" class="${bkSort===k?'on':''}">${l}</button>`).join('')}</div>
+    <div class="bk-vtot">${sorted.length} bookmaker${sorted.length===1?'':'s'} · <b class="${visTot>=0?'pos':'neg'}">${fmt(visTot)} €</b></div>
+  </div>`;
+  if(bkView==='grid'){
+    const maxBal=Math.max(1,...sorted.map(c=>casaMoney(c,ledger).balance));
+    list.innerHTML=bar+`<div class="bk-grid" id="bkGrid">`+sorted.map(c=>{
+      const m=casaMoney(c,ledger),b=m.balance,cls=b>0?'pos':b<0?'neg':'zer';
+      const a=isBank(c)?null:act.get(bkKey(c.name||''));
+      const idle=!!(a&&a.last&&daysAgo(a.last)>IDLE_DAYS);
+      const pend=c.pendingTransfer||0;
+      const sub=isBank(c)?`<span>Bank account</span>`
+        :m.inPlay>0?`<span class="yel">${fmt(m.inPlay)} € in play${m.open>1?` (${m.open})`:''}</span>`
+        :a&&a.last?`<span class="${idle?'yel':''}">${idle?'idle · ':''}${agoLabel(a.last)}</span>`:`<span>no bets yet</span>`;
+      return `<div class="bk-tile ${cls}${bkFocus===c.id?' on':''}${idle?' idle':''}" data-bk-focus="${c.id}" role="button" tabindex="0" title="${esc(c.name)}">
+        <div class="bkt-top"><span class="bkt-name">${esc(c.name)}</span>${pend>0?`<span class="bkt-pend" title="Pending to receive: ${fmt(pend)} €">+${fmt(pend,0)}</span>`:''}</div>
+        <div class="bkt-bal ${cls}">${fmt(b)} €</div>
+        <div class="bkt-sub">${sub}</div>
+        <div class="bkt-bar"><i style="width:${b>0?Math.max(2,b/maxBal*100).toFixed(1):0}%"></i></div>
+      </div>`;
+    }).join('')+(bkFocus!=null?`<div class="bk-open" id="bkOpen">${cardHtml(sorted.find(c=>c.id===bkFocus))}</div>`:'')+`</div>`
+      +hiddenPanelHtml('casas',hidden.map(c=>({key:'casa:'+c.id,label:c.name||'(Unnamed)'})));
+    placeBkOpen();
+    return;
+  }
+  list.innerHTML=bar+`<div style="display:flex;flex-direction:column;gap:10px">`+sorted.map(cardHtml).join('')+`</div>`+hiddenPanelHtml('casas',hidden.map(c=>({key:'casa:'+c.id,label:c.name||'(Unnamed)'})));
 }
+// ── Bookmakers overview: grid of small tiles (all houses at a glance) or the full cards ──
+let bkView=(()=>{try{return localStorage.getItem('sb_bk_view')||'grid';}catch(e){return 'grid';}})(); // 'grid' | 'cards'
+let bkSort=(()=>{try{return localStorage.getItem('sb_bk_sort')||'bal';}catch(e){return 'bal';}})();
+let bkFocus=null; // id of the bookmaker opened from the grid
+const BK_SORTS=[['bal','Balance'],['name','A–Z'],['play','In play'],['last','Last bet']];
+function bkSortList(arr,ledger,act){
+  const bal=c=>casaMoney(c,ledger).balance;
+  const last=c=>{const a=act.get(bkKey(c.name||''));return a&&a.last?a.last:'';};
+  const byName=(a,b)=>(a.name||'').localeCompare(b.name||'',undefined,{sensitivity:'base'});
+  const f={name:byName,
+    play:(a,b)=>casaMoney(b,ledger).inPlay-casaMoney(a,ledger).inPlay||bal(b)-bal(a),
+    last:(a,b)=>(last(b)>last(a)?1:last(b)<last(a)?-1:0)||bal(b)-bal(a)}[bkSort]||((a,b)=>bal(b)-bal(a)||byName(a,b));
+  return [...arr].sort(f);
+}
+// the opened card goes right under the row of its tile (like an accordion)
+function placeBkOpen(){
+  const g=document.getElementById('bkGrid'),o=document.getElementById('bkOpen');if(!g||!o)return;
+  const tiles=[...g.querySelectorAll('.bk-tile')],i=tiles.findIndex(t=>t.classList.contains('on'));if(i<0)return;
+  const cols=Math.max(1,getComputedStyle(g).gridTemplateColumns.split(' ').filter(Boolean).length);
+  const after=tiles[Math.min(tiles.length-1,Math.floor(i/cols)*cols+cols-1)];
+  if(after.nextElementSibling!==o)after.after(o);
+}
+window.addEventListener('resize',()=>{const pc=document.getElementById('page-casas');if(pc&&pc.style.display!=='none')placeBkOpen();});
 
 const casaModal=document.getElementById('addCasaModal');
 function fillProfileSelect(selectEl,currentId){
@@ -6087,6 +6188,7 @@ document.getElementById('c-save').addEventListener('click',()=>{
   casaModal.style.display='none';editingCasaId=null;
 });
 document.getElementById('casasSearch').addEventListener('input',e=>renderCasas(e.target.value));
+document.getElementById('casasList').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('.bk-tile')){e.preventDefault();e.target.click();}});
 // Esc closes the dialog on top (through its Cancel button, so it cleans up like a click would)
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
@@ -6096,6 +6198,16 @@ document.addEventListener('keydown',e=>{
 // phone: the less-used buttons of each bookmaker hide behind "More"
 const bkMoreOpen=new Set();
 document.getElementById('casasList').addEventListener('click',e=>{
+  const vb=e.target.closest('[data-bkview]');
+  if(vb){bkView=vb.dataset.bkview;try{localStorage.setItem('sb_bk_view',bkView);}catch(_){}renderCasas(document.getElementById('casasSearch').value);return;}
+  const sb=e.target.closest('[data-bksort]');
+  if(sb){bkSort=sb.dataset.bksort;try{localStorage.setItem('sb_bk_sort',bkSort);}catch(_){}renderCasas(document.getElementById('casasSearch').value);return;}
+  const ft=e.target.closest('[data-bk-focus]');
+  if(ft){const id=+ft.dataset.bkFocus;bkFocus=bkFocus===id?null:id;
+    if(openBkPanel&&openBkPanel.cid!==bkFocus)openBkPanel=null;
+    renderCasas(document.getElementById('casasSearch').value);
+    if(bkFocus!=null){const o=document.getElementById('bkOpen');if(o){const r=o.getBoundingClientRect();if(r.bottom>innerHeight-70||r.top<0)o.scrollIntoView({behavior:'smooth',block:'nearest'});}}
+    return;}
   const moreBtn=e.target.closest('[data-bk-more]');
   if(moreBtn){
     const cid=+moreBtn.dataset.bkMore,card=moreBtn.closest('.bk-card');
