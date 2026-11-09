@@ -698,6 +698,8 @@ body.drag-folder-active .tr-rootdrop{display:block}
 .sbr-leg.edit .sbr-leg-sels{grid-column:1/-1;display:flex;flex-direction:column;gap:6px}
 .sbr-leg.edit .sbr-leg-sels .cs-add{align-self:flex-start;font-size:12px;color:var(--purple);background:none;border:none;cursor:pointer;padding:2px 0;font-weight:600}
 .sbr-leg.edit .sbr-leg-new{font-size:10.5px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.04em}
+.sbr-leg.edit .sbr-leg-top.has-g{grid-template-columns:auto minmax(0,1fr) auto}
+.sbr-leg.edit select.sbr-g{width:auto;min-width:0;padding-right:26px;font-weight:700;color:var(--purple)}
 .sbr-sum{flex-wrap:wrap;gap:4px 12px}.sbr-sum b{font-family:var(--mono)}.sbr-sum b.pend-preview-pos{color:var(--green)}.sbr-sum b.pend-preview-neg{color:var(--red)}
 .sbr-leg.edit input{min-width:0}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -2967,7 +2969,8 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
       <div id="sbr-legs-wrap"><label class="fl">Bookmakers</label><div class="sbr-legs" id="sbr-legs"></div>
         <button class="ba" id="sbr-addleg" type="button" style="display:none;margin-top:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add outcome</button>
         <div class="nf-combo sbr-sum" id="sbr-sum" style="display:none;margin-top:8px"></div></div>
-      <div id="sbr-kind-w" style="display:none"><label class="fl">Type</label><select id="sbr-kind"><option value="sb">Surebet</option><option value="mid">Middle</option></select></div>
+      <div id="sbr-kind-w" class="two-col" style="display:none"><div><label class="fl">Type</label><select id="sbr-kind"><option value="sb">Surebet</option><option value="mid">Middle</option></select></div>
+        <div id="sbr-outs-w" style="display:none"><label class="fl">Outcomes</label><select id="sbr-outs"></select></div></div>
       <div class="two-col">
         <div><label class="fl">Date</label><input type="date" id="sbr-start"></div>
         <div><label class="fl">Ends ~ (hour)</label><select id="sbr-time" class="hour-sel"><option value="">--</option><option value="00:00">00h</option><option value="01:00">01h</option><option value="02:00">02h</option><option value="03:00">03h</option><option value="04:00">04h</option><option value="05:00">05h</option><option value="06:00">06h</option><option value="07:00">07h</option><option value="08:00">08h</option><option value="09:00">09h</option><option value="10:00">10h</option><option value="11:00">11h</option><option value="12:00">12h</option><option value="13:00">13h</option><option value="14:00">14h</option><option value="15:00">15h</option><option value="16:00">16h</option><option value="17:00">17h</option><option value="18:00">18h</option><option value="19:00">19h</option><option value="20:00">20h</option><option value="21:00">21h</option><option value="22:00">22h</option><option value="23:00">23h</option></select></div>
@@ -4011,9 +4014,23 @@ function midBothRes(res){return cents(res.returns.reduce((a,x)=>a+x,0)-res.actua
 const MID_PILL='<span class="mid-pill" title="Middle: both legs can win">Middle</span>';
 function midPill(b){return b&&b.mid?MID_PILL:'';}
 // what a surebet / middle made with this result (a leg index, 'both', or nothing = expected)
+// A surebet can have more legs than outcomes (e.g. 3 bookmakers, 2 outcomes: one side split in two).
+// Then every leg carries g = its outcome; legs with the same g win together.
+function legWins(b,w,i){
+  if(w==='both')return !!b.mid;
+  if(w===i)return true;
+  const L=b.legs||[];return typeof w==='number'&&!!L[w]&&!!L[i]&&L[w].g!=null&&L[i].g===L[w].g;
+}
+function sbOutcomes(b){const L=b.legs||[];return L.some(l=>l.g!=null)?new Set(L.map((l,i)=>l.g!=null?l.g:'x'+i)).size:L.length;}
+// the worst return of the outcomes (sum of the legs of each outcome)
+function sbMinReturn(b){
+  const L=b.legs||[],m=new Map();
+  L.forEach((l,i)=>{const k=l.g!=null?l.g:'x'+i;m.set(k,(m.get(k)||0)+(l.minReturn!=null?l.minReturn:legPay(l)*(l.stake||0)));});
+  return m.size?cents(Math.min(...m.values())):0;
+}
 function sbResultProfit(b,w){
   if(w==='both'&&b.mid)return midBoth(b);
-  if(typeof w==='number'&&b.legs&&b.legs[w])return cents((b.legs[w].minReturn||0)-(b.totalStake||0));
+  if(typeof w==='number'&&b.legs&&b.legs[w])return cents(b.legs.reduce((a,l,i)=>a+(legWins(b,w,i)?(l.minReturn||0):0),0)-(b.totalStake||0));
   return null;
 }
 
@@ -4177,12 +4194,27 @@ function dropAutoMark(b){const a=b.autoRes;if(a&&b.status==='pending'&&b.pendMar
 let sbEd=null;
 function sbEdOdd(r){const v=(r.sels||[]).map(x=>parseFloat(x.odd)).filter(x=>x>1);return v.length?+v.reduce((a,x)=>a*x,1).toFixed(3):parseFloat(r.odd);}
 function sbEdCanShape(){const b=editingSbId&&D.bets.find(x=>x.id===editingSbId);return !!b&&b.status==='pending'&&b.cashOut==null;}
+// how many different outcomes the legs cover: Double (2) / Triple (3)… — fewer than legs = a side split between bookmakers
+let sbOutK=2;
+const OUT_NAME={2:'Double (2 outcomes)',3:'Triple (3 outcomes)'};
+function sbEdGroups(){ // keep every leg's outcome inside 0..K-1; legs with the same outcome text share it
+  const K=sbOutK,N=sbEd.length;
+  if(K>=N){sbEd.forEach((r,i)=>r.g=i);return;}
+  const used=new Set(sbEd.filter(r=>r.g>=0&&r.g<K).map(r=>r.g));
+  sbEd.forEach((r,i)=>{if(!(r.g>=0&&r.g<K)){const t=String(r.result).trim().toLowerCase();const j=t?sbEd.findIndex((x,k)=>k!==i&&x.g>=0&&x.g<K&&String(x.result).trim().toLowerCase()===t):-1;
+    let g=j>=0?sbEd[j].g:-1;if(g<0){for(let k=0;k<K;k++)if(!used.has(k)){g=k;break;}}if(g<0)g=K-1;r.g=g;used.add(g);}});
+}
 function renderSbEd(focusSel){
   const wrap=document.getElementById('sbr-legs'),shape=sbEdCanShape(),many=sbEd.length>2;
+  const N=sbEd.length;if(sbOutK>N||sbOutK<2)sbOutK=Math.min(Math.max(sbOutK,2),N);
+  const ow=document.getElementById('sbr-outs-w');ow.style.display=N>=3?'block':'none';
+  if(N>=3){const o=document.getElementById('sbr-outs');o.innerHTML=Array.from({length:N-1},(_,k)=>k+2).map(k=>`<option value="${k}">${OUT_NAME[k]||k+' outcomes'}</option>`).join('');o.value=String(sbOutK);}
+  const split=sbOutK<N;
+  sbEdGroups();
   document.getElementById('sbr-legs-wrap').style.display='block';
   wrap.innerHTML=sbEd.map((l,i)=>{
     const auto=l.sels&&l.sels.some(x=>parseFloat(x.odd)>1);
-    return `<div class="sbr-leg edit" data-edi="${i}"><div class="sbr-leg-top"><div class="res-wrap"><input type="text" class="sbr-leg-res" data-legres="${i}" placeholder="${l.sels?'Combi name (optional)':`Outcome ${i+1} (e.g. Over 10.5 shots)`}" value="${esc(l.result||'')}" autocomplete="off">${shape?`<button type="button" class="cb-tg${l.sels?' on':''}" data-edcb="${i}" title="${l.sels?'Stop being a combi':'Make this leg a combi (several selections)'}" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>`:''}</div>${shape&&many?`<button type="button" class="bd2" data-eddel="${i}" title="Remove this outcome"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`:''}</div>`+
+    return `<div class="sbr-leg edit" data-edi="${i}"><div class="sbr-leg-top${split?' has-g':''}">${split?`<select class="sbr-g" data-edg="${i}" title="Which outcome this leg covers">${Array.from({length:sbOutK},(_,k)=>`<option value="${k}"${l.g===k?' selected':''}>#${k+1}</option>`).join('')}</select>`:''}<div class="res-wrap"><input type="text" class="sbr-leg-res" data-legres="${i}" placeholder="${l.sels?'Combi name (optional)':`Outcome ${i+1} (e.g. Over 10.5 shots)`}" value="${esc(l.result||'')}" autocomplete="off">${shape?`<button type="button" class="cb-tg${l.sels?' on':''}" data-edcb="${i}" title="${l.sels?'Stop being a combi':'Make this leg a combi (several selections)'}" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>`:''}</div>${shape&&many?`<button type="button" class="bd2" data-eddel="${i}" title="Remove this outcome"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`:''}</div>`+
       `<select data-legi="${i}">${houseOptionsHtml(l.house||'',`Bookmaker ${i+1}`)}</select><input type="number" step="0.01" min="1.01" data-legodd="${i}" placeholder="${l.sels?'auto':'Odds'}" value="${auto?sbEdOdd(l):(l.odd!=null&&l.odd!==''?l.odd:'')}"${auto?' readonly title="Product of the combi selections"':''}><input type="number" step="0.01" min="0" data-legstake="${i}" placeholder="Stake €" value="${l.stake!=null&&l.stake!==''?l.stake:''}">`+
       (l.sels?`<div class="sbr-leg-sels">${l.sels.map((x,k)=>`<div class="or-cs"><input type="text" placeholder="Selection ${k+1} · e.g. Madrid win" value="${esc(x.name||'')}" data-edsn="${k}" data-edl="${i}" autocomplete="off"><input type="number" class="cs-o" placeholder="Odds" step="0.01" min="1.01" value="${x.odd!==''&&x.odd!=null?x.odd:''}" data-edso="${k}" data-edl="${i}"><button type="button" class="bd2" data-edsdel="${k}" data-edl="${i}" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('')}<button type="button" class="cs-add" data-edsadd="${i}">+ Add selection</button></div>`:'')+
       `</div>`;}).join('');
@@ -4195,7 +4227,9 @@ function renderSbEdSum(){
   const el=document.getElementById('sbr-sum');if(!sbEd){el.style.display='none';return;}
   const legs=sbEd.map(r=>({house:r.house,odd:sbEdOdd(r),stake:parseFloat(r.stake),sels:(r.sels||[]).filter(x=>parseFloat(x.odd)>1).map(x=>({odd:+x.odd}))}));
   if(!legs.length||legs.some(l=>!(l.odd>1)||!(l.stake>=0))){el.style.display='none';return;}
-  const tot=legs.reduce((a,l)=>a+l.stake,0),rets=legs.map(l=>cents(legPay(l)*l.stake)),min=Math.min(...rets),p=+(min-tot).toFixed(2);
+  const tot=legs.reduce((a,l)=>a+l.stake,0),rets=legs.map(l=>cents(legPay(l)*l.stake)),byG=new Map();
+  rets.forEach((r,i)=>{const k=sbOutK<sbEd.length?sbEd[i].g:i;byG.set(k,(byG.get(k)||0)+r);});
+  const min=Math.min(...byG.values()),p=+(min-tot).toFixed(2);
   const mid=document.getElementById('sbr-kind').value==='mid';
   el.innerHTML=`<span>Total <b>${fmt(tot)} €</b></span><span>${mid?'One side':'Profit'} <b class="${p>=0?'pend-preview-pos':'pend-preview-neg'}">${p>=0?'+':''}${fmt(p)} €</b>${tot>0?` (${fmt(p/tot*100)}%)`:''}</span>`+(mid?`<span>Both win <b class="pend-preview-pos">+${fmt(rets.reduce((a,x)=>a+x,0)-tot)} €</b></span>`:'');
   el.style.display='flex';
@@ -4204,7 +4238,9 @@ function renderSbrLegs(legs,editable){
   const wrap=document.getElementById('sbr-legs');
   document.getElementById('sbr-legs-wrap').style.display=legs.length?'block':'none';
   if(editable){
-    sbEd=legs.map((l,i)=>({o:i,house:l.house||'',result:l.result||'',odd:l.odd!=null?l.odd:'',stake:l.stake!=null?l.stake:'',sels:l.sels&&l.sels.length?l.sels.map(x=>({name:x.name||'',odd:x.odd!=null?x.odd:''})):null}));
+    sbEd=legs.map((l,i)=>({o:i,house:l.house||'',result:l.result||'',odd:l.odd!=null?l.odd:'',stake:l.stake!=null?l.stake:'',sels:l.sels&&l.sels.length?l.sels.map(x=>({name:x.name||'',odd:x.odd!=null?x.odd:''})):null,g:l.g!=null?l.g:i}));
+    sbOutK=legs.some(l=>l.g!=null)?Math.max(2,new Set(legs.map((l,i)=>l.g!=null?l.g:'x'+i)).size):legs.length;
+    if(legs.some(l=>l.g!=null)){const ks=[...new Set(sbEd.map(r=>r.g))];sbEd.forEach(r=>r.g=ks.indexOf(r.g));}
     renderSbEd();
     return;
   }
@@ -4224,13 +4260,18 @@ document.getElementById('sbr-legs').addEventListener('input',e=>{
   else if(d.legi!=null)sbEd[+d.legi].house=t.value;
   renderSbEdSum();
 });
-document.getElementById('sbr-legs').addEventListener('change',e=>{if(sbEd&&e.target.dataset.legi!=null){sbEd[+e.target.dataset.legi].house=e.target.value;renderSbEdSum();}});
+document.getElementById('sbr-legs').addEventListener('change',e=>{
+  if(!sbEd)return;const d=e.target.dataset;
+  if(d.legi!=null){sbEd[+d.legi].house=e.target.value;renderSbEdSum();}
+  if(d.edg!=null){sbEd[+d.edg].g=+e.target.value;renderSbEdSum();}
+});
+document.getElementById('sbr-outs').addEventListener('change',e=>{if(!sbEd)return;sbOutK=+e.target.value;sbEd.forEach(r=>r.g=-1);renderSbEd();});
 document.getElementById('sbr-legs').addEventListener('click',e=>{
   if(!sbEd)return;
   const del=e.target.closest('[data-eddel]'),cb=e.target.closest('[data-edcb]'),sa=e.target.closest('[data-edsadd]'),sd=e.target.closest('[data-edsdel]');
   if(!del&&!cb&&!sa&&!sd)return;
   e.preventDefault();
-  if(del){const i=+del.dataset.eddel;if(sbEd.length<=2)return;sbEd.splice(i,1);renderSbEd();return;}
+  if(del){const i=+del.dataset.eddel;if(sbEd.length<=2)return;if(sbOutK>=sbEd.length)sbOutK=sbEd.length-1;sbEd.splice(i,1);renderSbEd();return;}
   if(cb){const r=sbEd[+cb.dataset.edcb];
     if(r.sels){const v=sbEdOdd(r);if(v>1)r.odd=v;r.result=r.result||r.sels.map(x=>x.name).filter(Boolean).join(' + ');r.sels=null;renderSbEd(`[data-legres="${cb.dataset.edcb}"]`);}
     else{r.sels=[{name:r.result||'',odd:parseFloat(r.odd)>1?r.odd:''},{name:'',odd:''}];r.result='';renderSbEd(`[data-edsn="1"][data-edl="${cb.dataset.edcb}"]`);}
@@ -4243,7 +4284,8 @@ document.getElementById('sbr-legs').addEventListener('click',e=>{
 });
 document.getElementById('sbr-addleg').addEventListener('click',()=>{
   if(!sbEd||!sbEdCanShape())return;
-  sbEd.push({o:-1,house:'',result:'',odd:'',stake:'',sels:null});
+  if(sbOutK>=sbEd.length)sbOutK=sbEd.length+1; // all different so far: the new one is one more outcome
+  sbEd.push({o:-1,house:'',result:'',odd:'',stake:'',sels:null,g:-1});
   renderSbEd(`[data-legres="${sbEd.length-1}"]`);
 });
 document.getElementById('sbr-kind').addEventListener('change',renderSbEdSum);
@@ -4270,6 +4312,13 @@ function applySbEd(b){
     if(!o||o.house!==l.house||o.odd!==l.odd||o.stake!==l.stake||JSON.stringify(o.sels||null)!==JSON.stringify(l.sels||null)){changed=true;if(o&&JSON.stringify(o.sels||null)!==JSON.stringify(l.sels||null))resChanged=true;}
     legs.push(l);
   }
+  const split=sbOutK<sbEd.length&&sbOutK<rows.length;
+  if(split){
+    const used=new Set(rows.map(r=>r.g));
+    if(used.size<2){alert('Choose which outcome each leg covers: at least 2 different outcomes.');return null;}
+    const ks=[...used].sort((a,b)=>a-b);
+    rows.forEach((r,i)=>{const g=ks.indexOf(r.g);if(legs[i].g!==g)changed=true;legs[i].g=g;});
+  }else legs.forEach(l=>{if(l.g!=null){delete l.g;changed=true;}});
   const map={};rows.forEach((r,i)=>{if(r.o>=0)map[r.o]=i;});
   const re=v=>v==='both'?v:(v!=null&&map[v]!=null?map[v]:undefined);
   const shaped=rows.length!==old.length||rows.some((r,i)=>r.o!==i);
@@ -4366,7 +4415,7 @@ document.getElementById('sbr-save').addEventListener('click',()=>{
     if(legsChanged&&b.legs&&b.legs.length&&b.cashOut==null&&b.legs.every(l=>l.stake!=null)){
       b.legs.forEach(l=>{l.minReturn=cents(legPay(l)*(l.stake||0));});
       b.totalStake=+b.legs.reduce((a,l)=>a+(l.stake||0),0).toFixed(2);
-      b.minReturn=Math.min(...b.legs.map(l=>l.minReturn));
+      b.minReturn=sbMinReturn(b);
       const exp=+(b.minReturn-b.totalStake).toFixed(2);
       b.expectedProfit=exp;
       b.profitPct=b.totalStake>0?+(exp/b.totalStake*100).toFixed(2):0;
@@ -4484,11 +4533,11 @@ function renderSurebets(filter=''){
     const pctCls=isVoid?'neu':(hasPct?(displayProfitPct>=0?'pos':'neg'):'neu');
     const pctLabel=hasPct?(displayProfitPct>=0?'+':'')+fmt(displayProfitPct)+' %':'—';
     const legsHtml=hasLegs?`<div class="leg-head"><span>Bookmaker</span><span>Outcome</span><span style="text-align:right">Odds</span><span style="text-align:right">Stake</span><span style="text-align:right">Return</span><span></span></div>`+
-      b.legs.map((l,li)=>`<div class="leg${winnerIdx===li||bothWon?' leg-winner':''}"><span class="lh">${esc(l.house)}</span><span class="lr">${legRes(l,'',true)}</span><span class="lo">${fmt(l.odd||0)}</span><span class="lk">${fmt(l.stake||0)} €</span><span class="lm">${fmt(l.minReturn||0)} €</span><button class="win-btn${winnerIdx===li?' selected':''}" data-wbid="${b.id}" data-wleg="${li}" title="Mark as the winning outcome">${winnerIdx===li?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Won`:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Won`}</button></div>`).join('')+
+      b.legs.map((l,li)=>`<div class="leg${legWins(b,winnerIdx,li)?' leg-winner':''}"><span class="lh">${esc(l.house)}</span><span class="lr">${legRes(l,'',true)}</span><span class="lo">${fmt(l.odd||0)}</span><span class="lk">${fmt(l.stake||0)} €</span><span class="lm">${fmt(l.minReturn||0)} €</span><button class="win-btn${winnerIdx===li?' selected':''}" data-wbid="${b.id}" data-wleg="${li}" title="Mark as the winning outcome">${winnerIdx===li?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Won`:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Won`}</button></div>`).join('')+
       (b.mid?`<div class="leg${bothWon?' leg-winner':''}"><span class="lh">Both</span><span class="lr">Middle hit${(w=>w?' · ends on '+midWindowTxt(w):'')(midWindow(b.legs))}</span><span class="lo"></span><span class="lk"></span><span class="lm">${fmt(midBoth(b)+(b.totalStake||0))} €</span><button class="win-btn${bothWon?' selected':''}" data-wbid="${b.id}" data-wleg="both" title="Both legs won (the middle hit)">${bothWon?'✓ ':''}Both</button></div>`:'')+
       (coPartOf(b)?`<div class="real-profit-row"><span class="real-profit-label">Part cashed out · ${b.legs.map((l,i)=>b.coPart[i]!=null?`${esc(l.house)} ${fmt(b.coPart[i])} €`:`${esc(l.house)} still open`).join(' · ')}</span></div>`:'')+
       (b.cashOut!=null&&!isVoid?`<div class="real-profit-row"><span class="real-profit-label">Cash out${Array.isArray(b.cashOutLegs)?' · '+b.legs.map((l,i)=>`${esc(l.house)} ${fmt(b.cashOutLegs[i]||0)} €`).join(' · '):` · ${fmt(b.cashOut)} €`}</span><span class="real-profit-val ${(b.profit||0)>=0?'':'neg'}">${(b.profit||0)>=0?'+':''}${fmt(b.profit||0)} €</span></div>`:'')+
-      (realProfit!=null&&!isVoid?`<div class="real-profit-row"><span class="real-profit-label">✓ ${bothWon?'Middle hit · both':esc(b.legs[winnerIdx].house)} won — real profit</span><span class="real-profit-val${realProfit<0?' neg':''}">${realProfit>=0?'+':''}${fmt(realProfit)} €</span></div>`:'')
+      (realProfit!=null&&!isVoid?`<div class="real-profit-row"><span class="real-profit-label">✓ ${bothWon?'Middle hit · both':b.legs.filter((l,i)=>legWins(b,winnerIdx,i)).map(l=>esc(l.house)).join(' + ')} won — real profit</span><span class="real-profit-val${realProfit<0?' neg':''}">${realProfit>=0?'+':''}${fmt(realProfit)} €</span></div>`:'')
     : `<div style="padding:8px 15px;font-size:12px;color:var(--faint)">No leg breakdown (pre-loaded surebet)</div>`;
     return`<div class="bi${flagOf(b)?' flagged-row':''}"${flagRowStyle(b)}><div class="bih"><div><div class="bie">${sbTagHtml(b,myTw)}${midPill(b)}${esc(b.event)}</div>${sbSubHtml(b,myTw)}${b.notes?`<div class="bi-note">${PEND_NOTE_IC}${esc(b.notes)}</div>`:''}${flagTag('sb',b)}<div class="bid">${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}${b.categoryId?` · <span class="type-badge-kind">${esc(catName(b.categoryId))}</span>`:''}</div></div><div class="bim"><span class="pp2 ${pctCls}">${pctLabel}</span><span class="sb2 ${sCls}">${sLabel}</span><select class="ss" data-sid="${b.id}"><option value="pending" ${b.status==='pending'?'selected':''}>Pending</option><option value="won" ${b.status==='won'?'selected':''}>Won</option><option value="lost" ${b.status==='lost'?'selected':''}>Lost</option><option value="anulada" ${b.status==='anulada'?'selected':''}>Void</option></select>${flagIconBtn('sb',b)}<button class="bd2" data-edit-bid="${b.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>${hideBtnHtml('sb:'+b.id)}<button class="bd2" data-bid="${b.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></div><div class="bl">${legsHtml}</div><div class="bf"><span class="bfl">Staked: ${fmt(b.totalStake||0)} € · Min. return: ${fmt(b.minReturn||0)} €</span><span class="bfr ${isVoid?'neu':(displayProfit>=0?'pos':'neg')}">${displayProfit>=0?'+':''}${fmt(displayProfit)} €</span></div></div>`;
   }).join('')+betsMoreHtml('sb',visible.length,page.length)+hiddenPanelHtml('sb',hidden.map(b=>({key:'sb:'+b.id,label:b.event||'(No event)'})));
@@ -5520,7 +5569,7 @@ function pendCompactHtml(kind,item,tw){
     const cpp=coPartOf(b);
     const legsHtml=legs.length?legs.map((l,li)=>{const r=promos[li];
       if(cpp&&cpp[li]!=null)return`<span class="pc-leg co-done" title="Cashed out — already in the balance"><span class="pc-h"><mark>${esc(l.house||'—')}</mark></span><span class="pc-o">${fmt(l.odd||0)}</span><span class="pc-r">Cashed ${fmt(cpp[li])} €</span></span>`;
-      return`<button class="pc-leg${r?' promo':''}${mk===li?' marked':''}" data-pwinbid="${b.id}" data-pwinleg="${li}" title="${mk===li?'Marked as the winner — tap to unmark':'Tap to mark this as the outcome that happened'}" aria-pressed="${mk===li}"${r?` style="--hl:${r.color}"`:''}>
+      return`<button class="pc-leg${r?' promo':''}${mk===li||(mk!=='both'&&legWins(b,mk,li))?' marked':''}" data-pwinbid="${b.id}" data-pwinleg="${li}" title="${mk===li?'Marked as the winner — tap to unmark':'Tap to mark this as the outcome that happened'}" aria-pressed="${mk===li}"${r?` style="--hl:${r.color}"`:''}>
         <span class="pc-h"><mark>${esc(l.house||'—')}</mark></span><span class="pc-o"><mark>${fmt(l.odd||0)}</mark></span><span class="pc-r">${legRes(l)}</span></button>`;}).join('')
       +(b.mid?`<button class="pc-leg both${mk==='both'?' marked':''}" data-pwinbid="${b.id}" data-pwinleg="both" title="${mk==='both'?'Marked: both won — tap to unmark':'The middle hit: both legs won'}" aria-pressed="${mk==='both'}"><span class="pc-h"><mark>Both</mark></span><span class="pc-o"></span><span class="pc-r">Middle ${midBoth(b)>=0?'+':''}${fmt(midBoth(b))} €</span></button>`:'')
       :`<button class="pc-mk won pc-act${mk==='won'?' on':''}" data-pid="${b.id}" data-kind="sb" data-action="won">Won</button>`;
@@ -5636,9 +5685,9 @@ function renderPendientesInner(){
       const legsHtml=hasLegs?`<div class="pend-legs">${b.legs.map((l,li)=>{
         if(cpp&&cpp[li]!=null)return`<div class="pend-leg co-done"><span class="pl-house"><mark>${esc(l.house)}</mark></span><span class="pl-res">${legRes(l,'',true)}</span>
           <span class="pl-nums"><span>${fmt(l.stake||0)} € @ ${fmt(l.odd||0)}</span><span class="pl-co">Cashed out ${fmt(cpp[li])} €</span></span></div>`;
-        const realProfit=cpp?coPartProfit(b,li):(l.minReturn||0)-(b.totalStake||0);
+        const realProfit=cpp?coPartProfit(b,li):sbResultProfit(b,li);
         const r=promos[li];
-        return`<button class="pend-leg${r?' promo':''}${b.pendMark===li?' selected':''}" aria-pressed="${b.pendMark===li}" data-pwinbid="${b.id}" data-pwinleg="${li}"${r?` style="--hl:${r.color}"`:''}>
+        return`<button class="pend-leg${r?' promo':''}${b.pendMark===li||(b.pendMark!=='both'&&legWins(b,b.pendMark,li))?' selected':''}" aria-pressed="${b.pendMark===li}" data-pwinbid="${b.id}" data-pwinleg="${li}"${r?` style="--hl:${r.color}"`:''}>
           <span class="pl-radio"></span>
           <span class="pl-house"><mark>${esc(l.house)}</mark></span>
           <span class="pl-res">${legRes(l,'',true)}</span>
@@ -5698,7 +5747,7 @@ function coPartOf(b){return b&&b.status==='pending'&&Array.isArray(b.coPart)&&b.
 function coLegRet(l){return l.minReturn!=null?l.minReturn:(l.odd||0)*(l.stake||0);}
 function coPartProfit(b,w){ // w: leg index that won, 'both', or null = worst case of the open legs
   const cp=b.coPart,got=cp.reduce((a,x)=>a+(x||0),0),open=b.legs.map((l,i)=>i).filter(i=>cp[i]==null);
-  const p=x=>cents(got+open.reduce((a,i)=>a+((x==='both'||x===i)?coLegRet(b.legs[i]):0),0)-(b.totalStake||0));
+  const p=x=>cents(got+open.reduce((a,i)=>a+((x==='both'||legWins(b,x,i))?coLegRet(b.legs[i]):0),0)-(b.totalStake||0));
   if(w!=null)return p(w);
   return open.length?Math.min(...open.map(p)):p(null);
 }
@@ -5816,7 +5865,7 @@ function pendHasMark(kind,item){return kind!=='wd'&&item.pendMark!=null;}
 function pendResolveItem(kind,item){
   const m=item.pendMark;if(m==null)return false;
   if(kind==='nm'){resolveNormal(item,m);}
-  else if(coPartOf(item)){settleCoPart(item,(i,l)=>(m==='both'||m===i)?coLegRet(l):0);return true;}
+  else if(coPartOf(item)){settleCoPart(item,(i,l)=>(m==='both'||legWins(item,m,i))?coLegRet(l):0);return true;}
   else if(sbResultProfit(item,m)!=null){
     item.winnerLeg=m;item.profit=sbResultProfit(item,m);item.status='won';
   }else item.status='won';
@@ -6021,7 +6070,7 @@ function bookmakerLedger(keep){ // keep(item) → only count those items (e.g. o
     }else if(b.cashOut==null&&w==='both'&&b.mid){ // a middle that hit: every leg paid
       legs.forEach(l=>{const e=g(l.house);if(e)e.settled+=(l.minReturn!=null?l.minReturn:(l.odd||0)*(l.stake||0))-(l.stake||0);});
     }else if(b.cashOut==null&&w!=null&&legs[w]){
-      legs.forEach((l,i)=>{const e=g(l.house);if(e)e.settled+=i===w?((l.minReturn!=null?l.minReturn:(l.odd||0)*(l.stake||0))-(l.stake||0)):-(l.stake||0);});
+      legs.forEach((l,i)=>{const e=g(l.house);if(e)e.settled+=legWins(b,w,i)?((l.minReturn!=null?l.minReturn:(l.odd||0)*(l.stake||0))-(l.stake||0)):-(l.stake||0);});
     }else{ // cash out / legacy without a winning leg: split the result by stake
       const tot=legs.reduce((a,l)=>a+(l.stake||0),0)||legs.length;
       legs.forEach(l=>{const e=g(l.house);if(e)e.settled+=(b.profit||0)*((l.stake||(tot===legs.length?1:0))/tot);});
@@ -6054,7 +6103,7 @@ function houseBets(c){
       else if(st!=='won'&&st!=='lost'){res='void';pl=0;}
       else if(coLegs){res='cashout';pl=(b.cashOutLegs[i]||0)-(l.stake||0);}
       else if(b.cashOut==null&&w==='both'&&b.mid){res='won';pl=ret-(l.stake||0);}
-      else if(b.cashOut==null&&w!=null&&legs[w]){res=i===w?'won':'lost';pl=i===w?ret-(l.stake||0):-(l.stake||0);}
+      else if(b.cashOut==null&&w!=null&&legs[w]){const won=legWins(b,w,i);res=won?'won':'lost';pl=won?ret-(l.stake||0):-(l.stake||0);}
       else{res=b.cashOut!=null?'cashout':'settled';pl=(b.profit||0)*((l.stake||(tot===legs.length?1:0))/tot);}
       rows.push({kind:b.mid?'middle':'surebet',item:b,id:'sb'+b.id+':'+i,date:b.date||'',time:b.time||'',event:b.event||'',pick:l.result||'',market:b.market||'',
         sels:l.sels&&l.sels.length?l.sels:null,odd:l.odd||0,stake:l.stake||0,free:false,res,pl:pl==null?null:+pl.toFixed(2),
@@ -8135,7 +8184,10 @@ function arSettle(b,hit){
   const wins=res.map((x,i)=>x==='win'?i:-1).filter(i=>i>=0);
   if(b.mid&&res.length>=2&&wins.length===res.length)return {leg:'both',score:arScore(m,A,B),live:!(m.done&&!m.bad)};
   if(wins.length===1&&res.every(x=>x==='win'||x==='lose'))return {leg:wins[0],score:arScore(m,A,B),live:!(m.done&&!m.bad)};
-  if(!m.done&&wins.length<2&&!res.includes('push'))return {why:'playing',wait:AR_EVERY_MIN};
+  // one side split between bookmakers: its legs win together
+  const oneSide=wins.length>1&&wins.every(i=>legWins(b,wins[0],i))&&res.every((x,i)=>x===(legWins(b,wins[0],i)?'win':'lose'));
+  if(oneSide)return {leg:wins[0],score:arScore(m,A,B),live:!(m.done&&!m.bad)};
+  if(!m.done&&(wins.length<2||wins.every(i=>legWins(b,wins[0],i)))&&!res.includes('push'))return {why:'playing',wait:AR_EVERY_MIN};
   return {why:'unclear',wait:720};
 }
 function arCoverable(b){return (b.legs||[]).every(l=>arLegSpec(b,l));}
