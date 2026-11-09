@@ -2549,8 +2549,8 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
               <div class="nf-combo" id="nf-combo" style="margin-top:8px;display:none"><span>Combined odds</span><b id="nf-combo-odd">–</b></div>
             </div>
             <div class="two-col">
-              <div><label class="fl" id="nf-odd-label">Odds</label><input type="number" id="nf-odd" placeholder="1.80" step="0.01" min="1.01"></div>
-              <div><label class="fl" id="nf-stake-label">Amount staked (€)</label><input type="number" id="nf-stake" placeholder="20" step="0.01" min="0"></div>
+              <div><label class="fl" id="nf-odd-label">Odds</label><input type="text" inputmode="decimal" autocomplete="off" id="nf-odd" placeholder="1.80" step="0.01" min="1.01"></div>
+              <div><label class="fl" id="nf-stake-label">Amount staked (€)</label><input type="text" inputmode="decimal" autocomplete="off" id="nf-stake" placeholder="20" step="0.01" min="0"></div>
             </div>
             <div class="two-col">
               <div><label class="fl">Date</label><input type="date" id="nf-date"></div>
@@ -2595,7 +2595,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 
             <div class="sbx-sec"><span class="sbx-n">3</span>Stake</div>
             <div class="stake-row">
-              <div class="stake-tot"><label class="fl">Total</label><div class="iw"><input type="number" class="ii" id="totalInv" value="100" min="0" step="1"><span class="isuf">€</span></div><div class="stk-chips" id="stkChips"></div></div>
+              <div class="stake-tot"><label class="fl">Total</label><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="totalInv" value="100" min="0" step="1"><span class="isuf">€</span></div><div class="stk-chips" id="stkChips"></div></div>
               <div class="stake-rnd"><label class="fl">Rounding</label>
                 <div class="rp" id="roundPills">
                   <button class="rpb active" data-mode="exact">Exact</button>
@@ -2608,7 +2608,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
             </div>
             <div class="cr" id="customRow" style="display:none">
               <span>Multiples of</span>
-              <input type="number" id="customStep" value="0.1" min="0.01" step="0.01">
+              <input type="text" inputmode="decimal" autocomplete="off" id="customStep" value="0.1" min="0.01" step="0.01">
               <span>€</span>
             </div>
             <div class="ps-quick" id="psQuick"></div>
@@ -2667,7 +2667,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
           <div id="swList"></div>
           <div class="sw-form">
             <input type="text" id="sw-name" placeholder="Concept · e.g. BetHero" autocomplete="off">
-            <div class="iw"><input type="number" class="ii" id="sw-amount" placeholder="0" min="0" step="0.01"><span class="isuf">€</span></div>
+            <div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="sw-amount" placeholder="0" min="0" step="0.01"><span class="isuf">€</span></div>
             <input type="date" id="sw-date">
             <select id="sw-repeat"><option value="month">Every month</option><option value="once">One payment</option></select>
             <select id="sw-casa"></select>
@@ -2934,12 +2934,12 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
             <option value="Freebet">Freebet</option>
           </select>
         </div>
-        <div><label class="fl">Odds</label><input type="number" id="m-odd" placeholder="1.80" step="0.01" min="1.01"></div>
+        <div><label class="fl">Odds</label><input type="text" inputmode="decimal" autocomplete="off" id="m-odd" placeholder="1.80" step="0.01" min="1.01"></div>
       </div>
       <label class="cb-sw" id="m-combi-sw"><input type="checkbox" id="m-combi"><span class="cb-sw-k"></span><span class="cb-sw-t"><b>Combi</b><small>several selections in one bet — their odds multiply</small></span></label>
       <div id="m-sels-wrap" style="display:none"><label class="fl">Selections</label><div class="nf-sels" id="m-sels"></div>
         <button class="ba" id="m-addsel" type="button" style="margin-top:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add selection</button></div>
-      <div><label class="fl" id="m-stake-label">Amount staked (€)</label><input type="number" id="m-stake" placeholder="20" step="0.01" min="0"></div>
+      <div><label class="fl" id="m-stake-label">Amount staked (€)</label><input type="text" inputmode="decimal" autocomplete="off" id="m-stake" placeholder="20" step="0.01" min="0"></div>
       <div id="m-preview" style="display:none;background:var(--raised);border-radius:7px;padding:8px 11px;font-size:12px;justify-content:space-between;gap:8px">
         <span>If it wins: <span class="pend-preview-pos" id="m-preview-win"></span></span>
         <span>If it loses: <span class="pend-preview-neg" id="m-preview-loss"></span></span>
@@ -2991,7 +2991,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
     <div style="font-size:15px;font-weight:700;margin-bottom:4px">Cash out</div>
     <div id="co-info" style="font-size:12px;color:var(--muted,#888);margin-bottom:14px"></div>
     <div id="co-legs" class="co-legs"></div>
-    <div id="co-single"><label class="fl">Amount received (€)</label><input type="number" id="co-amount" step="0.01" min="0" placeholder="0.00"></div>
+    <div id="co-single"><label class="fl">Amount received (€)</label><input type="text" inputmode="decimal" autocomplete="off" id="co-amount" step="0.01" min="0" placeholder="0.00"></div>
     <div id="co-preview" style="margin-top:12px;font-size:13px"></div>
     <div style="display:flex;gap:9px;margin-top:18px">
       <button class="btn-s" id="co-cancel" style="flex:1">Cancel</button>
@@ -3015,8 +3015,8 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
         <select id="c-profile"></select>
       </div>
       <div class="two-col">
-        <div><label class="fl">Deposited</label><div class="iw"><input type="number" class="ii" id="c-amount" placeholder="0" min="0" step="0.01"><span class="isuf">€</span></div></div>
-        <div><label class="fl">Awaiting transfer</label><div class="iw"><input type="number" class="ii" id="c-pending" placeholder="0" min="0" step="0.01"><span class="isuf">€</span></div></div>
+        <div><label class="fl">Deposited</label><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="c-amount" placeholder="0" min="0" step="0.01"><span class="isuf">€</span></div></div>
+        <div><label class="fl">Awaiting transfer</label><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="c-pending" placeholder="0" min="0" step="0.01"><span class="isuf">€</span></div></div>
       </div>
       <div><label class="fl">Notes (optional)</label><input type="text" id="c-notes" placeholder="Welcome bonus, verified account…"></div>
       <label class="c-flow"><input type="checkbox" id="c-frac"><span><b>Pays with fractional odds</b><small>Bet365, William Hill… show 1.33 but pay 4/3 (1.3333). Turn on so returns match to the cent.</small></span></label>
@@ -4082,11 +4082,11 @@ function renderOutcomes(){
     row.innerHTML=`
       <select data-field="house" data-id="${o.id}">${houseOptionsHtml(o.house,`Bookmaker ${idx+1}`)}</select>
       <div class="res-wrap"><input type="text" placeholder="${o.sels?'Combi name (optional)':'Outcome (optional) · e.g. Over'}" value="${esc(o.result)}" data-field="result" data-id="${o.id}"><button class="cb-tg${o.sels?' on':''}" data-cbtg="${o.id}" title="${o.sels?'Stop being a combi':'Make this leg a combi (several selections)'}" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button></div>
-      <div class="oi-wrap"><input type="number" class="oi${lit?' lit':''}" placeholder="${o.sels?'auto':'1.00'}" value="${o.odd>0?+(+o.odd).toFixed(3):''}" data-field="odd" data-id="${o.id}" min="1.01" step="0.01"${o.sels&&o.sels.some(x=>parseFloat(x.odd)>1)?' readonly title="Product of the combi selections"':''}><span class="oi-frac" data-frac="${o.id}">${legFrac(o)}</span></div>
-      <input type="number" class="msi${o.fromPreset?' pre':''}" placeholder="${stakeHint(o)}" title="Leave empty to split the total automatically, or type a fixed stake" value="${o.manualStake>0?o.manualStake:''}" data-field="manualStake" data-id="${o.id}" min="0" step="0.01">
+      <div class="oi-wrap"><input type="text" inputmode="decimal" autocomplete="off" class="oi${lit?' lit':''}" placeholder="${o.sels?'auto':'1.00'}" value="${o.odd>0?+(+o.odd).toFixed(3):''}" data-field="odd" data-id="${o.id}" min="1.01" step="0.01"${o.sels&&o.sels.some(x=>parseFloat(x.odd)>1)?' readonly title="Product of the combi selections"':''}><span class="oi-frac" data-frac="${o.id}">${legFrac(o)}</span></div>
+      <input type="text" inputmode="decimal" autocomplete="off" class="msi${o.fromPreset?' pre':''}" placeholder="${stakeHint(o)}" title="Leave empty to split the total automatically, or type a fixed stake" value="${o.manualStake>0?o.manualStake:''}" data-field="manualStake" data-id="${o.id}" min="0" step="0.01">
       <button class="bd" data-id="${o.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>${o.sels?`
       <div class="or-combi"><div class="or-combi-h"><span>Combi · ${esc(o.house||'Bookmaker '+(idx+1))}</span><span>Odds <b data-cstot="${o.id}">${o.odd>1?fmt(o.odd):'–'}</b></span></div>
-        ${o.sels.map((x,k)=>`<div class="or-cs"><input type="text" placeholder="Selection ${k+1} · e.g. Madrid win" value="${esc(x.name||'')}" data-csn="${k}" data-id="${o.id}" autocomplete="off"><input type="number" class="cs-o" placeholder="Odds" step="0.01" min="1.01" value="${x.odd!==''&&x.odd!=null?x.odd:''}" data-cso="${k}" data-id="${o.id}"><button class="bd2" data-csdel="${k}" data-id="${o.id}" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('')}
+        ${o.sels.map((x,k)=>`<div class="or-cs"><input type="text" placeholder="Selection ${k+1} · e.g. Madrid win" value="${esc(x.name||'')}" data-csn="${k}" data-id="${o.id}" autocomplete="off"><input type="text" inputmode="decimal" autocomplete="off" class="cs-o" placeholder="Odds" step="0.01" min="1.01" value="${x.odd!==''&&x.odd!=null?x.odd:''}" data-cso="${k}" data-id="${o.id}"><button class="bd2" data-csdel="${k}" data-id="${o.id}" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('')}
         <button class="cs-add" data-csadd="${o.id}">+ Add selection</button></div>`:''}`;
     list.appendChild(row);
   });
@@ -4226,8 +4226,8 @@ function renderSbEd(focusSel){
   wrap.innerHTML=sbEd.map((l,i)=>{
     const auto=l.sels&&l.sels.some(x=>parseFloat(x.odd)>1);
     return `<div class="sbr-leg edit" data-edi="${i}"><div class="sbr-leg-top${split?' has-g':''}">${split?`<select class="sbr-g" data-edg="${i}" title="Which outcome this leg covers">${Array.from({length:sbOutK},(_,k)=>`<option value="${k}"${l.g===k?' selected':''}>#${k+1}</option>`).join('')}</select>`:''}<div class="res-wrap"><input type="text" class="sbr-leg-res" data-legres="${i}" placeholder="${l.sels?'Combi name (optional)':`Outcome ${i+1} (e.g. Over 10.5 shots)`}" value="${esc(l.result||'')}" autocomplete="off">${shape?`<button type="button" class="cb-tg${l.sels?' on':''}" data-edcb="${i}" title="${l.sels?'Stop being a combi':'Make this leg a combi (several selections)'}" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>`:''}</div>${shape&&many?`<button type="button" class="bd2" data-eddel="${i}" title="Remove this outcome"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`:''}</div>`+
-      `<select data-legi="${i}">${houseOptionsHtml(l.house||'',`Bookmaker ${i+1}`)}</select><input type="number" step="0.01" min="1.01" data-legodd="${i}" placeholder="${l.sels?'auto':'Odds'}" value="${auto?sbEdOdd(l):(l.odd!=null&&l.odd!==''?l.odd:'')}"${auto?' readonly title="Product of the combi selections"':''}><input type="number" step="0.01" min="0" data-legstake="${i}" placeholder="Stake €" value="${l.stake!=null&&l.stake!==''?l.stake:''}">`+
-      (l.sels?`<div class="sbr-leg-sels">${l.sels.map((x,k)=>`<div class="or-cs"><input type="text" placeholder="Selection ${k+1} · e.g. Madrid win" value="${esc(x.name||'')}" data-edsn="${k}" data-edl="${i}" autocomplete="off"><input type="number" class="cs-o" placeholder="Odds" step="0.01" min="1.01" value="${x.odd!==''&&x.odd!=null?x.odd:''}" data-edso="${k}" data-edl="${i}"><button type="button" class="bd2" data-edsdel="${k}" data-edl="${i}" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('')}<button type="button" class="cs-add" data-edsadd="${i}">+ Add selection</button></div>`:'')+
+      `<select data-legi="${i}">${houseOptionsHtml(l.house||'',`Bookmaker ${i+1}`)}</select><input type="text" inputmode="decimal" autocomplete="off" step="0.01" min="1.01" data-legodd="${i}" placeholder="${l.sels?'auto':'Odds'}" value="${auto?sbEdOdd(l):(l.odd!=null&&l.odd!==''?l.odd:'')}"${auto?' readonly title="Product of the combi selections"':''}><input type="text" inputmode="decimal" autocomplete="off" step="0.01" min="0" data-legstake="${i}" placeholder="Stake €" value="${l.stake!=null&&l.stake!==''?l.stake:''}">`+
+      (l.sels?`<div class="sbr-leg-sels">${l.sels.map((x,k)=>`<div class="or-cs"><input type="text" placeholder="Selection ${k+1} · e.g. Madrid win" value="${esc(x.name||'')}" data-edsn="${k}" data-edl="${i}" autocomplete="off"><input type="text" inputmode="decimal" autocomplete="off" class="cs-o" placeholder="Odds" step="0.01" min="1.01" value="${x.odd!==''&&x.odd!=null?x.odd:''}" data-edso="${k}" data-edl="${i}"><button type="button" class="bd2" data-edsdel="${k}" data-edl="${i}" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('')}<button type="button" class="cs-add" data-edsadd="${i}">+ Add selection</button></div>`:'')+
       `</div>`;}).join('');
   document.getElementById('sbr-addleg').style.display=shape?'flex':'none';
   if(focusSel){const f=wrap.querySelector(focusSel);if(f)f.focus();}
@@ -5224,7 +5224,7 @@ function syncMOdd(){
 function renderMSels(focus){
   document.getElementById('m-combi').checked=!!mSels;
   document.getElementById('m-sels-wrap').style.display=mSels?'block':'none';
-  document.getElementById('m-sels').innerHTML=(mSels||[]).map((x,i)=>`<div class="nf-sel"><input type="text" data-mseln="${i}" placeholder="Selection ${i+1}" value="${esc(x.name||'')}" autocomplete="off"><input type="number" step="0.01" min="1.01" data-mselo="${i}" placeholder="Odds" value="${x.odd!==''&&x.odd!=null?x.odd:''}"><button type="button" class="bd2" data-mseldel="${i}" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('');
+  document.getElementById('m-sels').innerHTML=(mSels||[]).map((x,i)=>`<div class="nf-sel"><input type="text" data-mseln="${i}" placeholder="Selection ${i+1}" value="${esc(x.name||'')}" autocomplete="off"><input type="text" inputmode="decimal" autocomplete="off" step="0.01" min="1.01" data-mselo="${i}" placeholder="Odds" value="${x.odd!==''&&x.odd!=null?x.odd:''}"><button type="button" class="bd2" data-mseldel="${i}" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('');
   if(focus!=null){const f=document.querySelector(`#m-sels [data-mseln="${focus}"]`);if(f)f.focus();}
   syncMOdd();
 }
@@ -5773,6 +5773,12 @@ function settleCoPart(b,pay){ // pay(i,leg) → what each still-open leg returne
 // surebets with legs: the money received at each bookmaker is entered separately
 function coPerLeg(t){return !!(t&&t.kind==='sb'&&t.item.legs&&t.item.legs.length);}
 function coKept(){return [...document.querySelectorAll('#co-legs .co-leg.kept')].map(r=>+r.dataset.i);}
+// iPhone's Spanish decimal keypad only has a comma: number boxes are text boxes with a decimal keypad,
+// and a comma typed in any of them becomes a dot (so 12,5 is read as 12.5 everywhere)
+document.addEventListener('input',e=>{
+  const t=e.target;if(!t||t.tagName!=='INPUT'||t.inputMode!=='decimal'||t.value.indexOf(',')<0)return;
+  const p=t.selectionStart;t.value=t.value.replace(/,/g,'.');try{t.setSelectionRange(p,p);}catch(_){}
+},true);
 function coLegAmounts(){return [...document.querySelectorAll('#co-legs [data-coleg]')].map(i=>{const v=parseFloat(String(i.value).replace(',','.'));return isNaN(v)?null:v;});}
 function updateCashoutPreview(){
   if(!cashoutTarget)return;
@@ -5810,7 +5816,7 @@ function openCashoutModal(kind,id){
   const cp=per?coPartOf(item):null;
   document.getElementById('co-legs').innerHTML=per?item.legs.map((l,i)=>{const ret=l.minReturn!=null?l.minReturn:(l.odd||0)*(l.stake||0);const kept=cp&&cp[i]==null;return`<div class="co-leg${kept?' kept':''}" data-i="${i}">
       <div class="co-leg-info"><b>${esc(l.house||'Leg '+(i+1))}</b><span>${esc(l.result||'')} · ${fmt(l.stake||0)} € @ ${fmt(l.odd||0)}</span></div>
-      <div class="co-leg-in"><input type="number" step="0.01" min="0" inputmode="decimal" data-coleg="${i}" placeholder="0.00" value="${cp&&cp[i]!=null?cp[i].toFixed(2):''}" aria-label="Received at ${esc(l.house||'')}"><span>€</span><em>still open</em></div>
+      <div class="co-leg-in"><input type="text" inputmode="decimal" autocomplete="off" step="0.01" min="0" data-coleg="${i}" placeholder="0.00" value="${cp&&cp[i]!=null?cp[i].toFixed(2):''}" aria-label="Received at ${esc(l.house||'')}"><span>€</span><em>still open</em></div>
       <div class="co-quick"><button type="button" class="co-keep" data-cokeep="${i}" title="Not paid yet: keep this leg in Pending and settle it later">Keep pending</button><button type="button" data-cofill="${i}" data-v="0">Lost · 0 €</button><button type="button" data-cofill="${i}" data-v="${ret}">Won · ${fmt(ret)} €</button><button type="button" data-cofill="${i}" data-v="${l.stake||0}">Stake back · ${fmt(l.stake||0)} €</button></div>
     </div>`;}).join(''):'';
   document.getElementById('co-amount').value='';
@@ -6262,7 +6268,7 @@ function renderCasas(filter=''){
         <div class="bk-panel-title">${mode==='dep'?'Add deposit':'Record withdrawal'}</div>
         ${moveDestHtml(c,mode)}
         <div class="bk-panel-row">
-          <div class="iw"><input type="number" class="ii" id="bk-panel-amount" placeholder="0" min="0" step="0.01"><span class="isuf">€</span></div>
+          <div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="bk-panel-amount" placeholder="0" min="0" step="0.01"><span class="isuf">€</span></div>
           <button class="btn-reg" data-bk-apply="${c.id}" data-bk-mode="${mode}" style="width:auto;padding:9px 16px">${mode==='dep'?'Add':'Subtract'}</button>
         </div>
         <div class="bk-amts">${QUICK_AMOUNTS.map(a=>`<div class="bk-chip" data-bk-quick="${a}">${a} €</div>`).join('')}</div>
@@ -6271,7 +6277,7 @@ function renderCasas(filter=''){
       panelHtml=`<div class="bk-panel">
         <div class="bk-panel-title">Pending transfer to receive</div>
         <div class="bk-panel-row">
-          <div class="iw"><input type="number" class="ii" id="bk-panel-amount" value="${pend>0?pend:''}" placeholder="0" min="0" step="0.01"><span class="isuf">€</span></div>
+          <div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="bk-panel-amount" value="${pend>0?pend:''}" placeholder="0" min="0" step="0.01"><span class="isuf">€</span></div>
           <button class="btn-reg" data-bk-apply="${c.id}" data-bk-mode="pending" style="width:auto;padding:9px 16px">Save</button>
           ${pend>0?`<button class="btn-s" data-bk-clear-pending="${c.id}" style="width:auto;padding:9px 16px">Mark as received</button>`:''}
         </div>
@@ -6280,7 +6286,7 @@ function renderCasas(filter=''){
       panelHtml=`<div class="bk-panel">
         <div class="bk-panel-title">Real balance you see in ${esc(c.name)} right now (without the money in pending bets)</div>
         <div class="bk-panel-row">
-          <div class="iw"><input type="number" class="ii" id="bk-panel-amount" value="${amt}" step="0.01"><span class="isuf">€</span></div>
+          <div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="bk-panel-amount" value="${amt}" step="0.01"><span class="isuf">€</span></div>
           <button class="btn-reg" data-bk-apply="${c.id}" data-bk-mode="bal" style="width:auto;padding:9px 16px">Save</button>
           ${mny.adj?`<button class="btn-s" data-bk-clear-adj="${c.id}" style="width:auto;padding:9px 16px">Remove adjustment</button>`:''}
         </div>
@@ -6301,8 +6307,8 @@ function renderCasas(filter=''){
           <div class="bk-hist-empty" style="margin:6px 0 10px">Charged so far: <b>${fmt(charged)} €</b>. "Stop" ends it from next month and keeps what was already charged.</div>`:''}
         <div class="bk-cost-form">
           <input type="text" id="bk-cost-name" placeholder="Concept · e.g. Account rental" autocomplete="off">
-          <div class="iw"><input type="number" class="ii" id="bk-cost-amount" placeholder="0" min="0" step="0.01"><span class="isuf">€/mo</span></div>
-          <div class="iw"><input type="number" class="ii" id="bk-cost-day" placeholder="Day" min="1" max="31" step="1" value="${new Date().getDate()}"><span class="isuf">day</span></div>
+          <div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="bk-cost-amount" placeholder="0" min="0" step="0.01"><span class="isuf">€/mo</span></div>
+          <div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="bk-cost-day" placeholder="Day" min="1" max="31" step="1" value="${new Date().getDate()}"><span class="isuf">day</span></div>
           <button class="btn-reg" data-cost-add="${c.id}" style="width:auto;padding:9px 16px;margin:0">Add</button>
         </div>
       </div>`;
@@ -7421,7 +7427,7 @@ let psForm=[{odd:'',stake:''},{odd:'',stake:''}], psEditId=null;
 function renderPsForm(){
   document.getElementById('psLegs').innerHTML=psForm.map((l,i)=>{
     const o=parseFloat(l.odd),s=parseFloat(l.stake);const ret=o>1&&s>0?fmt(o*s)+' €':'–';
-    return `<div class="ps-leg"><input type="number" step="0.01" min="1.01" placeholder="3.25" value="${l.odd}" data-psi="${i}" data-psf="odd"><input type="number" step="0.01" min="0" placeholder="30" value="${l.stake}" data-psi="${i}" data-psf="stake"><span class="ps-ret" id="psRet${i}">${ret}</span><button class="bd" data-psdel="${i}" ${psForm.length<=2?'disabled style="opacity:.3"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`;
+    return `<div class="ps-leg"><input type="text" inputmode="decimal" autocomplete="off" step="0.01" min="1.01" placeholder="3.25" value="${l.odd}" data-psi="${i}" data-psf="odd"><input type="text" inputmode="decimal" autocomplete="off" step="0.01" min="0" placeholder="30" value="${l.stake}" data-psi="${i}" data-psf="stake"><span class="ps-ret" id="psRet${i}">${ret}</span><button class="bd" data-psdel="${i}" ${psForm.length<=2?'disabled style="opacity:.3"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`;
   }).join('');
   renderPsSum();
 }
@@ -8885,9 +8891,9 @@ function renderCalcTab(tab){
   if(tab==='kelly'){
     body.innerHTML=`
       <div style="display:flex;flex-direction:column;gap:13px;max-width:420px">
-        <div><label class="fl">Decimal odds</label><input type="number" id="k-odds" placeholder="E.g. 2.00" min="1.01" step="0.01"></div>
-        <div><label class="fl">Estimated probability of winning</label><div class="iw"><input type="number" class="ii" id="k-prob" placeholder="E.g. 55" min="0.1" max="99.9" step="0.1"><span class="isuf">%</span></div></div>
-        <div><label class="fl">Total bankroll</label><div class="iw"><input type="number" class="ii" id="k-bankroll" placeholder="E.g. 1000" min="0" step="1"><span class="isuf">€</span></div></div>
+        <div><label class="fl">Decimal odds</label><input type="text" inputmode="decimal" autocomplete="off" id="k-odds" placeholder="E.g. 2.00" min="1.01" step="0.01"></div>
+        <div><label class="fl">Estimated probability of winning</label><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="k-prob" placeholder="E.g. 55" min="0.1" max="99.9" step="0.1"><span class="isuf">%</span></div></div>
+        <div><label class="fl">Total bankroll</label><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="k-bankroll" placeholder="E.g. 1000" min="0" step="1"><span class="isuf">€</span></div></div>
         <button class="btn-reg" id="k-calc-btn">${CALC_ICON}Calculate</button>
       </div>
       <div id="k-result" style="margin-top:16px;max-width:420px"></div>`;
@@ -8908,9 +8914,9 @@ function renderCalcTab(tab){
   }else if(tab==='hedge'){
     body.innerHTML=`
       <div style="display:flex;flex-direction:column;gap:13px;max-width:420px">
-        <div><label class="fl">Original bet amount</label><div class="iw"><input type="number" class="ii" id="h-stake" placeholder="E.g. 50" min="0" step="0.01"><span class="isuf">€</span></div></div>
-        <div><label class="fl">Original odds</label><input type="number" id="h-odds-orig" placeholder="E.g. 3.50" min="1.01" step="0.01"></div>
-        <div><label class="fl">Current odds of the opposite outcome</label><input type="number" id="h-odds-opp" placeholder="E.g. 1.60" min="1.01" step="0.01"></div>
+        <div><label class="fl">Original bet amount</label><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="h-stake" placeholder="E.g. 50" min="0" step="0.01"><span class="isuf">€</span></div></div>
+        <div><label class="fl">Original odds</label><input type="text" inputmode="decimal" autocomplete="off" id="h-odds-orig" placeholder="E.g. 3.50" min="1.01" step="0.01"></div>
+        <div><label class="fl">Current odds of the opposite outcome</label><input type="text" inputmode="decimal" autocomplete="off" id="h-odds-opp" placeholder="E.g. 1.60" min="1.01" step="0.01"></div>
         <button class="btn-reg" id="h-calc-btn">${CALC_ICON}Calculate</button>
       </div>
       <div id="h-result" style="margin-top:16px;max-width:420px"></div>`;
@@ -8918,8 +8924,8 @@ function renderCalcTab(tab){
   }else if(tab==='freebet'){
     body.innerHTML=`
       <div style="display:flex;flex-direction:column;gap:13px;max-width:420px">
-        <div><label class="fl">Free Bet value</label><div class="iw"><input type="number" class="ii" id="f-value" placeholder="E.g. 25" min="0" step="0.01"><span class="isuf">€</span></div></div>
-        <div><label class="fl">Bet odds</label><input type="number" id="f-odds" placeholder="E.g. 4.00" min="1.01" step="0.01"></div>
+        <div><label class="fl">Free Bet value</label><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="f-value" placeholder="E.g. 25" min="0" step="0.01"><span class="isuf">€</span></div></div>
+        <div><label class="fl">Bet odds</label><input type="text" inputmode="decimal" autocomplete="off" id="f-odds" placeholder="E.g. 4.00" min="1.01" step="0.01"></div>
         <button class="btn-reg" id="f-calc-btn">${CALC_ICON}Calculate</button>
       </div>
       <div id="f-result" style="margin-top:16px;max-width:420px"></div>`;
@@ -8977,7 +8983,7 @@ function renderNovigRowsList(){
   document.getElementById('novigRowsList').innerHTML=novigRows.map((r,idx)=>`
     <div class="dynrow">
       <input type="text" class="dyn-label" data-rid="${r.id}" placeholder="Outcome ${idx+1}" value="${esc(r.label)}">
-      <input type="number" class="oi dyn-odd" data-rid="${r.id}" placeholder="1,00" value="${r.odd}" min="1.01" step="0.01">
+      <input type="text" inputmode="decimal" autocomplete="off" class="oi dyn-odd" data-rid="${r.id}" placeholder="1,00" value="${r.odd}" min="1.01" step="0.01">
       <button class="bd dyn-remove" data-rid="${r.id}"${novigRows.length<=2?' style="opacity:.3;pointer-events:none"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
     </div>`).join('');
 }
@@ -9019,7 +9025,7 @@ function renderHoldRowsList(){
   document.getElementById('holdRowsList').innerHTML=holdRows.map((r,idx)=>`
     <div class="dynrow">
       <input type="text" class="dyn-label" data-rid="${r.id}" placeholder="Outcome ${idx+1}" value="${esc(r.label)}">
-      <input type="number" class="oi dyn-odd" data-rid="${r.id}" placeholder="1,00" value="${r.odd}" min="1.01" step="0.01">
+      <input type="text" inputmode="decimal" autocomplete="off" class="oi dyn-odd" data-rid="${r.id}" placeholder="1,00" value="${r.odd}" min="1.01" step="0.01">
       <button class="bd dyn-remove" data-rid="${r.id}"${holdRows.length<=2?' style="opacity:.3;pointer-events:none"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
     </div>`).join('');
 }
@@ -9425,7 +9431,7 @@ function nfComboOdd(){
 }
 function renderNfSels(){
   if(!nfIsCombi())return;
-  document.getElementById('nf-sels').innerHTML=nfSels.map((x,i)=>`<div class="nf-sel"><input type="text" data-seln="${i}" placeholder="Selection ${i+1}" value="${esc(x.name||'')}" autocomplete="off"><input type="number" step="0.01" min="1.01" data-selo="${i}" placeholder="Odds" value="${x.odd!==''&&x.odd!=null?x.odd:''}"><button class="bd2" data-seldel="${i}" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('');
+  document.getElementById('nf-sels').innerHTML=nfSels.map((x,i)=>`<div class="nf-sel"><input type="text" data-seln="${i}" placeholder="Selection ${i+1}" value="${esc(x.name||'')}" autocomplete="off"><input type="text" inputmode="decimal" autocomplete="off" step="0.01" min="1.01" data-selo="${i}" placeholder="Odds" value="${x.odd!==''&&x.odd!=null?x.odd:''}"><button class="bd2" data-seldel="${i}" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('');
   syncComboOdd();
 }
 function syncComboOdd(){
