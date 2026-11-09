@@ -4017,9 +4017,20 @@ function midPill(b){return b&&b.mid?MID_PILL:'';}
 // A surebet can have more legs than outcomes (e.g. 3 bookmakers, 2 outcomes: one side split in two).
 // Then every leg carries g = its outcome; legs with the same g win together.
 function legWins(b,w,i){
+  if(Array.isArray(w))return w.some(x=>legWins(b,x,i));
   if(w==='both')return !!b.mid;
   if(w===i)return true;
   const L=b.legs||[];return typeof w==='number'&&!!L[w]&&!!L[i]&&L[w].g!=null&&L[i].g===L[w].g;
+}
+// a result can also be several legs that won at once (lines that overlap: Over 9.5 + Under 14.5 aces)
+function sbHasWin(b,w){const L=b.legs||[];return typeof w==='number'?!!L[w]:Array.isArray(w)&&w.length>0&&w.every(i=>!!L[i]);}
+function markNorm(a){a=[...new Set(a)].sort((x,y)=>x-y);return a.length?(a.length===1?a[0]:a):undefined;}
+// with 3+ outcomes a tap adds / takes away a leg from the result; with 2 it switches between them
+function toggleLegMark(b,cur,li){
+  if(li==='both'||sbOutcomes(b)<3)return cur===li?undefined:li;
+  const set=Array.isArray(cur)?cur.slice():typeof cur==='number'?[cur]:[];
+  const at=set.indexOf(li);if(at>=0)set.splice(at,1);else set.push(li);
+  return markNorm(set);
 }
 function sbOutcomes(b){const L=b.legs||[];return L.some(l=>l.g!=null)?new Set(L.map((l,i)=>l.g!=null?l.g:'x'+i)).size:L.length;}
 // the worst return of the outcomes (sum of the legs of each outcome)
@@ -4030,7 +4041,7 @@ function sbMinReturn(b){
 }
 function sbResultProfit(b,w){
   if(w==='both'&&b.mid)return midBoth(b);
-  if(typeof w==='number'&&b.legs&&b.legs[w])return cents(b.legs.reduce((a,l,i)=>a+(legWins(b,w,i)?(l.minReturn||0):0),0)-(b.totalStake||0));
+  if(sbHasWin(b,w))return cents(b.legs.reduce((a,l,i)=>a+(legWins(b,w,i)?(l.minReturn||0):0),0)-(b.totalStake||0));
   return null;
 }
 
@@ -4320,7 +4331,7 @@ function applySbEd(b){
     rows.forEach((r,i)=>{const g=ks.indexOf(r.g);if(legs[i].g!==g)changed=true;legs[i].g=g;});
   }else legs.forEach(l=>{if(l.g!=null){delete l.g;changed=true;}});
   const map={};rows.forEach((r,i)=>{if(r.o>=0)map[r.o]=i;});
-  const re=v=>v==='both'?v:(v!=null&&map[v]!=null?map[v]:undefined);
+  const re=v=>v==='both'?v:Array.isArray(v)?markNorm(v.filter(x=>map[x]!=null).map(x=>map[x])):(v!=null&&map[v]!=null?map[v]:undefined);
   const shaped=rows.length!==old.length||rows.some((r,i)=>r.o!==i);
   if(resChanged)dropAutoMark(b);
   if(shaped){
@@ -4533,7 +4544,7 @@ function renderSurebets(filter=''){
     const pctCls=isVoid?'neu':(hasPct?(displayProfitPct>=0?'pos':'neg'):'neu');
     const pctLabel=hasPct?(displayProfitPct>=0?'+':'')+fmt(displayProfitPct)+' %':'—';
     const legsHtml=hasLegs?`<div class="leg-head"><span>Bookmaker</span><span>Outcome</span><span style="text-align:right">Odds</span><span style="text-align:right">Stake</span><span style="text-align:right">Return</span><span></span></div>`+
-      b.legs.map((l,li)=>`<div class="leg${legWins(b,winnerIdx,li)?' leg-winner':''}"><span class="lh">${esc(l.house)}</span><span class="lr">${legRes(l,'',true)}</span><span class="lo">${fmt(l.odd||0)}</span><span class="lk">${fmt(l.stake||0)} €</span><span class="lm">${fmt(l.minReturn||0)} €</span><button class="win-btn${winnerIdx===li?' selected':''}" data-wbid="${b.id}" data-wleg="${li}" title="Mark as the winning outcome">${winnerIdx===li?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Won`:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Won`}</button></div>`).join('')+
+      b.legs.map((l,li)=>`<div class="leg${legWins(b,winnerIdx,li)?' leg-winner':''}"><span class="lh">${esc(l.house)}</span><span class="lr">${legRes(l,'',true)}</span><span class="lo">${fmt(l.odd||0)}</span><span class="lk">${fmt(l.stake||0)} €</span><span class="lm">${fmt(l.minReturn||0)} €</span><button class="win-btn${winnerIdx===li||(Array.isArray(winnerIdx)&&winnerIdx.includes(li))?' selected':''}" data-wbid="${b.id}" data-wleg="${li}" title="Mark as the winning outcome">${winnerIdx===li?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Won`:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Won`}</button></div>`).join('')+
       (b.mid?`<div class="leg${bothWon?' leg-winner':''}"><span class="lh">Both</span><span class="lr">Middle hit${(w=>w?' · ends on '+midWindowTxt(w):'')(midWindow(b.legs))}</span><span class="lo"></span><span class="lk"></span><span class="lm">${fmt(midBoth(b)+(b.totalStake||0))} €</span><button class="win-btn${bothWon?' selected':''}" data-wbid="${b.id}" data-wleg="both" title="Both legs won (the middle hit)">${bothWon?'✓ ':''}Both</button></div>`:'')+
       (coPartOf(b)?`<div class="real-profit-row"><span class="real-profit-label">Part cashed out · ${b.legs.map((l,i)=>b.coPart[i]!=null?`${esc(l.house)} ${fmt(b.coPart[i])} €`:`${esc(l.house)} still open`).join(' · ')}</span></div>`:'')+
       (b.cashOut!=null&&!isVoid?`<div class="real-profit-row"><span class="real-profit-label">Cash out${Array.isArray(b.cashOutLegs)?' · '+b.legs.map((l,i)=>`${esc(l.house)} ${fmt(b.cashOutLegs[i]||0)} €`).join(' · '):` · ${fmt(b.cashOut)} €`}</span><span class="real-profit-val ${(b.profit||0)>=0?'':'neg'}">${(b.profit||0)>=0?'+':''}${fmt(b.profit||0)} €</span></div>`:'')+
@@ -4941,12 +4952,13 @@ document.getElementById('sbList').addEventListener('click',e=>{
     const b=D.bets.find(x=>x.id===bid);if(!b||sbResultProfit(b,li)==null)return;
     delete b.cashOut;delete b.cashOutLegs; // picking a winner replaces a cash out
     // Toggle: click same leg again to deselect
-    if(b.winnerLeg===li){
+    const v=toggleLegMark(b,b.winnerLeg,li);
+    if(v===undefined){
       delete b.winnerLeg;
       b.profit=cents(b.minReturn-(b.totalStake||0));
     } else {
-      b.winnerLeg=li;
-      b.profit=sbResultProfit(b,li);
+      b.winnerLeg=v;
+      b.profit=sbResultProfit(b,v);
     }
     save();renderSurebets(document.getElementById('sbSearch').value);renderProfit();
     return;
@@ -4985,7 +4997,7 @@ document.getElementById('sbCsv').addEventListener('click',()=>{
   head.push('Notes');
   csvDownload(`surebets_${todayLocalISO()}.csv`,head,list.map(b=>{
     const legs=b.legs||[],p=b.status==='pending'?(b.expectedProfit??b.profit??0):betProfit(b);
-    const r=[b.date||'',b.time||'',b.mid?'Middle':'Surebet',b.event||'',b.market||'',ST_LABEL[b.status]||b.status||'',b.totalStake||0,p,b.totalStake?p/b.totalStake*100:0,b.winnerLeg==='both'?'Both (middle)':b.winnerLeg!=null&&legs[b.winnerLeg]?legs[b.winnerLeg].house:''];
+    const r=[b.date||'',b.time||'',b.mid?'Middle':'Surebet',b.event||'',b.market||'',ST_LABEL[b.status]||b.status||'',b.totalStake||0,p,b.totalStake?p/b.totalStake*100:0,b.winnerLeg==='both'?'Both (middle)':sbHasWin(b,b.winnerLeg)?legs.filter((l,i)=>legWins(b,b.winnerLeg,i)).map(l=>l.house).join(' + '):''];
     for(let i=0;i<maxL;i++){const l=legs[i];r.push(l?l.house||'':'',l?l.result||'':'',l?+l.odd||0:'',l?+l.stake||0:'');}
     r.push(b.notes||'');return r;}));
 });
@@ -5710,7 +5722,7 @@ function renderPendientesInner(){
         </div>
         ${hasLegs?legsHtml:`<div class="pend-hint">No leg breakdown. <button class="pc-mk won${b.pendMark==='won'?' on':''}" data-pid="${b.id}" data-kind="sb" data-action="won">Won</button></div>`}
         ${cpp&&b.pendMark==null?`<div class="pend-hint co-part-hint">Part cashed out (${fmt(cpp.reduce((a,x)=>a+(x||0),0))} € received) — tap the open leg if it wins, or <b>Cash out</b> again to enter what it paid.</div>`:''}
-        ${b.pendMark!=null?`<div class="pend-hint pend-mk-hint"><span><b>${esc(pendMarkLabel('sb',b))}</b> — marked, not resolved yet. It stays here until you resolve it.</span>${PEND_RESOLVE('sb',b.id)}</div>`:hasLegs?`<div class="pend-hint">Tap the outcome that happened to <b>mark</b> it — then <b>Resolve</b> it once it's settled.</div>`:''}
+        ${b.pendMark!=null?`<div class="pend-hint pend-mk-hint"><span><b>${esc(pendMarkLabel('sb',b))}</b> — marked, not resolved yet. It stays here until you resolve it.</span>${PEND_RESOLVE('sb',b.id)}</div>`:hasLegs?`<div class="pend-hint">${sbOutcomes(b)>=3?'Tap every outcome that won (one or more)':'Tap the outcome that happened'} to <b>mark</b> it — then <b>Resolve</b> it once it's settled.</div>`:''}
       </div>`;
     }
     const n=item;
@@ -5829,7 +5841,7 @@ document.getElementById('co-save').addEventListener('click',()=>{
       pendUndoToast([[D.bets,item]],`${item.event||'Bet'} · cashed out ${item.legs.filter((l,i)=>!kept.includes(i)).map(l=>l.house).join(', ')} · the rest stays pending`);
       item.coPart=item.legs.map((l,i)=>kept.includes(i)?null:cents(a[i]||0));
       item.status='pending';delete item.cashOut;delete item.cashOutLegs;delete item.winnerLeg;delete item.resolveDate;
-      if(item.pendMark==='both'||typeof item.pendMark==='number'&&!kept.includes(item.pendMark))delete item.pendMark;
+      if(item.pendMark==='both'||Array.isArray(item.pendMark)||typeof item.pendMark==='number'&&!kept.includes(item.pendMark))delete item.pendMark;
       document.getElementById('cashoutModal').style.display='none';cashoutTarget=null;
       save();updateBadges();renderPendientes();renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);renderProfit();
       return;
@@ -5877,7 +5889,8 @@ function pendMarkLabel(kind,item){
   const m=item.pendMark;
   if(kind==='nm')return m==='won'?'Won':'Lost';
   if(m==='both'&&item.mid)return 'Middle hit · both won';
-  return typeof m==='number'&&item.legs&&item.legs[m]?(item.legs[m].house||'Leg '+(m+1))+' won':'Won';
+  if(sbHasWin(item,m)){const L=item.legs.map((l,i)=>i).filter(i=>legWins(item,m,i)).map(i=>item.legs[i].house||'Leg '+(i+1));return L.join(' + ')+' won';}
+  return 'Won';
 }
 // Void settles straight away, so it needs two taps on the button: the first one only arms it
 let pendArm=null; // {key, el, html, timer}
@@ -5993,7 +6006,7 @@ document.getElementById('pendList').addEventListener('click',e=>{
     dropLinkedMarks(b);
     // you changed or took back what the scores marked: the automatic check leaves this one to you
     if(b.autoRes&&!b.autoRes.via&&b.autoRes.leg===b.pendMark)b.arNo=1;
-    if(b.pendMark===li)delete b.pendMark;else b.pendMark=li;
+    {const v=toggleLegMark(b,b.pendMark,li);if(v===undefined)delete b.pendMark;else b.pendMark=v;}
     delete b.autoRes;
     const linked=b.pendMark!=null?applyLinkedMarks(b):[];
     save();renderPendientes();
@@ -6069,7 +6082,7 @@ function bookmakerLedger(keep){ // keep(item) → only count those items (e.g. o
       legs.forEach((l,i)=>{const e=g(l.house);if(e)e.settled+=(b.cashOutLegs[i]||0)-(l.stake||0);});
     }else if(b.cashOut==null&&w==='both'&&b.mid){ // a middle that hit: every leg paid
       legs.forEach(l=>{const e=g(l.house);if(e)e.settled+=(l.minReturn!=null?l.minReturn:(l.odd||0)*(l.stake||0))-(l.stake||0);});
-    }else if(b.cashOut==null&&w!=null&&legs[w]){
+    }else if(b.cashOut==null&&sbHasWin(b,w)){
       legs.forEach((l,i)=>{const e=g(l.house);if(e)e.settled+=legWins(b,w,i)?((l.minReturn!=null?l.minReturn:(l.odd||0)*(l.stake||0))-(l.stake||0)):-(l.stake||0);});
     }else{ // cash out / legacy without a winning leg: split the result by stake
       const tot=legs.reduce((a,l)=>a+(l.stake||0),0)||legs.length;
@@ -6103,7 +6116,7 @@ function houseBets(c){
       else if(st!=='won'&&st!=='lost'){res='void';pl=0;}
       else if(coLegs){res='cashout';pl=(b.cashOutLegs[i]||0)-(l.stake||0);}
       else if(b.cashOut==null&&w==='both'&&b.mid){res='won';pl=ret-(l.stake||0);}
-      else if(b.cashOut==null&&w!=null&&legs[w]){const won=legWins(b,w,i);res=won?'won':'lost';pl=won?ret-(l.stake||0):-(l.stake||0);}
+      else if(b.cashOut==null&&sbHasWin(b,w)){const won=legWins(b,w,i);res=won?'won':'lost';pl=won?ret-(l.stake||0):-(l.stake||0);}
       else{res=b.cashOut!=null?'cashout':'settled';pl=(b.profit||0)*((l.stake||(tot===legs.length?1:0))/tot);}
       rows.push({kind:b.mid?'middle':'surebet',item:b,id:'sb'+b.id+':'+i,date:b.date||'',time:b.time||'',event:b.event||'',pick:l.result||'',market:b.market||'',
         sels:l.sels&&l.sels.length?l.sels:null,odd:l.odd||0,stake:l.stake||0,free:false,res,pl:pl==null?null:+pl.toFixed(2),
