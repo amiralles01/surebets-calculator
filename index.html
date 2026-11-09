@@ -692,7 +692,13 @@ body.drag-folder-active .tr-rootdrop{display:block}
 .sbr-leg-info{font-size:12px;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sbr-leg-info b{color:var(--text);font-weight:600}
 .sbr-leg.edit{grid-template-columns:1fr 1fr 1fr;grid-template-areas:'info info info' 'house odd stake'}
-.sbr-leg.edit .sbr-leg-info,.sbr-leg.edit .sbr-leg-res{grid-area:info}
+.sbr-leg.edit .sbr-leg-info,.sbr-leg.edit .sbr-leg-res,.sbr-leg.edit .sbr-leg-top{grid-area:info}
+.sbr-leg.edit .sbr-leg-top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center}
+.sbr-leg.edit .sbr-leg-top .bd2{width:30px;height:30px}
+.sbr-leg.edit .sbr-leg-sels{grid-column:1/-1;display:flex;flex-direction:column;gap:6px}
+.sbr-leg.edit .sbr-leg-sels .cs-add{align-self:flex-start;font-size:12px;color:var(--purple);background:none;border:none;cursor:pointer;padding:2px 0;font-weight:600}
+.sbr-leg.edit .sbr-leg-new{font-size:10.5px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.04em}
+.sbr-sum{flex-wrap:wrap;gap:4px 12px}.sbr-sum b{font-family:var(--mono)}.sbr-sum b.pend-preview-pos{color:var(--green)}.sbr-sum b.pend-preview-neg{color:var(--red)}
 .sbr-leg.edit input{min-width:0}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 input[type=date],input[type=time]{width:100%;background:var(--inp);border:1px solid var(--border);border-radius:7px;
@@ -2928,7 +2934,9 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
         </div>
         <div><label class="fl">Odds</label><input type="number" id="m-odd" placeholder="1.80" step="0.01" min="1.01"></div>
       </div>
-      <div id="m-sels" class="nf-combo" style="display:none;flex-direction:column;align-items:flex-start;gap:3px"></div>
+      <label class="cb-sw" id="m-combi-sw"><input type="checkbox" id="m-combi"><span class="cb-sw-k"></span><span class="cb-sw-t"><b>Combi</b><small>several selections in one bet — their odds multiply</small></span></label>
+      <div id="m-sels-wrap" style="display:none"><label class="fl">Selections</label><div class="nf-sels" id="m-sels"></div>
+        <button class="ba" id="m-addsel" type="button" style="margin-top:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add selection</button></div>
       <div><label class="fl" id="m-stake-label">Amount staked (€)</label><input type="number" id="m-stake" placeholder="20" step="0.01" min="0"></div>
       <div id="m-preview" style="display:none;background:var(--raised);border-radius:7px;padding:8px 11px;font-size:12px;justify-content:space-between;gap:8px">
         <span>If it wins: <span class="pend-preview-pos" id="m-preview-win"></span></span>
@@ -2956,7 +2964,10 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
     <div style="display:flex;flex-direction:column;gap:11px">
       <div><label class="fl">Event</label><input type="text" id="sbr-event" placeholder="Spain vs Portugal"></div>
       <div><label class="fl">Market / line <span style="font-weight:400;color:var(--faint)">(optional — tells apart surebets of the same match)</span></label><input type="text" id="sbr-market" placeholder="E.g. Mbappé 1.5+ shots · Corners O9.5" autocomplete="off"></div>
-      <div id="sbr-legs-wrap"><label class="fl">Bookmakers</label><div class="sbr-legs" id="sbr-legs"></div></div>
+      <div id="sbr-legs-wrap"><label class="fl">Bookmakers</label><div class="sbr-legs" id="sbr-legs"></div>
+        <button class="ba" id="sbr-addleg" type="button" style="display:none;margin-top:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add outcome</button>
+        <div class="nf-combo sbr-sum" id="sbr-sum" style="display:none;margin-top:8px"></div></div>
+      <div id="sbr-kind-w" style="display:none"><label class="fl">Type</label><select id="sbr-kind"><option value="sb">Surebet</option><option value="mid">Middle</option></select></div>
       <div class="two-col">
         <div><label class="fl">Date</label><input type="date" id="sbr-start"></div>
         <div><label class="fl">Ends ~ (hour)</label><select id="sbr-time" class="hour-sel"><option value="">--</option><option value="00:00">00h</option><option value="01:00">01h</option><option value="02:00">02h</option><option value="03:00">03h</option><option value="04:00">04h</option><option value="05:00">05h</option><option value="06:00">06h</option><option value="07:00">07h</option><option value="08:00">08h</option><option value="09:00">09h</option><option value="10:00">10h</option><option value="11:00">11h</option><option value="12:00">12h</option><option value="13:00">13h</option><option value="14:00">14h</option><option value="15:00">15h</option><option value="16:00">16h</option><option value="17:00">17h</option><option value="18:00">18h</option><option value="19:00">19h</option><option value="20:00">20h</option><option value="21:00">21h</option><option value="22:00">22h</option><option value="23:00">23h</option></select></div>
@@ -4161,14 +4172,119 @@ let editingSbId=null;
 // The line of a pending bet was edited (e.g. 'Más de 9.5' → 'Más de 10.5'): a mark that
 // auto-results made from the old line no longer holds, so take it back and let it check again.
 function dropAutoMark(b){const a=b.autoRes;if(a&&b.status==='pending'&&b.pendMark===a.leg)delete b.pendMark;delete b.autoRes;}
+// ── Edit surebet: the legs being edited live in sbEd until Save, so outcomes can be added,
+// removed or turned into combis. o = the leg's index in the saved bet (-1 = a new one).
+let sbEd=null;
+function sbEdOdd(r){const v=(r.sels||[]).map(x=>parseFloat(x.odd)).filter(x=>x>1);return v.length?+v.reduce((a,x)=>a*x,1).toFixed(3):parseFloat(r.odd);}
+function sbEdCanShape(){const b=editingSbId&&D.bets.find(x=>x.id===editingSbId);return !!b&&b.status==='pending'&&b.cashOut==null;}
+function renderSbEd(focusSel){
+  const wrap=document.getElementById('sbr-legs'),shape=sbEdCanShape(),many=sbEd.length>2;
+  document.getElementById('sbr-legs-wrap').style.display='block';
+  wrap.innerHTML=sbEd.map((l,i)=>{
+    const auto=l.sels&&l.sels.some(x=>parseFloat(x.odd)>1);
+    return `<div class="sbr-leg edit" data-edi="${i}"><div class="sbr-leg-top"><div class="res-wrap"><input type="text" class="sbr-leg-res" data-legres="${i}" placeholder="${l.sels?'Combi name (optional)':`Outcome ${i+1} (e.g. Over 10.5 shots)`}" value="${esc(l.result||'')}" autocomplete="off">${shape?`<button type="button" class="cb-tg${l.sels?' on':''}" data-edcb="${i}" title="${l.sels?'Stop being a combi':'Make this leg a combi (several selections)'}" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>`:''}</div>${shape&&many?`<button type="button" class="bd2" data-eddel="${i}" title="Remove this outcome"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`:''}</div>`+
+      `<select data-legi="${i}">${houseOptionsHtml(l.house||'',`Bookmaker ${i+1}`)}</select><input type="number" step="0.01" min="1.01" data-legodd="${i}" placeholder="${l.sels?'auto':'Odds'}" value="${auto?sbEdOdd(l):(l.odd!=null&&l.odd!==''?l.odd:'')}"${auto?' readonly title="Product of the combi selections"':''}><input type="number" step="0.01" min="0" data-legstake="${i}" placeholder="Stake €" value="${l.stake!=null&&l.stake!==''?l.stake:''}">`+
+      (l.sels?`<div class="sbr-leg-sels">${l.sels.map((x,k)=>`<div class="or-cs"><input type="text" placeholder="Selection ${k+1} · e.g. Madrid win" value="${esc(x.name||'')}" data-edsn="${k}" data-edl="${i}" autocomplete="off"><input type="number" class="cs-o" placeholder="Odds" step="0.01" min="1.01" value="${x.odd!==''&&x.odd!=null?x.odd:''}" data-edso="${k}" data-edl="${i}"><button type="button" class="bd2" data-edsdel="${k}" data-edl="${i}" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('')}<button type="button" class="cs-add" data-edsadd="${i}">+ Add selection</button></div>`:'')+
+      `</div>`;}).join('');
+  document.getElementById('sbr-addleg').style.display=shape?'flex':'none';
+  if(focusSel){const f=wrap.querySelector(focusSel);if(f)f.focus();}
+  renderSbEdSum();
+}
+// live totals of what is being edited: total staked, worst return, profit
+function renderSbEdSum(){
+  const el=document.getElementById('sbr-sum');if(!sbEd){el.style.display='none';return;}
+  const legs=sbEd.map(r=>({house:r.house,odd:sbEdOdd(r),stake:parseFloat(r.stake),sels:(r.sels||[]).filter(x=>parseFloat(x.odd)>1).map(x=>({odd:+x.odd}))}));
+  if(!legs.length||legs.some(l=>!(l.odd>1)||!(l.stake>=0))){el.style.display='none';return;}
+  const tot=legs.reduce((a,l)=>a+l.stake,0),rets=legs.map(l=>cents(legPay(l)*l.stake)),min=Math.min(...rets),p=+(min-tot).toFixed(2);
+  const mid=document.getElementById('sbr-kind').value==='mid';
+  el.innerHTML=`<span>Total <b>${fmt(tot)} €</b></span><span>${mid?'One side':'Profit'} <b class="${p>=0?'pend-preview-pos':'pend-preview-neg'}">${p>=0?'+':''}${fmt(p)} €</b>${tot>0?` (${fmt(p/tot*100)}%)`:''}</span>`+(mid?`<span>Both win <b class="pend-preview-pos">+${fmt(rets.reduce((a,x)=>a+x,0)-tot)} €</b></span>`:'');
+  el.style.display='flex';
+}
 function renderSbrLegs(legs,editable){
   const wrap=document.getElementById('sbr-legs');
   document.getElementById('sbr-legs-wrap').style.display=legs.length?'block':'none';
   if(editable){
-    wrap.innerHTML=legs.map((l,i)=>`<div class="sbr-leg edit"><input type="text" class="sbr-leg-res" data-legres="${i}" placeholder="Outcome ${i+1} (e.g. Over 10.5 shots)" value="${esc(l.result||'')}" autocomplete="off"><select data-legi="${i}">${houseOptionsHtml(l.house||'',`Bookmaker ${i+1}`)}</select><input type="number" step="0.01" min="1.01" data-legodd="${i}" placeholder="Odds" value="${l.odd!=null?l.odd:''}"><input type="number" step="0.01" min="0" data-legstake="${i}" placeholder="Stake €" value="${l.stake!=null?l.stake:''}"></div>`).join('');
+    sbEd=legs.map((l,i)=>({o:i,house:l.house||'',result:l.result||'',odd:l.odd!=null?l.odd:'',stake:l.stake!=null?l.stake:'',sels:l.sels&&l.sels.length?l.sels.map(x=>({name:x.name||'',odd:x.odd!=null?x.odd:''})):null}));
+    renderSbEd();
     return;
   }
+  sbEd=null;document.getElementById('sbr-addleg').style.display='none';renderSbEdSum();
   wrap.innerHTML=legs.map((l,i)=>`<div class="sbr-leg"><div class="sbr-leg-info"><b>${legRes(l,`Outcome ${i+1}`)}</b> @ ${fmt(l.odd||0)}</div><select data-legi="${i}">${houseOptionsHtml(l.house||'',`Bookmaker ${i+1}`)}</select></div>`).join('');
+}
+document.getElementById('sbr-legs').addEventListener('input',e=>{
+  if(!sbEd)return;const t=e.target,d=t.dataset;
+  if(d.edl!=null){const r=sbEd[+d.edl];if(!r||!r.sels)return;
+    if(d.edsn!=null)r.sels[+d.edsn].name=t.value;
+    else{r.sels[+d.edso].odd=t.value;const oe=document.querySelector(`#sbr-legs [data-legodd="${d.edl}"]`);const v=sbEdOdd(r);
+      if(oe){const auto=r.sels.some(x=>parseFloat(x.odd)>1);oe.readOnly=auto;if(auto)oe.value=v;}}
+  }
+  else if(d.legres!=null)sbEd[+d.legres].result=t.value;
+  else if(d.legodd!=null)sbEd[+d.legodd].odd=t.value;
+  else if(d.legstake!=null)sbEd[+d.legstake].stake=t.value;
+  else if(d.legi!=null)sbEd[+d.legi].house=t.value;
+  renderSbEdSum();
+});
+document.getElementById('sbr-legs').addEventListener('change',e=>{if(sbEd&&e.target.dataset.legi!=null){sbEd[+e.target.dataset.legi].house=e.target.value;renderSbEdSum();}});
+document.getElementById('sbr-legs').addEventListener('click',e=>{
+  if(!sbEd)return;
+  const del=e.target.closest('[data-eddel]'),cb=e.target.closest('[data-edcb]'),sa=e.target.closest('[data-edsadd]'),sd=e.target.closest('[data-edsdel]');
+  if(!del&&!cb&&!sa&&!sd)return;
+  e.preventDefault();
+  if(del){const i=+del.dataset.eddel;if(sbEd.length<=2)return;sbEd.splice(i,1);renderSbEd();return;}
+  if(cb){const r=sbEd[+cb.dataset.edcb];
+    if(r.sels){const v=sbEdOdd(r);if(v>1)r.odd=v;r.result=r.result||r.sels.map(x=>x.name).filter(Boolean).join(' + ');r.sels=null;renderSbEd(`[data-legres="${cb.dataset.edcb}"]`);}
+    else{r.sels=[{name:r.result||'',odd:parseFloat(r.odd)>1?r.odd:''},{name:'',odd:''}];r.result='';renderSbEd(`[data-edsn="1"][data-edl="${cb.dataset.edcb}"]`);}
+    return;}
+  const li=+(sa||sd).dataset[sa?'edsadd':'edl'],r=sbEd[li];if(!r||!r.sels)return;
+  if(sa){r.sels.push({name:'',odd:''});renderSbEd(`[data-edsn="${r.sels.length-1}"][data-edl="${li}"]`);return;}
+  r.sels.splice(+sd.dataset.edsdel,1);
+  if(!r.sels.length){r.sels=null;}
+  renderSbEd();
+});
+document.getElementById('sbr-addleg').addEventListener('click',()=>{
+  if(!sbEd||!sbEdCanShape())return;
+  sbEd.push({o:-1,house:'',result:'',odd:'',stake:'',sels:null});
+  renderSbEd(`[data-legres="${sbEd.length-1}"]`);
+});
+document.getElementById('sbr-kind').addEventListener('change',renderSbEdSum);
+// Save what sbEd holds into the bet. Returns false (and says why) when something is missing.
+// Leg-indexed fields (marks, winner, partial cash out, flag) follow their leg when legs move.
+function applySbEd(b){
+  const old=b.legs||[];
+  const rows=sbEd.filter(r=>!(r.o<0&&!r.house&&!String(r.result).trim()&&!(parseFloat(r.odd)>1)&&!(parseFloat(r.stake)>0)&&!(r.sels||[]).some(x=>x.name.trim()||parseFloat(x.odd)>1)));
+  if(rows.length<2){alert('A surebet needs at least 2 outcomes.');return null;}
+  const legs=[];let changed=rows.length!==old.length||rows.some((r,i)=>r.o!==i),resChanged=false;
+  for(let i=0;i<rows.length;i++){
+    const r=rows[i],o=r.o>=0?old[r.o]:null;
+    const sels=r.sels?r.sels.filter(x=>x.name.trim()||parseFloat(x.odd)>1).map(x=>({name:x.name.trim(),odd:parseFloat(x.odd)||null})):[];
+    const odd=sbEdOdd({sels,odd:r.odd});
+    if(!(odd>1)){alert(`Outcome ${i+1}: enter the odds (more than 1).`);return null;}
+    let stake=parseFloat(r.stake);
+    if(isNaN(stake)||stake<0){if(o&&o.stake==null&&String(r.stake).trim()==='')stake=null;else{alert(`Outcome ${i+1}: enter the stake.`);return null;}}
+    const l=o?{...o}:{};
+    l.house=r.house.trim()||(o&&o.house)||`Bookmaker ${i+1}`;
+    const res=String(r.result).trim()||(sels.length?sels.map(x=>x.name||'?').join(' + '):(o&&!o.sels&&o.result)||`Outcome ${i+1}`);
+    if(!o||res!==o.result)resChanged=true;
+    l.result=res;l.odd=odd;l.stake=stake;
+    if(sels.length)l.sels=sels;else delete l.sels;
+    if(!o||o.house!==l.house||o.odd!==l.odd||o.stake!==l.stake||JSON.stringify(o.sels||null)!==JSON.stringify(l.sels||null)){changed=true;if(o&&JSON.stringify(o.sels||null)!==JSON.stringify(l.sels||null))resChanged=true;}
+    legs.push(l);
+  }
+  const map={};rows.forEach((r,i)=>{if(r.o>=0)map[r.o]=i;});
+  const re=v=>v==='both'?v:(v!=null&&map[v]!=null?map[v]:undefined);
+  const shaped=rows.length!==old.length||rows.some((r,i)=>r.o!==i);
+  if(resChanged)dropAutoMark(b);
+  if(shaped){
+    if(b.pendMark!=null){const v=re(b.pendMark);if(v===undefined)delete b.pendMark;else b.pendMark=v;}
+    if(b.winnerLeg!=null){const v=re(b.winnerLeg);if(v===undefined)delete b.winnerLeg;else b.winnerLeg=v;}
+    if(b.autoRes){const v=re(b.autoRes.leg);if(v===undefined)delete b.autoRes;else b.autoRes.leg=v;}
+    if(b.flag&&b.flag.leg!=null){const v=re(b.flag.leg);if(v===undefined)delete b.flag.leg;else b.flag.leg=v;}
+    ['coPart','cashOutLegs'].forEach(k=>{if(!Array.isArray(b[k]))return;const a=rows.map(r=>r.o>=0&&b[k][r.o]!=null?b[k][r.o]:null);if(a.some(x=>x!=null))b[k]=a;else delete b[k];});
+  }
+  b.legs=legs;
+  const mid=document.getElementById('sbr-kind').value==='mid';
+  if(!!b.mid!==mid){changed=true;if(mid)b.mid=1;else{delete b.mid;delete b.midProfit;if(b.pendMark==='both')delete b.pendMark;if(b.winnerLeg==='both')delete b.winnerLeg;}}
+  return changed;
 }
 function readSbrHouses(){return [...document.querySelectorAll('#sbr-legs [data-legi]')].map(i=>i.value.trim());}
 function openSbRegModal(){
@@ -4185,6 +4301,7 @@ function openSbRegModal(){
   document.getElementById('sbr-time').value=pf?hourOnly(pf.time):'';
   fillCategorySelect(document.getElementById('sbr-category'),pf&&newBetCat==null?pf.categoryId:newBetCat);
   document.getElementById('sbr-notes').value='';
+  document.getElementById('sbr-kind-w').style.display='none';
   document.getElementById('sbRegModal').style.display='flex';
 }
 function openSbEditModal(id){
@@ -4195,6 +4312,8 @@ function openSbEditModal(id){
   document.getElementById('sbr-save').textContent='Save changes';
   document.getElementById('sbr-event').value=b.event||'';
   document.getElementById('sbr-market').value=b.market||'';
+  document.getElementById('sbr-kind').value=b.mid?'mid':'sb';
+  document.getElementById('sbr-kind-w').style.display='block';
   renderSbrLegs(b.legs||[],true);
   document.getElementById('sbr-start').value=b.date||'';
   document.getElementById('sbr-time').value=hourOnly(b.time);
@@ -4229,10 +4348,11 @@ function registerBet(){
   newBetCat=null;sbPrefill=null;renderRepeatSel();
   toast(`Surebet saved to pending · ${res.profit>=0?'+':''}${fmt(res.profit)} €${matchWhenMsg(mw)}${unifyMsg(uw,bet)}`,'View pending',()=>navTo('pendientes'));
 }
-document.getElementById('sbr-cancel').addEventListener('click',()=>{document.getElementById('sbRegModal').style.display='none';editingSbId=null;});
+document.getElementById('sbr-cancel').addEventListener('click',()=>{document.getElementById('sbRegModal').style.display='none';editingSbId=null;sbEd=null;});
 document.getElementById('sbr-save').addEventListener('click',()=>{
   if(editingSbId){
     const b=D.bets.find(x=>x.id===editingSbId);if(!b){editingSbId=null;return;}
+    const legsChanged=sbEd?applySbEd(b):false;if(legsChanged===null)return;
     const evVal=document.getElementById('sbr-event').value.trim();
     b.event=evVal||b.event||'(No event)';
     b.market=document.getElementById('sbr-market').value.trim();
@@ -4243,18 +4363,6 @@ document.getElementById('sbr-save').addEventListener('click',()=>{
     const mw=b.status==='pending'&&was!==b.date+' '+(b.time||'')?syncMatchWhen(b):[];
     const catVal=document.getElementById('sbr-category').value;
     b.categoryId=catVal?+catVal:null;
-    const houses=readSbrHouses();
-    let legsChanged=false;
-    (b.legs||[]).forEach((l,i)=>{if(houses[i]&&houses[i]!==l.house){l.house=houses[i];legsChanged=true;}});
-    // editable odds & stakes per leg
-    (b.legs||[]).forEach((l,i)=>{
-      const oEl=document.querySelector(`#sbr-legs [data-legodd="${i}"]`),sEl=document.querySelector(`#sbr-legs [data-legstake="${i}"]`);
-      const o=oEl?parseFloat(oEl.value):NaN,st=sEl?parseFloat(sEl.value):NaN;
-      if(!isNaN(o)&&o>1&&o!==l.odd){l.odd=o;legsChanged=true;}
-      if(!isNaN(st)&&st>=0&&st!==l.stake){l.stake=st;legsChanged=true;}
-      const rEl=document.querySelector(`#sbr-legs [data-legres="${i}"]`),r=rEl?rEl.value.trim():'';
-      if(r&&r!==l.result){l.result=r;dropAutoMark(b);} // outcome / line text, e.g. "Más de 10.5 tiros"
-    });
     if(legsChanged&&b.legs&&b.legs.length&&b.cashOut==null&&b.legs.every(l=>l.stake!=null)){
       b.legs.forEach(l=>{l.minReturn=cents(legPay(l)*(l.stake||0));});
       b.totalStake=+b.legs.reduce((a,l)=>a+(l.stake||0),0).toFixed(2);
@@ -4269,7 +4377,7 @@ document.getElementById('sbr-save').addEventListener('click',()=>{
     save();updateBadges();
     renderSurebets(document.getElementById('sbSearch').value);renderProfit();renderPendientes();
     if(document.getElementById('page-categorias').style.display!=='none')renderCategorias();
-    document.getElementById('sbRegModal').style.display='none';editingSbId=null;
+    document.getElementById('sbRegModal').style.display='none';editingSbId=null;sbEd=null;
     if(mw.length)toast(`Saved · time updated on ${mw.length} other bet${mw.length>1?'s':''} of this match`,'Undo',()=>{undoMatchWhen(mw);save();renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);renderPendientes();toast('Other bets put back');});
     return;
   }
@@ -5032,10 +5140,10 @@ function openNormalModal(id){
   document.getElementById('m-house').innerHTML=houseOptionsHtml(n?(n.house||''):'','Choose bookmaker…');
   document.getElementById('m-time').value=n?hourOnly(n.time):'';
   document.getElementById('m-type').value=n&&n.type==='Freebet'?'Freebet':'Normal'; // old 'Combi' bets become Normal combis
-  {const ms=document.getElementById('m-sels'),sl=n&&isCombi(n)?n.selections||[]:[];
-    ms.style.display=n&&isCombi(n)?'flex':'none';
-    ms.innerHTML=n&&isCombi(n)?`<span><b style="font-family:inherit">Combi</b> · ${sl.length} selection${sl.length===1?'':'s'}</span>`+sl.map(x=>`<span style="color:var(--muted)">${esc(x.name||'?')}${x.odd?' @ '+fmt(x.odd):''}</span>`).join(''):'';}
+  mSels=n&&isCombi(n)?(n.selections||[]).map(x=>({name:x.name||'',odd:x.odd!=null?x.odd:''})):null;
+  if(mSels&&!mSels.length)mSels.push({name:'',odd:''},{name:'',odd:''});
   document.getElementById('m-odd').value=(n&&n.odd!=null)?n.odd:'';
+  renderMSels();
   document.getElementById('m-stake').value=(n&&n.stake!=null)?n.stake:'';
   document.getElementById('m-notes').value=n?(n.notes||''):'';
   document.getElementById('m-date').value=n?(n.date||todayISO()):todayISO();
@@ -5044,7 +5152,38 @@ function openNormalModal(id){
   updateNormalPreview();
   modal.style.display='flex';
 }
-document.getElementById('m-cancel').addEventListener('click',()=>{modal.style.display='none';editingNormalId=null;});
+// Edit bet: a combi's selections can be changed, added or removed; the odds follow their product
+let mSels=null;
+function mSelsOdd(){const v=(mSels||[]).map(x=>parseFloat(x.odd)).filter(x=>x>1);return v.length?+v.reduce((a,x)=>a*x,1).toFixed(3):0;}
+function syncMOdd(){
+  const co=mSelsOdd(),el=document.getElementById('m-odd');
+  el.readOnly=!!co;el.title=co?'Product of the combi selections':'';if(co)el.value=co;
+  updateNormalPreview();
+}
+function renderMSels(focus){
+  document.getElementById('m-combi').checked=!!mSels;
+  document.getElementById('m-sels-wrap').style.display=mSels?'block':'none';
+  document.getElementById('m-sels').innerHTML=(mSels||[]).map((x,i)=>`<div class="nf-sel"><input type="text" data-mseln="${i}" placeholder="Selection ${i+1}" value="${esc(x.name||'')}" autocomplete="off"><input type="number" step="0.01" min="1.01" data-mselo="${i}" placeholder="Odds" value="${x.odd!==''&&x.odd!=null?x.odd:''}"><button type="button" class="bd2" data-mseldel="${i}" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('');
+  if(focus!=null){const f=document.querySelector(`#m-sels [data-mseln="${focus}"]`);if(f)f.focus();}
+  syncMOdd();
+}
+document.getElementById('m-combi').addEventListener('change',e=>{
+  if(e.target.checked){const o=parseFloat(document.getElementById('m-odd').value);mSels=[{name:document.getElementById('m-pick').value.trim(),odd:o>1?o:''},{name:'',odd:''}];renderMSels(1);}
+  else{const co=mSelsOdd();mSels=null;renderMSels();if(co)document.getElementById('m-odd').value=co;}
+});
+document.getElementById('m-addsel').addEventListener('click',()=>{if(!mSels)return;mSels.push({name:'',odd:''});renderMSels(mSels.length-1);});
+document.getElementById('m-sels').addEventListener('input',e=>{
+  const d=e.target.dataset;if(!mSels)return;
+  if(d.mseln!=null)mSels[+d.mseln].name=e.target.value;
+  else if(d.mselo!=null){mSels[+d.mselo].odd=e.target.value;syncMOdd();}
+});
+document.getElementById('m-sels').addEventListener('click',e=>{
+  const b=e.target.closest('[data-mseldel]');if(!b||!mSels)return;
+  mSels.splice(+b.dataset.mseldel,1);
+  if(!mSels.length){const o=parseFloat(document.getElementById('m-odd').value);mSels=null;renderMSels();if(o>1)document.getElementById('m-odd').value=o;return;}
+  renderMSels();
+});
+document.getElementById('m-cancel').addEventListener('click',()=>{modal.style.display='none';editingNormalId=null;mSels=null;});
 document.getElementById('m-save').addEventListener('click',()=>{
   const ev=document.getElementById('m-event').value.trim();
   const type=document.getElementById('m-type').value;
@@ -5059,6 +5198,11 @@ document.getElementById('m-save').addEventListener('click',()=>{
       n.event=ev||n.event||'(Sin evento)';n.type=type;
       const pk=document.getElementById('m-pick').value.trim();
       if(pk!==(n.pick||'')){if(pk)n.pick=pk;else delete n.pick;dropAutoMark(n);}
+      if(mSels){
+        const sl=mSels.filter(x=>x.name.trim()||parseFloat(x.odd)>1).map(x=>({name:x.name.trim(),odd:parseFloat(x.odd)||null}));
+        if(JSON.stringify(sl)!==JSON.stringify(n.selections||[]))dropAutoMark(n);
+        if(sl.length)n.selections=sl;else delete n.selections;
+      }else if(isCombi(n)){delete n.selections;dropAutoMark(n);}
       if(!isNaN(oddIn)&&oddIn>0)n.odd=oddIn;
       if(!isNaN(stakeIn)&&stakeIn>0)n.stake=stakeIn;
       n.house=document.getElementById('m-house').value.trim(); // before the payout: fractional odds depend on the bookmaker
@@ -5093,7 +5237,7 @@ document.getElementById('m-save').addEventListener('click',()=>{
   save();updateBadges();
   renderNormals(document.getElementById('nbSearch').value);renderProfit();renderPendientes();
   if(document.getElementById('page-categorias').style.display!=='none')renderCategorias();
-  modal.style.display='none';editingNormalId=null;
+  modal.style.display='none';editingNormalId=null;mSels=null;
   if(mw.length)toast(`Saved${matchWhenMsg(mw)}`,'Undo',()=>{undoMatchWhen(mw);save();renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);renderPendientes();toast('Other bets put back');});
 });
 
