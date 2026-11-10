@@ -1027,6 +1027,9 @@ input[type=checkbox]{accent-color:var(--accent)}
 .tp-normal{background:var(--cdim);color:var(--cyan);border-color:rgba(47,104,168,.28)}
 .tp-freebet{background:var(--ydim);color:var(--yellow);border-color:rgba(244,197,61,.3)}
 .tp-combi{background:var(--pdim);color:var(--purple);border-color:rgba(138,74,140,.3)}
+.tp-fun{background:rgba(232,93,160,.12);color:#E85DA0;border:1px solid rgba(232,93,160,.35)}
+.cb-sw.fun-sw input:checked+.cb-sw-k{background:rgba(232,93,160,.14);border-color:#E85DA0}.cb-sw.fun-sw input:checked+.cb-sw-k::after{background:#E85DA0}.cb-sw.fun-sw:has(input:checked){border-color:rgba(232,93,160,.5)}
+.pd-chip.fun.active{border-color:#E85DA0;color:#E85DA0}
 .type-badge-kind{background:var(--raised);color:var(--muted);border-color:var(--border2)}
 .ss,.ns{-webkit-appearance:none;appearance:none;border-radius:99px;padding:5px 28px 5px 12px;font-size:12.5px;font-weight:600;min-height:30px;
   background-color:var(--raised);border:1px solid var(--border2);color:var(--text);background-position:right 10px center}
@@ -2541,6 +2544,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
               <div><label class="fl">Bookmaker</label><select id="nf-house"><option value="">Choose bookmaker…</option></select></div>
               <div id="nf-cat-w"><label class="fl">Category (optional)</label><select id="nf-category"><option value="">No category</option></select></div>
             </div>
+            <label class="cb-sw fun-sw" id="nf-fun-sw"><input type="checkbox" id="nf-fun"><span class="cb-sw-k"></span><span class="cb-sw-t"><b>Funbet</b><small>a bet you place just because — kept apart from your opportunity bets</small></span></label>
             <label class="cb-sw" id="nf-combi-sw"><input type="checkbox" id="nf-combi"><span class="cb-sw-k"></span><span class="cb-sw-t"><b>Combi</b><small>several selections in one bet — their odds multiply</small></span></label>
             <div id="nf-sels-wrap" style="display:none">
               <label class="fl">Selections</label>
@@ -2801,6 +2805,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
             <div class="cat-chip" data-typef="middle">Middles</div>
             <div class="cat-chip" data-typef="normal">Normal</div>
             <div class="cat-chip" data-typef="freebet">Freebets</div>
+            <div class="cat-chip" data-typef="fun">Funbets</div>
             <button class="btn-s" id="catAddBetBtn" style="margin-left:auto">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Add bet
@@ -2936,6 +2941,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
         </div>
         <div><label class="fl">Odds</label><input type="text" inputmode="decimal" autocomplete="off" id="m-odd" placeholder="1.80" step="0.01" min="1.01"></div>
       </div>
+      <label class="cb-sw fun-sw" id="m-fun-sw"><input type="checkbox" id="m-fun"><span class="cb-sw-k"></span><span class="cb-sw-t"><b>Funbet</b><small>a bet you place just because — kept apart from your opportunity bets</small></span></label>
       <label class="cb-sw" id="m-combi-sw"><input type="checkbox" id="m-combi"><span class="cb-sw-k"></span><span class="cb-sw-t"><b>Combi</b><small>several selections in one bet — their odds multiply</small></span></label>
       <div id="m-sels-wrap" style="display:none"><label class="fl">Selections</label><div class="nf-sels" id="m-sels"></div>
         <button class="ba" id="m-addsel" type="button" style="margin-top:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add selection</button></div>
@@ -4466,23 +4472,27 @@ function renderBetsDays(){
   const el=document.getElementById('betsDays');if(!el)return;
   const sb=document.querySelector('#betsTabs .seg-b.active')?.dataset.bview!=='normales';
   const src=sb?visibleBets():visibleNormals();
-  const cnt=k=>{const keep=betsDay;betsDay=k;const n=src.filter(x=>betsDayMatch(x.date)&&(!betsFlag||flagOf(x))).length;betsDay=keep;return n;};
+  const cnt=k=>{const keep=betsDay;betsDay=k;const n=src.filter(x=>betsDayMatch(x.date)&&(!betsFlag||flagOf(x))&&(sb||betsFunMatch(x))).length;betsDay=keep;return n;};
+  const fuN=k=>src.filter(x=>betsDayMatch(x.date)&&(!betsFlag||flagOf(x))&&(k==='fun')===isFun(x)).length;
   const flN=src.filter(x=>betsDayMatch(x.date)&&flagOf(x)).length,flAny=betsFlag||src.some(x=>flagOf(x));
   const chip=(k,l)=>`<button class="pd-chip${betsDay===k?' active':''}" data-bday="${k}">${l} <span class="pd-n">${cnt(k)}</span></button>`;
   const custom=/^\d{4}-\d{2}-\d{2}$/.test(betsDay);
   el.innerHTML=chip('all','All')+chip('today','Today')+chip('yesterday','Yesterday')+chip('week','Last 7 days')+
     (custom?chip(betsDay,pendDayLabel(betsDay)):'')+
     `<label class="pd-pick" title="Pick any day"><input type="date" id="betsDayPick" value="${custom?betsDay:''}"></label>`+
-    (flAny?`<span class="pd-sep"></span><button class="pd-chip flg${betsFlag?' active':''}" data-bflag title="Only the bets you flagged">${FLAG_IC}Flagged <span class="pd-n">${flN}</span></button>`:'');
+    (flAny?`<span class="pd-sep"></span><button class="pd-chip flg${betsFlag?' active':''}" data-bflag title="Only the bets you flagged">${FLAG_IC}Flagged <span class="pd-n">${flN}</span></button>`:'')+
+    (sb?'':`<span class="pd-sep"></span><button class="pd-chip${betsFun==='opp'?' active':''}" data-bfun="opp" title="Bets you placed because the opportunity came up">Opportunity <span class="pd-n">${fuN('opp')}</span></button><button class="pd-chip fun${betsFun==='fun'?' active':''}" data-bfun="fun" title="Bets you placed just because">Funbets <span class="pd-n">${fuN('fun')}</span></button>`);
 }
 function rerenderBets(){renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);}
 let betsFlag=false; // My bets: only flagged ones
+let betsFun='all'; // My bets (normal tab): all | opp (opportunity bets) | fun (funbets)
+function betsFunMatch(x){return betsFun==='all'||(betsFun==='fun')===isFun(x);}
 function showFlaggedBets(){
   betsFlag=true;betsDay='all';
   const sbN=visibleBets().filter(b=>b.status!=='pending'&&flagOf(b)).length;
   navTo(sbN||!visibleNormals().some(n=>flagOf(n))?'surebets':'normales');
 }
-document.getElementById('betsDays').addEventListener('click',e=>{if(e.target.closest('[data-bflag]')){betsFlag=!betsFlag;rerenderBets();return;}const c=e.target.closest('[data-bday]');if(!c)return;betsDay=c.dataset.bday;rerenderBets();});
+document.getElementById('betsDays').addEventListener('click',e=>{if(e.target.closest('[data-bflag]')){betsFlag=!betsFlag;rerenderBets();return;}{const f=e.target.closest('[data-bfun]');if(f){betsFun=betsFun===f.dataset.bfun?'all':f.dataset.bfun;rerenderBets();return;}}const c=e.target.closest('[data-bday]');if(!c)return;betsDay=c.dataset.bday;rerenderBets();});
 document.getElementById('betsDays').addEventListener('change',e=>{if(e.target.id!=='betsDayPick')return;betsDay=e.target.value||'all';rerenderBets();});
 // My bets lists only build what's on screen: a page of cards at a time (more load as you
 // scroll), and nothing at all while the list is hidden — it is rebuilt when you open it.
@@ -4493,7 +4503,7 @@ function betsListShown(sub){
   return !!p&&p.style.display!=='none'&&!!s&&s.style.display!=='none';
 }
 function betsPageOf(kind,filter,list){
-  const k=filter+'|'+betsDay+'|'+betsFlag;if(betsLimitKey[kind]!==k){betsLimitKey[kind]=k;betsLimit[kind]=BETS_PAGE;}
+  const k=filter+'|'+betsDay+'|'+betsFlag+'|'+betsFun;if(betsLimitKey[kind]!==k){betsLimitKey[kind]=k;betsLimit[kind]=BETS_PAGE;}
   return list.slice(0,betsLimit[kind]);
 }
 function betsMoreHtml(kind,total,shown){
@@ -4561,25 +4571,29 @@ function renderSurebets(filter=''){
 function typePill(t){
   if(t==='Freebet')return`<span class="type-pill tp-freebet">Freebet</span>`;
   if(t==='Combi')return`<span class="type-pill tp-combi">Combi</span>`;
+  if(t==='Fun')return`<span class="type-pill tp-fun">Funbet</span>`;
   return`<span class="type-pill tp-normal">Normal</span>`;
 }
 // a normal / freebet, plus a Combi pill when it's an accumulator (old 'Combi' bets show as Normal · Combi)
-function nmPill(n){return typePill(n.type==='Freebet'?'Freebet':'Normal')+(isCombi(n)?typePill('Combi'):'');}
+function nmPill(n){return typePill(n.type==='Freebet'?'Freebet':'Normal')+(isCombi(n)?typePill('Combi'):'')+(isFun(n)?typePill('Fun'):'');}
+// Funbets: bets placed just because. Every other bet (all the old ones too) counts as an 'Opportunity' bet.
+function isFun(x){return !!(x&&x.fun);}
+function nmCat(n){return isFun(n)?'fun':n.type==='Freebet'?'freebet':'normal';}
 function houseTag(h){return h?`<span>${esc(h)}</span>`:'';}
 function renderNormals(filter=''){
   if(!betsListShown('page-normales'))return;
-  const items=D.normals.filter(n=>betsDayMatch(n.date)&&(!betsFlag||flagOf(n))).filter(n=>!filter||n.event.toLowerCase().includes(filter.toLowerCase()));
-  const vNorm=visibleNormals().filter(n=>betsDayMatch(n.date));
+  const items=D.normals.filter(n=>betsDayMatch(n.date)&&(!betsFlag||flagOf(n))&&betsFunMatch(n)).filter(n=>!filter||n.event.toLowerCase().includes(filter.toLowerCase()));
+  const vNorm=visibleNormals().filter(n=>betsDayMatch(n.date)&&betsFunMatch(n));
   renderBetsDays();
   const pendCount=vNorm.filter(n=>n.status==='pending').length;
-  const freebets=vNorm.filter(n=>n.type==='Freebet');
-  const fbProfit=freebets.reduce((a,n)=>a+(n.profit||0),0);
-  const normProfit=vNorm.filter(n=>n.type!=='Freebet').reduce((a,n)=>a+(n.profit||0),0);
+  const catSum=c=>vNorm.filter(n=>nmCat(n)===c).reduce((a,n)=>a+(n.profit||0),0);
+  const fbProfit=catSum('freebet'),normProfit=catSum('normal'),funProfit=catSum('fun'),funN=vNorm.filter(isFun).length;
   document.getElementById('nbStats').innerHTML=`
     <div class="sc"><div class="sl2">Total entries</div><div class="sv2">${vNorm.length}</div></div>
     <div class="sc"><div class="sl2">Pending</div><div class="sv2 yel">${pendCount}</div></div>
     <div class="sc"><div class="sl2">Normal bet profit</div><div class="sv2 ${normProfit>=0?'pos':'neg'}">${normProfit>=0?'+':''}${fmt(normProfit)} €</div></div>
-    <div class="sc"><div class="sl2">Freebet profit</div><div class="sv2 ${fbProfit>=0?'pos':'neg'}">${fbProfit>=0?'+':''}${fmt(fbProfit)} €</div></div>`;
+    <div class="sc"><div class="sl2">Freebet profit</div><div class="sv2 ${fbProfit>=0?'pos':'neg'}">${fbProfit>=0?'+':''}${fmt(fbProfit)} €</div></div>
+    ${funN?`<div class="sc"><div class="sl2">Funbet profit · ${funN}</div><div class="sv2 ${funProfit>=0?'pos':'neg'}">${funProfit>=0?'+':''}${fmt(funProfit)} €</div></div>`:''}`;
   const list=document.getElementById('nbList');
   const visible=items.filter(n=>!isHidden('nm:'+n.id));
   const hidden=items.filter(n=>isHidden('nm:'+n.id));
@@ -4622,7 +4636,7 @@ function renderProfitRange(all){
   if(from&&to&&from>to){box.innerHTML=`<div style="font-size:12.5px;color:var(--red)">The start date must be before the end date.</div>`;return;}
   const sel=profitRangeEntries.filter(e=>!isHidden('month:'+e.date.slice(0,7))&&(!from||e.date>=from)&&(!to||e.date<=to));
   const sum=c=>sel.filter(e=>e.cat===c).reduce((a,e)=>a+e.profit,0);
-  const sb=sum('surebet'),md=sum('middle'),nm=sum('normal'),fb=sum('freebet'),adj=sum('adjust'),cst=sum('cost'),exp=sum('expense'),sw=sum('software'),tot=sb+md+nm+fb+adj+cst+exp+sw;
+  const sb=sum('surebet'),md=sum('middle'),nm=sum('normal'),fb=sum('freebet'),fu=sum('fun'),adj=sum('adjust'),cst=sum('cost'),exp=sum('expense'),sw=sum('software'),tot=sb+md+nm+fb+fu+adj+cst+exp+sw;
   const sg=v=>(v>=0?'+':'')+fmt(v)+' €';
   const label=from&&to?`${fmtDate(from)} → ${fmtDate(to)}`:(from?`From ${fmtDate(from)}`:`Until ${fmtDate(to)}`);
   box.innerHTML=`<div class="total-hero" style="margin:0">
@@ -4633,6 +4647,7 @@ function renderProfitRange(all){
       ${md?`<div class="th-sub-item"><div class="th-sub-label">Middles</div><div class="th-sub-val" style="color:${md>=0?'#B8621B':'var(--red)'}">${sg(md)}</div></div>`:''}
       <div class="th-sub-item"><div class="th-sub-label">Normal</div><div class="th-sub-val" style="color:${nm>=0?'var(--blue)':'var(--red)'}">${sg(nm)}</div></div>
       <div class="th-sub-item"><div class="th-sub-label">Freebets</div><div class="th-sub-val" style="color:var(--yellow)">${sg(fb)}</div></div>
+      ${fu?`<div class="th-sub-item"><div class="th-sub-label">Funbets</div><div class="th-sub-val" style="color:${fu>=0?'#E85DA0':'var(--red)'}">${sg(fu)}</div></div>`:''}
       ${exp?`<div class="th-sub-item"><div class="th-sub-label">Bank expenses</div><div class="th-sub-val">${sg(exp)}</div></div>`:''}
       ${cst?`<div class="th-sub-item"><div class="th-sub-label">Monthly costs</div><div class="th-sub-val" style="color:var(--red)">${sg(cst)}</div></div>`:''}
       ${sw?`<div class="th-sub-item"><div class="th-sub-label">Software</div><div class="th-sub-val" style="color:var(--red)">${sg(sw)}</div></div>`:''}
@@ -4712,7 +4727,7 @@ function bankrollCardHtml(all){
   const pre=preAll.reduce((a,e)=>a+e.profit,0),preSw=preAll.filter(e=>e.cat==='software').reduce((a,e)=>a+e.profit,0);
   const since=all.filter(e=>e.date>=t.from&&!isHidden('month:'+e.date.slice(0,7)));
   const cat=c=>since.filter(e=>e.cat===c).reduce((a,e)=>a+e.profit,0);
-  const bets=cat('surebet')+cat('middle')+cat('normal')+cat('freebet'),corr=cat('adjust'),exp=cat('expense'),cost=cat('cost'),sw=cat('software');
+  const bets=cat('surebet')+cat('middle')+cat('normal')+cat('freebet')+cat('fun'),corr=cat('adjust'),exp=cat('expense'),cost=cat('cost'),sw=cat('software');
   const sinceSum=Math.round(since.reduce((a,e)=>a+e.profit,0)*100)/100+0,total=Math.round((pre+sinceSum)*100)/100+0;
   const br=bankrollSummary();const now=br.bankroll+br.inTransit;
   const c2=x=>Math.round(x*100)/100+0;
@@ -4796,7 +4811,7 @@ function renderProfit(){
   // Combine all entries with dates
   const all=[];
   visibleBets().forEach(b=>{const rd=b.date||b.resolveDate;if(rd&&b.profit!==undefined)all.push({date:rd,profit:betProfit(b),cat:b.mid?'middle':'surebet'})});
-  visibleNormals().forEach(n=>{const rd=n.date||n.resolveDate;if(rd&&n.profit!==undefined&&n.profit!==0)all.push({date:rd,profit:n.profit,cat:n.type==='Freebet'?'freebet':'normal'})});
+  visibleNormals().forEach(n=>{const rd=n.date||n.resolveDate;if(rd&&n.profit!==undefined&&n.profit!==0)all.push({date:rd,profit:n.profit,cat:nmCat(n)})});
   trackedCosts().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'cost'}));
   softwareCharges().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'software'}));
   migrateBanks();ensureAdjLogs();
@@ -4807,14 +4822,14 @@ function renderProfit(){
   const months={};
   all.forEach(e=>{
     const m=e.date.slice(0,7);
-    if(!months[m])months[m]={surebet:0,middle:0,normal:0,freebet:0,adjust:0,cost:0,expense:0,software:0};
+    if(!months[m])months[m]={surebet:0,middle:0,normal:0,freebet:0,fun:0,adjust:0,cost:0,expense:0,software:0};
     months[m][e.cat]+=e.profit;
   });
 
   const keys=Object.keys(months).sort();
   const visibleKeys=keys.filter(k=>!isHidden('month:'+k));
   const hiddenKeys=keys.filter(k=>isHidden('month:'+k));
-  const totalAll=visibleKeys.reduce((a,k)=>a+months[k].surebet+months[k].middle+months[k].normal+months[k].freebet+months[k].adjust+months[k].cost+months[k].expense+months[k].software,0);
+  const totalAll=visibleKeys.reduce((a,k)=>a+months[k].surebet+months[k].middle+months[k].normal+months[k].freebet+months[k].fun+months[k].adjust+months[k].cost+months[k].expense+months[k].software,0);
   const totalSw=visibleKeys.reduce((a,k)=>a+months[k].software,0);
   const totalExp=visibleKeys.reduce((a,k)=>a+months[k].expense,0);
   const totalCost=visibleKeys.reduce((a,k)=>a+months[k].cost,0);
@@ -4823,6 +4838,7 @@ function renderProfit(){
   const totalMid=visibleKeys.reduce((a,k)=>a+months[k].middle,0);
   const totalNorm=visibleKeys.reduce((a,k)=>a+months[k].normal,0);
   const totalFB=visibleKeys.reduce((a,k)=>a+months[k].freebet,0);
+  const totalFun=visibleKeys.reduce((a,k)=>a+months[k].fun,0),hasFun=visibleNormals().some(isFun);
 
   function mName(k){const[y,mo]=k.split('-');return `${MONTH_NAMES_EN[+mo-1]} ${y}`;}
 
@@ -4836,6 +4852,7 @@ function renderProfit(){
         ${totalMid?`<div class="th-sub-item"><div class="th-sub-label">Middles</div><div class="th-sub-val" style="color:${totalMid>=0?'#B8621B':'var(--red)'}">${totalMid>=0?'+':''}${fmt(totalMid)} €</div></div>`:''}
         <div class="th-sub-item"><div class="th-sub-label">Normal</div><div class="th-sub-val" style="color:${totalNorm>=0?'var(--blue)':'var(--red)'}">${totalNorm>=0?'+':''}${fmt(totalNorm)} €</div></div>
         <div class="th-sub-item"><div class="th-sub-label">Freebets</div><div class="th-sub-val" style="color:var(--yellow)">${totalFB>=0?'+':''}${fmt(totalFB)} €</div></div>
+        ${hasFun?`<div class="th-sub-item"><div class="th-sub-label">Funbets</div><div class="th-sub-val" style="color:${totalFun>=0?'#E85DA0':'var(--red)'}">${totalFun>=0?'+':''}${fmt(totalFun)} €</div></div>`:''}
         ${totalExp?`<div class="th-sub-item"><div class="th-sub-label">Bank expenses</div><div class="th-sub-val" style="color:var(--red)">${fmt(totalExp)} €</div></div>`:''}
         ${totalCost?`<div class="th-sub-item"><div class="th-sub-label">Monthly costs</div><div class="th-sub-val" style="color:var(--red)">${fmt(totalCost)} €</div></div>`:''}
         ${totalSw?`<div class="th-sub-item"><div class="th-sub-label">Software</div><div class="th-sub-val" style="color:var(--red)">${fmt(totalSw)} €</div></div>`:''}
@@ -4848,13 +4865,14 @@ function renderProfit(){
   const hiddenKeysDesc=[...hiddenKeys].reverse();
 
   document.getElementById('monthList').innerHTML=visibleKeysDesc.map(k=>{
-    const m=months[k];const tot=m.surebet+m.middle+m.normal+m.freebet+m.adjust+m.cost+m.expense+m.software;
+    const m=months[k];const tot=m.surebet+m.middle+m.normal+m.freebet+m.fun+m.adjust+m.cost+m.expense+m.software;
     return`<div class="month-card">
       <div class="mc-head"><span class="mc-month">${mName(k)}</span><div style="display:flex;align-items:center;gap:6px"><span class="mc-total ${tot>=0?'pos':'neg'}">${tot>=0?'+':''}${fmt(tot)} €</span>${hideBtnHtml('month:'+k)}</div></div>
       ${m.surebet!==0?`<div class="mc-row"><span class="mc-cat">Surebets</span><span class="mc-val ${m.surebet>=0?'pos':'neg'}">${m.surebet>=0?'+':''}${fmt(m.surebet)} €</span></div>`:''}
       ${m.middle!==0?`<div class="mc-row"><span class="mc-cat">Middles</span><span class="mc-val ${m.middle>=0?'pos':'neg'}">${m.middle>=0?'+':''}${fmt(m.middle)} €</span></div>`:''}
       ${m.normal!==0?`<div class="mc-row"><span class="mc-cat">Normal</span><span class="mc-val ${m.normal>=0?'pos':'neg'}">${m.normal>=0?'+':''}${fmt(m.normal)} €</span></div>`:''}
       ${m.freebet!==0?`<div class="mc-row"><span class="mc-cat">Freebets</span><span class="mc-val ${m.freebet>=0?'pos':'neg'}">${m.freebet>=0?'+':''}${fmt(m.freebet)} €</span></div>`:''}
+      ${m.fun!==0?`<div class="mc-row"><span class="mc-cat">Funbets</span><span class="mc-val ${m.fun>=0?'pos':'neg'}">${m.fun>=0?'+':''}${fmt(m.fun)} €</span></div>`:''}
       ${m.expense!==0?`<div class="mc-row"><span class="mc-cat">Bank expenses</span><span class="mc-val neg">${fmt(m.expense)} €</span></div>`:''}
       ${m.cost!==0?`<div class="mc-row"><span class="mc-cat">Monthly costs</span><span class="mc-val neg">${fmt(m.cost)} €</span></div>`:''}
       ${m.software!==0?`<div class="mc-row"><span class="mc-cat">Software</span><span class="mc-val neg">${fmt(m.software)} €</span></div>`:''}
@@ -5002,10 +5020,10 @@ document.getElementById('sbCsv').addEventListener('click',()=>{
     r.push(b.notes||'');return r;}));
 });
 document.getElementById('nbCsv').addEventListener('click',()=>{
-  const list=visibleNormals().filter(n=>betsDayMatch(n.date)).sort((a,b)=>(a.date||'').localeCompare(b.date||'')||a.id-b.id);
+  const list=visibleNormals().filter(n=>betsDayMatch(n.date)&&betsFunMatch(n)).sort((a,b)=>(a.date||'').localeCompare(b.date||'')||a.id-b.id);
   if(!list.length){toast('No bets to export');return;}
-  csvDownload(`bets_${todayLocalISO()}.csv`,['Date','Time','Type','Event','Bookmaker','Odds','Stake','Status','Profit','Notes'],
-    list.map(n=>[n.date||'',n.time||'',n.type||'Normal',n.event||'',n.house||'',+n.odd||0,+n.stake||0,ST_LABEL[n.status]||n.status||'',n.status==='pending'?'':(n.profit||0),n.notes||'']));
+  csvDownload(`bets_${todayLocalISO()}.csv`,['Date','Time','Type','Tag','Event','Bookmaker','Odds','Stake','Status','Profit','Notes'],
+    list.map(n=>[n.date||'',n.time||'',n.type||'Normal',isFun(n)?'Funbet':'Opportunity',n.event||'',n.house||'',+n.odd||0,+n.stake||0,ST_LABEL[n.status]||n.status||'',n.status==='pending'?'':(n.profit||0),n.notes||'']));
 });
 document.getElementById('sbExport').addEventListener('click',()=>{
   const blob=new Blob([JSON.stringify({bets:D.bets},null,2)],{type:'application/json'});
@@ -5201,6 +5219,7 @@ function openNormalModal(id){
   document.getElementById('m-house').innerHTML=houseOptionsHtml(n?(n.house||''):'','Choose bookmaker…');
   document.getElementById('m-time').value=n?hourOnly(n.time):'';
   document.getElementById('m-type').value=n&&n.type==='Freebet'?'Freebet':'Normal'; // old 'Combi' bets become Normal combis
+  document.getElementById('m-fun').checked=isFun(n);
   mSels=n&&isCombi(n)?(n.selections||[]).map(x=>({name:x.name||'',odd:x.odd!=null?x.odd:''})):null;
   if(mSels&&!mSels.length)mSels.push({name:'',odd:''},{name:'',odd:''});
   document.getElementById('m-odd').value=(n&&n.odd!=null)?n.odd:'';
@@ -5257,6 +5276,7 @@ document.getElementById('m-save').addEventListener('click',()=>{
     const n=D.normals.find(x=>x.id===editingNormalId);
     if(n){
       n.event=ev||n.event||'(Sin evento)';n.type=type;
+      if(document.getElementById('m-fun').checked)n.fun=1;else delete n.fun;
       const pk=document.getElementById('m-pick').value.trim();
       if(pk!==(n.pick||'')){if(pk)n.pick=pk;else delete n.pick;dropAutoMark(n);}
       if(mSels){
@@ -6105,7 +6125,7 @@ function houseBets(c){
     if(bkKey((n.house||'').trim())!==key)return;
     const st=n.status;
     const res=st==='pending'?'pending':st==='anulada'?'void':n.cashOut!=null&&(st==='won'||st==='lost')?'cashout':st==='won'?'won':st==='lost'?'lost':'void';
-    rows.push({kind:n.type==='Freebet'?'freebet':'normal',item:n,id:'nm'+n.id,date:n.date||'',time:n.time||'',event:n.event||'',pick:n.pick||'',
+    rows.push({kind:nmCat(n),item:n,id:'nm'+n.id,date:n.date||'',time:n.time||'',event:n.event||'',pick:n.pick||'',
       sels:isCombi(n)?(n.selections||[]):null,odd:n.odd||0,stake:n.stake||0,free:n.type==='Freebet',res,fk:'nm',flag:flagOf(n),
       pl:st==='won'||st==='lost'?+(n.profit||0):st==='pending'?null:0});
   });
@@ -6135,7 +6155,7 @@ function houseBets(c){
 let bkBetsRes='all',bkBetsKind='all',bkBetsN=40,bkBetsFlag=false;
 const BK_RES_LABEL={won:'Won',lost:'Lost',pending:'Pending',void:'Void',cashout:'Cash out',settled:'Settled'};
 const BK_RES_CLS={won:'sw',lost:'sl3',pending:'sp',void:'sa',cashout:'sa',settled:'sa'};
-const BK_KIND_LABEL={normal:'Normal',freebet:'Freebet',surebet:'Surebet',middle:'Middle'};
+const BK_KIND_LABEL={normal:'Normal',freebet:'Freebet',fun:'Funbet',surebet:'Surebet',middle:'Middle'};
 function bkBetsPanelHtml(c){
   const all=houseBets(c);
   if(!all.length)return `<div class="bk-panel"><div class="bk-panel-title">Bets at ${esc(c.name)}</div><div class="bk-hist-empty">No bets placed at ${esc(c.name)} yet.</div></div>`;
@@ -6144,7 +6164,7 @@ function bkBetsPanelHtml(c){
   const net=+settled.reduce((a,x)=>a+x.pl,0).toFixed(2);
   const staked=+all.filter(x=>!x.free&&x.res!=='void').reduce((a,x)=>a+x.stake,0).toFixed(2);
   const inPlay=+all.filter(x=>x.res==='pending'&&!x.free).reduce((a,x)=>a+x.stake,0).toFixed(2);
-  const kinds=['normal','freebet','surebet','middle'].filter(k=>all.some(x=>x.kind===k));
+  const kinds=['normal','freebet','fun','surebet','middle'].filter(k=>all.some(x=>x.kind===k));
   if(bkBetsKind!=='all'&&!kinds.includes(bkBetsKind))bkBetsKind='all';
   const flN=all.filter(x=>x.flag).length;if(!flN)bkBetsFlag=false;
   const byKind=all.filter(x=>(bkBetsKind==='all'||x.kind===bkBetsKind)&&(!bkBetsFlag||x.flag));
@@ -6158,7 +6178,7 @@ function bkBetsPanelHtml(c){
   const kindChips=kinds.length>1||flN?`<div class="bkb-chips">${kinds.length>1?[chip('kind','all','All types')].concat(kinds.map(k=>chip('kind',k,BK_KIND_LABEL[k]))).join(''):''}${flChip}</div>`:'';
   const page=shown.slice(0,bkBetsN);
   const rowsHtml=page.map(x=>{
-    const pill=x.kind==='middle'?`<span class="type-pill tp-mid">Middle</span>`:x.kind==='surebet'?`<span class="type-pill tp-sb">Surebet</span>`:typePill(x.free?'Freebet':'Normal')+(x.sels?typePill('Combi'):'');
+    const pill=x.kind==='middle'?`<span class="type-pill tp-mid">Middle</span>`:x.kind==='surebet'?`<span class="type-pill tp-sb">Surebet</span>`:typePill(x.free?'Freebet':'Normal')+(x.sels?typePill('Combi'):'')+(x.kind==='fun'?typePill('Fun'):'');
     const pick=x.sels?x.sels.map(s=>esc(s.name||'?')+(s.odd?' @ '+fmt(s.odd):'')).join(' + '):'';
     return `<div class="bkb-row r-${x.res}${x.flag?' flagged-row':''}"${x.flag?` style="--fc:${FLAG_R[x.flag.r].c}"`:''}>
       <div class="bkb-l">
@@ -6911,8 +6931,9 @@ function renderCategorias(){
     if(catSelId!=='all'&&catSelId!=='none'&&cid!==catSelId)return false;
     if(catTypeFilter==='surebet'&&(kind!=='sb'||item.mid))return false;
     if(catTypeFilter==='middle'&&(kind!=='sb'||!item.mid))return false;
-    if(catTypeFilter==='normal'&&(kind!=='nm'||item.type==='Freebet'))return false;
+    if(catTypeFilter==='normal'&&(kind!=='nm'||item.type==='Freebet'||isFun(item)))return false;
     if(catTypeFilter==='freebet'&&(kind!=='nm'||item.type!=='Freebet'))return false;
+    if(catTypeFilter==='fun'&&(kind!=='nm'||!isFun(item)))return false;
     return true;
   });
   items.sort((a,b)=>(b.item.date||'').localeCompare(a.item.date||''));
@@ -8828,7 +8849,7 @@ function loadEvCombi(p){
 }
 function loadEvNormal(p,type){
   const l=p.legs[0];
-  nfCombi=false;nfSels=[];setBetType(type==='Freebet'?'Freebet':'Normal');
+  nfCombi=false;nfFun=false;nfSels=[];setBetType(type==='Freebet'?'Freebet':'Normal');
   document.getElementById('nf-event').value=p.ev;
   document.getElementById('nf-odd').value=l.odd;
   const nfH=document.getElementById('nf-house');nfH.innerHTML=houseOptionsHtml(l.house,'Choose bookmaker…');nfH.value=nfH.querySelector('option[selected]')?.value||l.house;
@@ -9343,7 +9364,7 @@ function renderPerfil(){
 // ══════════════════════════════════════════
 //  UNIFIED NEW BET  (Surebet · Normal · Freebet · Middle — Normal / Freebet / surebet legs can be combis)
 // ══════════════════════════════════════════
-let newBetType='Surebet', newBetCat=null, nfSels=[], nfCombi=false;
+let newBetType='Surebet', newBetCat=null, nfSels=[], nfCombi=false, nfFun=false;
 function nfIsCombi(){return nfCombi&&!sbMode();}
 let toastTimer=null;
 // Cloud sync status: hidden while saves go through; shows up when they wait for a
@@ -9413,6 +9434,7 @@ function setBetType(type){
   document.getElementById('nfTitle').textContent=nfCombi?m.title+' · combi':m.title;
   document.getElementById('nfHelp').textContent=nfCombi?'Add the selections — the odds multiply':m.help;
   document.getElementById('nf-combi').checked=nfCombi;
+  document.getElementById('nf-fun').checked=nfFun;
   document.getElementById('nf-stake-label').textContent=m.stake;
   document.getElementById('nf-sels-wrap').style.display=nfCombi?'':'none';
   if(nfCombi&&!nfSels.length){nfSels=[{name:'',odd:''},{name:'',odd:''}];}
@@ -9461,7 +9483,7 @@ function renderNfResult(){
       <div class="sr"><span class="sl">ROI if it wins</span><span class="sv pos">${ok?'+'+fmt((odd-1)*100):'–'} %</span></div>`;
   document.getElementById('nfResult').innerHTML=`
     <div class="card ph2 nf-hero ${m.cls}">
-      <div class="nf-kind">${typePill(newBetType)}${nfIsCombi()?typePill('Combi'):''}</div>
+      <div class="nf-kind">${typePill(newBetType)}${nfIsCombi()?typePill('Combi'):''}${nfFun?typePill('Fun'):''}</div>
       <div class="pp ${ok?'pos':''}">${ok?'+'+fmt(win):fmt(0)} €</div>
       <div class="ps">${ok?'Net profit if it wins':'Enter odds and stake to see the result'}</div>
     </div>
@@ -9506,14 +9528,16 @@ function saveNewNormal(){
     notes:document.getElementById('nf-notes').value.trim(),
     categoryId:catVal?+catVal:null};
   if(sels.length)bet.selections=sels;
+  if(nfFun)bet.fun=1;
   if(nfTg&&nfTg.ev===ev){if(nfTg.comp)bet.comp=nfTg.comp;if(nfTg.pick)bet.pick=nfTg.pick;if(nfTg.evPct!=null)bet.evPct=nfTg.evPct;if(nfTg.fair)bet.fair=nfTg.fair;}
   const fromTg=!!nfTg;nfTg=null;if(tgCur&&tgCur.single)tgCur=null;
   D.normals.unshift(bet);const uw=unifyMatchName(bet);const mw=bet.time?syncMatchWhen(bet):[];
   save();updateBadges();renderPendientes();renderNormals(document.getElementById('nbSearch').value);renderProfit();
   newBetCat=null;
-  if(combi){nfCombi=false;setBetType(type);} // the next bet starts as a single again
+  const wasFun=nfFun;
+  if(combi||nfFun){nfCombi=false;nfFun=false;setBetType(type);} // the next bet starts as a single opportunity bet again
   resetNfForm();renderRepeatSel();
-  toast(`${type}${sels.length?' combi':''} saved to pending · +${fmt(bet.potentialWin)} € if it wins${matchWhenMsg(mw)}${unifyMsg(uw,bet)}`,'View pending',()=>navTo('pendientes'));
+  toast(`${wasFun?'Funbet':type}${sels.length?' combi':''} saved to pending · +${fmt(bet.potentialWin)} € if it wins${matchWhenMsg(mw)}${unifyMsg(uw,bet)}`,'View pending',()=>navTo('pendientes'));
   // registered from Telegram: back to the calculator with the next message waiting there
   if(fromTg&&(D.tgInbox||[]).length){if(tgNext(true))setTimeout(focusStake,0);}
 }
@@ -9528,6 +9552,7 @@ document.getElementById('nbTypes').addEventListener('click',e=>{
 });
 ['nf-odd','nf-stake'].forEach(id=>document.getElementById(id).addEventListener('input',renderNfResult));
 document.getElementById('nf-house').addEventListener('change',renderNfResult);
+document.getElementById('nf-fun').addEventListener('change',e=>{nfFun=e.target.checked;renderNfResult();});
 document.getElementById('nf-combi').addEventListener('change',e=>{
   nfCombi=e.target.checked;
   if(nfCombi){const o=parseFloat(document.getElementById('nf-odd').value);nfSels=[{name:'',odd:o>1?String(o):''},{name:'',odd:''}];}
