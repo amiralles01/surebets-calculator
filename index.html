@@ -1085,6 +1085,17 @@ input[type=checkbox]{accent-color:var(--accent)}
 .or-cs{display:grid;grid-template-columns:minmax(0,1fr) 84px 28px;gap:6px;align-items:center}
 .or-cs .bd2{width:28px;height:28px}
 .or-combi .cs-add{align-self:flex-start;font-size:12px;color:var(--purple);background:none;border:none;cursor:pointer;padding:2px 0;font-weight:600}
+.res-wrap .sp-tg{position:absolute;right:30px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:6px;border:none;background:transparent;color:var(--faint);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.res-wrap .sp-tg svg{width:15px;height:15px}.res-wrap .sp-tg:hover{color:var(--cyan);background:var(--cdim)}
+#outcomesList .res-wrap input{padding-right:58px}
+/* one outcome at several bookmakers: same coloured edge on its rows */
+#outcomesList .or.grp{--gc:var(--cyan);position:relative}#outcomesList .or.grp::before{content:'';position:absolute;left:-9px;top:2px;bottom:2px;width:3px;border-radius:2px;background:var(--gc)}
+#outcomesList .or.grp.g1{--gc:var(--yellow)}#outcomesList .or.grp.g2{--gc:var(--purple)}#outcomesList .or.grp.g3{--gc:var(--blue)}
+.or-alts{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:11.5px;color:var(--muted)}
+.or-alts .alt-add{font-size:12px;font-weight:600;color:var(--cyan);background:var(--cdim);border:1px solid transparent;border-radius:7px;padding:4px 9px;cursor:pointer}
+.or-alts .alt-add:hover{border-color:var(--cyan)}
+.grp-tag{white-space:nowrap;font-size:10.5px;font-weight:700;padding:1px 5px;border-radius:5px;background:var(--cdim);color:var(--cyan)}
+.grp-tag.g1{background:var(--ydim);color:var(--yellow)}.grp-tag.g2{background:var(--pdim);color:var(--purple)}.grp-tag.g3{background:var(--bdim);color:var(--blue)}
 .oi[readonly]{opacity:.85;cursor:default}
 .combi-tag{display:inline-block;margin-left:5px;padding:1px 6px;border-radius:99px;font-size:10px;font-weight:700;background:var(--pdim);color:var(--purple);vertical-align:1px;white-space:nowrap}
 .combi-sels{font-size:11px;color:var(--faint);display:block;margin-top:1px}
@@ -1843,6 +1854,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
   #sbCalcCard .or .bd{grid-column:4;grid-row:1}
   #sbCalcCard .or .res-wrap{grid-column:1/4;grid-row:2}
   #sbCalcCard .or .or-combi{grid-column:1/-1;grid-row:3}
+  #sbCalcCard .or .or-alts{grid-column:1/-1;grid-row:4}
   #sbCalcCard .or input[data-field="result"]{height:34px;padding-top:4px;padding-bottom:4px;background:var(--raised)}
   .ps-hit{font-size:12.5px}
 }
@@ -4065,11 +4077,42 @@ function sbResultProfit(b,w){
   return null;
 }
 
+// ONE outcome covered at several bookmakers (Más de 21.5 at 888sport 65 € + William Hill 20 €) is one side of the
+// surebet: its legs are added together. Legs with the same outcome text, or split with the "+ bookmaker" button, go together.
+function outKey(r){return String(r||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/,/g,'.').replace(/\s+/g,' ').trim();}
+function outGroups(list){
+  const keys=list.map((o,i)=>{const t=outKey(o.result);return t&&!/^outcome \d+$/.test(t)?'t:'+t:o.grp?'p:'+o.grp:'i:'+i;});
+  const ks=[...new Set(keys)];
+  return ks.length>=2&&ks.length<list.length?keys.map(k=>ks.indexOf(k)):list.map((o,i)=>i);
+}
+// Surebets saved before New bet knew about split outcomes: 3+ legs where two say the same outcome
+// (Más de 21.5 at 888sport and at William Hill) were counted as separate outcomes → a fake negative ROI.
+// They get g (legs that win together) and their expected / real profit is worked out again.
+function fixSplitBets(){
+  let n=0;
+  (D.bets||[]).forEach(b=>{
+    const L=b.legs||[];if(L.length<3||b.gOff||L.some(l=>l.g!=null))return;
+    const g=outGroups(L);if(Math.max(...g)+1>=L.length)return;
+    L.forEach((l,i)=>{l.g=g[i];});
+    const exp=cents(sbMinReturn(b)-(b.totalStake||0));
+    b.minReturn=sbMinReturn(b);b.expectedProfit=exp;
+    b.profitPct=b.totalStake>0?+(exp/b.totalStake*100).toFixed(2):0;
+    if(b.mid)b.midProfit=midBoth(b);
+    if(b.status==='pending')b.profit=exp;
+    else if(b.cashOut==null&&b.status!=='anulada'){
+      const r=sbResultProfit(b,b.winnerLeg);
+      if(r!=null)b.profit=r;
+      else if(b.status==='won'&&b.winnerLeg==null)b.profit=exp;
+    }
+    n++;
+  });
+  return n;
+}
 function calculate(){
   const valid=outcomes.filter(o=>o.odd>1);
   if(valid.length<2)return null;
   const po=valid.map(o=>legPay(o));
-  const probs=po.map(v=>1/v),sumP=probs.reduce((a,b)=>a+b,0);
+  const g=outGroups(valid),G=Math.max(...g)+1,split=G<valid.length;
   // Resultados con stake manual: se respeta el importe introducido tal cual.
   // El resto ("auto") se reparte proporcionalmente a su probabilidad implícita
   // usando el presupuesto que queda tras restar los stakes manuales.
@@ -4079,16 +4122,33 @@ function calculate(){
   const remaining=Math.max(0,totalInv-sumManual);
   const rounded=new Array(valid.length).fill(0);
   manualIdx.forEach(i=>{rounded[i]=cents(valid[i].manualStake)});
-  if(autoIdx.length){
+  if(autoIdx.length&&!split){
     const autoP=autoIdx.map(i=>1/po[i]),sumAutoP=autoP.reduce((a,b)=>a+b,0);
     autoIdx.forEach((i,k)=>{rounded[i]=cents(applyRound((remaining*autoP[k])/sumAutoP))});
+  }else if(autoIdx.length){
+    // every outcome returns the same R: an outcome's manual legs already return mr, its auto legs share the rest equally
+    const grp=Array.from({length:G},()=>({mr:0,auto:[]}));
+    valid.forEach((o,i)=>{if(o.manualStake>0)grp[g[i]].mr+=rounded[i]*po[i];else grp[g[i]].auto.push(i);});
+    let act=grp.filter(x=>x.auto.length),R=0;
+    for(let it=0;it<10&&act.length;it++){
+      let A=0,B=0;act.forEach(x=>{const inv=x.auto.reduce((a,i)=>a+1/po[i],0)/x.auto.length;A+=inv;B+=x.mr*inv;});
+      R=(remaining+B)/A;
+      const keep=act.filter(x=>x.mr<R);if(keep.length===act.length)break;act=keep;
+    }
+    act.forEach(x=>x.auto.forEach(i=>{rounded[i]=cents(applyRound(Math.max(0,(R-x.mr)/x.auto.length/po[i])))}));
   }
   // stakes and payouts in whole cents, exactly what the bookmaker shows
   const actual=cents(rounded.reduce((a,b)=>a+b,0));
   const returns=valid.map((o,i)=>cents(rounded[i]*po[i]));
-  const minRet=Math.min(...returns);
+  const gRet=new Array(G).fill(0),gStk=new Array(G).fill(0),gBest=new Array(G).fill(0);
+  valid.forEach((o,i)=>{gRet[g[i]]+=returns[i];gStk[g[i]]+=rounded[i];gBest[g[i]]=Math.max(gBest[g[i]],po[i]);});
+  const groupRet=gRet.map(cents);
+  // an outcome's odds = what its legs return together / what they stake (the best one while nothing is staked)
+  const sumP=split?gRet.reduce((a,r,k)=>a+(gStk[k]>0&&r>0?gStk[k]/r:1/gBest[k]),0):po.reduce((a,v)=>a+1/v,0);
+  const minRet=Math.min(...groupRet);
   const profit=cents(minRet-actual);
-  return{valid,sumPct:sumP*100,isSurebet:sumP<1,stakes:rounded,returns,minReturn:minRet,actualTotal:actual,profit,profitPct:actual>0?(profit/actual)*100:0,hasManual:manualIdx.length>0};
+  return{valid,sumPct:sumP*100,isSurebet:sumP<1,stakes:rounded,returns,minReturn:minRet,actualTotal:actual,profit,profitPct:actual>0?(profit/actual)*100:0,hasManual:manualIdx.length>0,
+    g,G,split,groupRet};
 }
 
 // ── Render calc ──
@@ -4097,21 +4157,36 @@ function renderOutcomes(){
   list.innerHTML='';
   const res=calculate();const lit=!!(res&&res.isSurebet);
   stakeHintMap=res?new Map(res.valid.map((o,i)=>[o.id,res.stakes[i]])):new Map();
+  const rg=outGroups(outcomes);
   outcomes.forEach((o,idx)=>{
-    const row=document.createElement('div');row.className='or';
+    const row=document.createElement('div');row.className='or'+orGrpCls(rg,idx);row.dataset.row=o.id;
     row.innerHTML=`
       <select data-field="house" data-id="${o.id}">${houseOptionsHtml(o.house,`Bookmaker ${idx+1}`)}</select>
-      <div class="res-wrap"><input type="text" placeholder="${o.sels?'Combi name (optional)':'Outcome (optional) · e.g. Over'}" value="${esc(o.result)}" data-field="result" data-id="${o.id}"><button class="cb-tg${o.sels?' on':''}" data-cbtg="${o.id}" title="${o.sels?'Stop being a combi':'Make this leg a combi (several selections)'}" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button></div>
+      <div class="res-wrap"><input type="text" placeholder="${o.sels?'Combi name (optional)':'Outcome (optional) · e.g. Over'}" value="${esc(o.result)}" data-field="result" data-id="${o.id}"><button class="cb-tg${o.sels?' on':''}" data-cbtg="${o.id}" title="${o.sels?'Stop being a combi':'Make this leg a combi (several selections)'}" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button><button class="sp-tg" data-split="${o.id}" title="Add another bookmaker for this same outcome (one side split between bookmakers)" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h12M5 21V10l5-4 5 4v11"/><line x1="19" y1="5" x2="19" y2="13"/><line x1="15" y1="9" x2="23" y2="9"/></svg></button></div>
       <div class="oi-wrap"><input type="text" inputmode="decimal" autocomplete="off" class="oi${lit?' lit':''}" placeholder="${o.sels?'auto':'1.00'}" value="${o.odd>0?+(+o.odd).toFixed(3):''}" data-field="odd" data-id="${o.id}" min="1.01" step="0.01"${o.sels&&o.sels.some(x=>parseFloat(x.odd)>1)?' readonly title="Product of the combi selections"':''}><span class="oi-frac" data-frac="${o.id}">${legFrac(o)}</span></div>
       <input type="text" inputmode="decimal" autocomplete="off" class="msi${o.fromPreset?' pre':''}" placeholder="${stakeHint(o)}" title="Leave empty to split the total automatically, or type a fixed stake" value="${o.manualStake>0?o.manualStake:''}" data-field="manualStake" data-id="${o.id}" min="0" step="0.01">
       <button class="bd" data-id="${o.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>${o.sels?`
       <div class="or-combi"><div class="or-combi-h"><span>Combi · ${esc(o.house||'Bookmaker '+(idx+1))}</span><span>Odds <b data-cstot="${o.id}">${o.odd>1?fmt(o.odd):'–'}</b></span></div>
         ${o.sels.map((x,k)=>`<div class="or-cs"><input type="text" placeholder="Selection ${k+1} · e.g. Madrid win" value="${esc(x.name||'')}" data-csn="${k}" data-id="${o.id}" autocomplete="off"><input type="text" inputmode="decimal" autocomplete="off" class="cs-o" placeholder="Odds" step="0.01" min="1.01" value="${x.odd!==''&&x.odd!=null?x.odd:''}" data-cso="${k}" data-id="${o.id}"><button class="bd2" data-csdel="${k}" data-id="${o.id}" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('')}
-        <button class="cs-add" data-csadd="${o.id}">+ Add selection</button></div>`:''}`;
+        <button class="cs-add" data-csadd="${o.id}">+ Add selection</button></div>`:''}${o.alts&&o.alts.length?`
+      <div class="or-alts"><span>Same odds at</span>${o.alts.map(h=>`<button type="button" class="alt-add" data-altadd="${o.id}" data-alth="${esc(h)}">+ ${esc(h)}</button>`).join('')}</div>`:''}`;
     list.appendChild(row);
   });
 }
 
+// rows that cover the same outcome get the same coloured edge
+function orGrpCls(rg,idx){const n=rg.filter(x=>x===rg[idx]).length;return n>1?' grp g'+(rg[idx]%4):'';}
+function markOutcomeGroups(){const rg=outGroups(outcomes);outcomes.forEach((o,i)=>{const r=document.querySelector(`#outcomesList .or[data-row="${o.id}"]`);if(r)r.className='or'+orGrpCls(rg,i);});}
+// another bookmaker for the same outcome: a row right under it with the same outcome and odds
+function splitOutcome(id,house){
+  const o=outcomes.find(x=>x.id===id);if(!o)return null;
+  if(!o.grp)o.grp='g'+o.id;
+  const n={id:nextId++,house:house||'',result:o.sels?'':o.result||'',odd:o.sels?0:o.odd,manualStake:null,grp:o.grp};
+  let at=outcomes.indexOf(o);while(at+1<outcomes.length&&outcomes[at+1].grp===o.grp)at++;
+  outcomes.splice(at+1,0,n);
+  if(house&&o.alts)o.alts=o.alts.filter(h=>bkKey(h)!==bkKey(house));
+  render();return n;
+}
 function renderResult(){
   renderStakeChips();
   const panel=document.getElementById('resultPanel');
@@ -4119,7 +4194,8 @@ function renderResult(){
   if(!res){const qb=document.getElementById('qBar');if(qb)qb.classList.remove('on');panel.innerHTML=`<div class="card"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>Add at least 2 odds &gt; 1.00.</p></div></div>`;return;}
   const{isSurebet,stakes,returns,minReturn,actualTotal,profit,profitPct,sumPct,valid}=res;
   const s=profit>=0?'+':'';
-  const isMid=newBetType==='Middle',both=midBothRes(res),win=midWindow(valid),winTxt=midWindowTxt(win);
+  const isMid=newBetType==='Middle',both=midBothRes(res),win=midWindow(res.split?valid.filter((o,i)=>res.g.indexOf(res.g[i])===i):valid),winTxt=midWindowTxt(win);
+  const gN=res.split?res.g.map(k=>res.g.filter(x=>x===k).length):null;
   const led=cachedLedger();
   // a negative balance means that bookmaker's money isn't really being tracked → no figure, no warning
   const bal=valid.map(o=>{const c=casaFor(o.house);const b=c?casaMoney(c,led).balance:null;return b!=null&&b>=0?b:null;});
@@ -4129,7 +4205,7 @@ function renderResult(){
   const balWarn=shortIdx.length?`<div class="reg-warn"><div><b>Not enough balance</b>${shortIdx.map(i=>`<span>${esc(valid[i].house)} needs ${fmt(stakes[i])}&nbsp;€ · has ${fmt(bal[i])}&nbsp;€</span>`).join('')}</div>${canFit?`<button class="tool" id="fitBalBtn" title="Lowers the total so every stake fits in its bookmaker">Fit to balance</button>`:''}</div>`:'';
   const badgeHtml=isMid?`<div class="badge bm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 8 3 12 7 16"/><polyline points="17 8 21 12 17 16"/><line x1="3" y1="12" x2="21" y2="12"/></svg>Middle</div>`:isSurebet?`<div class="badge bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Surebet</div>`:
     `<div class="badge br"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>No surebet</div>`;
-  const bkHtml=valid.map((o,i)=>`<div class="bkr"><div><div class="bkn">${esc(o.house||`Bookmaker ${i+1}`)}</div><div class="bks">${esc(o.result||`Outcome ${i+1}`)} · Odds ${fmt(o.odd)}${fractionLabel(o.house,o.odd)?` <span class="frac-tag" title="This bookmaker pays with the exact fraction behind the odds it shows">pays ${fractionLabel(o.house,o.odd)}</span>`:''}</div>${bal[i]!=null?`<div class="bk-left${short[i]?' short':''}">${short[i]?'Only ':''}${fmt(bal[i])} € available</div>`:''}</div><div class="bkv"><div class="bkst">${fmt(stakes[i])} €${o.manualStake>0?` <span style="color:var(--yellow);font-size:10px;font-weight:600">${o.fromPreset?'SAVED':'MANUAL'}</span>`:''}</div><div class="bkr2">return ${fmt(returns[i])} €</div><div class="bkm">min. ${fmt(returns[i])} €</div></div></div>`).join('');
+  const bkHtml=valid.map((o,i)=>`<div class="bkr"><div><div class="bkn">${esc(o.house||`Bookmaker ${i+1}`)}</div><div class="bks">${esc(o.result||`Outcome ${i+1}`)} · Odds ${fmt(o.odd)}${fractionLabel(o.house,o.odd)?` <span class="frac-tag" title="This bookmaker pays with the exact fraction behind the odds it shows">pays ${fractionLabel(o.house,o.odd)}</span>`:''}${gN&&gN[i]>1?` <span class="grp-tag g${res.g[i]%4}" title="Same outcome at ${gN[i]} bookmakers: they win together">${gN[i]} bookmakers</span>`:''}</div>${bal[i]!=null?`<div class="bk-left${short[i]?' short':''}">${short[i]?'Only ':''}${fmt(bal[i])} € available</div>`:''}</div><div class="bkv"><div class="bkst">${fmt(stakes[i])} €${o.manualStake>0?` <span style="color:var(--yellow);font-size:10px;font-weight:600">${o.fromPreset?'SAVED':'MANUAL'}</span>`:''}</div><div class="bkr2">return ${fmt(returns[i])} €</div><div class="bkm">${gN&&gN[i]>1?'outcome':'min.'} ${fmt(res.split?res.groupRet[res.g[i]]:returns[i])} €</div></div></div>`).join('');
   const bW=Math.min(sumPct/1.3,100);
   const head=isMid?`<div class="card ph2 mid">${badgeHtml}<div class="pp ${both>=0?'pos':'neg'}">${both>=0?'+':''}${fmt(both)} €</div><div class="ps">If both win${winTxt?` (it ends on <b>${winTxt}</b>)`:''} · if only one wins: <span class="hi ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span></div></div>`
     :`<div class="card ph2 ${isSurebet?'sb':''}">${badgeHtml}<div class="pp ${profit>=0?'pos':'neg'}">${s}${fmt(profitPct)} %</div><div class="ps">Guaranteed profit: <span class="hi ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span></div></div>`;
@@ -4349,7 +4425,9 @@ function applySbEd(b){
     if(used.size<2){alert('Choose which outcome each leg covers: at least 2 different outcomes.');return null;}
     const ks=[...used].sort((a,b)=>a-b);
     rows.forEach((r,i)=>{const g=ks.indexOf(r.g);if(legs[i].g!==g)changed=true;legs[i].g=g;});
-  }else legs.forEach(l=>{if(l.g!=null){delete l.g;changed=true;}});
+    delete b.gOff;
+  }else{if(legs.some(l=>l.g!=null))b.gOff=1; // you said every leg is its own outcome: the automatic fix leaves it alone
+    legs.forEach(l=>{if(l.g!=null){delete l.g;changed=true;}});}
   const map={};rows.forEach((r,i)=>{if(r.o>=0)map[r.o]=i;});
   const re=v=>v==='both'?v:Array.isArray(v)?markNorm(v.filter(x=>map[x]!=null).map(x=>map[x])):(v!=null&&map[v]!=null?map[v]:undefined);
   const shaped=rows.length!==old.length||rows.some((r,i)=>r.o!==i);
@@ -4406,6 +4484,7 @@ function legOut(o,i,house,res){
   const sels=(o.sels||[]).filter(x=>(x.name||'').trim()||parseFloat(x.odd)>1).map(x=>({name:(x.name||'').trim(),odd:parseFloat(x.odd)||null}));
   const l={house,result:o.result||(sels.length?sels.map(x=>x.name||'?').join(' + '):`Outcome ${i+1}`),odd:o.odd,stake:res.stakes[i],minReturn:res.returns[i]};
   if(sels.length)l.sels=sels;
+  if(res.split)l.g=res.g[i];
   return l;
 }
 function registerBet(){
@@ -4921,6 +5000,7 @@ function handleOutcomeFieldChange(el){
   if(field==='odd')o.odd=parseFloat(el.value)||0;
   else if(field==='manualStake'){o.manualStake=el.value===''?null:(parseFloat(el.value)||0);o.fromPreset=false;}
   else o[field]=el.value;
+  if(field==='result')markOutcomeGroups();
   if(field==='odd'||field==='house'){const f=document.querySelector(`[data-frac="${id}"]`);if(f)f.textContent=legFrac(o);}
   if(field==='odd'&&autoPreset())syncStakeInputs();
   renderResult();renderPsQuick();renderPsBanner();updateStakeHints();
@@ -4929,6 +5009,14 @@ function handleOutcomeFieldChange(el){
 document.getElementById('outcomesList').addEventListener('input',e=>handleOutcomeFieldChange(e.target));
 document.getElementById('outcomesList').addEventListener('change',e=>{if(e.target.tagName==='SELECT')handleOutcomeFieldChange(e.target);});
 document.getElementById('outcomesList').addEventListener('click',e=>{
+  const sp=e.target.closest('[data-split]'),aa=e.target.closest('[data-altadd]');
+  if(sp||aa){
+    e.preventDefault();
+    const n=splitOutcome(+(sp?sp.dataset.split:aa.dataset.altadd),aa?aa.dataset.alth:'');if(!n)return;
+    const f=document.querySelector(`#outcomesList ${aa?'.msi':'select'}[data-id="${n.id}"]`);if(f)f.focus();
+    toast(aa?`${aa.dataset.alth} added to the same outcome — type its stake`:'Pick the bookmaker and its odds: both legs count as one outcome');
+    return;
+  }
   const tg=e.target.closest('[data-cbtg]'),ad=e.target.closest('[data-csadd]'),dl=e.target.closest('[data-csdel]');
   if(tg||ad||dl){
     e.preventDefault();
@@ -7700,7 +7788,7 @@ function applyLastBet(){
   if(L.kind==='sb'){
     if(tgRequeue())save();
     clearPresetStakes();
-    outcomes=(b.legs||[]).map(l=>({id:nextId++,house:l.house||'',result:l.sels?'':l.result||'',odd:0,manualStake:null,...(l.sels?{sels:l.sels.map(x=>({name:x.name||'',odd:''}))}:{})}));
+    outcomes=(b.legs||[]).map(l=>({id:nextId++,house:l.house||'',result:l.sels?'':l.result||'',odd:0,manualStake:null,...(l.g!=null?{grp:'r'+l.g}:{}),...(l.sels?{sels:l.sels.map(x=>({name:x.name||'',odd:''}))}:{})}));
     while(outcomes.length<2)outcomes.push({id:nextId++,house:'',result:'',odd:0,manualStake:null});
     if(b.totalStake>0){totalInv=Math.round(b.totalStake*100)/100;document.getElementById('totalInv').value=totalInv;}
     sbPrefill=null;
@@ -7829,6 +7917,14 @@ function tgHouse(raw){
     if(hit)return hit[0];}
   return parts[0]||'';
 }
+// the other bookmakers of yours the message lists with the same odds ("en 🏦 888sport, William Hill (+2 casas más)")
+function tgAlts(raw,main){
+  const known=trackedBookmakers().map(n=>[n,bkLoose(n)]).filter(x=>x[1]),out=[];
+  String(raw||'').replace(/\(.*?\)/g,'').split(/,|\s\/\s|\s\+\s/).map(x=>x.trim()).filter(Boolean).forEach(r=>{const k=bkLoose(r);if(!k)return;
+    const hit=known.find(x=>x[0].trim().toLowerCase()===r.toLowerCase())||known.find(x=>x[1]===k);
+    if(hit&&bkKey(hit[0])!==bkKey(main)&&!out.some(h=>bkKey(h)===bkKey(hit[0])))out.push(hit[0]);});
+  return out;
+}
 // A MIDDLE message is the same with "MIDDLE" on its first line: "↔️ MIDDLE · ⚔️ A vs B · 💰 -0.8%" (it loads on New bet › Middle)
 function parseBotFormat(txt,at){
   txt=tgBody(txt);
@@ -7844,7 +7940,7 @@ function parseBotFormat(txt,at){
     const t=clean(l);
     if(/^\d\s+\S/.test(t)&&!/cuota|stake/i.test(t)){cur={result:t.replace(/^\d\s+/,'').replace(/\+?EV\b/i,'').trim()};legs.push(cur);return;}
     const c=t.match(/cuota:\s*(\d+[.,]\d+|\d+)\s*en\s*(.+)$/i);
-    if(c&&cur){cur.odd=parseFloat(c[1].replace(',','.'));cur.house=matchHouse(c[2]);return;}
+    if(c&&cur){cur.odd=parseFloat(c[1].replace(',','.'));cur.house=matchHouse(c[2]);const al=tgAlts(c[2],cur.house);if(al.length)cur.alts=al;return;}
     const st=t.match(/stake:\s*(\d+(?:[.,]\d+)?)/i);
     if(st&&cur)cur.stake=parseFloat(st[1].replace(',','.'));
   });
@@ -7869,7 +7965,7 @@ function parseBotFormat(txt,at){
   // the competition line as the bot writes it, sport emoji included: "🏆 ⚽ England Premier League"
   const tr=txt.match(/🏆\uFE0F?[ \t]*(?:torneo:[ \t]*)?([^\n]*)/i);
   const comp=tr?tr[1].replace(/\s+/g,' ').trim().slice(0,80):'';
-  return {legs:ok.map(l=>({house:l.house,odd:l.odd,stake:l.stake??null,result:l.result})),ev,market:pre,date,time,comp,...(mid?{mid:true}:{})};
+  return {legs:ok.map(l=>({house:l.house,odd:l.odd,stake:l.stake??null,result:l.result,...(l.alts?{alts:l.alts}:{})})),ev,market:pre,date,time,comp,...(mid?{mid:true}:{})};
 }
 // A +EV (value bet) message from the "Apuestas +EV → Telegram" script: ONE bet, registered as a Normal bet.
 // "💎 +EV · ⚔️ A vs B · 📈 EV 5.85%" / "🏆 ⚽ Liga" / "⏳ Empieza en: 28m" / "🎯 Mercado - Selección" /
@@ -7969,7 +8065,7 @@ document.getElementById('qPaste').addEventListener('input',e=>{
   if(legs.length<2){if(e.target.value.trim())toast('Could not find 2 of your bookmakers with odds in that text');return;}
   if(tgRequeue())save();
   clearPresetStakes();
-  outcomes=legs.map((l,i)=>({id:nextId++,house:l.house,result:l.result||'',odd:l.odd,manualStake:null}));
+  outcomes=legs.map((l,i)=>({id:nextId++,house:l.house,result:l.result||'',odd:l.odd,manualStake:null,...(l.alts?{alts:l.alts.slice()}:{})}));
   if(date)document.getElementById('q-date').value=date;
   if(time)document.getElementById('q-hour').value=time;
   const evEl=document.getElementById('q-event');if(ev)evEl.value=ev;
@@ -7977,7 +8073,7 @@ document.getElementById('qPaste').addEventListener('input',e=>{
   qAutoCat(p);
   if(p.mid&&newBetType!=='Middle')setBetType('Middle');
   render();document.getElementById('qPasteWrap').style.display='none';
-  toast(`${p.mid?'Middle · ':''}Detected ${legs.map(l=>l.house+' @'+fmt(l.odd)).join(' · ')}`);
+  toast(`${p.mid?'Middle · ':''}Detected ${legs.map(l=>l.house+' @'+fmt(l.odd)).join(' · ')}${legs.some(l=>l.alts)?' · tap + to add the other bookmaker':''}`);
   setTimeout(()=>document.getElementById('q-event').value.trim()?document.getElementById('regBtn')?.focus():document.getElementById('q-event').focus(),30);
 });
 
@@ -8908,7 +9004,7 @@ function tgLoad(uid,quiet,type){
     D.tgInbox=D.tgInbox.filter(x=>x.uid!==uid);if(!quiet)save();renderTgCard();return true;}
   tgRequeue();tgCur=it;
   clearPresetStakes();
-  outcomes=p.legs.map(l=>({id:nextId++,house:l.house,result:l.result||'',odd:l.odd,manualStake:null}));
+  outcomes=p.legs.map(l=>({id:nextId++,house:l.house,result:l.result||'',odd:l.odd,manualStake:null,...(l.alts?{alts:l.alts.slice()}:{})}));
   if(p.date)document.getElementById('q-date').value=p.date;
   if(p.time)document.getElementById('q-hour').value=p.time;
   if(p.ev)document.getElementById('q-event').value=p.ev;
@@ -9947,6 +10043,7 @@ function emailToPath(email) {
     // Another device (or tab) saved. This device's own saves come back here too and change nothing.
     unsubscribeSnapshot = onSnapshot(docRef, s => serial(() => fromCloud(s)), e => console.error('[Firestore] listener', e));
 
+    if (fixSplitBets()) save();
     updateBadges();
     render();
     renderTgCard();tgStart();
