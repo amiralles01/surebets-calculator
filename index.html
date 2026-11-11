@@ -2438,6 +2438,58 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 #flagModal .fl-opt small{display:block;font-weight:500;font-size:11px;color:var(--faint);margin-top:1px}
 #flagModal textarea{font-size:16px}
 #flagModal select{font-size:16px}
+
+/* ══ PROFIT PAGE LOOK (2026-11-11) ══ */
+.th-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:28px;align-items:end;position:relative}
+.th-grid:has(> :only-child){grid-template-columns:1fr}
+.th-chart{min-width:0}
+.thc-plot{position:relative;display:flex;gap:6px;align-items:stretch}
+.thc-zero{position:absolute;left:0;right:0;height:1px;background:rgba(255,255,255,.22)}
+.thc-b{flex:1;position:relative;border:0;background:none;padding:0;cursor:pointer;border-radius:6px;font:inherit}
+.thc-b::before{content:'';position:absolute;left:18%;right:18%;top:var(--top);height:var(--h);background:#9BE2B3;border-radius:4px 4px 1px 1px;opacity:.75;transition:opacity .15s}
+.thc-b.neg::before{background:#FF9A86;border-radius:1px 1px 4px 4px}
+.thc-b.cur::before{background:var(--ball,#F5C542);opacity:1}
+.thc-b:hover::before,.thc-b:focus-visible::before{opacity:1}
+.thc-b:hover{background:rgba(255,255,255,.05)}
+.thc-lab{position:absolute;left:50%;transform:translateX(-50%);top:calc(var(--top) - 17px);font-size:11px;font-weight:700;color:#fff;white-space:nowrap;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.thc-tip{position:absolute;top:-6px;transform:translate(-50%,-100%);background:#fff;color:#14281d;border-radius:8px;padding:5px 9px;font-size:12px;line-height:1.25;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .12s;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:2;display:flex;flex-direction:column}
+.thc-tip.on{opacity:1}.thc-tip small{color:#5d6b63;font-size:11px}.thc-tip b{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.thc-x{display:flex;gap:6px;margin-top:6px}.thc-x span{flex:1;text-align:center;font-size:11px;color:var(--pitch-muted,rgba(255,255,255,.6))}
+.thc-x span.cur{color:#fff;font-weight:700}
+.total-hero .th-sub{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:22px}
+.total-hero .th-sub-item{position:relative;overflow:hidden;min-width:0;padding:10px 14px 11px}
+.total-hero .th-sub-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c)}
+.total-hero .th-sub-label{display:flex;align-items:center;gap:6px}
+.total-hero .th-sub-val{color:#fff;white-space:nowrap}
+.total-hero .th-sub-val.neg{color:#FFB4A6}
+.pc-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);flex-shrink:0}
+.month-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;align-items:start}
+.month-grid .month-card{margin:0}
+.month-card.now{box-shadow:0 0 0 2px var(--ball,#F5C542),var(--lift,0 6px 20px rgba(0,0,0,.08))}
+.mc-month{display:flex;align-items:center;gap:8px;min-width:0;white-space:nowrap}
+.month-grid .mc-total{font-size:22px;white-space:nowrap}
+.month-grid .mc-head{gap:8px}
+.mc-tag{font-style:normal;font-family:var(--sans,inherit);font-size:10.5px;font-weight:700;letter-spacing:.2px;padding:2px 7px;border-radius:20px;background:var(--ydim);color:#8a6a00}
+.mc-tag.best{background:var(--gdim);color:var(--green)}
+.month-grid .mc-row{position:relative;padding:9px 18px 12px}
+.mc-cat{display:flex;align-items:center;gap:8px}
+.mc-bar{position:absolute;left:18px;bottom:5px;height:3px;max-width:calc(100% - 36px);border-radius:2px;background:var(--c);opacity:.55}
+.mc-bar.neg{opacity:.35}
+.bks-res{position:relative;padding-bottom:6px}
+.bks-div{position:absolute;left:0;right:0;bottom:0;height:3px;border-radius:2px;background:var(--border)}
+.bks-div::after{content:'';position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--faint);opacity:.6}
+.bks-div i{position:absolute;top:0;bottom:0;border-radius:2px}
+.bks-div i.pos{left:50%;background:var(--green)}.bks-div i.neg{right:50%;background:var(--red)}
+.bks-bar{background:var(--faint);opacity:.3}
+.bks-roi{font-style:normal;display:inline-block;min-width:58px;text-align:center;padding:3px 8px;border-radius:20px;background:var(--raised);font-size:12.5px}
+.bks-roi.pos{background:var(--gdim)}.bks-roi.neg{background:var(--rdim)}
+@media(max-width:800px){
+  .th-grid{grid-template-columns:1fr;gap:18px}
+  .thc-plot{gap:3px}.thc-x{gap:3px}.thc-x span{font-size:10px}
+  .total-hero .th-sub{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .month-grid{grid-template-columns:1fr;gap:10px}
+  .bks-roi{min-width:0;padding:2px 5px;font-size:11px}
+}
 </style>
 </head>
 <body>
@@ -4878,11 +4930,11 @@ function renderBkStats(){
   const sgn=v=>(v>0?'+':'')+fmt(v,Math.abs(v)>=1000?0:2);
   const pct=(r,v)=>v?(r>0?'+':'')+fmt(r/v*100,1)+'%':'—';
   const cls=v=>v>0.004?'pos':v<-0.004?'neg':'';
-  const maxVol=rows[0][1].vol||1;
+  const maxVol=rows[0][1].vol||1,maxRes=Math.max(...rows.map(([k,e])=>Math.abs(e.settled)),0.01);
   el.innerHTML=`<div class="bks-tbl"><div class="bks-h"><span>Bookmaker</span><span>Staked</span><span>Result</span><span>ROI</span></div>`+
     rows.map(([k,e])=>{const a=act.get(k),idle=a&&a.last&&daysAgo(a.last)>IDLE_DAYS;
-      return `<div class="bks-r"><span class="bks-n"><b>${esc((D.casas||[]).find(c=>bkKey(c.name||'')===k)?.name||e.name)}</b><small>${e.n} bet${e.n>1?'s':''}${a&&a.last?` · <em class="${idle?'idle':''}">last ${agoLabel(a.last)}</em>`:''}</small><i class="bks-bar" style="width:${Math.max(3,e.vol/maxVol*100).toFixed(1)}%"></i></span><span>${fmt(e.vol,0)} €</span><span class="${cls(e.settled)}">${sgn(e.settled)} €</span><span class="${cls(e.settled)}">${pct(e.settled,e.vol)}</span></div>`;}).join('')+
-    `<div class="bks-r bks-t"><span class="bks-n"><b>Total</b><small>${tot.n} bets</small></span><span>${fmt(tot.vol,0)} €</span><span class="${cls(tot.res)}">${sgn(tot.res)} €</span><span class="${cls(tot.res)}">${pct(tot.res,tot.vol)}</span></div></div>
+      return `<div class="bks-r"><span class="bks-n"><b>${esc((D.casas||[]).find(c=>bkKey(c.name||'')===k)?.name||e.name)}</b><small>${e.n} bet${e.n>1?'s':''}${a&&a.last?` · <em class="${idle?'idle':''}">last ${agoLabel(a.last)}</em>`:''}</small><i class="bks-bar" style="width:${Math.max(3,e.vol/maxVol*100).toFixed(1)}%"></i></span><span>${fmt(e.vol,0)} €</span><span class="bks-res ${cls(e.settled)}">${sgn(e.settled)} €<i class="bks-div"><i class="${e.settled<0?'neg':'pos'}" style="width:${(Math.abs(e.settled)/maxRes*50).toFixed(1)}%"></i></i></span><span><em class="bks-roi ${cls(e.settled)}">${pct(e.settled,e.vol)}</em></span></div>`;}).join('')+
+    `<div class="bks-r bks-t"><span class="bks-n"><b>Total</b><small>${tot.n} bets</small></span><span>${fmt(tot.vol,0)} €</span><span class="${cls(tot.res)}">${sgn(tot.res)} €</span><span><em class="bks-roi ${cls(tot.res)}">${pct(tot.res,tot.vol)}</em></span></div></div>
     <div class="bks-note">Result = what each bookmaker paid you minus what you staked there. In a surebet one bookmaker wins and the others lose, so single bookmakers swing; the total is your real profit.</div>`;
 }
 document.getElementById('bkStatsPer').addEventListener('click',e=>{const b=e.target.closest('[data-bkper]');if(!b)return;bkStatsPer=b.dataset.bkper;renderBkStats();});
@@ -4897,6 +4949,29 @@ function paceHtml(all){
   const avg=sum(e=>daily(e)&&e.date.slice(0,7)===ym&&e.date<=t)/(+t.slice(8));
   const it=(l,v,d=2)=>`<span><small>${l}</small><b class="${v>0.004?'pos':v<-0.004?'neg':''}">${v>0.004?'+':''}${fmt(v,d)} €</b></span>`;
   return `<div class="th-pace">${it('Today',today)}${it('Last 7 days',week)}${it('This month',month)}${it('Per day this month',avg)}</div>`;
+}
+const PROFIT_CATS=[['surebet','Surebets','#2E9E5B',1],['middle','Middles','#C2702A'],['normal','Normal','#3B7DD8',1],['freebet','Freebets','#D9A21B',1],['fun','Funbets','#D6559A'],
+  ['expense','Bank expenses','#8A8F98'],['cost','Monthly costs','#8A8F98'],['software','Software','#8A8F98'],['adjust','Balance corrections','#5B9AA8']];
+function profitCats(hasFun){return PROFIT_CATS.map(([k,n,c,always])=>({k,n,c,always:!!always||(k==='fun'&&hasFun)}));}
+// last 12 months as bars: up = profit, down = loss; hover / tap shows the month
+function monthChartHtml(keys,months){
+  const ks=keys.slice(-12);if(ks.length<2)return '';
+  const v=ks.map(k=>{const m=months[k];return m.surebet+m.middle+m.normal+m.freebet+m.fun+m.adjust+m.cost+m.expense+m.software;});
+  const hi=Math.max(...v,0),lo=Math.min(...v,0),span=(hi-lo)||1,H=120,zero=hi/span*H;
+  const cur=todayLocalISO().slice(0,7),bi=v.indexOf(Math.max(...v));
+  const short=k=>MONTH_NAMES_EN[+k.slice(5)-1].slice(0,3);
+  return `<div class="th-chart" aria-label="Profit per month"><div class="thc-plot" style="height:${H}px"><i class="thc-zero" style="top:${zero.toFixed(1)}px"></i>`+
+    ks.map((k,i)=>{const h=Math.max(2,Math.abs(v[i])/span*H);const top=v[i]>=0?zero-h:zero;
+      return `<button type="button" class="thc-b${v[i]<0?' neg':''}${k===cur?' cur':''}" data-thc="${i}" data-l="${MONTH_NAMES_EN[+k.slice(5)-1]} ${k.slice(0,4)}" data-v="${(v[i]>=0?'+':'')+fmt(v[i])} €" style="--top:${top.toFixed(1)}px;--h:${h.toFixed(1)}px">${i===bi||k===cur?`<span class="thc-lab" style="${v[i]>=0?'':'top:calc(var(--top) + var(--h) + 3px)'}">${v[i]>=0?'+':''}${fmt(v[i],0)}</span>`:''}</button>`;}).join('')+
+    `<div class="thc-tip" id="thcTip"></div></div><div class="thc-x">${ks.map(k=>`<span${k===cur?' class="cur"':''}>${short(k)}</span>`).join('')}</div></div>`;
+}
+function wireMonthChart(){
+  const tip=document.getElementById('thcTip');if(!tip)return;const plot=tip.parentElement;
+  const show=b=>{if(!b){tip.classList.remove('on');return;}tip.innerHTML=`<small>${b.dataset.l}</small><b>${b.dataset.v}</b>`;
+    const r=b.getBoundingClientRect(),pr=plot.getBoundingClientRect();tip.style.left=Math.min(Math.max(r.left-pr.left+r.width/2,40),pr.width-40)+'px';tip.classList.add('on');};
+  plot.addEventListener('pointerover',e=>show(e.target.closest('[data-thc]')));
+  plot.addEventListener('pointerleave',()=>show(null));
+  plot.addEventListener('focusin',e=>show(e.target.closest('[data-thc]')));plot.addEventListener('focusout',()=>show(null));
 }
 function renderProfit(){
   const pg=document.getElementById('page-profit');if(pg&&pg.style.display==='none')return; // rebuilt when you open it
@@ -4935,43 +5010,39 @@ function renderProfit(){
 
   function mName(k){const[y,mo]=k.split('-');return `${MONTH_NAMES_EN[+mo-1]} ${y}`;}
 
+  // the categories, each with its own colour (the same ones the month cards use)
+  const cats=profitCats(hasFun);
+  const tot={surebet:totalSB,middle:totalMid,normal:totalNorm,freebet:totalFB,fun:totalFun,expense:totalExp,cost:totalCost,software:totalSw,adjust:totalAdj};
+  const tiles=cats.filter(c=>c.always||tot[c.k]).map(c=>`<div class="th-sub-item" style="--c:${c.c}"><div class="th-sub-label"><i class="pc-dot"></i>${c.n}</div><div class="th-sub-val ${tot[c.k]>0.004?'pos':tot[c.k]<-0.004?'neg':''}">${tot[c.k]>0.004?'+':''}${fmt(tot[c.k])} €</div></div>`).join('');
   document.getElementById('totalHero').innerHTML=`
     <div class="total-hero">
-      <div class="th-label">Total Profit</div>
-      <div class="th-val ${totalAll>=0?'pos':'neg'}">${totalAll>=0?'+':''}${fmt(totalAll)} €</div>
-      ${paceHtml(all)}
-      <div class="th-sub">
-        <div class="th-sub-item"><div class="th-sub-label">Surebets</div><div class="th-sub-val" style="color:var(--green)">${totalSB>=0?'+':''}${fmt(totalSB)} €</div></div>
-        ${totalMid?`<div class="th-sub-item"><div class="th-sub-label">Middles</div><div class="th-sub-val" style="color:${totalMid>=0?'#B8621B':'var(--red)'}">${totalMid>=0?'+':''}${fmt(totalMid)} €</div></div>`:''}
-        <div class="th-sub-item"><div class="th-sub-label">Normal</div><div class="th-sub-val" style="color:${totalNorm>=0?'var(--blue)':'var(--red)'}">${totalNorm>=0?'+':''}${fmt(totalNorm)} €</div></div>
-        <div class="th-sub-item"><div class="th-sub-label">Freebets</div><div class="th-sub-val" style="color:var(--yellow)">${totalFB>=0?'+':''}${fmt(totalFB)} €</div></div>
-        ${hasFun?`<div class="th-sub-item"><div class="th-sub-label">Funbets</div><div class="th-sub-val" style="color:${totalFun>=0?'#E85DA0':'var(--red)'}">${totalFun>=0?'+':''}${fmt(totalFun)} €</div></div>`:''}
-        ${totalExp?`<div class="th-sub-item"><div class="th-sub-label">Bank expenses</div><div class="th-sub-val" style="color:var(--red)">${fmt(totalExp)} €</div></div>`:''}
-        ${totalCost?`<div class="th-sub-item"><div class="th-sub-label">Monthly costs</div><div class="th-sub-val" style="color:var(--red)">${fmt(totalCost)} €</div></div>`:''}
-        ${totalSw?`<div class="th-sub-item"><div class="th-sub-label">Software</div><div class="th-sub-val" style="color:var(--red)">${fmt(totalSw)} €</div></div>`:''}
-        ${totalAdj?`<div class="th-sub-item"><div class="th-sub-label">Balance corrections</div><div class="th-sub-val" style="color:${totalAdj>=0?'var(--green)':'var(--red)'}">${totalAdj>=0?'+':''}${fmt(totalAdj)} €</div></div>`:''}
+      <div class="th-grid">
+        <div class="th-main">
+          <div class="th-label">Total Profit</div>
+          <div class="th-val ${totalAll>=0?'pos':'neg'}">${totalAll>=0?'+':''}${fmt(totalAll)} €</div>
+          ${paceHtml(all)}
+        </div>
+        ${monthChartHtml(visibleKeys,months)}
       </div>
+      <div class="th-sub">${tiles}</div>
     </div>`;
+  wireMonthChart();
 
   document.getElementById('totalHero').insertAdjacentHTML('beforeend',bankrollCardHtml(all));
   const visibleKeysDesc=[...visibleKeys].reverse();
   const hiddenKeysDesc=[...hiddenKeys].reverse();
 
-  document.getElementById('monthList').innerHTML=visibleKeysDesc.map(k=>{
-    const m=months[k];const tot=m.surebet+m.middle+m.normal+m.freebet+m.fun+m.adjust+m.cost+m.expense+m.software;
-    return`<div class="month-card">
-      <div class="mc-head"><span class="mc-month">${mName(k)}</span><div style="display:flex;align-items:center;gap:6px"><span class="mc-total ${tot>=0?'pos':'neg'}">${tot>=0?'+':''}${fmt(tot)} €</span>${hideBtnHtml('month:'+k)}</div></div>
-      ${m.surebet!==0?`<div class="mc-row"><span class="mc-cat">Surebets</span><span class="mc-val ${m.surebet>=0?'pos':'neg'}">${m.surebet>=0?'+':''}${fmt(m.surebet)} €</span></div>`:''}
-      ${m.middle!==0?`<div class="mc-row"><span class="mc-cat">Middles</span><span class="mc-val ${m.middle>=0?'pos':'neg'}">${m.middle>=0?'+':''}${fmt(m.middle)} €</span></div>`:''}
-      ${m.normal!==0?`<div class="mc-row"><span class="mc-cat">Normal</span><span class="mc-val ${m.normal>=0?'pos':'neg'}">${m.normal>=0?'+':''}${fmt(m.normal)} €</span></div>`:''}
-      ${m.freebet!==0?`<div class="mc-row"><span class="mc-cat">Freebets</span><span class="mc-val ${m.freebet>=0?'pos':'neg'}">${m.freebet>=0?'+':''}${fmt(m.freebet)} €</span></div>`:''}
-      ${m.fun!==0?`<div class="mc-row"><span class="mc-cat">Funbets</span><span class="mc-val ${m.fun>=0?'pos':'neg'}">${m.fun>=0?'+':''}${fmt(m.fun)} €</span></div>`:''}
-      ${m.expense!==0?`<div class="mc-row"><span class="mc-cat">Bank expenses</span><span class="mc-val neg">${fmt(m.expense)} €</span></div>`:''}
-      ${m.cost!==0?`<div class="mc-row"><span class="mc-cat">Monthly costs</span><span class="mc-val neg">${fmt(m.cost)} €</span></div>`:''}
-      ${m.software!==0?`<div class="mc-row"><span class="mc-cat">Software</span><span class="mc-val neg">${fmt(m.software)} €</span></div>`:''}
-      ${m.adjust!==0?`<div class="mc-row"><span class="mc-cat">Balance corrections</span><span class="mc-val ${m.adjust>=0?'pos':'neg'}">${m.adjust>=0?'+':''}${fmt(m.adjust)} €</span></div>`:''}
+  const mTot=k=>{const m=months[k];return m.surebet+m.middle+m.normal+m.freebet+m.fun+m.adjust+m.cost+m.expense+m.software;};
+  const best=visibleKeys.length>1?visibleKeys.reduce((a,k)=>mTot(k)>mTot(a)?k:a,visibleKeys[0]):null;
+  const curYm=todayLocalISO().slice(0,7);
+  document.getElementById('monthList').innerHTML=`<div class="month-grid">`+visibleKeysDesc.map(k=>{
+    const m=months[k];const tot=mTot(k);
+    const rows=cats.filter(c=>m[c.k]!==0);const big=Math.max(...rows.map(c=>Math.abs(m[c.k])),0.01);
+    return`<div class="month-card${k===curYm?' now':''}">
+      <div class="mc-head"><span class="mc-month">${mName(k)}${k===curYm?'<em class="mc-tag">This month</em>':k===best&&tot>0?'<em class="mc-tag best">Best month</em>':''}</span><div style="display:flex;align-items:center;gap:6px"><span class="mc-total ${tot>=0?'pos':'neg'}">${tot>=0?'+':''}${fmt(tot)} €</span>${hideBtnHtml('month:'+k)}</div></div>
+      ${rows.map(c=>{const v=m[c.k];return`<div class="mc-row" style="--c:${c.c}"><span class="mc-cat"><i class="pc-dot"></i>${c.n}</span><span class="mc-val ${v>=0?'pos':'neg'}">${v>=0?'+':''}${fmt(v)} €</span><i class="mc-bar${v<0?' neg':''}" style="width:${Math.max(2,Math.abs(v)/big*100).toFixed(1)}%"></i></div>`;}).join('')}
     </div>`;
-  }).join('') + hiddenPanelHtml('profit',hiddenKeysDesc.map(k=>({key:'month:'+k,label:mName(k)})));
+  }).join('')+`</div>` + hiddenPanelHtml('profit',hiddenKeysDesc.map(k=>({key:'month:'+k,label:mName(k)})));
   renderProfitRange(all);
   renderSoftware();
 }
