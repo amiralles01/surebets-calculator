@@ -1870,8 +1870,15 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 }
 @media(min-width:601px) and (max-width:1180px){.ni{padding:8px 7px;font-size:13px}}
 
-.bk-cost-form{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,.8fr) auto;gap:8px;align-items:center}
-@media(max-width:600px){.bk-cost-form{grid-template-columns:1fr 1fr}.bk-cost-form>input{grid-column:1/-1}.bk-cost-form .btn-reg{grid-column:1/-1}}
+.bk-cost-form{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,.8fr) minmax(0,1.1fr) auto;gap:8px;align-items:center}
+.bk-cost-form>*{min-width:0}.bk-cost-form select{width:100%;font-size:16px}
+.bk-cost-past{grid-column:1/-1;order:9}.bk-cost-past:empty{display:none}.bk-cost-form .btn-reg{order:10}
+@media(max-width:600px){.bk-cost-form{grid-template-columns:1fr 1fr}.bk-cost-form>input,.bk-cost-form>select{grid-column:1/-1}.bk-cost-form .btn-reg{grid-column:1/-1}}
+.cost-months{margin:2px 0 10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg2,rgba(127,127,127,.05))}
+.cost-m-head{font-size:12.5px;font-weight:600;margin:2px 0 8px}.cost-m-head small{font-weight:400;color:var(--faint);margin-left:4px}
+.cost-m-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
+.cost-m{display:flex;flex-direction:column;gap:3px;font-size:11.5px;color:var(--muted,var(--faint))}.cost-m .ii{padding-right:30px!important;text-align:left;font-size:16px}
+.cost-m-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}.cost-m-btns .btn-s{width:auto;padding:9px 14px;margin:0}
 .bk-cost-form .ii{padding-right:52px!important;text-align:left}
 .sw-form{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,.8fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) auto;gap:8px;align-items:center;margin-top:10px}
 .sw-form>*{min-width:0;width:100%}.sw-form .btn-reg{width:auto}
@@ -3762,10 +3769,33 @@ function ensureAdjLogs(){
   if(changed)save();
 }
 // Monthly recurring costs of a bookmaker (account rental, subscriptions…): one charge per month on the chosen day
+function costMonthsHtml(c,k){
+  const list=costMonthList(k).slice().reverse();
+  return `<div class="cost-months" data-cost-box="${c.id}:${k.id}">
+    <div class="cost-m-head">Price of each month <small>${isBank(c)?'taken from this balance and from Profit':'charged to Profit'} · 0 = not paid that month</small></div>
+    <div class="cost-m-grid">${list.map(ym=>`<label class="cost-m"><span>${ymShort(ym)}</span><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" data-cost-m="${ym}" value="${costAmt(k,ym)}"><span class="isuf">€</span></div></label>`).join('')||'<div class="bk-hist-empty">Nothing charged yet — the first charge is on day '+(k.day||1)+'.</div>'}</div>
+    <div class="cost-m-btns"><button class="btn-s" data-cost-earlier="${c.id}:${k.id}">+ Earlier month</button><button class="btn-reg" data-cost-save="${c.id}:${k.id}" style="width:auto;padding:9px 16px;margin:0">Save months</button></div>
+  </div>`;
+}
+// boxes for the earlier months when a new cost starts in the past
+function costPastHtml(since){
+  const ym=todayLocalISO().slice(0,7);if(!since||since>=ym)return '';
+  const out=[];for(let v=since;v<ym;v=ymAdd(v,1))out.push(v);
+  return `<div class="cost-m-head">Price of the earlier months <small>leave empty = same as the monthly amount</small></div>
+    <div class="cost-m-grid">${out.map(v=>`<label class="cost-m"><span>${ymShort(v)}</span><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" data-cost-pm="${v}" placeholder="same"><span class="isuf">€</span></div></label>`).join('')}</div>`;
+}
+function readCostMonths(box,k){
+  box.querySelectorAll('[data-cost-m]').forEach(inp=>{
+    const ym=inp.dataset.costM;const v=Math.abs(parseFloat(inp.value));const amt=isNaN(v)?0:+v.toFixed(2);
+    if(!k.amts)k.amts={};
+    if(amt===k.amount)delete k.amts[ym];else k.amts[ym]=amt;
+  });
+  if(k.amts&&!Object.keys(k.amts).length)delete k.amts;
+}
 function costCharges(c){
   const out=[];const today=todayLocalISO();
   (c.costs||[]).forEach(k=>{
-    if(!(k.amount>0)||!k.from)return;
+    if(!k.from||!(k.amount>0||k.amts))return;
     let [y,m]=k.from.split('-').map(Number);
     for(let i=0;i<600;i++){
       const ym=`${y}-${String(m).padStart(2,'0')}`;
@@ -3773,12 +3803,30 @@ function costCharges(c){
       const last=new Date(y,m,0).getDate();
       const date=`${ym}-${String(Math.min(k.day||1,last)).padStart(2,'0')}`;
       if(date>today)break;
-      if(date>=(k.start||'0'))out.push({date,profit:-k.amount,name:k.name,casa:c.name});
+      const amt=costAmt(k,ym);
+      if(date>=(k.start||'0')&&amt>0)out.push({date,ym,profit:-amt,name:k.name,casa:c.name,kid:k.id});
       m++;if(m>12){m=1;y++;}
     }
   });
   return out;
 }
+// a monthly cost can have its own price in some months (k.amts = {'2026-09': 35, …}); 0 = not charged that month
+function costAmt(k,ym){return k.amts&&k.amts[ym]!=null?+k.amts[ym]:(k.amount||0);}
+function ymAdd(ym,n){let [y,m]=ym.split('-').map(Number);m+=n;while(m>12){m-=12;y++;}while(m<1){m+=12;y--;}return `${y}-${String(m).padStart(2,'0')}`;}
+function ymShort(ym){const [y,m]=ym.split('-').map(Number);return MES_ES[m-1].slice(0,3)+' '+y;}
+// months a cost covers so far (charged or set to 0), oldest first
+function costMonthList(k){
+  const out=[];const today=todayLocalISO();if(!k.from)return out;let ym=k.from;
+  for(let i=0;i<600;i++){
+    if(k.until&&ym>k.until)break;
+    const [y,m]=ym.split('-').map(Number);const date=`${ym}-${String(Math.min(k.day||1,new Date(y,m,0).getDate())).padStart(2,'0')}`;
+    if(date>today)break;
+    if(date>=(k.start||'0'))out.push(ym);
+    ym=ymAdd(ym,1);
+  }
+  return out;
+}
+let costEditOpen=null; // 'cid:kid' of the cost whose months are open
 function nextMonthStart(iso){const [y,m]=iso.split('-').map(Number);return m===12?`${y+1}-01-01`:`${y}-${String(m+1).padStart(2,'0')}-01`;}
 // ── Bankroll model ─────────────────────────────────────────────────────
 // Bookmakers + bank accounts hold your bankroll. Moving money between them is internal.
@@ -3837,7 +3885,8 @@ function trackInfo(){return D.track&&D.track.from?D.track:null;}
 // only what happens inside the tracking window counts
 function trackedAdj(){const t=trackInfo();return t?adjEntries().filter(a=>a.date>=t.from&&a.id>=t.setAt):[];}
 function trackedExpenses(){const t=trackInfo();return t?expenseEntries().filter(a=>a.date>=t.from):[];}
-function trackedCosts(){const t=trackInfo();return t?costEntries().filter(a=>a.date>=t.from):[];}
+// monthly costs always count in Profit (like software), also months you add by hand before the bankroll start
+function trackedCosts(){return costEntries();}
 // Software costs (subscriptions, tools…): always subtracted from Total Profit, monthly totals and date ranges,
 // but never from daily earnings (calendar, chart, month box). Optionally tied to a bookmaker.
 function softCosts(){if(!Array.isArray(D.software))D.software=[];return D.software;}
@@ -4882,12 +4931,12 @@ function bankrollCardHtml(all){
   const t=trackInfo();const today=todayLocalISO();
   const sg=v=>(v>=0?'+':'')+fmt(v)+' €';
   if(!t)return `<div class="br-card" id="brCard">
-      <div class="br-head"><b>Count your whole bankroll</b><span>Right now Profit counts bet results only, day by day. Pick a day and, from then on, it also counts balance corrections (Set balance), expenses paid from your bank and monthly costs — and you can check it against the money you really have. Everything before that day stays exactly as it is.</span></div>
+      <div class="br-head"><b>Count your whole bankroll</b><span>Right now Profit counts bet results only, day by day. Pick a day and, from then on, it also counts balance corrections (Set balance) and expenses paid from your bank — and you can check it against the money you really have. Everything before that day stays exactly as it is.</span></div>
       <div class="br-start"><div><label class="fl">Start counting from</label><input type="date" id="brFrom" value="${today}" max="${today}"></div><button class="btn-reg" id="brStart">Start</button></div>
       <div class="br-foot"><button class="link-btn" id="brBackup">Download a full backup (JSON)</button></div>
     </div>`;
   const preAll=all.filter(e=>e.date<t.from&&!isHidden('month:'+e.date.slice(0,7)));
-  const pre=preAll.reduce((a,e)=>a+e.profit,0),preSw=preAll.filter(e=>e.cat==='software').reduce((a,e)=>a+e.profit,0);
+  const pre=preAll.reduce((a,e)=>a+e.profit,0),preSw=preAll.filter(e=>e.cat==='software').reduce((a,e)=>a+e.profit,0),preCost=preAll.filter(e=>e.cat==='cost').reduce((a,e)=>a+e.profit,0);
   const since=all.filter(e=>e.date>=t.from&&!isHidden('month:'+e.date.slice(0,7)));
   const cat=c=>since.filter(e=>e.cat===c).reduce((a,e)=>a+e.profit,0);
   const bets=cat('surebet')+cat('middle')+cat('normal')+cat('freebet')+cat('fun'),corr=cat('adjust'),exp=cat('expense'),cost=cat('cost'),sw=cat('software');
@@ -4899,7 +4948,7 @@ function bankrollCardHtml(all){
   const started=new Date(t.setAt);
   return `<div class="br-card" id="brCard">
       <div class="br-head"><b>Your profit, step by step</b><span>Bankroll counted since ${fmtDate(t.from)} · <button class="link-btn" id="brEdit">change</button></span></div>
-      <div class="br-row"><span>Until ${fmtDate(dayBefore)} <small>${preSw?`bet results · software ${sg(preSw)}`:'bet results only, as before'}</small></span><b>${sg(pre)}</b></div>
+      <div class="br-row"><span>Until ${fmtDate(dayBefore)} <small>${preSw||preCost?`bet results${preCost?` · monthly costs ${sg(preCost)}`:''}${preSw?` · software ${sg(preSw)}`:''}`:'bet results only, as before'}</small></span><b>${sg(pre)}</b></div>
       <div class="br-row"><span>Since ${fmtDate(t.from)}
         <small>bets ${sg(bets)}${corr?` · balance corrections ${sg(corr)}`:''}${exp?` · bank expenses ${sg(exp)}`:''}${cost?` · monthly costs ${sg(cost)}`:''}${sw?` · software ${sg(sw)}`:''}</small></span><b>${sg(sinceSum)}</b></div>
       <div class="br-row br-tot"><span>= Total profit</span><b class="${total>=0?'pos':'neg'}">${sg(total)}</b></div>
@@ -6516,13 +6565,16 @@ function renderCasas(filter=''){
             <span class="bk-hist-type ${on?'wd':''}">${esc(k.name||'Cost')}</span>
             <span class="bk-hist-date">${on?`every month · day ${k.day}`:`stopped · ${k.until}`}</span>
             <span class="bk-hist-amt neg">−${fmt(k.amount)} €</span>
+            <button class="unhidebtn${costEditOpen===c.id+':'+k.id?' on':''}" data-cost-months="${c.id}:${k.id}" title="See and change the price of each month, or add earlier months">Months${costMonthList(k).length?` · ${costMonthList(k).length}`:''}</button>
             ${on?`<button class="unhidebtn" data-cost-stop="${c.id}:${k.id}">Stop</button>`:`<button class="unhidebtn" data-cost-del="${c.id}:${k.id}">Delete</button>`}
-          </div>`;}).join('')}</div>
+          </div>${costEditOpen===c.id+':'+k.id?costMonthsHtml(c,k):''}`;}).join('')}</div>
           <div class="bk-hist-empty" style="margin:6px 0 10px">Charged so far: <b>${fmt(charged)} €</b>. "Stop" ends it from next month and keeps what was already charged.</div>`:''}
         <div class="bk-cost-form">
           <input type="text" id="bk-cost-name" placeholder="Concept · e.g. Account rental" autocomplete="off">
           <div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="bk-cost-amount" placeholder="0" min="0" step="0.01"><span class="isuf">€/mo</span></div>
           <div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="bk-cost-day" placeholder="Day" min="1" max="31" step="1" value="${new Date().getDate()}"><span class="isuf">day</span></div>
+          <select id="bk-cost-since" title="First month it was paid">${Array.from({length:13},(_,i)=>{const v=ymAdd(ym,-i);return `<option value="${v}">${i?'Since '+ymShort(v):'From this month'}</option>`;}).join('')}</select>
+          <div class="bk-cost-past" id="bk-cost-past"></div>
           <button class="btn-reg" data-cost-add="${c.id}" style="width:auto;padding:9px 16px;margin:0">Add</button>
         </div>
       </div>`;
@@ -6690,6 +6742,7 @@ document.getElementById('c-save').addEventListener('click',()=>{
   casaModal.style.display='none';editingCasaId=null;
 });
 document.getElementById('casasSearch').addEventListener('input',e=>renderCasas(e.target.value));
+document.getElementById('casasList').addEventListener('change',e=>{if(e.target.id==='bk-cost-since'){const b=document.getElementById('bk-cost-past');if(b)b.innerHTML=costPastHtml(e.target.value);}});
 document.getElementById('casasList').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('.bk-tile')){e.preventDefault();e.target.click();}});
 // Esc closes the dialog on top (through its Cancel button, so it cleans up like a click would)
 document.addEventListener('keydown',e=>{
@@ -6750,8 +6803,39 @@ document.getElementById('casasList').addEventListener('click',e=>{
     if(!Array.isArray(c.costs))c.costs=[];
     // first charge: this month if the day hasn't passed yet, otherwise next month
     const thisMonth=t.slice(0,7);const dayThis=`${thisMonth}-${String(day).padStart(2,'0')}`;
-    c.costs.push({id:Date.now(),name:document.getElementById('bk-cost-name').value.trim()||'Monthly cost',amount:+amount.toFixed(2),day,from:thisMonth,start:dayThis>=t?dayThis:nextMonthStart(t)});
-    save();renderCasas(document.getElementById('casasSearch').value);toast(`${fmt(amount)} €/month added to ${c.name}`);return;
+    const sinceEl=document.getElementById('bk-cost-since');const since=sinceEl&&sinceEl.value&&sinceEl.value<thisMonth?sinceEl.value:null;
+    const k={id:Date.now(),name:document.getElementById('bk-cost-name').value.trim()||'Monthly cost',amount:+amount.toFixed(2),day,from:since||thisMonth,start:since?`${since}-01`:(dayThis>=t?dayThis:nextMonthStart(t))};
+    if(since){
+      document.querySelectorAll('#bk-cost-past [data-cost-pm]').forEach(inp=>{
+        if(inp.value.trim()==='')return;const v=Math.abs(parseFloat(inp.value));if(isNaN(v))return;
+        const a=+v.toFixed(2);if(a!==k.amount){if(!k.amts)k.amts={};k.amts[inp.dataset.costPm]=a;}
+      });
+    }
+    c.costs.push(k);
+    const n=costMonthList(k).length,paid=costCharges({costs:[k],name:c.name}).reduce((a,x)=>a-x.profit,0);
+    save();renderCasas(document.getElementById('casasSearch').value);
+    toast(since?`${fmt(amount)} €/month added to ${c.name} · ${n} month${n===1?'':'s'} so far = ${fmt(paid)} €`:`${fmt(amount)} €/month added to ${c.name}`);return;
+  }
+  const costMonths=e.target.closest('[data-cost-months]');
+  if(costMonths){costEditOpen=costEditOpen===costMonths.dataset.costMonths?null:costMonths.dataset.costMonths;renderCasas(document.getElementById('casasSearch').value);return;}
+  const costEarlier=e.target.closest('[data-cost-earlier]');
+  if(costEarlier){
+    const [cid,kid]=costEarlier.dataset.costEarlier.split(':').map(Number);const c=D.casas.find(x=>x.id===cid);const k=c&&(c.costs||[]).find(x=>x.id===kid);if(!k)return;
+    readCostMonths(costEarlier.closest('[data-cost-box]'),k);
+    const ml=costMonthList(k);const earliest=ml[0]||(k.start&&k.start.slice(0,7)>k.from?k.start.slice(0,7):k.from);const nf=ymAdd(earliest,-1);
+    k.from=nf;k.start=`${nf}-01`;
+    save();renderCasas(document.getElementById('casasSearch').value);
+    const inp=document.querySelector(`[data-cost-box="${cid}:${kid}"] [data-cost-m="${nf}"]`);if(inp){inp.focus();inp.select&&inp.select();}
+    toast(`${ymShort(nf)} added — write its price and Save`);return;
+  }
+  const costSave=e.target.closest('[data-cost-save]');
+  if(costSave){
+    const [cid,kid]=costSave.dataset.costSave.split(':').map(Number);const c=D.casas.find(x=>x.id===cid);const k=c&&(c.costs||[]).find(x=>x.id===kid);if(!k)return;
+    const old=JSON.parse(JSON.stringify(k));
+    readCostMonths(costSave.closest('[data-cost-box]'),k);
+    const paid=costCharges({costs:[k],name:c.name}).reduce((a,x)=>a-x.profit,0);
+    save();renderCasas(document.getElementById('casasSearch').value);
+    toast(`Saved · ${k.name||'Cost'} = ${fmt(paid)} € so far`,'Undo',()=>{Object.keys(k).forEach(x=>delete k[x]);Object.assign(k,old);save();renderCasas(document.getElementById('casasSearch').value);});return;
   }
   const costStop=e.target.closest('[data-cost-stop]');
   if(costStop){
