@@ -6287,6 +6287,7 @@ function renderCasas(filter=''){
       metaBits.push(`<span class="type-badge-kind">${esc(prof?prof.name:'No profile')}</span>`);
     }
     if(isBank(c))metaBits.push(`<span class="type-badge-kind bank-badge">Bank account</span>`);
+    if(c.unused===true)metaBits.push(`<span class="type-badge-kind">Moved to Unused</span>`);
     if(c.notes)metaBits.push(esc(c.notes));
     let actHtml='';
     if(!isBank(c)){const a=act.get(bkKey(c.name||''));
@@ -6394,6 +6395,7 @@ function renderCasas(filter=''){
         <button class="bk-btn${mode==='costs'?' on':''}" data-bk-toggle="costs" data-cid="${c.id}">Monthly costs${activeCosts(c).length?` · ${fmt(activeCosts(c).reduce((a,k)=>a+k.amount,0))} €`:''}</button>
         <div class="bk-spacer"></div>
         <button class="bk-btn" data-edit-cid="${c.id}">Edit</button>
+        <button class="bk-btn bk-unused-btn" data-bk-unused="${c.id}" title="${isUnusedCasa(c,ledger)?'Bring it back to the Active list':'Move it to the Unused list (it stays there until you bring it back)'}">${isUnusedCasa(c,ledger)?'Move to Active':'Move to Unused'}</button>
         ${hideBtnHtml('casa:'+c.id)}
         <button class="bk-btn" data-cid="${c.id}">Delete</button>
         </span>
@@ -6627,6 +6629,19 @@ document.getElementById('casasList').addEventListener('click',e=>{
   }
   const editBtn=e.target.closest('[data-edit-cid]');
   if(editBtn){openCasaModal(+editBtn.dataset.editCid);return;}
+  const unBtn=e.target.closest('[data-bk-unused]');
+  if(unBtn){
+    const c=D.casas.find(x=>x.id===+unBtn.dataset.bkUnused);if(!c)return;
+    const had=('unused' in c),old=c.unused,lg=bookmakerLedger(),toUnused=!isUnusedCasa(c,lg);
+    if(toUnused)c.unused=true;
+    else if(autoUnusedCasa(c,lg))c.unused=false; // would fall back into Unused on its own: keep it Active
+    else delete c.unused;
+    if(bkFocus===c.id)bkFocus=null;
+    if(openBkPanel&&openBkPanel.cid===c.id)openBkPanel=null;
+    save();renderCasas(document.getElementById('casasSearch').value);
+    toast(toUnused?`${c.name} moved to Unused`:`${c.name} is back in Active`,'Undo',()=>{if(had)c.unused=old;else delete c.unused;save();renderCasas(document.getElementById('casasSearch').value);});
+    return;
+  }
   const delBtn=e.target.closest('[data-cid]');if(!delBtn)return;
   if(!confirm('Delete this bookmaker?'))return;
   D.casas=D.casas.filter(c=>c.id!==+delBtn.dataset.cid);save();updateBadges();
@@ -6644,7 +6659,13 @@ document.getElementById('casasList').addEventListener('keydown',e=>{
 // Profiles: group bookmakers by the person who owns the account (e.g. different family members).
 let bkProfileSel='all'; // 'all' (active) | 'none' | 'unused' | profileId
 // A bookmaker is "unused" when it has 0 € balance, nothing in play, and no deposit/withdrawal in the last 7 days
+// c.unused: true = moved to Unused by hand, false = kept in Active by hand, missing = automatic
 function isUnusedCasa(c,ledger){
+  if(c.unused===true)return true;
+  if(c.unused===false)return false;
+  return autoUnusedCasa(c,ledger);
+}
+function autoUnusedCasa(c,ledger){
   const m=casaMoney(c,ledger);
   if(isBank(c)||activeCosts(c).length)return false;
   if(Math.abs(m.balance)>=0.005||m.inPlay>0||m.open>0||(c.pendingTransfer||0)>0)return false;
@@ -6662,7 +6683,7 @@ function renderBkProfileTabs(){
     const active=bkProfileSel===p.id;
     html+=`<div class="cat-chip profile-chip ${active?'active':''}" data-bkprofile="${p.id}">${esc(p.name)}${active?`<span class="profile-del" data-bkprofile-del="${p.id}" title="Delete profile">×</span>`:''}</div>`;
   });
-  html+=`<div class="cat-chip ${bkProfileSel==='unused'?'active':''}" data-bkprofile="unused" title="0 € balance, nothing in play and no deposits or withdrawals in the last 7 days">Unused${nUnused?` (${nUnused})`:''}</div>`;
+  html+=`<div class="cat-chip ${bkProfileSel==='unused'?'active':''}" data-bkprofile="unused" title="Bookmakers you moved here, plus the ones with 0 € balance, nothing in play and no deposits or withdrawals in the last 7 days">Unused${nUnused?` (${nUnused})`:''}</div>`;
   html+=`<button class="btn-s" id="bkProfileAddBtn" style="margin-left:auto">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Add profile</button>`;
