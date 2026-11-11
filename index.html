@@ -2490,6 +2490,24 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
   .month-grid{grid-template-columns:1fr;gap:10px}
   .bks-roi{min-width:0;padding:2px 5px;font-size:11px}
 }
+
+/* ══ MERGED PAGES: tabs at the top of My bets / Profit / Calculators ══ */
+.subtabs{display:flex;gap:4px;padding:4px;border-radius:12px;background:var(--raised);border:1px solid var(--border);align-self:flex-start;max-width:100%;overflow-x:auto;scrollbar-width:none;margin-bottom:14px;flex-shrink:0}
+.subtabs::-webkit-scrollbar{display:none}
+.subtabs button{border:0;background:none;font:inherit;font-size:13.5px;font-weight:600;color:var(--muted);padding:8px 16px;border-radius:9px;cursor:pointer;white-space:nowrap}
+.subtabs button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.subtabs button:not(.on):hover{color:var(--text)}
+#page-profit[data-tab="overview"] [data-ptab="money"],#page-profit[data-tab="money"] [data-ptab="overview"]{display:none!important}
+#page-profit .cal-card .cal-wrap{margin-top:0;border-top:0;padding-top:0}
+.nav .ni.ni-sub{display:none!important}
+.ov-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:14px;align-items:start}
+.ov-pair>.card{margin:0}
+.stats3.stats4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.statbox[hidden],.profit-mes-box[hidden]{display:none!important}
+@media(max-width:900px){.ov-pair{grid-template-columns:1fr}}
+@media(max-width:600px){.stats3.stats4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+#page-categorias>.subtabs,#page-presets>.subtabs,#page-calculadoras>.subtabs{grid-column:1/-1}
+@media(max-width:600px){.subtabs{align-self:stretch}.subtabs button{flex:1;padding:8px 10px;font-size:13px}}
 </style>
 </head>
 <body>
@@ -2535,7 +2553,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
       Pending
       <span class="nb" id="pendCount">0</span>
     </div>
-    <div class="ni" data-page="categorias">
+    <div class="ni ni-sub" data-page="categorias" hidden>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24H4a1 1 0 0 0-1 1v5.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.82 0l4.59-4.59a2 2 0 0 0 .01-2.82z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>
       Categories
     </div>
@@ -2550,7 +2568,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
       <span class="nb" id="casasCount">0</span>
     </div>
     <div class="nav-group">Workspace</div>
-    <div class="ni" data-page="perfil">
+    <div class="ni ni-sub" data-page="perfil" hidden>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Profile
     </div>
@@ -2558,7 +2576,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="10" y2="11"/><line x1="14" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="10" y2="15"/><line x1="14" y1="15" x2="16" y2="15"/><line x1="8" y1="19" x2="10" y2="19"/><line x1="14" y1="19" x2="16" y2="19"/></svg>
       Calculators
     </div>
-    <div class="ni" data-page="presets">
+    <div class="ni ni-sub" data-page="presets" hidden>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
       Saved stakes
       <span class="nb" id="presetsCount">0</span>
@@ -2745,7 +2763,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
           </div>
         </div>
       </div>
-      <div class="card">
+      <div class="card" id="profitRangeCard">
         <div class="ch"><span class="ct">Profit by date range</span><span style="font-size:11.5px;color:var(--faint)">Pick a start and end day</span></div>
         <div class="cb">
           <div class="two-col">
@@ -5028,7 +5046,7 @@ function renderProfit(){
     </div>`;
   wireMonthChart();
 
-  document.getElementById('totalHero').insertAdjacentHTML('beforeend',bankrollCardHtml(all));
+  {const bb=document.getElementById('bankrollBox');if(bb)bb.innerHTML=bankrollCardHtml(all);else document.getElementById('totalHero').insertAdjacentHTML('beforeend',bankrollCardHtml(all));}
   const visibleKeysDesc=[...visibleKeys].reverse();
   const hiddenKeysDesc=[...hiddenKeys].reverse();
 
@@ -5045,6 +5063,7 @@ function renderProfit(){
   }).join('')+`</div>` + hiddenPanelHtml('profit',hiddenKeysDesc.map(k=>({key:'month:'+k,label:mName(k)})));
   renderProfitRange(all);
   renderSoftware();
+  if(document.querySelector('#page-profit .cal-card')){renderCalendar();renderPerfChart();}
 }
 
 // ══════════════════════════════════════════
@@ -7693,7 +7712,7 @@ document.getElementById('psSave').addEventListener('click',()=>{
 document.getElementById('psSearch').addEventListener('input',renderPresets);
 function editPreset(id){
   const p=D.presets.find(x=>x.id===id);if(!p)return;
-  if((document.querySelector('.ni.active')?.dataset.page)!=='presets')navTo('presets');
+  if(curPage!=='presets')navTo('presets');
   psEditId=p.id;
   psForm=p.legs.map(l=>({odd:String(l.odd),stake:String(l.stake)}));document.getElementById('ps-label').value=p.label||'';
   document.getElementById('psFormTitle').textContent='Edit saved stakes';document.getElementById('psSave').textContent='Save changes';document.getElementById('psCancel').style.display='';
@@ -9008,9 +9027,9 @@ function focusStake(){
   const k=window.innerWidth<600?'Register':'Enter';
   toast(activePreset()?`Saved stakes applied — press ${k}`:`Type your stake and press ${k}`);
 }
-function calcIdle(){return sbMode()&&(document.querySelector('.ni.active')?.dataset.page||'calc')==='calc'&&!outcomes.some(o=>o.odd>1);}
+function calcIdle(){return sbMode()&&curPage==='calc'&&!outcomes.some(o=>o.odd>1);}
 // the Normal / Freebet form is empty: a value bet that arrives can load there by itself (always as a Normal bet)
-function nfIdle(){return (newBetType==='Normal'||newBetType==='Freebet')&&!nfCombi&&(document.querySelector('.ni.active')?.dataset.page||'calc')==='calc'&&!document.getElementById('nf-event').value.trim()&&!(parseFloat(document.getElementById('nf-odd').value)>1);}
+function nfIdle(){return (newBetType==='Normal'||newBetType==='Freebet')&&!nfCombi&&curPage==='calc'&&!document.getElementById('nf-event').value.trim()&&!(parseFloat(document.getElementById('nf-odd').value)>1);}
 // afterNf: you just saved a bet from Telegram on the Normal form → the next message loads (a surebet back on the calculator)
 function tgNext(afterNf){
   const idx=tgDupIndex(); // ones you already registered wait in the list (tap Use if you really placed it twice)
@@ -9800,31 +9819,72 @@ document.getElementById('betsTabs').addEventListener('click',e=>{const b=e.targe
 // ══════════════════════════════════════════
 const pgMeta={
   calc:{title:'New bet',sub:'Surebets, middles, normal bets and freebets — any of them can be a combi'},
-  bets:{title:'My bets',sub:'Every bet you have registered, by type'},
-  profit:{title:'Profit',sub:'Monthly performance and running total'},
+  bets:{title:'My bets',sub:'Every bet you have registered, by type and by category'},
+  profit:{title:'Profit',sub:'Your results, stats, bankroll and costs'},
   pendientes:{title:'Pending',sub:'Bets waiting for a result'},
   casas:{title:'Bookmakers',sub:'Registered bookmakers and the money in each one'},
   notas:{title:'Notes',sub:'Your notes organized into folders'},
   categorias:{title:'Categories',sub:'Organize your bets into your own categories'},
   perfil:{title:'Profile',sub:'Your personal stats and performance'},
-  calculadoras:{title:'Calculators',sub:'Kelly, No-Vig, Hedge, Free Bet and Hold'},
+  calculadoras:{title:'Calculators',sub:'Kelly, No-Vig, Hedge, Free Bet, Hold and your saved stakes'},
   presets:{title:'Saved stakes',sub:'The stakes you always use for some odds — filled in by themselves in New bet. Tap Edit to change one.'},
 };
+// pages that live inside another one, reached with the tabs at the top of it
+const PAGE_GROUPS={
+  bets:[['bets','All bets'],['categorias','Categories']],
+  profit:[['profit:overview','Overview'],['perfil','Stats'],['profit:money','Money & costs']],
+  calculadoras:[['calculadoras','Calculators'],['presets','Saved stakes']]};
+const GROUP_OF={};Object.entries(PAGE_GROUPS).forEach(([g,l])=>l.forEach(([k])=>{GROUP_OF[k.split(':')[0]]=g;}));
+let curPage='calc',profitTab='overview';
+function renderSubTabs(page,tab){
+  let bar=document.getElementById('subTabs');
+  const g=GROUP_OF[page],target=document.getElementById('page-'+page);
+  if(!g||!target){if(bar)bar.remove();return;}
+  if(!bar){bar=document.createElement('div');bar.id='subTabs';bar.className='subtabs';
+    bar.addEventListener('click',e=>{const b=e.target.closest('[data-sub]');if(b)navTo(b.dataset.sub);});}
+  const cur=page==='profit'?'profit:'+tab:page;
+  bar.innerHTML=PAGE_GROUPS[g].map(([k,l])=>`<button type="button" data-sub="${k}" class="${k===cur?'on':''}">${l}</button>`).join('');
+  target.prepend(bar);
+}
+// Profit's Stats tab shows the Profile page, plus the bookmaker table; the calendar and the chart go to Overview
+function mergeProfitPages(){
+  const pp=document.getElementById('page-profit'),pf=document.getElementById('page-perfil');if(!pp||!pf||pp.dataset.merged)return;pp.dataset.merged=1;
+  const hero=document.getElementById('totalHero'),months=document.getElementById('monthList');
+  hero.dataset.ptab='overview';months.dataset.ptab='overview';
+  const bk=document.createElement('div');bk.id='bankrollBox';bk.dataset.ptab='money';pp.insertBefore(bk,document.getElementById('swCard'));
+  document.getElementById('swCard').dataset.ptab='money';
+  document.getElementById('profitRangeCard').dataset.ptab='money';
+  const cal=pf.querySelector('.cal-wrap');const calCard=document.createElement('div');calCard.className='card cal-card';calCard.dataset.ptab='overview';
+  calCard.innerHTML='<div class="cb"></div>';calCard.firstChild.appendChild(cal);
+  const perf=document.getElementById('perfTotal').closest('.card');perf.dataset.ptab='overview';
+  const pair=document.createElement('div');pair.className='ov-pair';pair.dataset.ptab='overview';
+  pair.appendChild(calCard);pair.appendChild(perf);pp.insertBefore(pair,months);delete perf.dataset.ptab;delete calCard.dataset.ptab;
+  pf.appendChild(document.getElementById('bkStatsCard'));
+  // the same numbers are on Overview already
+  ['profitMesVal','statGanadoSB','statGanadoFB'].forEach(id=>{const e=document.getElementById(id);const box=e&&e.closest('.profit-mes-box,.statbox');if(box)box.hidden=true;});
+  const s3=[...pf.querySelectorAll('.stats3')];if(s3.length>1){s3.slice(1).forEach(x=>{[...x.children].forEach(c=>s3[0].appendChild(c));x.remove();});s3[0].classList.add('stats4');}
+}
 const ALL_PAGES=['calc','bets','profit','pendientes','casas','notas','categorias','perfil','calculadoras','presets'];
 function navTo(page){
     if(page==='surebets'||page==='normales'){const v=page;page='bets';setTimeout(()=>setBetsView(v));}
-    const item=document.querySelector(`.ni[data-page="${page}"]`);
+    if(String(page).startsWith('profit:')){profitTab=page.slice(7);page='profit';}
+    mergeProfitPages();
+    curPage=page;
+    const item=document.querySelector(`.ni[data-page="${GROUP_OF[page]||page}"]`);
     document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));if(item)item.classList.add('active');
     document.getElementById('phNewBet').style.display=(page==='calc'||page==='bets')?'none':'';
-    const tabPages=['bets','pendientes','calc','profit'];
-    document.querySelectorAll('#tabbar .tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===(tabPages.includes(page)?page:'more')));
+    const tabPages=['bets','pendientes','calc','profit'],tp=GROUP_OF[page]||page;
+    document.querySelectorAll('#tabbar .tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===(tabPages.includes(tp)?tp:'more')));
     ALL_PAGES.forEach(p=>{
       const el=document.getElementById('page-'+p);if(el)el.style.display='none';
     });
     const target=document.getElementById('page-'+page);
     if(target)target.style.display=page==='calc'?'contents':'flex';
-    document.getElementById('pgTitle').textContent=pgMeta[page].title;
-    document.getElementById('pgSub').textContent=pgMeta[page].sub;
+    const gm=pgMeta[GROUP_OF[page]||page];
+    document.getElementById('pgTitle').textContent=gm.title;
+    document.getElementById('pgSub').textContent=gm.sub;
+    renderSubTabs(page,profitTab);
+    if(page==='profit')document.getElementById('page-profit').dataset.tab=profitTab;
     if(page==='calc')renderTodaySub();
     if(page==='calc')setBetType(newBetType);
     else if(page==='bets'){renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);}
@@ -9833,7 +9893,7 @@ function navTo(page){
     else if(page==='casas')renderCasas();
     else if(page==='notas')renderNotas();
     else if(page==='categorias')renderCategorias();
-    else if(page==='perfil')renderPerfil();
+    else if(page==='perfil'){renderPerfil();renderBkStats();}
     else if(page==='presets')renderPresets();
     else if(page==='calculadoras')renderCalcTab(document.querySelector('.calc-tab.active')?.dataset.calc||'kelly');
     if(window.innerWidth<600)closeSB();
@@ -9854,7 +9914,7 @@ function updateBadges(){
 }
 // New bet header: what you've registered today (by the moment you saved it, not the match date)
 function renderTodaySub(){
-  if((document.querySelector('.ni.active')?.dataset.page||'calc')!=='calc')return;
+  if(curPage!=='calc')return;
   const el=document.getElementById('pgSub');if(!el)return;
   const t=new Date().toDateString(),isToday=x=>x.id>1e12&&new Date(x.id).toDateString()===t;
   const sb=visibleBets().filter(isToday).filter(b=>b.status!=='anulada'),nm=visibleNormals().filter(isToday);
@@ -9868,7 +9928,7 @@ function renderTodaySub(){
 // Re-renders whichever page is currently on screen. Used after hide/unhide actions,
 // which can be triggered from several different pages.
 function rerenderActivePage(){
-  const activePage=document.querySelector('.ni.active')?.dataset.page||'calc';
+  const activePage=curPage;
   if(activePage==='calc'){if(sbMode())render();else renderNfResult();}
   else if(activePage==='bets'){renderSurebets(document.getElementById('sbSearch')?.value||'');renderNormals(document.getElementById('nbSearch')?.value||'');}
   else if(activePage==='profit')renderProfit();
@@ -10142,7 +10202,7 @@ function emailToPath(email) {
 
   function refreshCurrentView() {
     updateBadges();
-    const activePage = document.querySelector('.ni.active')?.dataset.page || 'calc';
+    const activePage = curPage;
     if (activePage === 'calc') { if (sbMode()) render(); else renderNfResult(); }
     else if (activePage === 'bets') { renderSurebets(document.getElementById('sbSearch')?.value || ''); renderNormals(document.getElementById('nbSearch')?.value || ''); }
     else if (activePage === 'profit') renderProfit();
