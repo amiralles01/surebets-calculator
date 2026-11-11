@@ -2515,6 +2515,22 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 @media(max-width:600px){.stats3.stats4{grid-template-columns:repeat(2,minmax(0,1fr))}}
 #page-categorias>.subtabs,#page-presets>.subtabs,#page-calculadoras>.subtabs{grid-column:1/-1}
 @media(max-width:600px){.subtabs{align-self:stretch}.subtabs button{flex:1;padding:8px 10px;font-size:13px}}
+/* ── Reuse a pending bet (New bet) ── */
+.ru-chips{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.ru-chip{height:28px;padding:0 11px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.ru-chip.on{border-color:var(--accent,var(--green));color:var(--text);background:var(--adim,var(--gdim))}
+.ru-list{overflow-y:auto;display:flex;flex-direction:column;gap:7px;min-height:80px;-webkit-overflow-scrolling:touch}
+.ru-it{display:block;width:100%;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font:inherit;cursor:pointer}
+.ru-it:hover,.ru-it:focus-visible{border-color:var(--accent,var(--green))}
+.ru-ev{font-size:13.5px;font-weight:700;display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.ru-ty{font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:6px;background:var(--border);color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.ru-mk{font-size:12px;color:var(--muted);margin-top:2px}
+.ru-lg{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.45}
+.ru-lg b{color:var(--text);font-weight:600}
+.ru-wh{font-size:11.5px;color:var(--faint);margin-top:3px}
+.ru-empty{padding:18px;text-align:center;color:var(--faint);font-size:13px}
+#ru-q{font-size:16px}
+
 </style>
 </head>
 <body>
@@ -2628,7 +2644,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
       <div style="display:flex;flex-direction:column;gap:13px">
         <div class="card tg-card" id="tgCard" style="display:none"></div>
         <div class="card" id="nfCard" style="display:none">
-          <div class="ch"><span class="ct" id="nfTitle">Bet details</span><span style="font-size:11.5px;color:var(--faint)" id="nfHelp"></span></div>
+          <div class="ch"><span class="ct" id="nfTitle">Bet details</span><span style="font-size:11.5px;color:var(--faint)" id="nfHelp"></span><button class="tool" id="reuseBtnNf" style="margin-left:auto" title="Reuse one of your pending bets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>From pending</span></button></div>
           <div class="cb nf-grid">
             <div><label class="fl">Event</label><input type="text" id="nf-event" placeholder="Spain vs Portugal" autocomplete="off"></div>
             <div class="two-col">
@@ -2659,6 +2675,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
             <span class="ct" id="sbCalcTitle">Surebet</span>
             <div class="sbx-tools">
               <button class="tool" id="repBtn" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg><span>Same as last</span></button>
+              <button class="tool" id="reuseBtn" title="Reuse one of your pending bets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>From pending</span></button>
               <button class="tool" id="qPasteBtn" title="Paste the text of a surebet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg><span>Paste</span></button>
               <button class="tool" id="tgSetBtn" title="Telegram inbox settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg><span>Telegram</span><i class="tool-dot"></i></button>
             </div>
@@ -3160,6 +3177,17 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
       <button class="btn-d" id="fl-remove" style="flex:1;display:none">Remove flag</button>
       <button class="btn-reg" id="fl-save" style="flex:2">Save flag</button>
     </div>
+  </div>
+</div>
+
+<div id="reuseModal" class="modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
+  <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;width:100%;max-width:520px;margin:16px;max-height:86vh;display:flex;flex-direction:column">
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px">Reuse a pending bet</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Fills the new bet with its match, market, date, category, bookmakers, outcomes, odds and stake. Change what's different and register.</div>
+    <input type="text" id="ru-q" placeholder="Search match, market or bookmaker…" autocomplete="off" style="margin-bottom:10px">
+    <div class="ru-chips" id="ru-chips"></div>
+    <div class="ru-list" id="ru-list"></div>
+    <div style="display:flex;gap:9px;margin-top:12px"><button class="btn-s" id="ru-cancel" style="flex:1">Cancel</button></div>
   </div>
 </div>
 
@@ -7957,12 +7985,15 @@ function renderRepeatSel(){
   const what=L.kind==='sb'?(L.b.legs||[]).map(l=>l.house).filter(Boolean).join(' / '):(L.b.house||'');
   btn.title=`Copy everything from your last bet except the odds:\n${L.b.event||'(no event)'}${L.b.market?' · '+L.b.market:''}${what?' · '+what:''}`;
 }
-function applyLastBet(){
-  const L=lastBet();if(!L)return;const b=L.b;
+function applyLastBet(){applyBetTemplate(lastBet(),false);}
+// fill the New bet form from a saved bet; withOdds = also copy the odds (reusing a pending bet)
+function applyBetTemplate(L,withOdds){
+  if(!L)return;const b=L.b;const od=v=>withOdds&&+v>1?+v:0;
   if(L.kind==='sb'){
     if(tgRequeue())save();
     clearPresetStakes();
-    outcomes=(b.legs||[]).map(l=>({id:nextId++,house:l.house||'',result:l.sels?'':l.result||'',odd:0,manualStake:null,...(l.g!=null?{grp:'r'+l.g}:{}),...(l.sels?{sels:l.sels.map(x=>({name:x.name||'',odd:''}))}:{})}));
+    outcomes=(b.legs||[]).map(l=>({id:nextId++,house:l.house||'',result:l.sels?'':l.result||'',odd:l.sels?0:od(l.odd),manualStake:null,...(l.g!=null?{grp:'r'+l.g}:{}),...(l.sels?{sels:l.sels.map(x=>({name:x.name||'',odd:od(x.odd)?String(od(x.odd)):''}))}:{})}));
+    outcomes.forEach(o=>{if(o.sels){const p=o.sels.reduce((a,x)=>a*(parseFloat(x.odd)||0),1);if(p>1)o.odd=+p.toFixed(4);}});
     while(outcomes.length<2)outcomes.push({id:nextId++,house:'',result:'',odd:0,manualStake:null});
     if(b.totalStake>0){totalInv=Math.round(b.totalStake*100)/100;document.getElementById('totalInv').value=totalInv;}
     sbPrefill=null;
@@ -7971,21 +8002,72 @@ function applyLastBet(){
     document.getElementById('q-date').value=b.date||todayISO();document.getElementById('q-hour').value=hourOnly(b.time);
     fillCategorySelect(document.getElementById('q-cat'),b.categoryId??null);
     qComp=b.comp?{ev:(b.event||'').trim(),comp:b.comp}:null;document.getElementById('q-cat-w').classList.remove('auto');
-    {const f=document.querySelector('#outcomesList .oi');if(f)f.focus();} // straight away, so the phone keyboard opens
+    {const f=document.querySelector('#outcomesList .oi');if(f){f.focus();if(withOdds&&f.select)f.select();}} // straight away, so the phone keyboard opens
   }else{
     sbPrefill=null;
     nfCombi=isCombi(b);setBetType(b.type==='Freebet'?'Freebet':'Normal');
     const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v??'';};
-    set('nf-event',b.event);set('nf-stake',b.stake);set('nf-date',b.date||todayISO());set('nf-time',hourOnly(b.time));set('nf-notes',b.notes);set('nf-odd','');
+    set('nf-event',b.event);set('nf-stake',b.stake);set('nf-date',b.date||todayISO());set('nf-time',hourOnly(b.time));set('nf-notes',b.notes);set('nf-odd',isCombi(b)?'':(od(b.odd)||''));
     const h=document.getElementById('nf-house');h.innerHTML=houseOptionsHtml(b.house||'','Choose bookmaker…');h.value=b.house||'';
     fillCategorySelect(document.getElementById('nf-category'),b.categoryId??null);
-    if(nfCombi){nfSels=(b.selections||[]).map(x=>({name:x.name||'',odd:''}));while(nfSels.length<2)nfSels.push({name:'',odd:''});renderNfSels();syncComboOdd();}
+    if(withOdds){nfFun=!!b.fun&&b.type!=='Freebet';const f=document.getElementById('nf-fun');if(f)f.checked=nfFun;}
+    if(nfCombi){nfSels=(b.selections||[]).map(x=>({name:x.name||'',odd:od(x.odd)?String(od(x.odd)):''}));while(nfSels.length<2)nfSels.push({name:'',odd:''});renderNfSels();syncComboOdd();}
     renderNfResult();
-    {const f=document.querySelector(nfCombi?'#nf-sels [data-selo]':'#nf-odd');if(f)f.focus();}
+    {const f=document.querySelector(nfCombi?'#nf-sels [data-selo]':'#nf-odd');if(f){f.focus();if(withOdds&&f.select)f.select();}}
   }
-  toast('Copied from your last bet — just enter the odds');
+  toast(withOdds?'Copied from the pending bet — change what\'s different':'Copied from your last bet — just enter the odds');
 }
 document.getElementById('repBtn').addEventListener('click',applyLastBet);
+
+// ── "From pending": pick any pending bet and start a new one from it
+let ruKind='all';
+function ruItems(){
+  const out=[];
+  (D.bets||[]).forEach(b=>{if(b.status==='pending')out.push({kind:'sb',b});});
+  (D.normals||[]).forEach(n=>{if(n.status==='pending')out.push({kind:'nm',b:n});});
+  return out.sort((x,y)=>y.b.id-x.b.id);
+}
+function ruType(L){const b=L.b;return L.kind==='sb'?(b.mid?'Middle':'Surebet'):(b.type==='Freebet'?'Freebet':(isCombi(b)?'Combi':'Normal'));}
+function ruText(L){const b=L.b;return [b.event,b.market,b.notes,ruType(L),...(L.kind==='sb'?(b.legs||[]).flatMap(l=>[l.house,l.result]):[b.house,...(b.selections||[]).map(x=>x.name)])].filter(Boolean).join(' ').toLowerCase();}
+function renderReuseList(){
+  const q=(document.getElementById('ru-q').value||'').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  const all=ruItems();
+  const nSb=all.filter(L=>L.kind==='sb').length,nNm=all.length-nSb;
+  document.getElementById('ru-chips').innerHTML=[['all','All',all.length],['sb','Surebets & middles',nSb],['nm','Normal & freebets',nNm]].map(([k,t,n])=>`<button class="ru-chip${ruKind===k?' on':''}" data-rukind="${k}">${t} · ${n}</button>`).join('');
+  const words=q.split(/\s+/).filter(Boolean);
+  const list=all.filter(L=>(ruKind==='all'||L.kind===ruKind)&&(!words.length||(t=>words.every(w=>t.includes(w)))(ruText(L).normalize('NFD').replace(/[̀-ͯ]/g,''))));
+  const el=document.getElementById('ru-list');
+  if(!list.length){el.innerHTML=`<div class="ru-empty">${all.length?'No pending bet matches':'You have no pending bets'}</div>`;return;}
+  const shown=list.slice(0,80);
+  el.innerHTML=shown.map(L=>{const b=L.b;
+    const lg=L.kind==='sb'?(b.legs||[]).map(l=>`<b>${esc(l.house||'?')}</b>${l.result?' '+esc(l.result):''} @${fmt(l.odd||0)}`).join(' · ')
+      :`<b>${esc(b.house||'?')}</b> @${fmt(b.odd||0)} · ${fmt(b.stake||0)} €${isCombi(b)?' · '+(b.selections||[]).length+' selections':''}`;
+    const st=L.kind==='sb'?` · ${fmt(b.totalStake||0)} € staked`:'';
+    return `<button class="ru-it" data-ru="${L.kind}:${b.id}"><div class="ru-ev"><span class="ru-ty">${ruType(L)}</span>${esc(b.event||'(no event)')}</div>${b.market?`<div class="ru-mk">${esc(b.market)}</div>`:''}<div class="ru-lg">${lg}</div><div class="ru-wh">${fmtWhen(b.date,b.time)||'No date'}${st}${b.categoryId?' · '+esc(catName(b.categoryId)):''}</div></button>`;}).join('')
+    +(list.length>shown.length?`<div class="ru-empty">${list.length-shown.length} more — search to narrow it down</div>`:'');
+}
+function openReuse(){
+  const m=document.getElementById('reuseModal');
+  ruKind=sbMode()?'sb':'nm';
+  if(!ruItems().some(L=>L.kind===ruKind))ruKind='all';
+  document.getElementById('ru-q').value='';
+  renderReuseList();m.style.display='flex';
+  if(!matchMedia('(pointer:coarse)').matches)document.getElementById('ru-q').focus();
+}
+function closeReuse(){document.getElementById('reuseModal').style.display='none';}
+document.getElementById('reuseBtn').addEventListener('click',openReuse);
+document.getElementById('reuseBtnNf').addEventListener('click',openReuse);
+document.getElementById('ru-cancel').addEventListener('click',closeReuse);
+document.getElementById('reuseModal').addEventListener('click',e=>{if(e.target.id==='reuseModal')closeReuse();});
+document.getElementById('ru-q').addEventListener('input',renderReuseList);
+document.getElementById('ru-q').addEventListener('keydown',e=>{if(e.key==='Enter'){const f=document.querySelector('#ru-list .ru-it');if(f){e.preventDefault();f.click();}}});
+document.getElementById('ru-chips').addEventListener('click',e=>{const c=e.target.closest('[data-rukind]');if(!c)return;ruKind=c.dataset.rukind;renderReuseList();});
+document.getElementById('ru-list').addEventListener('click',e=>{
+  const it=e.target.closest('[data-ru]');if(!it)return;
+  const [k,id]=it.dataset.ru.split(':');
+  const b=(k==='sb'?D.bets:D.normals).find(x=>String(x.id)===id);if(!b)return;
+  closeReuse();applyBetTemplate({kind:k,b},true);
+});
 
 
 // ══════════════════════════════════════════
