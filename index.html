@@ -2530,6 +2530,28 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .ru-wh{font-size:11.5px;color:var(--faint);margin-top:3px}
 .ru-empty{padding:18px;text-align:center;color:var(--faint);font-size:13px}
 #ru-q{font-size:16px}
+/* ── Change a bet's type (Edit modals) ── */
+.ct-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:-6px 0 14px}
+.ct-l{font-size:11.5px;color:var(--faint);font-weight:600;margin-right:2px}
+.ct-chip{height:28px;padding:0 11px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.ct-chip:hover{color:var(--text)}
+.ct-chip.on{border-color:var(--accent,var(--green));color:var(--text);background:var(--adim,var(--gdim))}
+.ct-chip.x::after{content:' ⇄';opacity:.55}
+.cv-it{position:relative;padding-left:40px}
+.cv-it::before{content:'';position:absolute;left:13px;top:13px;width:16px;height:16px;border-radius:5px;border:1.5px solid var(--border2,var(--border));background:var(--raised,transparent)}
+.cv-it.on{border-color:var(--accent,var(--green));background:var(--adim,var(--gdim))}
+.cv-it.on::before{background:var(--green);border-color:var(--green);box-shadow:inset 0 0 0 3px var(--surface)}
+.cv-it.fixed{cursor:default;opacity:.95}
+.cv-sec{font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;margin:6px 2px 0}
+.cv-st{font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:6px;background:var(--border);color:var(--muted)}
+.cv-st.won{background:var(--gdim);color:var(--green)}.cv-st.lost{background:var(--rdim);color:var(--red)}
+.cv-leg{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--border)}
+.cv-leg>div{flex:1;min-width:0}
+.cv-leg select{width:auto;min-width:112px}
+.cv-res{font-size:12px;font-weight:700;margin-top:3px}
+.cv-note{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.45}
+.cv-note:empty{display:none}
+#cv-q{font-size:16px}
 
 </style>
 </head>
@@ -3036,6 +3058,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 <div id="addModal" class="modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
   <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:440px;margin:16px">
     <div style="font-size:15px;font-weight:700;margin-bottom:16px" id="addModalTitle">Edit bet</div>
+    <div class="ct-row" id="m-ct"></div>
     <div style="display:flex;flex-direction:column;gap:11px">
       <div><label class="fl">Event</label><input type="text" id="m-event" placeholder="Spain vs Portugal"></div>
       <div><label class="fl">Pick / market (optional)</label><input type="text" id="m-pick" placeholder="Más de 10.5 tiros" autocomplete="off"></div>
@@ -3077,6 +3100,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 <div id="sbRegModal" class="modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
   <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:440px;margin:16px">
     <div style="font-size:15px;font-weight:700;margin-bottom:16px" id="sbRegModalTitle">Register surebet</div>
+    <div class="ct-row" id="sbr-ct" style="display:none"></div>
     <div style="display:flex;flex-direction:column;gap:11px">
       <div><label class="fl">Event</label><input type="text" id="sbr-event" placeholder="Spain vs Portugal"></div>
       <div><label class="fl">Market / line <span style="font-weight:400;color:var(--faint)">(optional — tells apart surebets of the same match)</span></label><input type="text" id="sbr-market" placeholder="E.g. Mbappé 1.5+ shots · Corners O9.5" autocomplete="off"></div>
@@ -3188,6 +3212,18 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
     <div class="ru-chips" id="ru-chips"></div>
     <div class="ru-list" id="ru-list"></div>
     <div style="display:flex;gap:9px;margin-top:12px"><button class="btn-s" id="ru-cancel" style="flex:1">Cancel</button></div>
+  </div>
+</div>
+
+<!-- ══ CHANGE TYPE (normal ⇄ surebet / middle) ══ -->
+<div id="convModal" class="modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
+  <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;width:100%;max-width:520px;margin:16px;max-height:86vh;display:flex;flex-direction:column">
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px" id="cv-title">Count as surebet</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px" id="cv-sub"></div>
+    <input type="text" id="cv-q" placeholder="Search match, pick or bookmaker…" autocomplete="off" style="margin-bottom:10px">
+    <div class="ru-list" id="cv-list"></div>
+    <div class="cv-note" id="cv-note"></div>
+    <div style="display:flex;gap:9px;margin-top:12px"><button class="btn-s" id="cv-cancel" style="flex:1">Cancel</button><button class="btn-reg" id="cv-go" style="flex:2">Continue</button></div>
   </div>
 </div>
 
@@ -4447,7 +4483,8 @@ function dropAutoMark(b){const a=b.autoRes;if(a&&b.status==='pending'&&b.pendMar
 // removed or turned into combis. o = the leg's index in the saved bet (-1 = a new one).
 let sbEd=null;
 function sbEdOdd(r){const v=(r.sels||[]).map(x=>parseFloat(x.odd)).filter(x=>x>1);return v.length?+v.reduce((a,x)=>a*x,1).toFixed(3):parseFloat(r.odd);}
-function sbEdCanShape(){const b=editingSbId&&D.bets.find(x=>x.id===editingSbId);return !!b&&b.status==='pending'&&b.cashOut==null;}
+function sbById(id){return convDraft&&convDraft.bet.id===id?convDraft.bet:D.bets.find(x=>x.id===id);}
+function sbEdCanShape(){const b=editingSbId&&sbById(editingSbId);return !!b&&b.status==='pending'&&b.cashOut==null;}
 // how many different outcomes the legs cover: Double (2) / Triple (3)… — fewer than legs = a side split between bookmakers
 let sbOutK=2;
 const OUT_NAME={2:'Double (2 outcomes)',3:'Triple (3 outcomes)'};
@@ -4607,14 +4644,17 @@ function openSbRegModal(){
   fillCategorySelect(document.getElementById('sbr-category'),pf&&newBetCat==null?pf.categoryId:newBetCat);
   document.getElementById('sbr-notes').value='';
   document.getElementById('sbr-kind-w').style.display='none';
+  renderSbCt();
   document.getElementById('sbRegModal').style.display='flex';
 }
 function openSbEditModal(id){
-  const b=D.bets.find(x=>x.id===id);if(!b)return;
+  if(convDraft&&convDraft.bet.id!==id)convDraft=null;
+  const b=sbById(id);if(!b)return;
+  const draft=!!convDraft;
   editingSbId=id;
   refreshBookmakerList();
-  document.getElementById('sbRegModalTitle').textContent=b.mid?'Edit middle':'Edit surebet';
-  document.getElementById('sbr-save').textContent='Save changes';
+  document.getElementById('sbRegModalTitle').textContent=draft?(b.mid?'New middle from your bets — check and save':'New surebet from your bets — check and save'):b.mid?'Edit middle':'Edit surebet';
+  document.getElementById('sbr-save').textContent=draft?(b.mid?'Save as middle':'Save as surebet'):'Save changes';
   document.getElementById('sbr-event').value=b.event||'';
   document.getElementById('sbr-market').value=b.market||'';
   document.getElementById('sbr-kind').value=b.mid?'mid':'sb';
@@ -4624,6 +4664,7 @@ function openSbEditModal(id){
   document.getElementById('sbr-time').value=hourOnly(b.time);
   fillCategorySelect(document.getElementById('sbr-category'),b.categoryId);
   document.getElementById('sbr-notes').value=b.notes||'';
+  renderSbCt();
   document.getElementById('sbRegModal').style.display='flex';
 }
 // the leg saved with a surebet; a combi leg keeps its selections
@@ -4654,10 +4695,11 @@ function registerBet(){
   newBetCat=null;sbPrefill=null;renderRepeatSel();
   toast(`Surebet saved to pending · ${res.profit>=0?'+':''}${fmt(res.profit)} €${matchWhenMsg(mw)}${unifyMsg(uw,bet)}`,'View pending',()=>navTo('pendientes'));
 }
-document.getElementById('sbr-cancel').addEventListener('click',()=>{document.getElementById('sbRegModal').style.display='none';editingSbId=null;sbEd=null;});
+document.getElementById('sbr-cancel').addEventListener('click',()=>{document.getElementById('sbRegModal').style.display='none';editingSbId=null;sbEd=null;convDraft=null;});
 document.getElementById('sbr-save').addEventListener('click',()=>{
   if(editingSbId){
-    const b=D.bets.find(x=>x.id===editingSbId);if(!b){editingSbId=null;return;}
+    const b=sbById(editingSbId);if(!b){editingSbId=null;return;}
+    const isDraft=!!(convDraft&&convDraft.bet===b);
     const legsChanged=sbEd?applySbEd(b):false;if(legsChanged===null)return;
     const evVal=document.getElementById('sbr-event').value.trim();
     b.event=evVal||b.event||'(No event)';
@@ -4669,7 +4711,7 @@ document.getElementById('sbr-save').addEventListener('click',()=>{
     const mw=b.status==='pending'&&was!==b.date+' '+(b.time||'')?syncMatchWhen(b):[];
     const catVal=document.getElementById('sbr-category').value;
     b.categoryId=catVal?+catVal:null;
-    if(legsChanged&&b.legs&&b.legs.length&&b.cashOut==null&&b.legs.every(l=>l.stake!=null)){
+    if((legsChanged||isDraft)&&b.legs&&b.legs.length&&b.cashOut==null&&b.legs.every(l=>l.stake!=null)){
       b.legs.forEach(l=>{l.minReturn=cents(legPay(l)*(l.stake||0));});
       b.totalStake=+b.legs.reduce((a,l)=>a+(l.stake||0),0).toFixed(2);
       b.minReturn=sbMinReturn(b);
@@ -4679,6 +4721,12 @@ document.getElementById('sbr-save').addEventListener('click',()=>{
       if(b.mid)b.midProfit=midBoth(b);
       if(b.status==='pending')b.profit=exp;
       else if(b.status==='won'&&sbResultProfit(b,b.winnerLeg)!=null)b.profit=sbResultProfit(b,b.winnerLeg);
+    }
+    if(isDraft){
+      const n=convDraft.from.length,undo=convDraftCommit(b);
+      document.getElementById('sbRegModal').style.display='none';editingSbId=null;sbEd=null;
+      convAfter(`${b.event||'Bet'} · ${n>1?n+' bets joined into one ':'now counts as a '}${b.mid?'middle':'surebet'}`,undo);
+      return;
     }
     save();updateBadges();
     renderSurebets(document.getElementById('sbSearch').value);renderProfit();renderPendientes();
@@ -5499,6 +5547,7 @@ function openNormalModal(id){
   fillCategorySelect(document.getElementById('m-category'),n?n.categoryId:presetCategoryForNewBet);
   presetCategoryForNewBet=null;
   updateNormalPreview();
+  renderMCt();
   modal.style.display='flex';
 }
 // Edit bet: a combi's selections can be changed, added or removed; the odds follow their product
@@ -5600,6 +5649,231 @@ function resolveNormal(n,status){
   if(status==='won')n.profit=n.potentialWin!=null?n.potentialWin:+(((n.stake||0)*((n.odd||1)-1)).toFixed(2));
   else if(status==='lost')n.profit=n.potentialLoss!=null?n.potentialLoss:(n.type==='Freebet'?0:-(n.stake||0));
   else n.profit=0; // anulada o vuelta a pendiente
+}
+
+// ══════════════════════════════════════════
+//  CHANGE A BET'S TYPE — "Counts as" in both Edit modals
+// ══════════════════════════════════════════
+// Normal / Freebet / Funbet change in place. Surebet / Middle live in D.bets and the others in
+// D.normals, so going across turns the bet into the other kind: normal bets join as the legs of one
+// surebet (convNm), and a surebet splits into one bet per bookmaker (convSb). Money stays the same:
+// what each bet won, lost, voided or cashed out is carried over.
+const CT_TYPES=[['normal','Normal'],['freebet','Freebet'],['fun','Funbet'],['sb','Surebet'],['mid','Middle']];
+const CT_SB=k=>k==='sb'||k==='mid';
+function ctRowHtml(cur){const fam=CT_SB(cur);return `<span class="ct-l">Counts as</span>`+CT_TYPES.map(([k,t])=>`<button type="button" class="ct-chip${k===cur?' on':''}${CT_SB(k)!==fam?' x':''}" data-ct="${k}" title="${CT_SB(k)!==fam?(fam?'Split into one bet per bookmaker':'Join with the bets of the other side'):'Change the type'}">${t}</button>`).join('');}
+function mCurType(){return document.getElementById('m-fun').checked?'fun':document.getElementById('m-type').value==='Freebet'?'freebet':'normal';}
+function renderMCt(){const el=document.getElementById('m-ct');el.style.display=editingNormalId?'flex':'none';el.innerHTML=ctRowHtml(mCurType());}
+function renderSbCt(){const el=document.getElementById('sbr-ct');const on=!!editingSbId&&!(convDraft&&convDraft.bet.id===editingSbId);el.style.display=on?'flex':'none';if(on)el.innerHTML=ctRowHtml(document.getElementById('sbr-kind').value);}
+document.getElementById('m-type').addEventListener('change',renderMCt);
+document.getElementById('m-fun').addEventListener('change',renderMCt);
+document.getElementById('sbr-kind').addEventListener('change',renderSbCt);
+document.getElementById('m-ct').addEventListener('click',e=>{
+  const c=e.target.closest('[data-ct]');if(!c)return;const k=c.dataset.ct;
+  if(CT_SB(k)){const n=D.normals.find(x=>x.id===editingNormalId);if(!n)return;
+    modal.style.display='none';editingNormalId=null;mSels=null;openConvNm(n,k==='mid');return;}
+  if(k==='fun')document.getElementById('m-fun').checked=true;
+  else{document.getElementById('m-type').value=k==='freebet'?'Freebet':'Normal';document.getElementById('m-fun').checked=false;}
+  updateNormalPreview();renderMCt();
+});
+document.getElementById('sbr-ct').addEventListener('click',e=>{
+  const c=e.target.closest('[data-ct]');if(!c)return;const k=c.dataset.ct;
+  if(CT_SB(k)){document.getElementById('sbr-kind').value=k;renderSbEdSum();renderSbCt();return;}
+  const b=D.bets.find(x=>x.id===editingSbId);if(!b)return;
+  document.getElementById('sbRegModal').style.display='none';editingSbId=null;sbEd=null;
+  openConvSb(b,k);
+});
+function cvStatus(x,kind){
+  if(kind==='nm'){if(x.cashOut!=null)return ['Cashed out',x.profit>=0?'won':'lost'];
+    return x.status==='won'?['Won','won']:x.status==='lost'?['Lost','lost']:x.status==='anulada'?['Void','']:[x.pendMark?'Pending · marked '+(x.pendMark==='won'?'won':'lost'):'Pending',''];}
+  return x.status==='pending'?['Pending','']:x.status==='anulada'?['Void','']:[x.cashOut!=null?'Cashed out':'Settled',(x.profit||0)>=0?'won':'lost'];
+}
+function uniqId(id,taken){while(taken(id))id++;return id;}
+let cv=null;         // what the Change type dialog is doing: {mode:'nm'|'sb', id, mid, pick:Set, types:[]}
+let convDraft=null;  // a surebet being built from normal bets, shown in Edit surebet before it's saved: {bet, from:[ids], snaps}
+function cvClose(){document.getElementById('convModal').style.display='none';cv=null;}
+// ── normal bets → one surebet / middle ──
+function openConvNm(n,mid){
+  if(n.type==='Freebet'){alert('A freebet can\'t be a surebet leg: surebet legs are real-money stakes. If this was a real-money bet, switch it to Normal first, save, and then Surebet.');return;}
+  cv={mode:'nm',id:n.id,mid,pick:new Set()};
+  document.getElementById('cv-title').textContent=mid?'Count as a middle':'Count as a surebet';
+  document.getElementById('cv-sub').textContent='Tick the bets that cover the other side. They become one '+(mid?'middle':'surebet')+' — each one is a bookmaker leg — and stop being separate bets. Nothing changes until you save.';
+  document.getElementById('cv-q').style.display='';document.getElementById('cv-q').value='';
+  const day=d=>Date.parse((d||'')+'T00:00:00')/864e5,ev=matchName(n.event);
+  D.normals.forEach(x=>{if(x!==n&&x.type!=='Freebet'&&ev&&matchName(x.event)===ev&&Math.abs(day(x.date)-day(n.date))<=MATCH_DAYS&&x.status===n.status&&x.status==='pending')cv.pick.add(x.id);});
+  renderConvNm();
+  document.getElementById('convModal').style.display='flex';
+}
+function cvNmItem(x,on,fixed){
+  const [st,sc]=cvStatus(x,'nm');
+  return `<button type="button" class="ru-it cv-it${on?' on':''}${fixed?' fixed':''}"${fixed?'':` data-cvn="${x.id}"`}><div class="ru-ev"><span class="ru-ty">${isFun(x)?'Funbet':isCombi(x)?'Combi':'Normal'}</span>${esc(x.event||'(no event)')} <span class="cv-st ${sc}">${st}</span></div>${x.pick?`<div class="ru-mk">${esc(x.pick)}</div>`:''}<div class="ru-lg"><b>${esc(x.house||'?')}</b> @${fmt(x.odd||0)} · ${fmt(x.stake||0)} €${isCombi(x)?' · '+(x.selections||[]).length+' selections':''}</div><div class="ru-wh">${fmtWhen(x.date,x.time)||'No date'}</div></button>`;
+}
+function renderConvNm(){
+  const n=D.normals.find(x=>x.id===cv.id);if(!n){cvClose();return;}
+  const q=(document.getElementById('cv-q').value||'').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  const words=q.split(/\s+/).filter(Boolean),day=d=>Date.parse((d||'')+'T00:00:00')/864e5,ev=matchName(n.event);
+  const txt=x=>[x.event,x.pick,x.house,(x.selections||[]).map(s=>s.name).join(' ')].join(' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  const others=D.normals.filter(x=>x!==n&&x.type!=='Freebet');
+  const same=others.filter(x=>ev&&matchName(x.event)===ev&&Math.abs(day(x.date)-day(n.date))<=MATCH_DAYS);
+  let rest=others.filter(x=>!same.includes(x)&&!cv.pick.has(x.id));
+  rest=words.length?rest.filter(x=>(t=>words.every(w=>t.includes(w)))(txt(x))):rest.filter(x=>x.status==='pending');
+  rest.sort((a,b)=>b.id-a.id);
+  const picked=others.filter(x=>cv.pick.has(x.id)&&!same.includes(x));
+  const shown=rest.slice(0,40);
+  let h=`<div class="cv-sec">This bet</div>`+cvNmItem(n,true,true);
+  if(same.length)h+=`<div class="cv-sec">Same match</div>`+same.map(x=>cvNmItem(x,cv.pick.has(x.id))).join('');
+  if(picked.length)h+=`<div class="cv-sec">Picked</div>`+picked.map(x=>cvNmItem(x,true)).join('');
+  h+=`<div class="cv-sec">${words.length?'Found':'Other pending bets'}</div>`+(shown.length?shown.map(x=>cvNmItem(x,false)).join(''):`<div class="ru-empty">${words.length?'Nothing matches':'No other pending bets — search to find settled ones'}</div>`)
+    +(rest.length>shown.length?`<div class="ru-empty">${rest.length-shown.length} more — search to narrow it down</div>`:'');
+  document.getElementById('cv-list').innerHTML=h;
+  const k=cv.pick.size;
+  document.getElementById('cv-go').textContent=k?`Join ${k+1} bets → ${cv.mid?'middle':'surebet'}`:'Continue · add the other side by hand';
+  document.getElementById('cv-note').textContent=k?'':'No other bet ticked: you\'ll add the other bookmaker(s) by hand on the next step.';
+}
+function nmToLeg(n){
+  const sels=isCombi(n)?(n.selections||[]).map(x=>({name:x.name||'',odd:x.odd!=null?x.odd:null})):[];
+  const l={house:n.house||'',result:n.pick||(sels.length?sels.map(x=>x.name||'?').join(' + '):''),odd:n.odd,stake:n.stake||0};
+  if(sels.length)l.sels=sels;
+  l.minReturn=cents(legPay(l)*(l.stake||0));
+  return l;
+}
+// the surebet that these normal bets make, with their results carried over (null + alert if it can't be done)
+function sbFromNormals(list,mid){
+  const main=list[0],legs=list.map(nmToLeg);
+  const b={id:uniqId(main.id,id=>D.bets.some(x=>x.id===id)),event:main.event||'(No event)',market:'',date:main.date||todayISO(),time:main.time||'',resolveDate:'',
+    categoryId:main.categoryId!=null?main.categoryId:null,status:'pending',legs};
+  if(main.comp)b.comp=main.comp;
+  const notes=[...new Set(list.map(n=>(n.notes||'').trim()).filter(Boolean))];if(notes.length)b.notes=notes.join(' · ');
+  const fi=list.findIndex(n=>n.flag);if(fi>=0){b.flag={...list[fi].flag};if(list.length>1)b.flag.leg=fi;}
+  if(mid)b.mid=1;
+  b.totalStake=cents(legs.reduce((a,l)=>a+(l.stake||0),0));
+  b.minReturn=sbMinReturn(b);
+  const exp=cents(b.minReturn-b.totalStake);
+  b.expectedProfit=exp;b.profitPct=b.totalStake>0?+(exp/b.totalStake*100).toFixed(2):0;
+  if(mid)b.midProfit=midBoth(b);
+  const win=idx=>mid&&idx.length===2&&legs.length===2?'both':markNorm(idx);
+  const ret=n=>n.status==='anulada'?(n.stake||0):n.cashOut!=null?n.cashOut:n.status==='won'?cents((n.stake||0)+(n.profit||0)):0;
+  const open=list.filter(n=>n.status==='pending'),done=list.filter(n=>n.status!=='pending'),odd=done.some(n=>n.cashOut!=null||n.status==='anulada');
+  const lastRes=done.map(n=>n.resolveDate||'').sort().pop()||todayISO();
+  if(!done.length){ // all still open: a result already marked stays marked
+    const w=win(list.map((n,i)=>n.pendMark==='won'?i:-1).filter(i=>i>=0));if(w!==undefined)b.pendMark=w;
+    b.profit=exp;
+  }else if(!open.length){ // all settled
+    b.resolveDate=lastRes;
+    if(done.every(n=>n.status==='anulada')){b.status='anulada';b.profit=0;}
+    else if(!odd){const w=win(list.map((n,i)=>n.status==='won'?i:-1).filter(i=>i>=0));
+      if(w!==undefined){b.winnerLeg=w;b.profit=sbResultProfit(b,w);b.status='won';}else{b.profit=cents(-b.totalStake);b.status='lost';}}
+    else{b.cashOutLegs=list.map(n=>cents(ret(n)));b.cashOut=cents(b.cashOutLegs.reduce((a,x)=>a+x,0));b.profit=cents(b.cashOut-b.totalStake);b.status=b.profit>=0?'won':'lost';}
+  }else if(!odd){ // some settled, some open: the ones that won are marked, it settles from Pending
+    const w=win(list.map((n,i)=>n.status==='won'||n.pendMark==='won'?i:-1).filter(i=>i>=0));if(w!==undefined)b.pendMark=w;
+    b.profit=exp;
+  }else{ // a settled one was voided / cashed out: that money is in, the rest stays open (partial cash out)
+    b.coPart=list.map(n=>n.status==='pending'?null:cents(ret(n)));
+    const w=markNorm(list.map((n,i)=>n.status==='pending'&&n.pendMark==='won'?i:-1).filter(i=>i>=0));if(w!==undefined)b.pendMark=w;
+    b.profit=exp;
+  }
+  return b;
+}
+document.getElementById('cv-go').addEventListener('click',()=>{
+  if(!cv)return;
+  if(cv.mode==='sb'){convSbSave();return;}
+  const n=D.normals.find(x=>x.id===cv.id);if(!n){cvClose();return;}
+  const list=[n,...D.normals.filter(x=>x!==n&&cv.pick.has(x.id))];
+  const b=sbFromNormals(list,cv.mid);if(!b)return;
+  convDraft={bet:b,from:list.map(x=>x.id)};
+  cvClose();
+  openSbEditModal(b.id);
+  if(list.length===1){ // the other side is added by hand
+    sbEd.push({o:-1,house:'',result:'',odd:'',stake:'',sels:null,g:-1});sbOutK=sbEd.length;
+    renderSbEd('[data-legres="1"]');
+  }
+});
+document.getElementById('cv-cancel').addEventListener('click',cvClose);
+document.getElementById('convModal').addEventListener('click',e=>{if(e.target.id==='convModal'){cvClose();return;}
+  const it=e.target.closest('[data-cvn]');if(!it||!cv||cv.mode!=='nm')return;
+  const id=+it.dataset.cvn;if(cv.pick.has(id))cv.pick.delete(id);else cv.pick.add(id);renderConvNm();});
+document.getElementById('cv-q').addEventListener('input',()=>{if(cv&&cv.mode==='nm')renderConvNm();});
+document.getElementById('convModal').addEventListener('change',e=>{const s=e.target.closest('[data-cvt]');if(!s||!cv||cv.mode!=='sb')return;cv.types[+s.dataset.cvt]=s.value;renderConvSb();});
+// the draft is saved from Edit surebet: it goes into D.bets and the normal bets it came from leave
+function convDraftCommit(b){
+  const snaps=convDraft.from.map(id=>D.normals.find(x=>x.id===id)).filter(Boolean).map(x=>JSON.stringify(x));
+  const one=convDraft.from.length===1&&(b.legs||[]).length===2&&D.normals.find(x=>x.id===convDraft.from[0]);
+  if(one){ // one bet + the other side typed by hand: in a 2-way bet that side did the opposite
+    if(b.status==='pending'){if(one.pendMark==='lost')b.pendMark=1;}
+    else if(b.cashOut==null&&b.status!=='anulada')b.winnerLeg=one.status==='won'?0:1;
+  }
+  if(b.status!=='pending'&&b.cashOut==null&&b.status!=='anulada'){ // settled: the result follows the legs as they are now
+    const w=b.winnerLeg;if(w!=null&&sbResultProfit(b,w)!=null){b.profit=sbResultProfit(b,w);b.status='won';}else{delete b.winnerLeg;b.profit=cents(-(b.totalStake||0));b.status='lost';}
+  }
+  const from=new Set(convDraft.from);
+  D.normals=D.normals.filter(x=>!from.has(x.id));
+  from.forEach(id=>{if(D.hidden&&D.hidden['nm:'+id]){delete D.hidden['nm:'+id];D.hidden['sb:'+b.id]=1;}});
+  D.bets.unshift(b);convDraft=null;
+  return ()=>{D.bets=D.bets.filter(x=>x.id!==b.id);snaps.forEach(j=>{const o=JSON.parse(j);if(!D.normals.some(x=>x.id===o.id))D.normals.unshift(o);});};
+}
+// ── surebet / middle → one bet per bookmaker ──
+function openConvSb(b,k){
+  if(b.cashOut!=null&&!Array.isArray(b.cashOutLegs)){alert('This bet was cashed out as one amount, so it can\'t be split per bookmaker. Set it back to Pending (or cash it out per bookmaker) first.');return;}
+  cv={mode:'sb',id:b.id,types:(b.legs||[]).map(()=>k)};
+  document.getElementById('cv-title').textContent='Split into separate bets';
+  document.getElementById('cv-sub').textContent=`Each bookmaker leg of this ${b.mid?'middle':'surebet'} becomes its own bet, with its own result. Pick the type of each one.`;
+  document.getElementById('cv-q').style.display='none';
+  renderConvSb();
+  document.getElementById('convModal').style.display='flex';
+}
+// the bets a surebet splits into, results carried over (string = why it can't be done)
+function normalsFromSb(b,types){
+  const L=b.legs||[];if(!L.length)return 'This bet has no legs.';
+  const cp=coPartOf(b),w=b.winnerLeg;
+  const settledWin=b.status!=='pending'&&b.status!=='anulada'&&b.cashOut==null;
+  if(settledWin&&w==null&&Math.abs((b.profit||0)+(b.totalStake||0))>0.01)return 'Mark which bookmaker won first (My bets → tap the winning leg), so each bet gets its result.';
+  const used=new Set(),out=[];
+  L.forEach((l,i)=>{
+    const t=types[i]||'normal',fb=t==='freebet';
+    const id=uniqId(b.id+i,x=>used.has(x)||D.normals.some(n=>n.id===x));used.add(id);
+    const res=String(l.result||'').trim(),pk=/^outcome \d+$/i.test(res)?'':res;
+    const n={id,event:b.event||'(No event)',type:fb?'Freebet':'Normal',odd:l.odd,stake:l.stake||0,house:l.house||'',
+      status:'pending',date:b.date||todayISO(),time:b.time||'',resolveDate:'',notes:b.notes||'',categoryId:b.categoryId!=null?b.categoryId:null};
+    const pick=[b.market,pk].filter(Boolean).join(' · ');if(pick)n.pick=pick;
+    if(t==='fun')n.fun=1;
+    if(l.sels&&l.sels.length)n.selections=l.sels.map(x=>({name:x.name||'',odd:x.odd}));
+    if(b.comp)n.comp=b.comp;
+    n.potentialWin=cents(n.stake*(nmPayOdd(n)-1));n.potentialLoss=fb?0:-n.stake;
+    if(b.flag&&(b.flag.leg==null?i===0:b.flag.leg===i)){n.flag={...b.flag};delete n.flag.leg;}
+    const co=amt=>{n.cashOut=cents(amt);n.profit=cents(amt-(fb?0:n.stake));n.status=n.profit>=0?'won':'lost';n.resolveDate=b.resolveDate||todayISO();};
+    if(cp&&cp[i]!=null)co(cp[i]);
+    else if(b.status==='pending'){if(b.pendMark!=null&&(b.pendMark==='both'?b.mid:sbHasWin(b,b.pendMark)))n.pendMark=legWins(b,b.pendMark,i)?'won':'lost';}
+    else if(b.status==='anulada'){n.resolveDate=b.resolveDate||todayISO();resolveNormal(n,'anulada');}
+    else if(Array.isArray(b.cashOutLegs))co(b.cashOutLegs[i]||0);
+    else{n.resolveDate=b.resolveDate||todayISO();resolveNormal(n,w!=null&&legWins(b,w,i)?'won':'lost');}
+    out.push(n);
+  });
+  return out;
+}
+function renderConvSb(){
+  const b=D.bets.find(x=>x.id===cv.id);if(!b){cvClose();return;}
+  const r=normalsFromSb(b,cv.types),bad=typeof r==='string';
+  document.getElementById('cv-list').innerHTML=(b.legs||[]).map((l,i)=>{const n=bad?null:r[i];
+    const res=!n?'':n.status==='pending'?(n.pendMark?`Pending · marked ${n.pendMark}`:'Pending'):n.status==='anulada'?'Void · 0 €':`${n.cashOut!=null?'Cashed out':n.status==='won'?'Won':'Lost'} · ${(n.profit||0)>=0?'+':''}${fmt(n.profit||0)} €`;
+    return `<div class="cv-leg"><div><div class="ru-ev">${esc(l.house||'Leg '+(i+1))}</div><div class="ru-lg">${esc(l.result||'')} · ${fmt(l.stake||0)} € @ ${fmt(l.odd||0)}</div>${res?`<div class="cv-res ${n.status==='pending'||n.status==='anulada'?'':(n.profit||0)>=0?'pend-preview-pos':'pend-preview-neg'}">${res}</div>`:''}</div>
+      <select data-cvt="${i}"><option value="normal"${cv.types[i]==='normal'?' selected':''}>Normal</option><option value="freebet"${cv.types[i]==='freebet'?' selected':''}>Freebet</option><option value="fun"${cv.types[i]==='fun'?' selected':''}>Funbet</option></select></div>`;}).join('');
+  const tot=bad?0:cents(r.reduce((a,n)=>a+(n.status==='pending'?0:(n.profit||0)),0));
+  document.getElementById('cv-note').innerHTML=bad?`<span class="pend-preview-neg">${esc(r)}</span>`:b.status==='pending'&&!coPartOf(b)?`${r.length} pending bets · ${fmt(r.reduce((a,n)=>a+(n.type==='Freebet'?0:n.stake),0))} € staked`:`Result of the ${r.length} bets: <b class="${tot>=0?'pend-preview-pos':'pend-preview-neg'}">${tot>=0?'+':''}${fmt(tot)} €</b>${b.status!=='pending'?` (it was ${(b.profit||0)>=0?'+':''}${fmt(b.status==='anulada'?0:b.profit||0)} €)`:''}`;
+  const go=document.getElementById('cv-go');go.textContent=`Split into ${(b.legs||[]).length} bets`;go.disabled=bad;
+}
+function convSbSave(){
+  const b=D.bets.find(x=>x.id===cv.id);if(!b){cvClose();return;}
+  const r=normalsFromSb(b,cv.types);if(typeof r==='string'){alert(r);return;}
+  const snap=JSON.stringify(b),ids=r.map(n=>n.id),hid=D.hidden&&D.hidden['sb:'+b.id];
+  D.bets=D.bets.filter(x=>x!==b);
+  if(hid){delete D.hidden['sb:'+b.id];ids.forEach(id=>D.hidden['nm:'+id]=1);}
+  r.slice().reverse().forEach(n=>D.normals.unshift(n));
+  cvClose();
+  convAfter(`${b.event||'Bet'} · split into ${r.length} separate bets`,()=>{const s=new Set(ids);D.normals=D.normals.filter(x=>!s.has(x.id));if(!D.bets.some(x=>x.id===b.id))D.bets.unshift(JSON.parse(snap));if(hid){ids.forEach(id=>delete D.hidden['nm:'+id]);D.hidden['sb:'+b.id]=hid;}});
+}
+function convAfter(msg,undo){
+  save();updateBadges();refreshAfterPend();
+  if(document.getElementById('page-categorias').style.display!=='none')renderCategorias();
+  toast(msg,'Undo',()=>{undo();save();updateBadges();refreshAfterPend();toast('Put back as it was');});
 }
 
 // ══════════════════════════════════════════
