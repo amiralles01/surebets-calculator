@@ -421,6 +421,9 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,
 .mc-row{display:flex;justify-content:space-between;align-items:center;
   padding:8px 17px;border-bottom:1px solid var(--border);font-size:12.5px}
 .mc-row:last-child{border-bottom:none}
+.bk-stale{display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:10px;border:1px solid var(--yellow);border-radius:var(--r);background:var(--surface)}
+.bk-stale>div{flex:1;min-width:0}.bk-stale b{display:block;font-size:13.5px}.bk-stale small{display:block;font-size:12px;color:var(--muted);margin-top:3px}
+@media(max-width:600px){.bk-stale{flex-direction:column;align-items:stretch}}
 .th-real{font-size:12px;color:rgba(255,255,255,.62);margin:6px 0 10px;font-variant-numeric:tabular-nums}
 [data-adjm]{cursor:pointer}.adj-see{font-size:11px;font-weight:600;color:var(--faint);margin-left:4px}
 .adj-list{overflow:auto;display:flex;flex-direction:column;gap:6px}
@@ -7057,7 +7060,10 @@ function renderCasas(filter=''){
   };
   if(bkFocus!=null&&!sorted.some(c=>c.id===bkFocus))bkFocus=null;
   const visTot=sorted.reduce((a,c)=>a+casaMoney(c,ledger).balance,0);
-  const bar=`<div class="bk-vbar">
+  // Unused bookmakers really hold 0 €: if the app still shows money there, offer to set them to 0 (a logged Set balance)
+  const stale=bkProfileSel==='unused'?staleUnused(ledger):[];
+  const staleHtml=stale.length?`<div class="bk-stale"><div><b>${stale.length} Unused bookmaker${stale.length>1?'s':''} still show${stale.length>1?'':'s'} money in the app</b><small>${stale.map(x=>`${esc(x.c.name)} ${fmt(x.bal)} €`).join(' · ')}. If ${stale.length>1?'they really have':'it really has'} 0 € (withdrawn, closed or banned), set ${stale.length>1?'them':'it'} to 0: it's saved as a Set balance and Profit counts it.</small></div><button class="btn-reg" data-bk-zero-unused="1" style="width:auto;margin:0;padding:9px 16px">Set to 0</button></div>`:'';
+  const bar=staleHtml+`<div class="bk-vbar">
     <div class="bks-per" id="bkViewSeg"><button data-bkview="grid" class="${bkView==='grid'?'on':''}">Grid</button><button data-bkview="cards" class="${bkView==='cards'?'on':''}">Cards</button></div>
     <div class="bks-per" id="bkSortSeg">${BK_SORTS.map(([k,l])=>`<button data-bksort="${k}" class="${bkSort===k?'on':''}">${l}</button>`).join('')}</div>
     <div class="bk-vtot">${sorted.length} bookmaker${sorted.length===1?'':'s'} · <b class="${visTot>=0?'pos':'neg'}">${fmt(visTot)} €</b></div>
@@ -7313,6 +7319,14 @@ document.getElementById('casasList').addEventListener('click',e=>{
   }
   const editBtn=e.target.closest('[data-edit-cid]');
   if(editBtn){openCasaModal(+editBtn.dataset.editCid);return;}
+  if(e.target.closest('[data-bk-zero-unused]')){
+    const list=staleUnused();if(!list.length)return;
+    const snaps=list.map(x=>({c:x.c,balAdj:x.c.balAdj,adjLog:(x.c.adjLog||[]).map(a=>({...a}))}));
+    list.forEach(x=>logAdj(x.c,+((x.c.balAdj||0)-x.bal).toFixed(2)));
+    save();renderCasas(document.getElementById('casasSearch').value);
+    toast(`${list.length} bookmaker${list.length>1?'s':''} set to 0 €`,'Undo',()=>{snaps.forEach(s=>{s.c.balAdj=s.balAdj;s.c.adjLog=s.adjLog;});save();renderCasas(document.getElementById('casasSearch').value);});
+    return;
+  }
   const unBtn=e.target.closest('[data-bk-unused]');
   if(unBtn){
     const c=D.casas.find(x=>x.id===+unBtn.dataset.bkUnused);if(!c)return;
@@ -7344,6 +7358,10 @@ document.getElementById('casasList').addEventListener('keydown',e=>{
 let bkProfileSel='all'; // 'all' (active) | 'none' | 'unused' | profileId
 // A bookmaker is "unused" when it has 0 € balance, nothing in play, and no deposit/withdrawal in the last 7 days
 // c.unused: true = moved to Unused by hand, false = kept in Active by hand, missing = automatic
+function staleUnused(ledger){
+  const L=ledger||bookmakerLedger();
+  return visibleCasas().filter(c=>!isBank(c)&&isUnusedCasa(c,L)).map(c=>{const m=casaMoney(c,L);return {c,m,bal:m.balance};}).filter(x=>Math.abs(x.bal)>=0.01&&x.m.inPlay<0.005);
+}
 function isUnusedCasa(c,ledger){
   if(c.unused===true)return true;
   if(c.unused===false)return false;
