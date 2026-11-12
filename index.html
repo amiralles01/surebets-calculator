@@ -3023,7 +3023,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
       <div class="card">
         <div class="ch perf-head">
           <div>
-            <div class="perf-total-label" title="Bets only: no costs, Set balances or 'Not in bets'">Bets result</div>
+            <div class="perf-total-label" title="The line ends at Total Profit: bets, Set balances and costs on their day, starting from 'Not in bets'. The bars are bets only.">Total profit</div>
             <div class="perf-total-val" id="perfTotal">—</div>
           </div>
           <div class="perf-exp-boxes">
@@ -10074,6 +10074,10 @@ function renderPerfChart(){
   const entries=[];
   D.bets.forEach(b=>{if(isHidden('sb:'+b.id))return;const rd=b.date||b.resolveDate;if(rd)entries.push({date:rd,profit:betProfit(b),expected:b.status==='anulada'?0:((b.expectedProfit!=null?b.expectedProfit:b.profit)||0),isBet:true});});
   D.normals.forEach(n=>{if(isHidden('nm:'+n.id))return;const rd=n.date||n.resolveDate;if(rd)entries.push({date:rd,profit:n.profit||0,expected:n.profit||0,isBet:false});});
+  // the line also carries Set balances and costs on their date (the daily bars stay bets only),
+  // and 'Not in bets' as where it starts, so it ends at Total Profit
+  [...trackedAdj(),...trackedCosts(),...softwareCharges(),...trackedExpenses()].forEach(a=>{if(a.date&&a.date<=todayLocalISO())entries.push({date:a.date,profit:a.profit,expected:0,isBet:false,extra:true});});
+  const realInfo=gapAll&&gapAll.length?realProfitInfo(gapAll):null,startAt=realInfo&&Math.abs(realInfo.gap)>=0.01?realInfo.gap:0;
   const wrap=document.getElementById('perfChartWrap');
   if(!entries.length){
     wrap.innerHTML='<div class="perf-chart-empty">Not enough data yet to show performance.</div>';
@@ -10083,14 +10087,14 @@ function renderPerfChart(){
   }
   const byDate={};
   entries.forEach(e=>{
-    if(!byDate[e.date])byDate[e.date]={profit:0,expected:0,betExpected:0,sbGot:0};
-    byDate[e.date].profit+=e.profit;byDate[e.date].expected+=e.expected;
+    if(!byDate[e.date])byDate[e.date]={profit:0,expected:0,betExpected:0,sbGot:0,bets:0};
+    byDate[e.date].profit+=e.profit;byDate[e.date].expected+=e.expected;if(!e.extra)byDate[e.date].bets+=e.profit;
     if(e.isBet){byDate[e.date].betExpected+=e.expected;byDate[e.date].sbGot+=e.profit;}
   });
   const dates=Object.keys(byDate).sort();
-  let cp=0,ce=0,cc=0;
+  let cp=startAt,ce=0,cc=0;
   const series=dates.map(d=>{cp+=byDate[d].profit;ce+=byDate[d].expected;cc+=byDate[d].betExpected;
-    return{date:d,daily:byDate[d].profit,cumProfit:cp,cumEV:ce,cumCLV:cc,sbGot:byDate[d].sbGot};});
+    return{date:d,daily:byDate[d].bets,cumProfit:cp,cumEV:ce,cumCLV:cc,sbGot:byDate[d].sbGot};});
   const last=series[series.length-1];
   document.getElementById('perfTotal').textContent=(last.cumProfit>=0?'+':'')+fmt(last.cumProfit,0)+' €';
   document.getElementById('perfTotal').className='perf-total-val '+(last.cumProfit>=0?'pos':'neg');
@@ -10123,6 +10127,7 @@ function renderPerfChart(){
   const svg=`<svg class="perf-chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
     ${yTicks.map(v=>`<line x1="${padL}" y1="${y(v).toFixed(1)}" x2="${W-padR}" y2="${y(v).toFixed(1)}" stroke="var(--border)" stroke-width="1"/><text x="${padL-8}" y="${(y(v)+3).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--faint)">${fmtCompact(v)}</text>`).join('')}
     ${bars}
+    ${startAt?`<text x="${(padL+4).toFixed(1)}" y="${(y(startAt)-6).toFixed(1)}" font-size="10" fill="var(--faint)">starts at ${startAt>0?'+':''}${fmt(startAt,0)} € (Not in bets)</text>`:''}
     <path d="${path('cumCLV')}" fill="none" stroke="var(--purple)" stroke-width="2" stroke-dasharray="5,4"/>
     <path d="${path('cumProfit')}" fill="none" stroke="var(--blue)" stroke-width="2.5"/>
     ${xTicks.map(s=>`<text x="${x(s.date).toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="10" fill="var(--faint)">${dLabel(s.date)}</text>`).join('')}
