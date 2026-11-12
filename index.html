@@ -2079,7 +2079,8 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
   .pend-view .seg-b span{display:none}
   .pend-view .seg-b{padding:8px 9px}
   .pend-tools .ps-by{display:none}
-  #pendDays .pd-pick input{font-size:16px!important;width:156px;padding:4px 9px!important}
+  #pendDays .pd-pick input,#betsDays .pd-pick input{font-size:16px!important;width:156px;padding:4px 9px!important}
+  .cr input#customStep{font-size:16px!important}
   .pend-sort .seg-b{padding:8px 6px;text-transform:capitalize}
   .promo-btn{padding:9px 11px}
   #pendStats{gap:8px}
@@ -4068,7 +4069,8 @@ function softwareCharges(){
 function bankrollSnapshot(){const b=bankrollSummary();return {b0:+(b.bankroll+b.inTransit).toFixed(2),put0:+b.putIn.toFixed(2),drawn0:+b.drawn.toFixed(2)};}
 function betProfit(b){return(b.status==='won'||b.status==='lost')?(b.profit||0):0;}
 function betStake(b){return b.status==='anulada'?0:(b.totalStake||0);}
-function todayISO(){return new Date().toISOString().slice(0,10);}
+// your own day (Spain), not UTC: a bet saved at 00:30 belongs to today, not yesterday
+function todayISO(){return todayLocalISO();}
 
 // ══════════════════════════════════════════
 //  CALC STATE
@@ -4739,7 +4741,7 @@ function openSbRegModal(){
   document.getElementById('sbr-event').value=pf?pf.event||'':'';
   document.getElementById('sbr-market').value=pf?pf.market||'':'';
   renderSbrLegs(res.valid.map(o=>({house:o.house,result:o.result,odd:o.odd})));
-  document.getElementById('sbr-start').value=pf&&pf.date?pf.date:new Date().toISOString().slice(0,10);
+  document.getElementById('sbr-start').value=pf&&pf.date?pf.date:todayLocalISO();
   document.getElementById('sbr-time').value=pf?hourOnly(pf.time):'';
   fillCategorySelect(document.getElementById('sbr-category'),pf&&newBetCat==null?pf.categoryId:newBetCat);
   document.getElementById('sbr-notes').value='';
@@ -4780,7 +4782,7 @@ function registerBet(){
   const res=calculate();if(!res)return;
   const ev=document.getElementById('sbr-event').value.trim();
   if(!ev){alert('Please enter the event.');return;}
-  const startVal=document.getElementById('sbr-start').value||new Date().toISOString().slice(0,10);
+  const startVal=document.getElementById('sbr-start').value||todayLocalISO();
   const timeVal=document.getElementById('sbr-time').value||'';
   const catVal=document.getElementById('sbr-category').value;
   const houses=readSbrHouses();
@@ -4918,8 +4920,9 @@ function renderSurebets(filter=''){
   const bets=D.bets.filter(b=>betsDayMatch(b.date)&&(!betsFlag||flagOf(b))).filter(b=>!filter||b.event.toLowerCase().includes(filter.toLowerCase())||(b.market||'').toLowerCase().includes(filter.toLowerCase())||b.legs.some(l=>l.house&&l.house.toLowerCase().includes(filter.toLowerCase())));
   const vBets=visibleBets().filter(b=>betsDayMatch(b.date));
   renderBetsDays();
-  const won=vBets.filter(b=>b.status==='won'),lost=vBets.filter(b=>b.status==='lost');
-  const wonProfit=won.reduce((a,b)=>a+(b.profit||0),0);
+  const won=vBets.filter(b=>b.status==='won');
+  // what your surebets really made: won and lost ones (a lost surebet takes money away), voids count 0
+  const wonProfit=vBets.reduce((a,b)=>a+betProfit(b),0);
   document.getElementById('sbStats').innerHTML=`
     <div class="sc"><div class="sl2">Total surebets</div><div class="sv2">${vBets.length}</div></div>
     <div class="sc"><div class="sl2">Won</div><div class="sv2 pos">${won.length}</div></div>
@@ -5456,7 +5459,7 @@ document.getElementById('nbCsv').addEventListener('click',()=>{
 });
 document.getElementById('sbExport').addEventListener('click',()=>{
   const blob=new Blob([JSON.stringify({bets:D.bets},null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`surebets_${new Date().toISOString().slice(0,10)}.json`;a.click();
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`surebets_${todayLocalISO()}.json`;a.click();
 });
 document.getElementById('sbImport').addEventListener('click',()=>document.getElementById('sbFile').click());
 document.getElementById('sbFile').addEventListener('change',e=>{
@@ -5480,7 +5483,7 @@ document.getElementById('sbClear').addEventListener('click',()=>{
 
 document.getElementById('nbExport').addEventListener('click',()=>{
   const blob=new Blob([JSON.stringify({normals:D.normals},null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`normales_${new Date().toISOString().slice(0,10)}.json`;a.click();
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`normales_${todayLocalISO()}.json`;a.click();
 });
 document.getElementById('nbImport').addEventListener('click',()=>document.getElementById('nbFile').click());
 document.getElementById('nbFile').addEventListener('change',e=>{
@@ -5733,9 +5736,9 @@ document.getElementById('m-save').addEventListener('click',()=>{
       mwSrc=n;
     }
   }else{
-    if(!ev){alert('Introduce el evento.');return;}
+    if(!ev){alert('Please enter the event.');return;}
     if(!(oddIn>1)){alert('Enter a valid odds value (greater than 1).');return;}
-    if(!(stakeIn>0)){alert('Introduce el dinero invertido.');return;}
+    if(!(stakeIn>0)){alert('Enter the amount staked.');return;}
     D.normals.unshift({id:Date.now(),event:ev,type,odd:oddIn,stake:stakeIn,
       potentialWin:cents(stakeIn*(payOdd(document.getElementById('m-house')?.value,oddIn)-1)),potentialLoss:type==='Freebet'?0:-stakeIn,
       status:'pending',
@@ -7113,6 +7116,18 @@ function placeBkOpen(){
   const after=tiles[Math.min(tiles.length-1,Math.floor(i/cols)*cols+cols-1)];
   if(after.nextElementSibling!==o)after.after(o);
 }
+// big numbers in the tiles shrink a little to fit their box instead of being cut ("+2,048.2…")
+function fitNums(){
+  document.querySelectorAll('.sc .sv2').forEach(e=>{
+    if(!e.offsetParent)return;e.style.fontSize='';
+    if(e.scrollWidth<=e.clientWidth+1)return;
+    let f=parseFloat(getComputedStyle(e).fontSize);
+    while(f>13&&e.scrollWidth>e.clientWidth+1){f-=1;e.style.fontSize=f+'px';}
+  });
+}
+let _fitQ=0;function fitNumsSoon(){if(_fitQ)return;_fitQ=requestAnimationFrame(()=>{_fitQ=0;fitNums();});}
+new MutationObserver(fitNumsSoon).observe(document.body,{childList:true,subtree:true});
+window.addEventListener('resize',fitNumsSoon);
 window.addEventListener('resize',()=>{const pc=document.getElementById('page-casas');if(pc&&pc.style.display!=='none')placeBkOpen();});
 
 const casaModal=document.getElementById('addCasaModal');
@@ -7163,7 +7178,7 @@ document.getElementById('c-save').addEventListener('click',()=>{
       if(bank)c.kind='bank';else delete c.kind;
       c.fractional=document.getElementById('c-frac').checked;}
   }else{
-    D.casas.unshift({id:Date.now(),name,amount,notes,profileId,...(bank?{kind:'bank'}:{}),fractional:document.getElementById('c-frac').checked,pendingTransfer:0,history:amount>0?[{id:Date.now()+1,type:'dep',amount,date:new Date().toISOString().slice(0,10),init:true}]:[]});
+    D.casas.unshift({id:Date.now(),name,amount,notes,profileId,...(bank?{kind:'bank'}:{}),fractional:document.getElementById('c-frac').checked,pendingTransfer:0,history:amount>0?[{id:Date.now()+1,type:'dep',amount,date:todayLocalISO(),init:true}]:[]});
   }
   save();updateBadges();
   renderCasas(document.getElementById('casasSearch').value);
@@ -7371,7 +7386,7 @@ function autoUnusedCasa(c,ledger){
   const m=casaMoney(c,ledger);
   if(isBank(c)||activeCosts(c).length)return false;
   if(Math.abs(m.balance)>=0.005||m.inPlay>0||m.open>0||(c.pendingTransfer||0)>0)return false;
-  const cutoff=new Date(Date.now()-7*864e5).toISOString().slice(0,10);
+  const cutoff=shiftedISO(-7);
   if((c.history||[]).some(h=>(h.type==='dep'||h.type==='wd')&&(h.date||'')>=cutoff))return false;
   if(c.id>1e12&&c.id>Date.now()-7*864e5)return false; // just created
   return true;
