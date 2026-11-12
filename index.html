@@ -421,6 +421,7 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,
 .mc-row{display:flex;justify-content:space-between;align-items:center;
   padding:8px 17px;border-bottom:1px solid var(--border);font-size:12.5px}
 .mc-row:last-child{border-bottom:none}
+.th-real{font-size:12px;color:rgba(255,255,255,.62);margin:6px 0 10px;font-variant-numeric:tabular-nums}
 [data-adjm]{cursor:pointer}.adj-see{font-size:11px;font-weight:600;color:var(--faint);margin-left:4px}
 .adj-list{overflow:auto;display:flex;flex-direction:column;gap:6px}
 .adj-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--raised);border-radius:8px;font-size:13px}
@@ -3990,6 +3991,17 @@ document.addEventListener('click',e=>{
   const d=e.target.closest('[data-adj-del]');if(d){const [cid,id,date]=d.dataset.adjDel.split(':');deleteAdj(+cid,+id,date);return;}
   if(e.target.id==='adj-close'||e.target.id==='adjModal')document.getElementById('adjModal').style.display='none';
 });
+// real profit from the bookmakers' money (same maths as the Hacienda tile) minus every cost; null if no deposits are recorded
+function realProfitInfo(all){
+  const bk=visibleCasas().filter(c=>!isBank(c));const dep=bk.reduce((a,c)=>a+(c.amount||0),0);
+  if(!(dep>0))return null;
+  const ledger=bookmakerLedger();
+  const bal=bk.reduce((a,c)=>{const m=casaMoney(c,ledger);return a+m.balance+m.inPlay;},0);
+  const hac=+(bal-dep).toFixed(2);
+  const costs=+(-(all||[]).filter(e=>e.cat==='cost'||e.cat==='software'||e.cat==='expense').reduce((a,e)=>a+e.profit,0)).toFixed(2);
+  const recorded=(all||[]).reduce((a,e)=>a+e.profit,0);
+  return {hac,costs,real:+(hac-costs).toFixed(2),gap:+(hac-costs-recorded).toFixed(2)};
+}
 function trackInfo(){return D.track&&D.track.from?D.track:null;}
 // only what happens inside the tracking window counts
 function trackedAdj(){const t=trackInfo();return t?adjEntries().filter(a=>a.date>=t.from&&a.id>=t.setAt):[];}
@@ -5205,13 +5217,19 @@ function renderProfit(){
   // the categories, each with its own colour (the same ones the month cards use)
   const cats=profitCats(hasFun);
   const tot={surebet:totalSB,middle:totalMid,normal:totalNorm,freebet:totalFB,fun:totalFun,none:totalNone,expense:totalExp,cost:totalCost,software:totalSw,adjust:totalAdj};
-  const tiles=cats.filter(c=>c.always||tot[c.k]).map(c=>`<div class="th-sub-item" style="--c:${c.c}"${c.k==='adjust'?' data-adjm="all" title="See and undo each balance correction"':''}><div class="th-sub-label"><i class="pc-dot"></i>${c.n}</div><div class="th-sub-val ${tot[c.k]>0.004?'pos':tot[c.k]<-0.004?'neg':''}">${tot[c.k]>0.004?'+':''}${fmt(tot[c.k])} €</div></div>`).join('');
+  // Total Profit = what your bookmakers really made (Hacienda: balance + open bets − deposited, no banks)
+  // minus costs. Whatever that real money has and your bets don't (slots, bets with a bookmaker that isn't
+  // in Bookmakers, typos…) shows as its own tile, so the tiles still add up to the total.
+  const real=realProfitInfo(all);let headline=totalAll;
+  if(real){tot.gap=real.gap;headline=totalAll+real.gap;}
+  const tiles=[...cats,...(real&&Math.abs(real.gap)>=0.01?[{k:'gap',n:'Not in bets',c:'#7A8CA8',always:true}]:[])].filter(c=>c.always||tot[c.k]).map(c=>`<div class="th-sub-item" style="--c:${c.c}"${c.k==='adjust'?' data-adjm="all" title="See and undo each balance correction"':c.k==='gap'?' title="Money your bookmakers have that no bet explains, or bets that no bookmaker balance includes (a bookmaker name that isn\'t in Bookmakers, a typo, old totals). Counted so Total Profit = Hacienda − costs."':''}><div class="th-sub-label"><i class="pc-dot"></i>${c.n}</div><div class="th-sub-val ${tot[c.k]>0.004?'pos':tot[c.k]<-0.004?'neg':''}">${tot[c.k]>0.004?'+':''}${fmt(tot[c.k])} €</div></div>`).join('');
   document.getElementById('totalHero').innerHTML=`
     <div class="total-hero">
       <div class="th-grid">
         <div class="th-main">
           <div class="th-label">Total Profit</div>
-          <div class="th-val ${totalAll>=0?'pos':'neg'}">${totalAll>=0?'+':''}${fmt(totalAll)} €</div>
+          <div class="th-val ${headline>=0?'pos':'neg'}">${headline>=0?'+':''}${fmt(headline)} €</div>
+          ${real?`<div class="th-real">Bookmakers ${real.hac>=0?'+':''}${fmt(real.hac)} € − costs ${fmt(real.costs)} €</div>`:''}
           ${paceHtml(all)}
         </div>
         ${monthChartHtml(visibleKeys,months)}
