@@ -421,6 +421,12 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,
 .mc-row{display:flex;justify-content:space-between;align-items:center;
   padding:8px 17px;border-bottom:1px solid var(--border);font-size:12.5px}
 .mc-row:last-child{border-bottom:none}
+[data-adjm]{cursor:pointer}.adj-see{font-size:11px;font-weight:600;color:var(--faint);margin-left:4px}
+.adj-list{overflow:auto;display:flex;flex-direction:column;gap:6px}
+.adj-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--raised);border-radius:8px;font-size:13px}
+.adj-item .adj-l{flex:1;min-width:0}.adj-item .adj-l b{display:block;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.adj-item .adj-l small{color:var(--faint);font-size:11.5px}
+.adj-item .adj-v{font-family:var(--mono);font-weight:700;white-space:nowrap}.adj-item .adj-v.pos{color:var(--green)}.adj-item .adj-v.neg{color:var(--red)}
+.adj-item .adj-del{width:auto;padding:7px 12px;margin:0}
 .mc-cat{color:var(--muted)}
 .mc-val{font-family:var(--mono);font-weight:600}
 .mc-val.pos{color:var(--green)}.mc-val.neg{color:var(--red)}.mc-val.neu{color:var(--muted)}
@@ -3218,6 +3224,16 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
   </div>
 </div>
 
+<!-- ══ BALANCE CORRECTIONS LIST ══ -->
+<div id="adjModal" class="modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
+  <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;width:100%;max-width:520px;margin:16px;max-height:86vh;display:flex;flex-direction:column">
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px" id="adj-title">Balance corrections</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Every Set balance you made. Delete one that was a mistake: its bookmaker balance goes back and Profit stops counting it.</div>
+    <div class="adj-list" id="adj-list"></div>
+    <div style="display:flex;gap:9px;margin-top:12px"><button class="btn-s" id="adj-close" style="flex:1">Close</button></div>
+  </div>
+</div>
+
 <!-- ══ CHANGE TYPE (normal ⇄ surebet / middle) ══ -->
 <div id="convModal" class="modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
   <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;width:100%;max-width:520px;margin:16px;max-height:86vh;display:flex;flex-direction:column">
@@ -3949,6 +3965,31 @@ function adjEntries(){
   const out=[];visibleCasas().forEach(c=>(c.adjLog||[]).forEach(a=>{if(a.delta)out.push({id:a.id||0,date:a.date,profit:a.delta,casa:c.name});}));
   return out;
 }
+// list of balance corrections (one month 'YYYY-MM' or 'all'), newest first, with Delete
+let adjModalYm=null;
+function openAdjModal(ym){adjModalYm=ym;renderAdjModal();document.getElementById('adjModal').style.display='flex';}
+function renderAdjModal(){
+  const ym=adjModalYm,counted=new Set(trackedAdj().map(a=>a.casa+'|'+a.id));
+  const list=[];visibleCasas().forEach(c=>(c.adjLog||[]).forEach(a=>{if(a.delta&&(ym==='all'||(a.date||'').startsWith(ym)))list.push({c,a});}));
+  list.sort((x,y)=>(y.a.date||'').localeCompare(x.a.date||'')||(y.a.id||0)-(x.a.id||0));
+  document.getElementById('adj-title').textContent=ym==='all'?'Balance corrections':`Balance corrections · ${ymShort(ym)}`;
+  document.getElementById('adj-list').innerHTML=list.length?list.map(({c,a})=>{const v=a.delta;const on=counted.has(c.name+'|'+(a.id||0));
+    return `<div class="adj-item"><div class="adj-l"><b>${esc(c.name)}</b><small>${fmtDate(a.date)}${on?'':' · not counted in Profit (before your bankroll start)'}</small></div><span class="adj-v ${v>0?'pos':'neg'}">${v>0?'+':''}${fmt(v)} €</span><button class="btn-s adj-del" data-adj-del="${c.id}:${a.id||0}:${a.date}">Delete</button></div>`;}).join(''):'<div class="bk-hist-empty">No balance corrections here.</div>';
+}
+function deleteAdj(cid,id,date){
+  const c=D.casas.find(x=>x.id===cid);if(!c||!Array.isArray(c.adjLog))return;
+  const i=c.adjLog.findIndex(a=>(a.id||0)===id&&a.date===date);if(i<0)return;
+  const snap={balAdj:c.balAdj,adjLog:c.adjLog.map(a=>({...a}))};
+  const a=c.adjLog.splice(i,1)[0];
+  c.balAdj=+((c.balAdj||0)-(a.delta||0)).toFixed(2);
+  save();renderProfit();renderAdjModal();
+  toast(`Correction deleted · ${c.name} ${a.delta>0?'+':''}${fmt(a.delta)} €`,'Undo',()=>{c.balAdj=snap.balAdj;c.adjLog=snap.adjLog;save();renderProfit();if(document.getElementById('adjModal').style.display!=='none')renderAdjModal();});
+}
+document.addEventListener('click',e=>{
+  const o=e.target.closest('[data-adjm]');if(o&&o.closest('#page-profit')){openAdjModal(o.dataset.adjm);return;}
+  const d=e.target.closest('[data-adj-del]');if(d){const [cid,id,date]=d.dataset.adjDel.split(':');deleteAdj(+cid,+id,date);return;}
+  if(e.target.id==='adj-close'||e.target.id==='adjModal')document.getElementById('adjModal').style.display='none';
+});
 function trackInfo(){return D.track&&D.track.from?D.track:null;}
 // only what happens inside the tracking window counts
 function trackedAdj(){const t=trackInfo();return t?adjEntries().filter(a=>a.date>=t.from&&a.id>=t.setAt):[];}
@@ -5164,7 +5205,7 @@ function renderProfit(){
   // the categories, each with its own colour (the same ones the month cards use)
   const cats=profitCats(hasFun);
   const tot={surebet:totalSB,middle:totalMid,normal:totalNorm,freebet:totalFB,fun:totalFun,none:totalNone,expense:totalExp,cost:totalCost,software:totalSw,adjust:totalAdj};
-  const tiles=cats.filter(c=>c.always||tot[c.k]).map(c=>`<div class="th-sub-item" style="--c:${c.c}"><div class="th-sub-label"><i class="pc-dot"></i>${c.n}</div><div class="th-sub-val ${tot[c.k]>0.004?'pos':tot[c.k]<-0.004?'neg':''}">${tot[c.k]>0.004?'+':''}${fmt(tot[c.k])} €</div></div>`).join('');
+  const tiles=cats.filter(c=>c.always||tot[c.k]).map(c=>`<div class="th-sub-item" style="--c:${c.c}"${c.k==='adjust'?' data-adjm="all" title="See and undo each balance correction"':''}><div class="th-sub-label"><i class="pc-dot"></i>${c.n}</div><div class="th-sub-val ${tot[c.k]>0.004?'pos':tot[c.k]<-0.004?'neg':''}">${tot[c.k]>0.004?'+':''}${fmt(tot[c.k])} €</div></div>`).join('');
   document.getElementById('totalHero').innerHTML=`
     <div class="total-hero">
       <div class="th-grid">
@@ -5191,7 +5232,7 @@ function renderProfit(){
     const rows=cats.filter(c=>m[c.k]!==0);const big=Math.max(...rows.map(c=>Math.abs(m[c.k])),0.01);
     return`<div class="month-card${k===curYm?' now':''}">
       <div class="mc-head"><span class="mc-month">${mName(k)}${k===curYm?'<em class="mc-tag">This month</em>':k===best&&tot>0?'<em class="mc-tag best">Best month</em>':''}</span><div style="display:flex;align-items:center;gap:6px"><span class="mc-total ${tot>=0?'pos':'neg'}">${tot>=0?'+':''}${fmt(tot)} €</span>${hideBtnHtml('month:'+k)}</div></div>
-      ${rows.map(c=>{const v=m[c.k];return`<div class="mc-row" style="--c:${c.c}"><span class="mc-cat"><i class="pc-dot"></i>${c.n}</span><span class="mc-val ${v>=0?'pos':'neg'}">${v>=0?'+':''}${fmt(v)} €</span><i class="mc-bar${v<0?' neg':''}" style="width:${Math.max(2,Math.abs(v)/big*100).toFixed(1)}%"></i></div>`;}).join('')}
+      ${rows.map(c=>{const v=m[c.k];return`<div class="mc-row" style="--c:${c.c}"${c.k==='adjust'?` data-adjm="${k}" title="See and undo each balance correction"`:''}><span class="mc-cat"><i class="pc-dot"></i>${c.n}${c.k==='adjust'?' <small class="adj-see">See ›</small>':''}</span><span class="mc-val ${v>=0?'pos':'neg'}">${v>=0?'+':''}${fmt(v)} €</span><i class="mc-bar${v<0?' neg':''}" style="width:${Math.max(2,Math.abs(v)/big*100).toFixed(1)}%"></i></div>`;}).join('')}
     </div>`;
   }).join('')+`</div>` + hiddenPanelHtml('profit',hiddenKeysDesc.map(k=>({key:'month:'+k,label:mName(k)})));
   renderProfitRange(all);
