@@ -427,7 +427,7 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,
 .adj-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--raised);border-radius:8px;font-size:13px}
 .adj-item .adj-l{flex:1;min-width:0}.adj-item .adj-l b{display:block;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.adj-item .adj-l small{color:var(--faint);font-size:11.5px}
 .adj-item .adj-v{font-family:var(--mono);font-weight:700;white-space:nowrap}.adj-item .adj-v.pos{color:var(--green)}.adj-item .adj-v.neg{color:var(--red)}
-.adj-item .adj-del{width:auto;padding:7px 12px;margin:0}
+.adj-item .adj-del{width:auto;padding:7px 12px;margin:0}.adj-tot{background:none;border-top:1px solid var(--border);border-radius:0}
 .mc-cat{color:var(--muted)}
 .mc-val{font-family:var(--mono);font-weight:600}
 .mc-val.pos{color:var(--green)}.mc-val.neg{color:var(--red)}.mc-val.neu{color:var(--muted)}
@@ -2978,27 +2978,28 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
             <div class="profit-mes-val neu" id="profitMesVal">—</div>
           </div>
           <div class="stats3">
-            <div class="statbox"><div class="statbox-label">ROI</div><div class="statbox-val" id="statROI">—</div></div>
-            <div class="statbox"><div class="statbox-label">Wagered</div><div class="statbox-val neu" id="statWagered">—</div></div>
-            <div class="statbox"><div class="statbox-label">Win rate · bets</div><div class="statbox-val neu" id="statWinRateBets">—</div></div>
+            <div class="statbox" title="Profit of every bet paid with your own money (surebets, middles, normal bets, funbets) ÷ what you staked. Freebets are left out: they cost nothing."><div class="statbox-label">ROI</div><div class="statbox-val" id="statROI">—</div></div>
+            <div class="statbox" title="Money you staked: surebets, middles, normal bets and funbets (no freebets, no voids)"><div class="statbox-label">Wagered</div><div class="statbox-val neu" id="statWagered">—</div></div>
+            <div class="statbox" title="Normal bets and funbets won ÷ settled. Surebets are left out: one side always wins."><div class="statbox-label">Win rate · normal bets</div><div class="statbox-val neu" id="statWinRateBets">—</div></div>
           </div>
           <div class="stats3">
-            <div class="statbox"><div class="statbox-label">Win rate · freebets</div><div class="statbox-val neu" id="statWinRateFB">—</div></div>
+            <div class="statbox" title="Freebets won ÷ freebets settled"><div class="statbox-label">Win rate · freebets</div><div class="statbox-val neu" id="statWinRateFB">—</div></div>
             <div class="statbox"><div class="statbox-label">Surebet profit</div><div class="statbox-val" id="statGanadoSB">—</div></div>
             <div class="statbox"><div class="statbox-label">Freebet profit</div><div class="statbox-val" id="statGanadoFB">—</div></div>
           </div>
           <div class="statrow"><span class="sl">Total bets</span><span class="sv-combo" id="statTotalBets">0</span></div>
-          <div class="statrow"><span class="sl">Total freebets</span><span class="sv-combo" id="statTotalFB">0</span></div>
-          <div class="statrow"><span class="sl">Average bet</span><span class="sv-combo" id="statAvgBet">—</span></div>
-          <div class="statrow"><span class="sl">Average freebet</span><span class="sv-combo" id="statAvgFreebet">—</span></div>
-          <div class="statrow"><span class="sl">Average freebet profit</span><span class="sv-combo" id="statAvgFreebetProfit">—</span></div>
+          <div class="statrow"><span class="sl">Surebets · normal bets · freebets</span><span class="sv-combo" id="statTotalFB">0</span></div>
+          <div class="statrow"><span class="sl">Average surebet stake</span><span class="sv-combo" id="statAvgBet">—</span></div>
+          <div class="statrow"><span class="sl">Average profit per surebet</span><span class="sv-combo" id="statAvgSb">—</span></div>
+          <div class="statrow"><span class="sl">Average per freebet <small style="color:var(--faint)">won or lost</small></span><span class="sv-combo" id="statAvgFreebet">—</span></div>
+          <div class="statrow"><span class="sl">Average when a freebet wins</span><span class="sv-combo" id="statAvgFreebetProfit">—</span></div>
           <div class="clv-head">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-            Closing line value
+            Surebet margin
           </div>
           <div class="stats2">
-            <div><div class="label">Average CLV</div><div class="val" id="statAvgCLV">—</div></div>
-            <div><div class="label">Beating CLV</div><div class="val" id="statBeatCLV">—</div></div>
+            <div title="Average % a surebet locked in when you placed it (its profit ÷ total stake)"><div class="label">Average margin</div><div class="val" id="statAvgCLV">—</div></div>
+            <div title="Surebets placed with a positive margin (the rest were placed at a small loss, e.g. to use a promo)"><div class="label">Placed in profit</div><div class="val" id="statBeatCLV">—</div></div>
           </div>
           <div class="cal-wrap">
             <div class="cal-head">
@@ -3022,19 +3023,18 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
       <div class="card">
         <div class="ch perf-head">
           <div>
-            <div class="perf-total-label">Performance</div>
+            <div class="perf-total-label" title="Bets only: no costs, Set balances or 'Not in bets'">Bets result</div>
             <div class="perf-total-val" id="perfTotal">—</div>
           </div>
           <div class="perf-exp-boxes">
-            <div class="perf-exp-box"><div class="perf-exp-dot ev"></div><div><div class="perf-exp-label">Expected (EV)</div><div class="perf-exp-val" id="perfEV">—</div></div></div>
-            <div class="perf-exp-box"><div class="perf-exp-dot clv"></div><div><div class="perf-exp-label">Expected (CLV)</div><div class="perf-exp-val" id="perfCLV">—</div></div></div>
+            <div class="perf-exp-box" title="What your surebets guaranteed when you placed them, next to what they really paid"><div class="perf-exp-dot clv"></div><div><div class="perf-exp-label">Surebets locked in</div><div class="perf-exp-val" id="perfCLV">—</div></div></div>
+            <div class="perf-exp-box"><div class="perf-exp-dot" style="background:var(--green)"></div><div><div class="perf-exp-label">Surebets got</div><div class="perf-exp-val" id="perfEV">—</div></div></div>
           </div>
         </div>
         <div class="cb">
           <div class="perf-legend">
             <span class="perf-legend-item"><span class="perf-legend-swatch" style="background:var(--blue)"></span>Profit</span>
-            <span class="perf-legend-item"><span class="perf-legend-line" style="border-top:2px dashed var(--cyan)"></span>EV</span>
-            <span class="perf-legend-item"><span class="perf-legend-line" style="border-top:2px dashed var(--purple)"></span>CLV</span>
+            <span class="perf-legend-item"><span class="perf-legend-line" style="border-top:2px dashed var(--purple)"></span>Surebets locked in</span>
             <span class="perf-legend-item"><span class="perf-legend-swatch" style="background:var(--green);border-radius:2px"></span>Daily P/L</span>
           </div>
           <div id="perfChartWrap"></div>
@@ -3229,7 +3229,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 <div id="adjModal" class="modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
   <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;width:100%;max-width:520px;margin:16px;max-height:86vh;display:flex;flex-direction:column">
     <div style="font-size:15px;font-weight:700;margin-bottom:4px" id="adj-title">Balance corrections</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Every Set balance you made. Delete one that was a mistake: its bookmaker balance goes back and Profit stops counting it.</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px" id="adj-sub">Every Set balance you made. Delete one that was a mistake: its bookmaker balance goes back and Profit stops counting it.</div>
     <div class="adj-list" id="adj-list"></div>
     <div style="display:flex;gap:9px;margin-top:12px"><button class="btn-s" id="adj-close" style="flex:1">Close</button></div>
   </div>
@@ -3968,7 +3968,7 @@ function adjEntries(){
 }
 // list of balance corrections (one month 'YYYY-MM' or 'all'), newest first, with Delete
 let adjModalYm=null;
-function openAdjModal(ym){adjModalYm=ym;renderAdjModal();document.getElementById('adjModal').style.display='flex';}
+function openAdjModal(ym){adjModalYm=ym;document.getElementById('adj-sub').textContent='Every Set balance you made. Delete one that was a mistake: its bookmaker balance goes back and Profit stops counting it.';renderAdjModal();document.getElementById('adjModal').style.display='flex';}
 function renderAdjModal(){
   const ym=adjModalYm,counted=new Set(trackedAdj().map(a=>a.casa+'|'+a.id));
   const list=[];visibleCasas().forEach(c=>(c.adjLog||[]).forEach(a=>{if(a.delta&&(ym==='all'||(a.date||'').startsWith(ym)))list.push({c,a});}));
@@ -3983,10 +3983,43 @@ function deleteAdj(cid,id,date){
   const snap={balAdj:c.balAdj,adjLog:c.adjLog.map(a=>({...a}))};
   const a=c.adjLog.splice(i,1)[0];
   c.balAdj=+((c.balAdj||0)-(a.delta||0)).toFixed(2);
-  save();renderProfit();renderAdjModal();
+  save();renderProfit();if(adjModalYm)renderAdjModal();
   toast(`Correction deleted · ${c.name} ${a.delta>0?'+':''}${fmt(a.delta)} €`,'Undo',()=>{c.balAdj=snap.balAdj;c.adjLog=snap.adjLog;save();renderProfit();if(document.getElementById('adjModal').style.display!=='none')renderAdjModal();});
 }
+// where 'Not in bets' comes from: bets that no bookmaker balance includes, Set balances not dated in a month, and the rest
+function gapParts(all){
+  const real=realProfitInfo(all);if(!real)return null;
+  const known=new Set(visibleCasas().filter(c=>!isBank(c)).map(c=>bkKey(c.name||'')));
+  const L=bookmakerLedger();const unknown=[];
+  L.forEach((v,k)=>{if(!known.has(k)&&Math.abs(v.settled)>=0.005)unknown.push({name:v.name,v:+v.settled.toFixed(2)});});
+  unknown.sort((a,b)=>Math.abs(b.v)-Math.abs(a.v));
+  // counted in Profit but in no bookmaker at all: no bookmaker name, or old bets without a result status
+  let noHouse=0,noStatus=0;
+  visibleNormals().forEach(n=>{const p=n.profit||0;if(!p)return;const st=n.status==='won'||n.status==='lost';
+    if(!st){if(n.status!=='pending'&&n.status!=='anulada')noStatus+=p;return;}if(!bkKey(n.house))noHouse+=p;});
+  const counted=new Set(trackedAdj().map(a=>a.casa+'|'+a.id));let adjOut=0;
+  visibleCasas().filter(c=>!isBank(c)).forEach(c=>(c.adjLog||[]).forEach(a=>{if(a.delta&&!counted.has(c.name+'|'+(a.id||0)))adjOut+=a.delta;}));
+  const unk=unknown.reduce((a,x)=>a+x.v,0);
+  const rest=+(real.gap+unk+noHouse+noStatus-adjOut).toFixed(2);
+  return {real,unknown,unk:+unk.toFixed(2),noHouse:+noHouse.toFixed(2),noStatus:+noStatus.toFixed(2),adjOut:+adjOut.toFixed(2),rest};
+}
+let gapAll=[];
+function openGapModal(){
+  const g=gapParts(gapAll);if(!g)return;const sg=v=>(v>0?'+':'')+fmt(v)+' €';
+  const row=(l,sub,v)=>`<div class="adj-item"><div class="adj-l"><b>${l}</b>${sub?`<small>${sub}</small>`:''}</div><span class="adj-v ${v>0?'pos':v<0?'neg':''}">${sg(v)}</span></div>`;
+  const rows=[];
+  if(g.unknown.length)rows.push(row('Bets at a bookmaker that isn\'t in Bookmakers',g.unknown.slice(0,12).map(x=>`${esc(x.name)} ${sg(x.v)}`).join(' · ')+(g.unknown.length>12?' …':'')+'<br>Rename it in the bet, or add that bookmaker, so its balance moves',-g.unk));
+  if(Math.abs(g.noHouse)>=0.01)rows.push(row('Bets with no bookmaker','they count in Profit but move no balance (like the "Antiguo" totals)',-g.noHouse));
+  if(Math.abs(g.noStatus)>=0.01)rows.push(row('Old bets with no Won/Lost','they count in Profit but move no balance',-g.noStatus));
+  if(Math.abs(g.adjOut)>=0.01)rows.push(row('Set balances before your bankroll start','in the bookmakers\' money, not in any month',g.adjOut));
+  if(Math.abs(g.rest)>=0.01)rows.push(row('Other money in your bookmakers','no bet or Set balance explains it: casino, bonuses, a deposit not registered…',g.rest));
+  document.getElementById('adj-title').textContent='Not in bets';
+  document.getElementById('adj-sub').textContent=`Total Profit is your bookmakers' real result (Hacienda ${sg(g.real.hac)}) minus costs (${fmt(g.real.costs)} €). This is what that real money has and your bets don't, or the other way round.`;
+  document.getElementById('adj-list').innerHTML=rows.join('')+`<div class="adj-item adj-tot"><div class="adj-l"><b>= Not in bets</b></div><span class="adj-v ${g.real.gap>0?'pos':'neg'}">${sg(g.real.gap)}</span></div>`;
+  adjModalYm=null;document.getElementById('adjModal').style.display='flex';
+}
 document.addEventListener('click',e=>{
+  const gm=e.target.closest('[data-gapm]');if(gm&&gm.closest('#page-profit')){openGapModal();return;}
   const o=e.target.closest('[data-adjm]');if(o&&o.closest('#page-profit')){openAdjModal(o.dataset.adjm);return;}
   const d=e.target.closest('[data-adj-del]');if(d){const [cid,id,date]=d.dataset.adjDel.split(':');deleteAdj(+cid,+id,date);return;}
   if(e.target.id==='adj-close'||e.target.id==='adjModal')document.getElementById('adjModal').style.display='none';
@@ -5067,7 +5100,7 @@ function bankrollCardHtml(all){
   const t=trackInfo();const today=todayLocalISO();
   const sg=v=>(v>=0?'+':'')+fmt(v)+' €';
   if(!t)return `<div class="br-card" id="brCard">
-      <div class="br-head"><b>Count your whole bankroll</b><span>Right now Profit counts bet results only, day by day. Pick a day and, from then on, it also counts balance corrections (Set balance) and expenses paid from your bank — and you can check it against the money you really have. Everything before that day stays exactly as it is.</span></div>
+      <div class="br-head"><b>Count your whole bankroll</b><span>Total Profit already comes from your bookmakers' real money (Hacienda − costs). Pick a day and, from then on, each Set balance and bank expense also goes into its own month, instead of only into "Not in bets".</span></div>
       <div class="br-start"><div><label class="fl">Start counting from</label><input type="date" id="brFrom" value="${today}" max="${today}"></div><button class="btn-reg" id="brStart">Start</button></div>
       <div class="br-foot"><button class="link-btn" id="brBackup">Download a full backup (JSON)</button></div>
     </div>`;
@@ -5076,7 +5109,8 @@ function bankrollCardHtml(all){
   const since=all.filter(e=>e.date>=t.from&&!isHidden('month:'+e.date.slice(0,7)));
   const cat=c=>since.filter(e=>e.cat===c).reduce((a,e)=>a+e.profit,0);
   const bets=cat('surebet')+cat('middle')+cat('normal')+cat('freebet')+cat('fun'),corr=cat('adjust'),exp=cat('expense'),cost=cat('cost'),sw=cat('software');
-  const sinceSum=Math.round(since.reduce((a,e)=>a+e.profit,0)*100)/100+0,total=Math.round((pre+sinceSum)*100)/100+0;
+  const real=realProfitInfo(all),gap=real?real.gap:0;
+  const sinceSum=Math.round(since.reduce((a,e)=>a+e.profit,0)*100)/100+0,total=Math.round((pre+sinceSum+gap)*100)/100+0;
   const br=bankrollSummary();const now=br.bankroll+br.inTransit;
   const c2=x=>Math.round(x*100)/100+0;
   const drawn=c2(br.drawn-(t.drawn0||0)),putIn=c2(br.putIn-(t.put0||0)),change=c2(now-(t.b0||0)+drawn-putIn);
@@ -5087,6 +5121,7 @@ function bankrollCardHtml(all){
       <div class="br-row"><span>Until ${fmtDate(dayBefore)} <small>${preSw||preCost?`bet results${preCost?` · monthly costs ${sg(preCost)}`:''}${preSw?` · software ${sg(preSw)}`:''}`:'bet results only, as before'}</small></span><b>${sg(pre)}</b></div>
       <div class="br-row"><span>Since ${fmtDate(t.from)}
         <small>bets ${sg(bets)}${corr?` · balance corrections ${sg(corr)}`:''}${exp?` · bank expenses ${sg(exp)}`:''}${cost?` · monthly costs ${sg(cost)}`:''}${sw?` · software ${sg(sw)}`:''}</small></span><b>${sg(sinceSum)}</b></div>
+      ${Math.abs(gap)>=0.005?`<div class="br-row"><span>Not in bets <small>bookmakers' real money minus what your bets and costs say</small></span><b>${sg(gap)}</b></div>`:''}
       <div class="br-row br-tot"><span>= Total profit</span><b class="${total>=0?'pos':'neg'}">${sg(total)}</b></div>
       <div class="br-sub"><b>Your money since you started</b> <small>(${started.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})} ${started.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})})</small></div>
       <div class="br-row"><span>Bankroll now <small>all bookmakers + bank, including money in pending bets</small></span><b>${fmt(now)} €</b></div>
@@ -5138,7 +5173,7 @@ function renderBkStats(){
     rows.map(([k,e])=>{const a=act.get(k),idle=a&&a.last&&daysAgo(a.last)>IDLE_DAYS;
       return `<div class="bks-r"><span class="bks-n"><b>${esc((D.casas||[]).find(c=>bkKey(c.name||'')===k)?.name||e.name)}</b><small>${e.n} bet${e.n>1?'s':''}${a&&a.last?` · <em class="${idle?'idle':''}">last ${agoLabel(a.last)}</em>`:''}</small><i class="bks-bar" style="width:${Math.max(3,e.vol/maxVol*100).toFixed(1)}%"></i></span><span>${fmt(e.vol,0)} €</span><span class="bks-res ${cls(e.settled)}">${sgn(e.settled)} €<i class="bks-div"><i class="${e.settled<0?'neg':'pos'}" style="width:${(Math.abs(e.settled)/maxRes*50).toFixed(1)}%"></i></i></span><span><em class="bks-roi ${cls(e.settled)}">${pct(e.settled,e.vol)}</em></span></div>`;}).join('')+
     `<div class="bks-r bks-t"><span class="bks-n"><b>Total</b><small>${tot.n} bets</small></span><span>${fmt(tot.vol,0)} €</span><span class="${cls(tot.res)}">${sgn(tot.res)} €</span><span><em class="bks-roi ${cls(tot.res)}">${pct(tot.res,tot.vol)}</em></span></div></div>
-    <div class="bks-note">Result = what each bookmaker paid you minus what you staked there. In a surebet one bookmaker wins and the others lose, so single bookmakers swing; the total is your real profit.</div>`;
+    <div class="bks-note">Result = what each bookmaker paid you minus what you staked there. In a surebet one bookmaker wins and the others lose, so single bookmakers swing. The total is bets only: Total Profit (Overview) also takes off costs and adds money that isn't in any bet.</div>`;
 }
 document.getElementById('bkStatsPer').addEventListener('click',e=>{const b=e.target.closest('[data-bkper]');if(!b)return;bkStatsPer=b.dataset.bkper;renderBkStats();});
 // Profit hero: today / last 7 days / this month / average per day this month
@@ -5220,9 +5255,9 @@ function renderProfit(){
   // Total Profit = what your bookmakers really made (Hacienda: balance + open bets − deposited, no banks)
   // minus costs. Whatever that real money has and your bets don't (slots, bets with a bookmaker that isn't
   // in Bookmakers, typos…) shows as its own tile, so the tiles still add up to the total.
-  const real=realProfitInfo(all);let headline=totalAll;
+  gapAll=all;const real=realProfitInfo(all);let headline=totalAll;
   if(real){tot.gap=real.gap;headline=totalAll+real.gap;}
-  const tiles=[...cats,...(real&&Math.abs(real.gap)>=0.01?[{k:'gap',n:'Not in bets',c:'#7A8CA8',always:true}]:[])].filter(c=>c.always||tot[c.k]).map(c=>`<div class="th-sub-item" style="--c:${c.c}"${c.k==='adjust'?' data-adjm="all" title="See and undo each balance correction"':c.k==='gap'?' title="Money your bookmakers have that no bet explains, or bets that no bookmaker balance includes (a bookmaker name that isn\'t in Bookmakers, a typo, old totals). Counted so Total Profit = Hacienda − costs."':''}><div class="th-sub-label"><i class="pc-dot"></i>${c.n}</div><div class="th-sub-val ${tot[c.k]>0.004?'pos':tot[c.k]<-0.004?'neg':''}">${tot[c.k]>0.004?'+':''}${fmt(tot[c.k])} €</div></div>`).join('');
+  const tiles=[...cats,...(real&&Math.abs(real.gap)>=0.01?[{k:'gap',n:'Not in bets',c:'#7A8CA8',always:true}]:[])].filter(c=>c.always||tot[c.k]).map(c=>`<div class="th-sub-item" style="--c:${c.c}"${c.k==='adjust'?' data-adjm="all" title="See and undo each balance correction"':c.k==='gap'?' data-gapm="1" title="Tap to see where it comes from"':''}><div class="th-sub-label"><i class="pc-dot"></i>${c.n}${c.k==='gap'||c.k==='adjust'?' <small class="adj-see">See ›</small>':''}</div><div class="th-sub-val ${tot[c.k]>0.004?'pos':tot[c.k]<-0.004?'neg':''}">${tot[c.k]>0.004?'+':''}${fmt(tot[c.k])} €</div></div>`).join('');
   document.getElementById('totalHero').innerHTML=`
     <div class="total-hero">
       <div class="th-grid">
@@ -9884,7 +9919,7 @@ function clearProfileUI(){
 }
 document.getElementById('perfilShareBtn').addEventListener('click',()=>{
   const s=computeStats();
-  const text=`My Surebets stats — ROI: ${s.roi==null?'—':fmt(s.roi,1)+'%'} · Win Rate: ${s.winRateBets==null?'—':fmt(s.winRateBets,0)+'%'} · Bets: ${s.totalBets}`;
+  const text=`My Surebets stats — ROI: ${s.roi==null?'—':fmt(s.roi,1)+'%'} · Profit: ${fmt(s.totalProfit,0)} € · Bets: ${s.totalCount}`;
   if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(text).then(()=>alert('Stats copied to clipboard.')).catch(()=>alert(text));
   }else alert(text);
@@ -9896,7 +9931,9 @@ document.getElementById('perfilShareBtn').addEventListener('click',()=>{
 function computeStats(){
   const Dbets=visibleBets(),Dnormals=visibleNormals();
   // Wagered y ganancia de surebets: las anuladas no arriesgan ni ganan nada (betStake/betProfit las tratan como 0)
-  const wagered=Dbets.reduce((a,b)=>a+betStake(b),0);
+  const sbWagered=Dbets.reduce((a,b)=>a+betStake(b),0);
+  const cashNm=Dnormals.filter(n=>n.type!=='Freebet'&&(n.status==='won'||n.status==='lost'));
+  const wagered=sbWagered+cashNm.reduce((a,n)=>a+(n.stake||0),0);
   const gananciaSurebets=Dbets.reduce((a,b)=>a+betProfit(b),0);
   const freebets=Dnormals.filter(n=>n.type==='Freebet');
   const gananciaFreebets=freebets.reduce((a,n)=>a+(n.profit||0),0);
@@ -9905,25 +9942,27 @@ function computeStats(){
   const totalFreebets=freebets.length;
   const totalCount=totalBets+Dnormals.length;
 
-  // Win rate de bets (surebets): solo ganadas/perdidas deciden; pendientes y anuladas no cuentan
-  const wonBets=Dbets.filter(b=>b.status==='won').length;
-  const lostBets=Dbets.filter(b=>b.status==='lost').length;
+  // Win rate of normal bets / funbets (a surebet always has a winning side, so it says nothing)
+  const wonBets=cashNm.filter(n=>n.status==='won').length;
+  const lostBets=cashNm.filter(n=>n.status==='lost').length;
   const winRateBets=(wonBets+lostBets)>0?(wonBets/(wonBets+lostBets)*100):null;
 
-  // Win rate de freebets
-  const wonFB=freebets.filter(n=>(n.profit||0)>0).length;
-  const lostFB=freebets.filter(n=>(n.profit||0)<0).length;
+  // Win rate of freebets: a lost freebet has profit 0, so go by its status
+  const fbSettled=freebets.filter(n=>n.status==='won'||n.status==='lost'||(!n.status&&n.profit!=null));
+  const wonFB=fbSettled.filter(n=>n.status==='won'||(!n.status&&(n.profit||0)>0)).length;
+  const lostFB=fbSettled.length-wonFB;
   const winRateFreebets=(wonFB+lostFB)>0?(wonFB/(wonFB+lostFB)*100):null;
 
   // ROI: SOLO apuestas a mano ya resueltas — surebets con % de ROI conocido (excluye importadas sin profitPct,
   // excluye normales/freebets por completo, y excluye pendientes/anuladas)
-  const roiBets=Dbets.filter(b=>(b.status==='won'||b.status==='lost')&&typeof b.profitPct==='number');
-  const roiWagered=roiBets.reduce((a,b)=>a+(b.totalStake||0),0);
-  const roiProfit=roiBets.reduce((a,b)=>a+(b.profit||0),0);
-  const roi=roiWagered>0?(roiProfit/roiWagered*100):null;
+  // ROI: every bet paid with your own money (surebets, middles, normal bets, funbets) — profit ÷ staked
+  const roiProfit=gananciaSurebets+cashNm.reduce((a,n)=>a+(n.profit||0),0);
+  const roi=wagered>0?(roiProfit/wagered*100):null;
 
   const stakedCount=Dbets.filter(b=>b.status!=='anulada'&&(b.totalStake||0)>0).length;
-  const avgBet=stakedCount>0?(wagered/stakedCount):null;
+  const avgBet=stakedCount>0?(sbWagered/stakedCount):null;
+  const avgSb=stakedCount>0?(gananciaSurebets/stakedCount):null;
+  const totalNormals=Dnormals.filter(n=>n.type!=='Freebet').length;
   const avgProfit=totalCount>0?(totalProfit/totalCount):null;
 
   // Average freebet: profit medio de TODAS las freebets (ganadas, perdidas y en tablas)
@@ -9937,7 +9976,7 @@ function computeStats(){
   const beatingCLV=edgeBets.length?(edgeBets.filter(b=>b.profitPct>0).length/edgeBets.length*100):null;
 
   return{wagered,totalProfit,totalCount,totalBets,totalFreebets,winRateBets,winRateFreebets,roi,
-    gananciaSurebets,gananciaFreebets,avgBet,avgProfit,avgFreebet,avgFreebetProfit,avgCLV,beatingCLV};
+    gananciaSurebets,gananciaFreebets,avgBet,avgSb,totalNormals,avgProfit,avgFreebet,avgFreebetProfit,avgCLV,beatingCLV};
 }
 function renderPerfilStats(){
   const s=computeStats();
@@ -9953,9 +9992,10 @@ function renderPerfilStats(){
   const gfbEl=document.getElementById('statGanadoFB');
   gfbEl.textContent=(s.gananciaFreebets>=0?'+':'')+fmt(s.gananciaFreebets,0)+' €';
   gfbEl.className='statbox-val '+(s.gananciaFreebets>=0?'pos':'neg');
-  document.getElementById('statTotalBets').textContent=s.totalBets.toLocaleString('es-ES');
-  document.getElementById('statTotalFB').textContent=s.totalFreebets.toLocaleString('es-ES');
+  document.getElementById('statTotalBets').textContent=s.totalCount.toLocaleString('es-ES');
+  document.getElementById('statTotalFB').textContent=`${s.totalBets.toLocaleString('es-ES')} · ${s.totalNormals.toLocaleString('es-ES')} · ${s.totalFreebets.toLocaleString('es-ES')}`;
   document.getElementById('statAvgBet').textContent=s.avgBet==null?'—':fmt(s.avgBet,0)+' €';
+  const avgSbEl=document.getElementById('statAvgSb');avgSbEl.textContent=s.avgSb==null?'—':(s.avgSb>=0?'+':'')+fmt(s.avgSb,2)+' €';avgSbEl.className='sv-combo '+(s.avgSb==null?'':s.avgSb>=0?'pos':'neg');
   const avgFbEl=document.getElementById('statAvgFreebet');
   avgFbEl.textContent=s.avgFreebet==null?'—':(s.avgFreebet>=0?'+':'')+fmt(s.avgFreebet,1)+' €';
   avgFbEl.className='sv-combo '+(s.avgFreebet==null?'':(s.avgFreebet>=0?'pos':'neg'));
@@ -9964,7 +10004,7 @@ function renderPerfilStats(){
   avgFbpEl.className='sv-combo '+(s.avgFreebetProfit==null?'':'pos');
   const clvEl=document.getElementById('statAvgCLV');
   if(s.avgCLV==null){clvEl.textContent='—';clvEl.className='val dash';}
-  else{clvEl.textContent=(s.avgCLV>=0?'+':'')+fmt(s.avgCLV,1)+'%';clvEl.className='val '+(s.avgCLV>=0?'pos':'');}
+  else{clvEl.textContent=(s.avgCLV>=0?'+':'')+fmt(s.avgCLV,2)+'%';clvEl.className='val '+(s.avgCLV>=0?'pos':'');}
   const beatEl=document.getElementById('statBeatCLV');
   beatEl.textContent=s.beatingCLV==null?'—':fmt(s.beatingCLV,0)+'%';
   beatEl.className='val '+(s.beatingCLV==null?'dash':'pos');
@@ -10043,24 +10083,24 @@ function renderPerfChart(){
   }
   const byDate={};
   entries.forEach(e=>{
-    if(!byDate[e.date])byDate[e.date]={profit:0,expected:0,betExpected:0};
+    if(!byDate[e.date])byDate[e.date]={profit:0,expected:0,betExpected:0,sbGot:0};
     byDate[e.date].profit+=e.profit;byDate[e.date].expected+=e.expected;
-    if(e.isBet)byDate[e.date].betExpected+=e.expected;
+    if(e.isBet){byDate[e.date].betExpected+=e.expected;byDate[e.date].sbGot+=e.profit;}
   });
   const dates=Object.keys(byDate).sort();
   let cp=0,ce=0,cc=0;
   const series=dates.map(d=>{cp+=byDate[d].profit;ce+=byDate[d].expected;cc+=byDate[d].betExpected;
-    return{date:d,daily:byDate[d].profit,cumProfit:cp,cumEV:ce,cumCLV:cc};});
+    return{date:d,daily:byDate[d].profit,cumProfit:cp,cumEV:ce,cumCLV:cc,sbGot:byDate[d].sbGot};});
   const last=series[series.length-1];
   document.getElementById('perfTotal').textContent=(last.cumProfit>=0?'+':'')+fmt(last.cumProfit,0)+' €';
   document.getElementById('perfTotal').className='perf-total-val '+(last.cumProfit>=0?'pos':'neg');
-  document.getElementById('perfEV').textContent=(last.cumEV>=0?'+':'')+fmt(last.cumEV,0)+' €';
+  const sbGot=series.reduce((a,x)=>a+x.sbGot,0);document.getElementById('perfEV').textContent=(sbGot>=0?'+':'')+fmt(sbGot,0)+' €';
   document.getElementById('perfCLV').textContent=(last.cumCLV>=0?'+':'')+fmt(last.cumCLV,0)+' €';
 
   const W=900,H=340,padL=46,padR=14,padT=16,padB=26;
   const plotW=W-padL-padR,plotH=H-padT-padB;
   const allVals=[0];
-  series.forEach(s=>allVals.push(s.cumProfit,s.cumEV,s.cumCLV,s.daily));
+  series.forEach(s=>allVals.push(s.cumProfit,s.cumCLV,s.daily));
   let yMin=Math.min(...allVals),yMax=Math.max(...allVals);
   const yPad=(yMax-yMin)*0.12||10;yMin-=yPad;yMax+=yPad;
   const t0=new Date(series[0].date).getTime(),t1=new Date(series[series.length-1].date).getTime();
@@ -10083,7 +10123,6 @@ function renderPerfChart(){
   const svg=`<svg class="perf-chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
     ${yTicks.map(v=>`<line x1="${padL}" y1="${y(v).toFixed(1)}" x2="${W-padR}" y2="${y(v).toFixed(1)}" stroke="var(--border)" stroke-width="1"/><text x="${padL-8}" y="${(y(v)+3).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--faint)">${fmtCompact(v)}</text>`).join('')}
     ${bars}
-    <path d="${path('cumEV')}" fill="none" stroke="var(--cyan)" stroke-width="2" stroke-dasharray="5,4"/>
     <path d="${path('cumCLV')}" fill="none" stroke="var(--purple)" stroke-width="2" stroke-dasharray="5,4"/>
     <path d="${path('cumProfit')}" fill="none" stroke="var(--blue)" stroke-width="2.5"/>
     ${xTicks.map(s=>`<text x="${x(s.date).toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="10" fill="var(--faint)">${dLabel(s.date)}</text>`).join('')}
