@@ -2938,6 +2938,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
             <div class="cat-chip" data-typef="normal">Normal</div>
             <div class="cat-chip" data-typef="freebet">Freebets</div>
             <div class="cat-chip" data-typef="fun">Funbets</div>
+            <div class="cat-chip" data-typef="none">No category</div>
             <button class="btn-s" id="catAddBetBtn" style="margin-left:auto">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Add bet
@@ -4928,7 +4929,7 @@ function renderProfitRange(all){
   if(from&&to&&from>to){box.innerHTML=`<div style="font-size:12.5px;color:var(--red)">The start date must be before the end date.</div>`;return;}
   const sel=profitRangeEntries.filter(e=>!isHidden('month:'+e.date.slice(0,7))&&(!from||e.date>=from)&&(!to||e.date<=to));
   const sum=c=>sel.filter(e=>e.cat===c).reduce((a,e)=>a+e.profit,0);
-  const sb=sum('surebet'),md=sum('middle'),nm=sum('normal'),fb=sum('freebet'),fu=sum('fun'),adj=sum('adjust'),cst=sum('cost'),exp=sum('expense'),sw=sum('software'),tot=sb+md+nm+fb+fu+adj+cst+exp+sw;
+  const sb=sum('surebet'),md=sum('middle'),nm=sum('normal'),fb=sum('freebet'),fu=sum('fun'),no=sum('none'),adj=sum('adjust'),cst=sum('cost'),exp=sum('expense'),sw=sum('software'),tot=sb+md+nm+fb+fu+no+adj+cst+exp+sw;
   const sg=v=>(v>=0?'+':'')+fmt(v)+' €';
   const label=from&&to?`${fmtDate(from)} → ${fmtDate(to)}`:(from?`From ${fmtDate(from)}`:`Until ${fmtDate(to)}`);
   box.innerHTML=`<div class="total-hero" style="margin:0">
@@ -4940,6 +4941,7 @@ function renderProfitRange(all){
       <div class="th-sub-item"><div class="th-sub-label">Normal</div><div class="th-sub-val" style="color:${nm>=0?'var(--blue)':'var(--red)'}">${sg(nm)}</div></div>
       <div class="th-sub-item"><div class="th-sub-label">Freebets</div><div class="th-sub-val" style="color:var(--yellow)">${sg(fb)}</div></div>
       ${fu?`<div class="th-sub-item"><div class="th-sub-label">Funbets</div><div class="th-sub-val" style="color:${fu>=0?'#E85DA0':'var(--red)'}">${sg(fu)}</div></div>`:''}
+      ${no?`<div class="th-sub-item"><div class="th-sub-label">No category</div><div class="th-sub-val">${sg(no)}</div></div>`:''}
       ${exp?`<div class="th-sub-item"><div class="th-sub-label">Bank expenses</div><div class="th-sub-val">${sg(exp)}</div></div>`:''}
       ${cst?`<div class="th-sub-item"><div class="th-sub-label">Monthly costs</div><div class="th-sub-val" style="color:var(--red)">${sg(cst)}</div></div>`:''}
       ${sw?`<div class="th-sub-item"><div class="th-sub-label">Software</div><div class="th-sub-val" style="color:var(--red)">${sg(sw)}</div></div>`:''}
@@ -5097,13 +5099,13 @@ function paceHtml(all){
   const it=(l,v,d=2)=>`<span><small>${l}</small><b class="${v>0.004?'pos':v<-0.004?'neg':''}">${v>0.004?'+':''}${fmt(v,d)} €</b></span>`;
   return `<div class="th-pace">${it('Today',today)}${it('Last 7 days',week)}${it('This month',month)}${it('Per day this month',avg)}</div>`;
 }
-const PROFIT_CATS=[['surebet','Surebets','#2E9E5B',1],['middle','Middles','#C2702A'],['normal','Normal','#3B7DD8',1],['freebet','Freebets','#D9A21B',1],['fun','Funbets','#D6559A'],
+const PROFIT_CATS=[['surebet','Surebets','#2E9E5B',1],['middle','Middles','#C2702A'],['normal','Normal','#3B7DD8',1],['freebet','Freebets','#D9A21B',1],['fun','Funbets','#D6559A'],['none','No category','#9AA0A6'],
   ['expense','Bank expenses','#8A8F98'],['cost','Monthly costs','#8A8F98'],['software','Software','#8A8F98'],['adjust','Balance corrections','#5B9AA8']];
-function profitCats(hasFun){return PROFIT_CATS.map(([k,n,c,always])=>({k,n,c,always:!!always||(k==='fun'&&hasFun)}));}
+function profitCats(hasFun){return PROFIT_CATS.map(([k,n,c,always])=>({k,n,c,always:!!always||(k==='fun'&&hasFun)||(k==='none'&&[...D.bets,...D.normals].some(x=>x.cnt==='none'))}));}
 // last 12 months as bars: up = profit, down = loss; hover / tap shows the month
 function monthChartHtml(keys,months){
   const ks=keys.slice(-12);if(ks.length<2)return '';
-  const v=ks.map(k=>{const m=months[k];return m.surebet+m.middle+m.normal+m.freebet+m.fun+m.adjust+m.cost+m.expense+m.software;});
+  const v=ks.map(k=>{const m=months[k];return m.surebet+m.middle+m.normal+m.freebet+m.fun+m.none+m.adjust+m.cost+m.expense+m.software;});
   const hi=Math.max(...v,0),lo=Math.min(...v,0),span=(hi-lo)||1,H=120,zero=hi/span*H;
   const cur=todayLocalISO().slice(0,7),bi=v.indexOf(Math.max(...v));
   const short=k=>MONTH_NAMES_EN[+k.slice(5)-1].slice(0,3);
@@ -5137,14 +5139,14 @@ function renderProfit(){
   const months={};
   all.forEach(e=>{
     const m=e.date.slice(0,7);
-    if(!months[m])months[m]={surebet:0,middle:0,normal:0,freebet:0,fun:0,adjust:0,cost:0,expense:0,software:0};
+    if(!months[m])months[m]={surebet:0,middle:0,normal:0,freebet:0,fun:0,none:0,adjust:0,cost:0,expense:0,software:0};
     months[m][e.cat]+=e.profit;
   });
 
   const keys=Object.keys(months).sort();
   const visibleKeys=keys.filter(k=>!isHidden('month:'+k));
   const hiddenKeys=keys.filter(k=>isHidden('month:'+k));
-  const totalAll=visibleKeys.reduce((a,k)=>a+months[k].surebet+months[k].middle+months[k].normal+months[k].freebet+months[k].fun+months[k].adjust+months[k].cost+months[k].expense+months[k].software,0);
+  const totalAll=visibleKeys.reduce((a,k)=>a+months[k].surebet+months[k].middle+months[k].normal+months[k].freebet+months[k].fun+months[k].none+months[k].adjust+months[k].cost+months[k].expense+months[k].software,0);
   const totalSw=visibleKeys.reduce((a,k)=>a+months[k].software,0);
   const totalExp=visibleKeys.reduce((a,k)=>a+months[k].expense,0);
   const totalCost=visibleKeys.reduce((a,k)=>a+months[k].cost,0);
@@ -5153,13 +5155,14 @@ function renderProfit(){
   const totalMid=visibleKeys.reduce((a,k)=>a+months[k].middle,0);
   const totalNorm=visibleKeys.reduce((a,k)=>a+months[k].normal,0);
   const totalFB=visibleKeys.reduce((a,k)=>a+months[k].freebet,0);
+  const totalNone=visibleKeys.reduce((a,k)=>a+months[k].none,0);
   const totalFun=visibleKeys.reduce((a,k)=>a+months[k].fun,0),hasFun=visibleNormals().some(isFun);
 
   function mName(k){const[y,mo]=k.split('-');return `${MONTH_NAMES_EN[+mo-1]} ${y}`;}
 
   // the categories, each with its own colour (the same ones the month cards use)
   const cats=profitCats(hasFun);
-  const tot={surebet:totalSB,middle:totalMid,normal:totalNorm,freebet:totalFB,fun:totalFun,expense:totalExp,cost:totalCost,software:totalSw,adjust:totalAdj};
+  const tot={surebet:totalSB,middle:totalMid,normal:totalNorm,freebet:totalFB,fun:totalFun,none:totalNone,expense:totalExp,cost:totalCost,software:totalSw,adjust:totalAdj};
   const tiles=cats.filter(c=>c.always||tot[c.k]).map(c=>`<div class="th-sub-item" style="--c:${c.c}"><div class="th-sub-label"><i class="pc-dot"></i>${c.n}</div><div class="th-sub-val ${tot[c.k]>0.004?'pos':tot[c.k]<-0.004?'neg':''}">${tot[c.k]>0.004?'+':''}${fmt(tot[c.k])} €</div></div>`).join('');
   document.getElementById('totalHero').innerHTML=`
     <div class="total-hero">
@@ -5179,7 +5182,7 @@ function renderProfit(){
   const visibleKeysDesc=[...visibleKeys].reverse();
   const hiddenKeysDesc=[...hiddenKeys].reverse();
 
-  const mTot=k=>{const m=months[k];return m.surebet+m.middle+m.normal+m.freebet+m.fun+m.adjust+m.cost+m.expense+m.software;};
+  const mTot=k=>{const m=months[k];return m.surebet+m.middle+m.normal+m.freebet+m.fun+m.none+m.adjust+m.cost+m.expense+m.software;};
   const best=visibleKeys.length>1?visibleKeys.reduce((a,k)=>mTot(k)>mTot(a)?k:a,visibleKeys[0]):null;
   const curYm=todayLocalISO().slice(0,7);
   document.getElementById('monthList').innerHTML=`<div class="month-grid">`+visibleKeysDesc.map(k=>{
@@ -5666,11 +5669,11 @@ function resolveNormal(n,status){
 // "Counts as" = only where the bet's profit is counted (Profit page, Categories filter, My bets tiles):
 // item.cnt = surebet | middle | normal | freebet | fun. The bet itself stays as it is (one outcome is fine).
 // Picking its own type clears it. Turning it into a real surebet (joining legs) / splitting it is the link below.
-const CT_TYPES=[['surebet','Surebet'],['middle','Middle'],['normal','Normal'],['freebet','Freebet'],['fun','Funbet']];
-const CT_NAME={surebet:'Surebet',middle:'Middle',normal:'Normal',freebet:'Freebet',fun:'Funbet'};
+const CT_TYPES=[['surebet','Surebet'],['middle','Middle'],['normal','Normal'],['freebet','Freebet'],['fun','Funbet'],['none','No category']];
+const CT_NAME={surebet:'Surebet',middle:'Middle',normal:'Normal',freebet:'Freebet',fun:'Funbet',none:'No category'};
 function baseCat(kind,x){return kind==='sb'?(x.mid?'middle':'surebet'):nmCat(x);}
 function statCat(kind,x){return x&&x.cnt&&CT_NAME[x.cnt]?x.cnt:baseCat(kind,x);}
-function cntPill(kind,x){const c=x&&x.cnt&&CT_NAME[x.cnt]&&x.cnt!==baseCat(kind,x)?x.cnt:null;return c?`<span class="type-pill tp-cnt" title="Its profit counts with the ${CT_NAME[c]==='Funbet'?'funbets':CT_NAME[c].toLowerCase()+'s'}">Counts as ${CT_NAME[c]}</span>`:'';}
+function cntPill(kind,x){const c=x&&x.cnt&&CT_NAME[x.cnt]&&x.cnt!==baseCat(kind,x)?x.cnt:null;return c?`<span class="type-pill tp-cnt" title="${c==='none'?'Its profit counts apart, in No category':'Its profit counts with the '+(c==='fun'?'funbets':CT_NAME[c].toLowerCase()+'s')}">${c==='none'?'No category':'Counts as '+CT_NAME[c]}</span>`:'';}
 let ctPick=null; // what the open Edit modal will save as cnt (null = its own type)
 function ctRowHtml(base,join){const cur=ctPick||base;return `<span class="ct-l">Counts as</span>`+CT_TYPES.map(([k,t])=>`<button type="button" class="ct-chip${k===cur?' on':''}" data-ct="${k}" title="${k===base?'Its own type':'Count its profit as '+t+' — the bet stays as it is'}">${t}</button>`).join('')+
   `<button type="button" class="ct-x" data-ctx="1">${join?'Join with other bets into one real surebet ⇄':'Split into one bet per bookmaker ⇄'}</button>`;}
