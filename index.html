@@ -4361,6 +4361,13 @@ function outGroups(list){
 // Surebets saved before New bet knew about split outcomes: 3+ legs where two say the same outcome
 // (Más de 21.5 at 888sport and at William Hill) were counted as separate outcomes → a fake negative ROI.
 // They get g (legs that win together) and their expected / real profit is worked out again.
+// the 'Antiguo' totals (poker and other money from before the app, typed as normal bets at odds 2 with no bookmaker)
+// count once as No category: they lower Profit but stay out of Normal, ROI, win rate and the other stats
+function fixAntiguo(){
+  if(D.migAntiguo)return false;D.migAntiguo=1;
+  (D.normals||[]).forEach(n=>{if(/^antiguo$/i.test((n.event||'').trim())&&!(n.house||'').trim()&&!n.cnt)n.cnt='none';});
+  return true;
+}
 function fixSplitBets(){
   let n=0;
   (D.bets||[]).forEach(b=>{
@@ -5768,7 +5775,7 @@ const CT_TYPES=[['surebet','Surebet'],['middle','Middle'],['normal','Normal'],['
 const CT_NAME={surebet:'Surebet',middle:'Middle',normal:'Normal',freebet:'Freebet',fun:'Funbet',none:'No category'};
 function baseCat(kind,x){return kind==='sb'?(x.mid?'middle':'surebet'):nmCat(x);}
 function statCat(kind,x){return x&&x.cnt&&CT_NAME[x.cnt]?x.cnt:baseCat(kind,x);}
-function cntPill(kind,x){const c=x&&x.cnt&&CT_NAME[x.cnt]&&x.cnt!==baseCat(kind,x)?x.cnt:null;return c?`<span class="type-pill tp-cnt" title="${c==='none'?'Its profit counts apart, in No category':'Its profit counts with the '+(c==='fun'?'funbets':CT_NAME[c].toLowerCase()+'s')}">${c==='none'?'No category':'Counts as '+CT_NAME[c]}</span>`:'';}
+function cntPill(kind,x){const c=x&&x.cnt&&CT_NAME[x.cnt]&&x.cnt!==baseCat(kind,x)?x.cnt:null;return c?`<span class="type-pill tp-cnt" title="${c==='none'?'Its profit counts apart, in No category, and stays out of Stats':'Its profit counts with the '+(c==='fun'?'funbets':CT_NAME[c].toLowerCase()+'s')}">${c==='none'?'No category':'Counts as '+CT_NAME[c]}</span>`:'';}
 let ctPick=null; // what the open Edit modal will save as cnt (null = its own type)
 function ctRowHtml(base,join){const cur=ctPick||base;return `<span class="ct-l">Counts as</span>`+CT_TYPES.map(([k,t])=>`<button type="button" class="ct-chip${k===cur?' on':''}" data-ct="${k}" title="${k===base?'Its own type':'Count its profit as '+t+' — the bet stays as it is'}">${t}</button>`).join('')+
   `<button type="button" class="ct-x" data-ctx="1">${join?'Join with other bets into one real surebet ⇄':'Split into one bet per bookmaker ⇄'}</button>`;}
@@ -9929,7 +9936,8 @@ document.getElementById('perfilShareBtn').addEventListener('click',()=>{
 //  PERFIL — stats reales a partir de D.bets / D.normals
 // ══════════════════════════════════════════
 function computeStats(){
-  const Dbets=visibleBets(),Dnormals=visibleNormals();
+  // 'No category' items (poker, casino, old totals…) only move Profit: they stay out of every stat
+  const Dbets=visibleBets().filter(b=>statCat('sb',b)!=='none'),Dnormals=visibleNormals().filter(n=>statCat('nm',n)!=='none');
   // Wagered y ganancia de surebets: las anuladas no arriesgan ni ganan nada (betStake/betProfit las tratan como 0)
   const sbWagered=Dbets.reduce((a,b)=>a+betStake(b),0);
   const cashNm=Dnormals.filter(n=>n.type!=='Freebet'&&(n.status==='won'||n.status==='lost'));
@@ -10734,6 +10742,7 @@ function emailToPath(email) {
     unsubscribeSnapshot = onSnapshot(docRef, s => serial(() => fromCloud(s)), e => console.error('[Firestore] listener', e));
 
     if (fixSplitBets()) save();
+    if (fixAntiguo()) save();
     updateBadges();
     render();
     renderTgCard();tgStart();
