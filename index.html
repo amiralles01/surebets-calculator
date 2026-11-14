@@ -436,6 +436,10 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,
 .mx-btn svg{width:12px;height:12px}
 .mx-btn:hover{color:var(--text);border-color:var(--faint)}
 .pc-ev .mx-btn{margin-left:0}
+.lk-btn{display:inline-flex;align-items:center;gap:5px;margin-left:6px;max-width:100%;padding:1px 9px 1px 7px;border-radius:999px;border:1px dashed var(--accent,#2f6f4f);background:transparent;color:var(--accent,#2f6f4f);font:inherit;font-size:11.5px;font-weight:600;cursor:pointer;vertical-align:1px;min-width:0}
+.lk-btn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}.lk-btn b{font-weight:700}
+.lk-btn svg{width:12px;height:12px;flex-shrink:0}.lk-btn:hover{border-style:solid}
+.pc-ev .lk-btn{margin-left:0}
 #mxModal .modal-inner{max-width:640px}
 .mx-body{overflow:auto;min-height:0;display:flex;flex-direction:column;gap:12px;padding:1px}.mx-body>*{flex-shrink:0}
 .mx-hero{margin:0;padding:18px 20px 20px}
@@ -6909,7 +6913,7 @@ function pendCompactHtml(kind,item,tw){
     const p=cpp?coPartProfit(b,mk==null||mk==='won'?null:mk):sbResultProfit(b,mk)??(b.profit||0);
     return `<div class="pc-row sb${lvIsLive(b)?' lv-on':''}${marked?' marked':''}${pr?' promo':''}${tw.has(b.id)?' twin':''}"${pr?` style="--hl:${pr.color}"`:''}>
       ${pendTimeHtml(b,withDate)}
-      <div class="pc-ev"><span class="pc-ttl"><b>${sbTagHtml(b,tw)}${midPill(b)}${cntPill('sb',b)}${esc(b.event)}</b>${promoTag(pr)}</span>${b.market?`<span class="pc-mline">${mktChip(b.market)}</span>`:''}${lvSlot('sb',b)}${mxBtn('sb',b)}${arLine(b,true)}${pendNoteLine('sb',b)}${flagTag('sb',b)}</div>
+      <div class="pc-ev"><span class="pc-ttl"><b>${sbTagHtml(b,tw)}${midPill(b)}${cntPill('sb',b)}${esc(b.event)}</b>${promoTag(pr)}</span>${b.market?`<span class="pc-mline">${mktChip(b.market)}</span>`:''}${lvSlot('sb',b)}${mxBtn('sb',b)}${lkChip('sb',b)}${arLine(b,true)}${pendNoteLine('sb',b)}${flagTag('sb',b)}</div>
       <span class="pc-profit ${p>=0?'pos':'neg'}">${p>=0?'+':''}${fmt(p)} €</span>
       <div class="pc-legs${marked?' has-res':''}" style="--n:${Math.max(legs.length+(b.mid?1:0),1)}">${legsHtml}${marked?PEND_RESOLVE('sb',b.id):''}</div>
       <span class="pc-tail">${more}</span>
@@ -6922,7 +6926,7 @@ function pendCompactHtml(kind,item,tw){
   const loss=n.potentialLoss!=null?n.potentialLoss:(n.type==='Freebet'?0:-(n.stake||0));
   return `<div class="pc-row nm${lvIsLive(n)?' lv-on':''}${n.pendMark!=null?' marked':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
     ${pendTimeHtml(n,withDate)}
-    <div class="pc-ev"><span class="pc-ttl"><b>${esc(n.event)}</b> ${nmPill(n)}${promoTag(pr)}</span>${n.pick?`<span class="pc-mline">${mktChip(n.pick)}</span>`:''}${lvSlot('nm',n)}${mxBtn('nm',n)}${arLine(n,true)}<span class="pc-sub"><span class="pc-nmh${pr?' promo':''}"><mark>${esc(n.house||'No bookmaker')}</mark> @ <mark>${fmt(n.odd||0)}</mark></span> · ${fmt(n.stake||0)} €</span>${pendNoteLine('nm',n)}${flagTag('nm',n)}</div>
+    <div class="pc-ev"><span class="pc-ttl"><b>${esc(n.event)}</b> ${nmPill(n)}${promoTag(pr)}</span>${n.pick?`<span class="pc-mline">${mktChip(n.pick)}</span>`:''}${lvSlot('nm',n)}${mxBtn('nm',n)}${lkChip('nm',n)}${arLine(n,true)}<span class="pc-sub"><span class="pc-nmh${pr?' promo':''}"><mark>${esc(n.house||'No bookmaker')}</mark> @ <mark>${fmt(n.odd||0)}</mark></span> · ${fmt(n.stake||0)} €</span>${pendNoteLine('nm',n)}${flagTag('nm',n)}</div>
     <span class="pc-profit ${n.pendMark==='lost'?'neg':'pos'}" title="If it wins +${fmt(win)} € · if it loses ${fmt(loss)} €">${n.pendMark==='lost'?fmt(loss):'+'+fmt(win)} €</span>
     <div class="pc-legs pc-nm-btns">${pendMarkBtns(n,' pc-act')}${n.pendMark!=null?PEND_RESOLVE('nm',n.id):''}</div>
     <span class="pc-tail">${more}</span>
@@ -7085,7 +7089,7 @@ function renderPendientesInner(){
       return`<div class="pend-item sb${lvIsLive(b)?' lv-on':''}${b.pendMark!=null?' marked':''}${pendTw.has(b.id)?' twin':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
         <div class="pend-top">
           <div>
-            <div class="pend-ev">${sbTagHtml(b,pendTw)}${esc(b.event)} <span class="type-badge-kind">${b.mid?'Middle':'Surebet'}</span>${promoTag(pr)}${lvSlot('sb',b)}${mxBtn('sb',b)}${arLine(b)}</div>${sbSubHtml(b,pendTw)}
+            <div class="pend-ev">${sbTagHtml(b,pendTw)}${esc(b.event)} <span class="type-badge-kind">${b.mid?'Middle':'Surebet'}</span>${promoTag(pr)}${lvSlot('sb',b)}${mxBtn('sb',b)}${lkChip('sb',b)}${arLine(b)}</div>${sbSubHtml(b,pendTw)}
             <div class="pend-meta">${pendHouseChip([...new Set((b.legs||[]).map(l=>l.house))])}<span>${fmtWhen(b.date,b.time)}${b.resolveDate?' → '+fmtDate(b.resolveDate):''}</span>${b.totalStake?`<span>Staked: ${fmt(b.totalStake)} €</span>`:''}</div>
             ${pendOpen.has('sb:'+b.id)?pendNoteEdit('sb',b):pendNoteLine('sb',b)}${flagTag('sb',b)}
           </div>
@@ -7102,7 +7106,7 @@ function renderPendientesInner(){
     const loss=n.potentialLoss!=null?n.potentialLoss:(n.type==='Freebet'?0:-(n.stake||0));
     return`<div class="pend-item${lvIsLive(n)?' lv-on':''}${n.pendMark!=null?' marked':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
       <div class="pend-left">
-        <div class="pend-ev">${esc(n.event)} ${nmPill(n)}${promoTag(pr)}${lvSlot('nm',n)}${mxBtn('nm',n)}${arLine(n)}</div>${n.pick?`<div class="sb-sub">${mktChip(n.pick)}</div>`:''}
+        <div class="pend-ev">${esc(n.event)} ${nmPill(n)}${promoTag(pr)}${lvSlot('nm',n)}${mxBtn('nm',n)}${lkChip('nm',n)}${arLine(n)}</div>${n.pick?`<div class="sb-sub">${mktChip(n.pick)}</div>`:''}
         <div class="pend-meta">${pendHouseChip([n.house])}<span>${fmtWhen(n.date,n.time)}${n.resolveDate?' → '+fmtDate(n.resolveDate):''}</span><span class="pc-nmh${pr?' promo':''}">Odds <mark>${fmt(n.odd||0)}</mark></span><span>Staked: ${fmt(n.stake||0)} €</span></div>
         ${pendOpen.has('nm:'+n.id)?pendNoteEdit('nm',n):pendNoteLine('nm',n)}${flagTag('nm',n)}
       </div>
@@ -9080,6 +9084,7 @@ function sameMatchWhen(a,b){
 // another spelling when it has no word the other lacks; names that came from Telegram (with a competition) are clean
 function nameCovered(e1,e2){const x=matchSides(e1),y=matchSides(e2);return !!x&&!!y&&[0,1].every(i=>x[i].roots.every(r=>y[i].roots.includes(r))&&x[i].nums.every(r=>y[i].nums.includes(r)));}
 function unifyMatchName(src){ // → the name it had before, or '' if it was kept
+  if(lkShort(src))return lkOnSave(src);
   const nm=matchName(src.event);if(!nm||!matchSides(src.event))return '';
   const pend=[...D.bets,...D.normals].filter(o=>o!==src&&o.status==='pending'&&o.event&&sameMatchWhen(src,o));
   if(pend.some(o=>matchName(o.event)===nm))return ''; // some pending bet of it is already spelled like this
@@ -9093,6 +9098,83 @@ function unifyMatchName(src){ // → the name it had before, or '' if it was kep
   const was=src.event;src.event=best.event;src.evAlias=was;return was;
 }
 function unifyMsg(was,item){return was?` · named like your other bets: ${item.event}`:'';}
+// ── Bets typed with a short name ("Fritz aces", "Tirante doble falta"): no " vs ", so no live score, Match or
+// linked marks. They're offered the real match — another pending bet's "A vs B" or one ESPN lists that day — and
+// one tap renames them to it, keeping what was typed as the market. Only when a single match fits.
+const LK_MKT=new Set(('aces ace doble dobles falta faltas double doubles fault faults tiebreak tiebreaks tie break breaks juegos juego games game '+
+  'sets set puntos points corners corner corneres tarjetas tarjeta cards card goles gol goals goal remates remate tiros tiro shots shot '+
+  'rebotes asistencias triples over under mas menos total totales handicap ganador gana winner win local visitante home away '+
+  'primer primera segundo segunda tercer first second third partido match player jugador equipo team').split(' '));
+function lkShort(it){
+  return !!it&&it.status==='pending'&&!!it.event&&String(it.event).split(AR_VS).length!==2&&!isCombi(it)&&!(it.legs||[]).some(l=>l.sels&&l.sels.length);
+}
+function lkToks(ev){return arToks(ev).filter(t=>t.length>=4&&!LK_MKT.has(t));}
+function lkHits(toks,sides){return toks.some(x=>sides.some(s=>s.some(y=>arTokMatch(x,y))));}
+// the ESPN matches already read for live scores / results (no extra request), flattened once per change
+let _lkPool=null,_lkStamp=-1,arCacheStamp=0;
+function lkEspnPool(){
+  if(_lkStamp===arCacheStamp)return _lkPool;
+  const seen=new Map();
+  arCache.forEach((c,url)=>{
+    const f=AR_FEEDS.concat(AR_SOCCER).find(x=>url.includes(x[1]+'/scoreboard'));if(!f||!c.events)return;
+    try{arMatches(f[0],c.events,f,'').forEach(m=>{if(m.comps[0].name&&m.comps[1].name)seen.set(m.sport+':'+(m.id!=null?m.id:m.comps[0].name+'|'+m.comps[1].name+'|'+m.date),m);});}catch(e){}
+  });
+  _lkPool=[...seen.values()];_lkStamp=arCacheStamp;return _lkPool;
+}
+// → [{event, src:'bet'|'espn'}]: one entry when exactly one match fits (bets first, ESPN only if no bet does), else []
+function lkSuggest(it){
+  if(!lkShort(it))return [];
+  const toks=lkToks(it.event);if(!toks.length)return [];
+  const names=new Map();
+  [...D.bets,...(D.normals||[])].forEach(o=>{
+    if(o===it||o.status!=='pending'||!o.event||!sameMatchWhen(it,o))return;
+    const p=String(o.event).split(AR_VS);if(p.length!==2)return;
+    if(!lkHits(toks,p.map(arToks)))return;
+    const k=matchName(o.event);if(!names.has(k)||(o.comp&&!names.get(k).comp))names.set(k,o);
+  });
+  // two spellings of the same match ("Fritz vs Tirante" / "Taylor Harry Fritz vs Thiago Agustin Tirante") count as one
+  const uniq=[];names.forEach(o=>{if(!uniq.some(u=>sameMatchName(u.event,o.event)))uniq.push(o);});
+  if(uniq.length===1)return [{event:uniq[0].event,src:'bet'}];
+  if(uniq.length>1)return [];
+  const end=it.time?Date.parse(it.date+'T'+it.time+':00'):NaN,day=Date.parse((it.date||'')+'T12:00:00');
+  const ms=lkEspnPool().filter(m=>{
+    if(isNaN(m.date))return false;
+    if(!isNaN(end)){if(Math.abs(end-SPORT_HOURS*3600000-m.date)>6*3600000)return false;}
+    else if(isNaN(day)||Math.abs(day-m.date)>18*3600000)return false;
+    return lkHits(toks,m.comps.map(c=>c.toks));
+  });
+  const ids=[...new Set(ms.map(m=>matchName(m.comps[0].name+' vs '+m.comps[1].name)))];
+  return ids.length===1?[{event:ms[0].comps[0].name+' vs '+ms[0].comps[1].name,src:'espn'}]:[];
+}
+// renames it to the match; what was typed goes in front of the market (surebets) / pick (normal bets) → undo record
+function lkApply(it,event){
+  const rec={it,event:it.event,market:it.market,pick:it.pick,evAlias:it.evAlias,evLink:it.evLink};
+  const was=it.event,sb=Array.isArray(it.legs);
+  const k=sb?'market':'pick',cur=String(it[k]||'').trim();
+  it[k]=cur&&matchName(cur).includes(matchName(was))?cur:(cur?was+' - '+cur:was);
+  it.event=event;it.evAlias=was;it.evLink=1;
+  return rec;
+}
+function lkUndo(recs){(recs||[]).forEach(r=>{['event','market','pick','evAlias','evLink'].forEach(k=>{if(r[k]===undefined)delete r.it[k];else r.it[k]=r[k];});});}
+// one tap: this bet and every other short-named pending bet that points at the same match
+function lkLink(kind,id){
+  const it=(kind==='sb'?D.bets:D.normals||[]).find(x=>String(x.id)===String(id));if(!it)return;
+  const s=lkSuggest(it)[0];if(!s)return;
+  const group=[...D.bets,...(D.normals||[])].filter(o=>{if(o===it)return true;const t=lkSuggest(o)[0];return t&&sameMatchName(t.event,s.event);});
+  const recs=group.map(o=>lkApply(o,s.event));
+  if(recs.length>1)syncMatchWhen(it); // nothing to do unless times differ: they were in the same window already
+  save();updateBadges();renderPendientes();
+  if(typeof lvRefresh==='function')setTimeout(()=>lvRefresh(true),50);
+  toast(`${recs.length>1?recs.length+' bets':'Bet'} linked to ${s.event}`,'Undo',()=>{lkUndo(recs);save();renderPendientes();toast('Link undone');});
+}
+// on save: a short name with exactly one pending match around that time is linked straight away
+function lkOnSave(src){const s=lkSuggest(src).find(x=>x.src==='bet');if(!s)return '';const was=src.event;lkApply(src,s.event);return was;}
+function lkChip(kind,it){
+  const s=lkSuggest(it)[0];if(!s)return '';
+  return `<button type="button" class="lk-btn" data-lk="${kind}:${it.id}" title="Rename it to the real match, so it gets the live score and the Match window (what you typed stays as the market)">${LK_IC}<span>Link to <b>${esc(s.event)}</b></span></button>`;
+}
+const LK_IC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>';
+document.addEventListener('click',e=>{const b=e.target.closest('[data-lk]');if(!b)return;e.preventDefault();e.stopPropagation();const [k,id]=b.dataset.lk.split(':');lkLink(k,id);},true);
 const MATCH_DAYS=3; // same name further apart than this = a different match (league vs cup, return leg…)
 function syncMatchWhen(src){ // → list of {item,date,time} with the old values (for undo)
   const nm=matchName(src.event);if(!nm||!src.date)return [];
@@ -9550,7 +9632,7 @@ async function arFetch(path,ymd,maxAge=AR_EVERY_MIN*60000-20000){
   try{
     const r=await fetch(old?url:url+'&_='+Math.floor(Date.now()/60000),{signal:ctl.signal});if(!r.ok)throw new Error(r.status);
     const events=await r.json().then(j=>{const lg=((j.leagues||[])[0]||{}).name||'';const ev=j.events||[];if(lg)ev.forEach(e=>{e._lg=lg;});return ev;});
-    arCache.set(url,{t:Date.now(),events});return events;
+    arCache.set(url,{t:Date.now(),events});arCacheStamp++;return events;
   }catch(e){return null;}finally{clearTimeout(tm);}
 }
 // ESPN's football team stats → {corners, shots, sot, fouls} (null when ESPN has none for that league)
@@ -9806,6 +9888,7 @@ function arCandidates(manual){
   const oldest=shiftedISO(-AR_MAX_DAYS),now=Date.now();
   const ok=b=>{
     if(!manual){const t=arTried.get(b.id);if(t&&now-t.t<t.wait*60000)return false;}
+    if((b._nm||b).evLink)return false; // linked from a short typed name: its market is one the scores can't read
     return String(b.event||'').split(AR_VS).length===2&&arCoverable(b);
   };
   return [...D.bets.filter(b=>{
@@ -10085,19 +10168,33 @@ function lvCands(){
   (D.normals||[]).forEach(n=>add('nm',n));
   return out;
 }
+// short-named pending bets around their time with nothing to link to yet (backs off like lvCands)
+function lkCands(){
+  const now=Date.now(),today=shiftedISO(0);
+  return [...D.bets,...(D.normals||[])].filter(it=>{
+    if(!lkShort(it)||!it.date||!lkToks(it.event).length||lkSuggest(it).length)return false;
+    const end=it.time?Date.parse(it.date+'T'+it.time+':00'):NaN;
+    if(isNaN(end)){if(it.date!==today)return false;}
+    else if(now<end-SPORT_HOURS*3600000-60*60000||now>end+4*3600000)return false;
+    const t=lvTried.get('lk:'+it.id);return !(t&&now-t.t<t.wait*60000);
+  });
+}
 async function lvRefresh(force){
   if(lvBusy||!Array.isArray(D.bets))return;
   if(!force&&Date.now()-lvLast<LV_EVERY_SEC*1000-10000)return;
   // forget bets that aren't pending any more
   [...lvState.keys()].forEach(k=>{const [kd,id]=k.split(':');const it=(kd==='sb'?D.bets:D.normals||[]).find(x=>String(x.id)===id);if(!it||it.status!=='pending')lvState.delete(k);});
-  const cands=lvCands();
-  if(!cands.length){lvPaint();return;}
+  const cands=lvCands(),lks=lkCands();
+  if(!cands.length&&!lks.length){lvPaint();return;}
   lvBusy=true;lvLast=Date.now();
-  const before=lvSig();
+  const before=lvSig(),lkBefore=lks.length;
   try{
     const best=new Map(),sports=arSports(),age=LV_EVERY_SEC*1000-15000;
     const plan=cands.map(c=>[c,arPlan(c.item,sports,lvWhere.get(c.key)||(c.kind==='sb'?arWhere.get(c.item.id):undefined))]);
-    let reached=await arAsk(best,plan.map(([c,p])=>[p.first,p.days]),age);
+    // short-named bets ("Fritz aces"): their sport's scoreboards are read too, so Link to can offer the real match
+    const lkPlan=lks.map(it=>{const p=arPlan(it,sports);return [p.first,p.days];});
+    let reached=await arAsk(best,plan.map(([c,p])=>[p.first,p.days]).concat(lkPlan),age);
+    lks.forEach(it=>{const k='lk:'+it.id;if(lkSuggest(it).length){lvTried.delete(k);return;}const t=lvTried.get(k);lvTried.set(k,{t:Date.now(),wait:t?Math.min(t.wait*2,120):LV_RETRY_MIN});});
     const later=plan.filter(([c,p])=>p.then.length&&!arFindMatch(c.item,[...best.values()]));
     if(later.length)reached=await arAsk(best,later.map(([c,p])=>[p.then,p.days]),age)||reached;
     if(!reached)return;
@@ -10121,7 +10218,8 @@ async function lvRefresh(force){
     // which bets are live / finished changed → redraw the list (chips, filters, "Ready to settle"); else just the tags
     const pg=document.getElementById('page-pendientes'),ae=document.activeElement;
     const typing=ae&&pg&&pg.contains(ae)&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName);
-    if(lvSig()!==before&&pg&&pg.style.display!=='none'&&!typing)renderPendientes();else lvPaint();
+    const lkNew=lkBefore&&lks.some(it=>lkSuggest(it).length);
+    if((lvSig()!==before||lkNew)&&pg&&pg.style.display!=='none'&&!typing)renderPendientes();else lvPaint();
   }
 }
 function lvSig(){return [...lvState].map(([k,v])=>k+v.st).sort().join();}
