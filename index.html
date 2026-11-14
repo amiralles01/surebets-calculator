@@ -522,9 +522,6 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,
 .rt-list{display:flex;flex-direction:column;gap:6px}
 .rt-row{display:flex;gap:12px;align-items:center;padding:10px 12px;background:var(--raised);border-radius:10px;font-size:13px}
 .rt-row.rt-un{border:1px dashed var(--border)}
-.rt-tick{flex-shrink:0;width:26px;height:26px;border-radius:7px;border:2px solid var(--faint);background:transparent;color:transparent;display:grid;place-items:center;padding:0;cursor:pointer}
-.rt-tick svg{width:15px;height:15px}
-.rt-tick.on{background:var(--green);border-color:var(--green);color:#fff}
 .rt-warn{margin-top:5px;font-size:11px;color:#B8860B;line-height:1.35}
 .rt-l{flex:1;min-width:0}.rt-l>b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rt-l>small{display:block;color:var(--faint);font-size:11.5px;margin-top:2px}
@@ -2537,6 +2534,12 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .bk-vtot{margin-left:auto;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .bk-vtot b{font-family:var(--mono);font-size:14.5px;color:var(--text)}.bk-vtot b.pos{color:var(--green)}.bk-vtot b.neg{color:var(--red)}
 .bk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px}
+.bk-tick{flex-shrink:0;width:18px;height:18px;border-radius:5px;border:1.6px solid var(--faint);background:transparent;color:transparent;display:inline-grid;place-items:center;padding:0;margin-right:7px;vertical-align:-3px;cursor:pointer;position:relative}
+.bk-tick::after{content:'';position:absolute;inset:-8px}
+.bk-tick svg{width:12px;height:12px}
+.bk-tick:hover{border-color:var(--green)}
+.bk-tick.on{background:var(--green);border-color:var(--green);color:#fff}
+.bk-name .bk-tick{width:20px;height:20px;vertical-align:-4px}.bk-name .bk-tick svg{width:13px;height:13px}
 .bk-tile{--tone:var(--border2);position:relative;overflow:hidden;cursor:pointer;min-width:0;padding:11px 12px 13px;
   background:var(--surface);border-radius:12px;box-shadow:var(--lift);
   background-image:radial-gradient(120% 90% at 100% 0%,color-mix(in srgb,var(--tone) 11%,transparent),transparent 62%);
@@ -2547,6 +2550,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .bk-tile.on{box-shadow:0 0 0 2px var(--pitch2),var(--lift)}
 .bk-tile:focus-visible{box-shadow:0 0 0 2px var(--focus),var(--lift)}
 .bkt-top{display:flex;align-items:center;gap:6px;min-width:0}
+.bkt-top .bk-tick{margin-right:0}
 .bkt-name{font-size:13px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
 .bk-tile.idle .bkt-name::after{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ball,var(--yellow));margin-left:5px;vertical-align:middle}
 .bkt-pend{flex:none;font-size:10.5px;font-weight:700;color:#8a6a00;background:var(--ydim);border-radius:99px;padding:1px 6px;font-family:var(--mono)}
@@ -4488,9 +4492,6 @@ function rentaYear(y){
 // Jan–Jun is filing season for last year's return, so it opens on last year if there's anything in it
 function rentaDefaultYear(){const t=todayLocalISO(),cy=t.slice(0,4),py=String(+cy-1);return +t.slice(5,7)<=6&&dataYears().includes(py)?py:cy;}
 let rtYear=null;
-// a tick per bookmaker and year, only a reminder for you (statement asked, checked…): it changes nothing. Synced in D.rtTicks.
-function rtTicks(){if(!D.rtTicks||typeof D.rtTicks!=='object'||Array.isArray(D.rtTicks))D.rtTicks={};return D.rtTicks;}
-const rtTicked=(y,k)=>!!(D.rtTicks&&D.rtTicks[y+'|'+k]);
 function openRenta(y){rtYear=y||rtYear||rentaDefaultYear();renderRenta();document.getElementById('rtModal').style.display='flex';document.getElementById('rt-body').scrollTop=0;}
 function renderRenta(){
   const r=rentaYear(rtYear),cy=todayLocalISO().slice(0,4);
@@ -4510,10 +4511,8 @@ function renderRenta(){
   if(!r.rows.length)h+=`<div class="card st-card"><div class="cb"><div class="bk-hist-empty" style="padding:22px 0;text-align:center">Nothing recorded in ${r.y}.</div></div></div>`;
   else{
     const max=Math.max(...r.rows.map(x=>Math.abs(x.res)),0.01);
-    const tk=r.rows.filter(x=>rtTicked(r.y,x.key)).length;
-    h+=`<div class="card st-card"><div class="ch"><span class="ct">By bookmaker</span><span class="st-hint">${tk?`${tk}/${r.rows.length} ticked · `:''}deposited · withdrawn · result</span></div><div class="cb"><div class="rt-list">`+
-      r.rows.map(x=>{const on=rtTicked(r.y,x.key);return `<div class="rt-row${x.untracked?' rt-un':''}${on?' rt-on':''}">
-        <button type="button" class="rt-tick${on?' on':''}" data-rttick="${esc(x.key)}" aria-pressed="${on}" title="Tick it to remember something (statement asked, checked…). It changes nothing."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+    h+=`<div class="card st-card"><div class="ch"><span class="ct">By bookmaker</span><span class="st-hint">deposited · withdrawn · result</span></div><div class="cb"><div class="rt-list">`+
+      r.rows.map(x=>{return `<div class="rt-row${x.untracked?' rt-un':''}">
         <div class="rt-l"><b>${esc(x.name)}</b><small>${x.n} settled bet${x.n===1?'':'s'}${x.open?` · ${x.open} pending`:''}${x.untracked?' · not in Bookmakers':''}</small>
           ${x.untracked?'':`<div class="rt-mv"><span>In <b>${fmt(x.dep)} €</b></span><span>Out <b>${fmt(x.wd)} €</b></span></div>`}
           ${x.undated||x.undatedEdit?`<div class="rt-warn">Some deposits/withdrawals have no date (typed on the bookmaker${x.undatedEdit?' or totals edited':''}), so they're in no year. The result doesn't change.</div>`:''}</div>
@@ -4534,14 +4533,12 @@ function renderRenta(){
 }
 function rentaCsv(){
   const r=rentaYear(rtYear);
-  const rows=r.rows.map(x=>[x.name,x.untracked?'':x.dep,x.untracked?'':x.wd,x.n,x.bets,x.adj,x.res,x.res>0?x.res:0,x.res<0?-x.res:0,rtTicked(r.y,x.key)?'✓':'',[x.untracked?'not in Bookmakers':'',x.undated||x.undatedEdit?'some deposits/withdrawals have no date':''].filter(Boolean).join(' · ')]);
+  const rows=r.rows.map(x=>[x.name,x.untracked?'':x.dep,x.untracked?'':x.wd,x.n,x.bets,x.adj,x.res,x.res>0?x.res:0,x.res<0?-x.res:0,[x.untracked?'not in Bookmakers':'',x.undated||x.undatedEdit?'some deposits/withdrawals have no date':''].filter(Boolean).join(' · ')]);
   rows.push([],['Total',r.dep,r.wd,r.rows.reduce((a,x)=>a+x.n,0),'','',r.net,r.gains,r.losses],['To declare (gains − losses, never below 0)','','','','','',r.declare]);
-  csvDownload(`renta-${r.y}.csv`,['Bookmaker','Deposited','Withdrawn','Settled bets','Bets result','Corrections','Result','Gain','Loss','Ticked','Note'],rows);
+  csvDownload(`renta-${r.y}.csv`,['Bookmaker','Deposited','Withdrawn','Settled bets','Bets result','Corrections','Result','Gain','Loss','Note'],rows);
 }
 document.addEventListener('click',e=>{
   const y=e.target.closest('[data-rty]');if(y){rtYear=y.dataset.rty;renderRenta();return;}
-  const tk=e.target.closest('[data-rttick]');if(tk){const t=rtTicks(),k=rtYear+'|'+tk.dataset.rttick;if(t[k])delete t[k];else t[k]=1;save();
-    const st=document.getElementById('rt-body').scrollTop;renderRenta();document.getElementById('rt-body').scrollTop=st;return;}
   if(e.target.closest('[data-rt-open]')){openRenta();return;}
   if(e.target.id==='rt-csv'){rentaCsv();return;}
   if(e.target.id==='rt-cancel'||e.target.id==='rtModal')document.getElementById('rtModal').style.display='none';
@@ -7423,6 +7420,8 @@ function agoLabel(d){const n=daysAgo(d);return n<=0?'today':n===1?'yesterday':n+
 const IDLE_DAYS=14; // a bookmaker unused for longer gets flagged (accounts look healthier with steady activity)
 // Cash flow of a bookmaker from deposits and withdrawals only (the balance in the account doesn't count).
 // c.amount is already deposits − withdrawals (and absorbs hand edits), so money put in = c.amount + withdrawn.
+// a tick on each bookmaker, only a reminder for you: it changes nothing. c.tick, synced with the bookmaker.
+function bkTickHtml(c){return `<button type="button" class="bk-tick${c.tick?' on':''}" data-bk-tick="${c.id}" aria-pressed="${!!c.tick}" title="${c.tick?'Ticked':'Tick'} · just a reminder, it changes nothing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>`;}
 function casaCashFlow(c){
   const wd=(c.history||[]).filter(h=>h.type==='wd');
   const out=+wd.reduce((a,h)=>a+(h.amount||0),0).toFixed(2);
@@ -7583,7 +7582,7 @@ function renderCasas(filter=''){
       <div class="bk-main">
         <div class="bk-avatar">${esc(bkInitials(c.name))}</div>
         <div class="bk-info">
-          <div class="bk-name">${esc(c.name)}</div>
+          <div class="bk-name">${bkTickHtml(c)}${esc(c.name)}</div>
           ${metaBits.length?`<div class="bk-meta">${metaBits.join(' · ')}</div>`:''}${actHtml}
         </div>
         <div class="bk-bal"><div class="bk-bal-val ${pCls}">${fmt(amt)} €</div><div class="bk-bal-sub">balance</div></div>
@@ -7636,7 +7635,7 @@ function renderCasas(filter=''){
         :m.inPlay>0?`<span class="yel">${fmt(m.inPlay)} € in play${m.open>1?` (${m.open})`:''}</span>`
         :a&&a.last?`<span class="${idle?'yel':''}">${idle?'idle · ':''}${agoLabel(a.last)}</span>`:`<span>no bets yet</span>`;
       return `<div class="bk-tile ${cls}${bkFocus===c.id?' on':''}${idle?' idle':''}" data-bk-focus="${c.id}" role="button" tabindex="0" title="${esc(c.name)}">
-        <div class="bkt-top"><span class="bkt-name">${esc(c.name)}</span>${pend>0?`<span class="bkt-pend" title="Pending to receive: ${fmt(pend)} €">+${fmt(pend,0)}</span>`:''}</div>
+        <div class="bkt-top">${bkTickHtml(c)}<span class="bkt-name">${esc(c.name)}</span>${pend>0?`<span class="bkt-pend" title="Pending to receive: ${fmt(pend)} €">+${fmt(pend,0)}</span>`:''}</div>
         <div class="bkt-bal ${cls}">${fmt(b)} €</div>
         <div class="bkt-sub">${sub}</div>
         <div class="bkt-bar"><i style="width:${b>0?Math.max(2,b/maxBal*100).toFixed(1):0}%"></i></div>
@@ -7754,6 +7753,8 @@ document.getElementById('casasList').addEventListener('click',e=>{
   if(vb){bkView=vb.dataset.bkview;try{localStorage.setItem('sb_bk_view',bkView);}catch(_){}renderCasas(document.getElementById('casasSearch').value);return;}
   const sb=e.target.closest('[data-bksort]');
   if(sb){bkSort=sb.dataset.bksort;try{localStorage.setItem('sb_bk_sort',bkSort);}catch(_){}renderCasas(document.getElementById('casasSearch').value);return;}
+  const tk=e.target.closest('[data-bk-tick]');
+  if(tk){const c=D.casas.find(x=>x.id===+tk.dataset.bkTick);if(c){if(c.tick)delete c.tick;else c.tick=true;save();renderCasas(document.getElementById('casasSearch').value);}return;}
   const ft=e.target.closest('[data-bk-focus]');
   if(ft){const id=+ft.dataset.bkFocus;bkFocus=bkFocus===id?null:id;
     if(openBkPanel&&openBkPanel.cid!==bkFocus)openBkPanel=null;
