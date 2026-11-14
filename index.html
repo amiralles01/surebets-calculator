@@ -7613,7 +7613,7 @@ function renderCasas(filter=''){
           <button class="btn-reg" data-bk-cash-save="${c.id}" style="width:auto;padding:9px 16px;margin:0">Save</button>
           ${f.edited?`<button class="btn-s" data-bk-cash-reset="${c.id}" style="width:auto;padding:9px 16px;margin:0">Back to automatic</button>`:''}
         </div>
-        <div class="bk-hist-empty" style="margin-top:8px">Changes Deposited, Withdrawn, Real result, Hacienda and Renta. The balance stays the same. New deposits and withdrawals keep adding on top.${f.edited?` Automatic: ${fmt(f.autoIn)} € in · ${fmt(f.autoOut)} € out.`:''}</div>
+        <div class="bk-hist-empty" style="margin-top:8px">Changes Deposited, Withdrawn, Bet results, Hacienda and Renta. The balance stays the same. New deposits and withdrawals keep adding on top.${f.edited?` Automatic: ${fmt(f.autoIn)} € in · ${fmt(f.autoOut)} € out.`:''}</div>
       </div>`;
     }else if(mode==='bal'){
       panelHtml=`<div class="bk-panel">
@@ -7683,8 +7683,8 @@ function renderCasas(filter=''){
           const cell=(l,v,sub)=>`<div class="bk-cash${mode==='cash'?' on':''}" role="button" tabindex="0" data-bk-toggle="cash" data-cid="${c.id}" title="Tap to type the real totals from the bookmaker's website"><span>${l}${f.edited?' · edited':''} ${ed}</span><b>${fmt(v)} €</b>${sub?`<small class="bk-dir">${sub}</small>`:''}</div>`;
           return cell('Deposited',f.in,'all time')+cell('Withdrawn',f.out,f.pendOut?`${fmt(f.pendOut)} € on its way`:'all time')+
           `<div><span>In pending bets${mny.open?` (${mny.open})`:''}</span><b class="${mny.inPlay>0?'yel':''}">${fmt(mny.inPlay)} €</b></div>
-          <div title="Withdrawn ${fmt(f.out)} − deposited ${fmt(f.in)} + balance ${fmt(amt)} + pending ${fmt(mny.inPlay)}${th?` + ${fmt(th)} lost by others`:''}: what this bookmaker really made you. It's what goes to Hacienda."><span>Real result</span><b class="${cl(real)}">${sg(real)}</b><small class="bk-dir">out − in + balance${th?` · +${fmt(th)} others`:''}</small></div>
-          <div title="The result of the bets you logged here${mny.adj?` (balance corrections: ${sg(mny.adj)})`:''}"><span>Logged bets</span><b class="${cl(mny.settled)}">${sg(mny.settled)}</b><small class="bk-dir">${Math.abs(nl)>=0.01?`${sg(nl)} not logged`:'all logged'}</small></div>`;})()}
+          <div title="Withdrawn ${fmt(f.out)} − deposited ${fmt(f.in)} + balance ${fmt(amt)} + pending ${fmt(mny.inPlay)}${th?` + ${fmt(th)} lost by others`:''}: what your bets here really made you, logged or not. It's what goes to Hacienda."><span>Bet results</span><b class="${cl(real)}">${sg(real)}</b><small class="bk-dir">out − in + balance${th?` · +${fmt(th)} others`:''}</small></div>
+          <div title="The result of the bets you logged here${mny.adj?` (balance corrections: ${sg(mny.adj)})`:''}"><span>Logged in the app</span><b class="${cl(mny.settled)}">${sg(mny.settled)}</b><small class="bk-dir">${Math.abs(nl)>=0.01?`${sg(nl)} missing vs Bet results`:'matches Bet results'}</small></div>`;})()}
       </div>`}
       <div class="bk-actions">
         <button class="bk-btn dep${mode==='dep'?' on':''}" data-bk-toggle="dep" data-cid="${c.id}">+ Deposit</button>
