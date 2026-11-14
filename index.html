@@ -2660,6 +2660,17 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .total-hero .th-sub-val{color:#fff;white-space:nowrap}
 .total-hero .th-sub-val.neg{color:#FFB4A6}
 .pc-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);flex-shrink:0}
+.pt-bar{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:10px;flex-wrap:wrap}
+.pt-hint{font-size:12px;color:var(--pitch-muted,rgba(255,255,255,.6));flex:1;min-width:0}
+.pt-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:var(--pitch-muted,rgba(255,255,255,.7));font:inherit;font-size:12px;font-weight:600;padding:5px 11px;border-radius:20px;cursor:pointer;white-space:nowrap}
+.pt-btn svg{width:13px;height:13px}
+.pt-btn:hover{color:#fff;border-color:rgba(255,255,255,.3)}
+.pt-btn.on{background:var(--ball,#F5C542);border-color:transparent;color:#14281d}
+.total-hero .th-sub-item.pt-edit{cursor:pointer;padding-right:36px;transition:opacity .15s}
+.total-hero .th-sub-item.pt-off{opacity:.4;border-style:dashed}
+.total-hero .th-sub-item.pt-off .th-sub-val{text-decoration:line-through}
+.pt-eye{position:absolute;top:50%;right:10px;transform:translateY(-50%);width:20px;height:20px;color:#fff;opacity:.8}
+.pt-eye svg{width:100%;height:100%}
 .month-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;align-items:start}
 .month-grid .month-card{margin:0}
 .month-card.now{box-shadow:0 0 0 2px var(--ball,#F5C542),var(--lift,0 6px 20px rgba(0,0,0,.08))}
@@ -5587,6 +5598,14 @@ function wireMonthChart(){
   plot.addEventListener('pointerleave',()=>show(null));
   plot.addEventListener('focusin',e=>show(e.target.closest('[data-thc]')));plot.addEventListener('focusout',()=>show(null));
 }
+let ptEdit=false;
+const PT_EYE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+const PT_EYE_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.83 21.83 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.82 21.82 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+document.addEventListener('click',e=>{
+  if(e.target.closest('[data-ptedit]')){ptEdit=!ptEdit;renderProfit();return;}
+  const t=e.target.closest('[data-pttog]');if(!t)return;
+  const k='ptile:'+t.dataset.pttog;isHidden(k)?unhideItem(k):hideItem(k);renderProfit();
+});
 function renderProfit(){
   const pg=document.getElementById('page-profit');if(pg&&pg.style.display==='none')return; // rebuilt when you open it
   renderBkStats();
@@ -5633,7 +5652,12 @@ function renderProfit(){
   // in Bookmakers, typos…) shows as its own tile, so the tiles still add up to the total.
   gapAll=all;const real=realProfitInfo(all);let headline=totalAll;
   if(real){tot.gap=real.gap;headline=totalAll+real.gap;}
-  const tiles=[...cats,...(real&&Math.abs(real.gap)>=0.01?[{k:'gap',n:'Not in bets',c:'#7A8CA8',always:true}]:[])].filter(c=>c.always||tot[c.k]).map(c=>`<div class="th-sub-item" style="--c:${c.c}"${c.k==='adjust'?' data-adjm="all" title="See and undo each balance correction"':c.k==='gap'?' data-gapm="1" title="Tap to see where it comes from"':''}><div class="th-sub-label"><i class="pc-dot"></i>${c.n}${c.k==='gap'||c.k==='adjust'?' <small class="adj-see">See ›</small>':''}</div><div class="th-sub-val ${tot[c.k]>0.004?'pos':tot[c.k]<-0.004?'neg':''}">${tot[c.k]>0.004?'+':''}${fmt(tot[c.k])} €</div></div>`).join('');
+  // each card can be hidden on its own (Edit cards); hiding only changes what you see, never the totals
+  const tileCats=[...cats,...(real&&Math.abs(real.gap)>=0.01?[{k:'gap',n:'Not in bets',c:'#7A8CA8',always:true}]:[])].filter(c=>c.always||tot[c.k]);
+  const nHid=tileCats.filter(c=>isHidden('ptile:'+c.k)).length;
+  const tiles=tileCats.filter(c=>ptEdit||!isHidden('ptile:'+c.k)).map(c=>{const hid=isHidden('ptile:'+c.k);
+    return `<div class="th-sub-item${ptEdit?' pt-edit'+(hid?' pt-off':''):''}" style="--c:${c.c}"${ptEdit?` data-pttog="${c.k}" role="button" title="${hid?'Show':'Hide'} this card"`:c.k==='adjust'?' data-adjm="all" title="See and undo each balance correction"':c.k==='gap'?' data-gapm="1" title="Tap to see where it comes from"':''}><div class="th-sub-label"><i class="pc-dot"></i>${c.n}${!ptEdit&&(c.k==='gap'||c.k==='adjust')?' <small class="adj-see">See ›</small>':''}</div><div class="th-sub-val ${tot[c.k]>0.004?'pos':tot[c.k]<-0.004?'neg':''}">${tot[c.k]>0.004?'+':''}${fmt(tot[c.k])} €</div>${ptEdit?`<span class="pt-eye">${hid?PT_EYE_OFF:PT_EYE}</span>`:''}</div>`;}).join('');
+  const ptBar=tileCats.length?`<div class="pt-bar">${ptEdit?`<span class="pt-hint">Tap a card to hide or show it. Totals don't change.</span>`:''}<button type="button" class="pt-btn${ptEdit?' on':''}" data-ptedit="1">${ptEdit?'Done':`${PT_EYE}Edit cards${nHid?` · ${nHid} hidden`:''}`}</button></div>`:'';
   document.getElementById('totalHero').innerHTML=`
     <div class="total-hero">
       <div class="th-grid">
@@ -5645,7 +5669,8 @@ function renderProfit(){
         </div>
         ${monthChartHtml(visibleKeys,months)}
       </div>
-      <div class="th-sub">${tiles}</div>
+      ${tiles?`<div class="th-sub">${tiles}</div>`:''}
+      ${ptBar}
     </div>`;
   wireMonthChart();
 
