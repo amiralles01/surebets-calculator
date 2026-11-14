@@ -7594,6 +7594,8 @@ function casaCashFlow(c){
   const inn=+(autoIn+(a.in||0)).toFixed(2), outT=+(autoOut+(a.out||0)).toFixed(2);
   return {in:inn,out:outT,pendOut,net:+(outT-inn).toFixed(2),autoIn,autoOut,edited:!!(a.in||a.out)};
 }
+// money still on its way to you: old one-off pendingTransfer + withdrawals not yet confirmed received
+function casaPendIn(c){return +((c.pendingTransfer||0)+casaCashFlow(c).pendOut).toFixed(2);}
 function casaMoney(c,ledger){
   const e=(ledger||bookmakerLedger()).get(bkKey(c.name||''))||{settled:0,inPlay:0,open:0};
   const deposited=c.amount||0, adj=c.balAdj||0;
@@ -7615,7 +7617,7 @@ function renderCasas(filter=''){
   };
   const items=D.casas.filter(c=>byProfile(c)&&(!filter||c.name.toLowerCase().includes(filter.toLowerCase())));
   const vCasas=visibleCasas().filter(byProfile);
-  const totalPending=vCasas.reduce((a,c)=>a+(c.pendingTransfer||0),0);
+  const totalPending=+vCasas.reduce((a,c)=>a+casaPendIn(c),0).toFixed(2);
   const ledger=bookmakerLedger(),act=bookmakerActivity();
   const idleList=vCasas.filter(c=>!isBank(c)).filter(c=>{const a=act.get(bkKey(c.name||''));return a&&a.last&&daysAgo(a.last)>IDLE_DAYS;});
   const totBal=vCasas.reduce((a,c)=>a+casaMoney(c,ledger).balance,0), totPlay=vCasas.reduce((a,c)=>a+casaMoney(c,ledger).inPlay,0);
@@ -7638,7 +7640,7 @@ function renderCasas(filter=''){
   const sorted=bkSortList(visible,ledger,act);
   const cardHtml=c=>{
     const mny=casaMoney(c,ledger),amt=mny.balance,pCls=amt>0?'pos':amt<0?'neg':'zer';
-    const pend=c.pendingTransfer||0;
+    const pend=casaPendIn(c);
     const pendWdCount=(c.history||[]).filter(h=>h.type==='wd'&&h.status==='pending').length;
     const metaBits=[];
     if(bkProfileSel==='all'||bkProfileSel==='unused'){
@@ -7797,7 +7799,7 @@ function renderCasas(filter=''){
       const m=casaMoney(c,ledger),b=m.balance,cls=b>0?'pos':b<0?'neg':'zer';
       const a=isBank(c)?null:act.get(bkKey(c.name||''));
       const idle=!!(a&&a.last&&daysAgo(a.last)>IDLE_DAYS);
-      const pend=c.pendingTransfer||0;
+      const pend=casaPendIn(c);
       const sub=isBank(c)?`<span>Bank account</span>`
         :m.inPlay>0?`<span class="yel">${fmt(m.inPlay)} € in play${m.open>1?` (${m.open})`:''}</span>`
         :a&&a.last?`<span class="${idle?'yel':''}">${idle?'idle · ':''}${agoLabel(a.last)}</span>`:`<span>no bets yet</span>`;
