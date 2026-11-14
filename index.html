@@ -1894,7 +1894,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .bk-money span{font-size:12px;color:var(--muted)}
 .bk-money b{font-size:15px;font-weight:600}
 .bk-money b.pos{color:var(--green)}.bk-money b.neg{color:var(--red)}.bk-money b.yel{color:var(--yellow)}
-@media(max-width:600px){.bk-money{grid-template-columns:1fr 1fr;padding:0 14px 12px}}
+@media(max-width:600px){.bk-money{grid-template-columns:1fr 1fr;padding:0 14px 12px}.bk-money .bk-cash{grid-column:1/-1}}
 
 .ps-head,.ps-leg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,.9fr) 34px;gap:8px;align-items:center}
 .ps-head{font-size:11px;color:var(--faint);margin-bottom:6px}
@@ -7279,6 +7279,15 @@ function bookmakerActivity(){
 function daysAgo(d){return Math.round((Date.parse(todayLocalISO()+'T00:00:00')-Date.parse(d+'T00:00:00'))/864e5);}
 function agoLabel(d){const n=daysAgo(d);return n<=0?'today':n===1?'yesterday':n+' days ago';}
 const IDLE_DAYS=14; // a bookmaker unused for longer gets flagged (accounts look healthier with steady activity)
+// Cash flow of a bookmaker from deposits and withdrawals only (the balance in the account doesn't count).
+// c.amount is already deposits − withdrawals (and absorbs hand edits), so money put in = c.amount + withdrawn.
+function casaCashFlow(c){
+  const wd=(c.history||[]).filter(h=>h.type==='wd');
+  const out=+wd.reduce((a,h)=>a+(h.amount||0),0).toFixed(2);
+  const pendOut=+wd.filter(h=>h.status==='pending').reduce((a,h)=>a+(h.amount||0),0).toFixed(2);
+  const inn=+Math.max(0,(c.amount||0)+out).toFixed(2);
+  return {in:inn,out,pendOut,net:+(out-inn).toFixed(2)};
+}
 function casaMoney(c,ledger){
   const e=(ledger||bookmakerLedger()).get(bkKey(c.name||''))||{settled:0,inPlay:0,open:0};
   const deposited=c.amount||0, adj=c.balAdj||0;
@@ -7428,6 +7437,7 @@ function renderCasas(filter=''){
         <div><span>Bet results</span><b class="${mny.settled>0?'pos':mny.settled<0?'neg':''}">${mny.settled>0?'+':''}${fmt(mny.settled)} €</b></div>
         <div><span>In pending bets${mny.open?` (${mny.open})`:''}</span><b class="${mny.inPlay>0?'yel':''}">${fmt(mny.inPlay)} €</b></div>
         ${(()=>{const d=+(mny.deposited-amt).toFixed(2);return `<div><span>Deposited − balance</span><b class="${d>0?'neg':d<0?'pos':''}">${fmt(d)} €</b><small class="bk-dir ${d>0?'neg':d<0?'pos':''}">${d<0?`you're up ${fmt(-d)} €`:d>0?`you're down ${fmt(d)} €`:'even'}</small></div>`;})()}
+        ${(()=>{const f=casaCashFlow(c);return `<div class="bk-cash" title="Only deposits and withdrawals, whatever is in the account now doesn't count: put in ${fmt(f.in)} €, taken out ${fmt(f.out)} €${f.pendOut?` (${fmt(f.pendOut)} € still on its way)`:''}"><span>Withdrawn − deposited</span><b class="${f.net>0?'pos':f.net<0?'neg':''}">${f.net>0?'+':''}${fmt(f.net)} €</b><small class="bk-dir">${fmt(f.in)} in · ${fmt(f.out)} out${f.pendOut?` · ${fmt(f.pendOut)} on its way`:''}</small></div>`;})()}
       </div>`}
       <div class="bk-actions">
         <button class="bk-btn dep${mode==='dep'?' on':''}" data-bk-toggle="dep" data-cid="${c.id}">+ Deposit</button>
