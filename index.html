@@ -514,6 +514,23 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,
 .dt-chips{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;margin-bottom:12px;scrollbar-width:none;flex-shrink:0}.dt-chips::-webkit-scrollbar{display:none}
 .dt-chips .bkb-chip{flex-shrink:0;font-size:13px;padding:7px 14px;background:var(--surface)}
 .dt-chips .bkb-chip.on{background:var(--pitch,#1f4a35);color:#fff;border-color:transparent}
+.rt-btn{flex-shrink:0;font:inherit;font-size:13px;font-weight:650;padding:7px 14px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer}
+.rt-btn:hover{border-color:var(--pitch,#1f4a35)}
+.sc-tax[data-rt-open]{cursor:pointer}
+.rt-hero .th-val{font-size:52px}
+.rt-hero .rt-dec{color:#fff;text-decoration:underline 2px rgba(255,255,255,.35);text-underline-offset:4px}
+.rt-list{display:flex;flex-direction:column;gap:6px}
+.rt-row{display:flex;gap:12px;align-items:center;padding:10px 12px;background:var(--raised);border-radius:10px;font-size:13px}
+.rt-row.rt-un{opacity:.8;border:1px dashed var(--border)}
+.rt-l{flex:1;min-width:0}.rt-l>b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rt-l>small{display:block;color:var(--faint);font-size:11.5px;margin-top:2px}
+.rt-mv{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:5px;font-size:12px;color:var(--muted)}.rt-mv span{white-space:nowrap}.rt-mv b{font-family:var(--mono);font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+.rt-r{display:flex;flex-direction:column;align-items:flex-end;gap:3px;white-space:nowrap;min-width:96px}
+.rt-r>b{font-family:var(--mono);font-size:15px;font-variant-numeric:tabular-nums}.rt-r>b.pos{color:var(--green)}.rt-r>b.neg{color:var(--red)}
+.rt-r>small{color:var(--faint);font-size:10.5px}
+.rt-r .bks-div{position:relative;display:block;width:90px;margin-top:3px}
+.rt-notes{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--muted);line-height:1.45}.rt-notes b{color:var(--text)}
+@media(max-width:600px){.rt-hero .th-val{font-size:40px}.rt-r{min-width:0}.rt-r>small{white-space:normal;text-align:right;max-width:120px}.rt-r .bks-div{width:64px}}
 .st-hero{margin:0}
 .st-hero .th-val{font-size:62px}
 .st-hero .th-grid{align-items:end}
@@ -3157,7 +3174,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 
     <!-- ═══ PERFIL PAGE ═══ -->
     <div id="page-perfil" class="fw" style="display:none">
-      <div class="st-top"><div class="dt-chips" id="statsPer"></div><button class="icon-btn" id="perfilShareBtn" title="Copy a summary of these stats">
+      <div class="st-top"><div class="dt-chips" id="statsPer"></div><button class="rt-btn" data-rt-open title="Your gambling result per calendar year, for the tax return">Renta</button><button class="icon-btn" id="perfilShareBtn" title="Copy a summary of these stats">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           </button></div>
       <div id="statsDash" class="fw"></div>
@@ -3400,6 +3417,14 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 </div>
 
 <!-- ══ DETAILS: wagered, freebets, a day / month / range ══ -->
+<div id="rtModal" class="modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
+  <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;width:100%;max-width:780px;margin:16px;max-height:88vh;display:flex;flex-direction:column">
+    <div style="font-size:15px;font-weight:700;margin-bottom:8px" id="rt-title">Tax return (Renta)</div>
+    <div class="dt-chips" id="rt-chips"></div>
+    <div class="dt-body" id="rt-body"></div>
+    <div style="display:flex;gap:9px;margin-top:12px"><button class="btn-s" id="rt-csv" style="flex:1">Excel</button><button class="btn-s" id="rt-cancel" style="flex:1">Close</button></div>
+  </div>
+</div>
 <div id="dtModal" class="modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
   <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;width:100%;max-width:780px;margin:16px;max-height:88vh;display:flex;flex-direction:column">
     <div style="font-size:15px;font-weight:700;margin-bottom:8px" id="dt-title">Details</div>
@@ -4261,10 +4286,22 @@ function dtPeriod(p){
   if(p==='month')return{from:ym+'-01',to:ym+'-31',label:MONTH_NAMES_EN[d.getMonth()]+' '+d.getFullYear()};
   if(p==='last'){const l=new Date(d.getFullYear(),d.getMonth()-1,1),k=l.getFullYear()+'-'+String(l.getMonth()+1).padStart(2,'0');return{from:k+'-01',to:k+'-31',label:MONTH_NAMES_EN[l.getMonth()]+' '+l.getFullYear()};}
   if(p==='year')return{from:t.slice(0,4)+'-01-01',to:t.slice(0,4)+'-12-31',label:t.slice(0,4)};
+  if(/^y\d{4}$/.test(p))return{from:p.slice(1)+'-01-01',to:p.slice(1)+'-12-31',label:p.slice(1)}; // a past calendar year
   return{from:'',to:'',label:'All time'};
 }
 const DT_PERS=[['all','All'],['year','This year'],['month','This month'],['last','Last month'],['7d','7 days'],['today','Today']];
-function dtChipsHtml(cur,attr){return DT_PERS.map(([k,l])=>`<button class="bkb-chip${cur===k?' on':''}" ${attr}="${k}">${l}</button>`).join('');}
+// every calendar year with bets, deposits/withdrawals or balance corrections, newest first (always includes this year)
+let _yearsCache=null;
+function dataYears(){
+  if(_yearsCache&&_yearsCache.d===D&&_yearsCache.v===saveVer)return _yearsCache.y;
+  const y=new Set([todayLocalISO().slice(0,4)]),add=d=>{if(d&&/^\d{4}-/.test(d))y.add(d.slice(0,4));};
+  (D.bets||[]).forEach(b=>add(b.date||b.resolveDate));(D.normals||[]).forEach(n=>add(n.date||n.resolveDate));
+  (D.casas||[]).forEach(c=>{(c.history||[]).forEach(h=>add(h.date));(c.adjLog||[]).forEach(a=>add(a.date));});
+  const out=[...y].sort().reverse();_yearsCache={d:D,v:saveVer,y:out};return out;
+}
+function dtPersList(){const cy=todayLocalISO().slice(0,4);return DT_PERS.slice(0,2).concat(dataYears().filter(x=>x!==cy).map(x=>['y'+x,x]),DT_PERS.slice(2));}
+const isDtPer=v=>DT_PERS.some(p=>p[0]===v)||/^y\d{4}$/.test(v||'');
+function dtChipsHtml(cur,attr){return dtPersList().map(([k,l])=>`<button class="bkb-chip${cur===k?' on':''}" ${attr}="${k}">${l}</button>`).join('');}
 function dtDayLabel(d){return new Date(d+'T00:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
 const FB_IC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>';
 const dtCatColor=k=>(PROFIT_CATS.find(x=>x[0]===k)||[])[2]||'#999';
@@ -4391,7 +4428,7 @@ function renderDetails(){
   document.getElementById('dt-body').innerHTML=rows.length?dashHtml(rows,dtStats(rows),{from,to,label:oneDay&&!per?fmtDate(from):label,oneDay,sheet:true}):`<div class="bk-hist-empty" style="padding:30px 0;text-align:center">No bets in this period.</div>`;
 }
 // ── the Stats tab
-let statsPer=(()=>{try{const v=localStorage.getItem('sb_stats_per');return DT_PERS.some(p=>p[0]===v)?v:'all';}catch(e){return 'all';}})();
+let statsPer=(()=>{try{const v=localStorage.getItem('sb_stats_per');return isDtPer(v)?v:'all';}catch(e){return 'all';}})();
 function statsRange(){return dtPeriod(statsPer);}
 function renderPerfilStats(){
   const el=document.getElementById('statsDash');if(!el)return;
@@ -4410,6 +4447,91 @@ document.addEventListener('click',e=>{
     openDetails({from:f,to:t,label:mo?MONTH_NAMES_EN[+f.slice(5,7)-1]+' '+f.slice(0,4):f&&t?`${fmtDate(f)} → ${fmtDate(t)}`:f?`From ${fmtDate(f)}`:`Until ${fmtDate(t)}`});return;}
   if(e.target.id==='dt-cancel'||e.target.id==='dtModal')document.getElementById('dtModal').style.display='none';
 });
+// ══════════════════════════════════════════
+//  TAX RETURN (RENTA / IRPF) — one calendar year, 1 Jan → 31 Dec.
+//  Gambling is a capital gain: each bookmaker's result in the year, gains minus losses of the same year;
+//  if losses are bigger the year is 0 (they don't carry over). A bookmaker's result = its bets dated that year
+//  (same split per bookmaker as the cards) + the balance corrections made that year. Pending bets wait until settled.
+// ══════════════════════════════════════════
+function rentaYear(y){
+  const inY=d=>!!d&&d.slice(0,4)===y,itemIn=x=>inY(x.date||x.resolveDate);
+  const ledger=bookmakerLedger(itemIn),used=new Set(),rows=[];
+  visibleCasas().filter(c=>!isBank(c)).forEach(c=>{
+    const k=bkKey((c.name||'').trim());const e=k&&ledger.get(k);if(k)used.add(k);
+    const h=(c.history||[]).filter(x=>inY(x.date));
+    const dep=+h.filter(x=>x.type==='dep').reduce((a,x)=>a+(x.amount||0),0).toFixed(2);
+    const wd=+h.filter(x=>x.type==='wd').reduce((a,x)=>a+(x.amount||0),0).toFixed(2);
+    const adj=+(c.adjLog||[]).filter(a=>inY(a.date)).reduce((a,x)=>a+(x.delta||0),0).toFixed(2);
+    const bets=e?+e.settled.toFixed(2):0,n=e?e.n:0,open=e?e.open:0;
+    if(!dep&&!wd&&!adj&&!bets&&!n&&!open)return;
+    rows.push({name:c.name||'?',dep,wd,adj,bets,n,open,res:+(bets+adj).toFixed(2)});
+  });
+  ledger.forEach((e,k)=>{if(used.has(k)||(!e.n&&!e.open&&!e.settled))return; // bets at a bookmaker you don't track in Bookmakers
+    rows.push({name:e.name,dep:0,wd:0,adj:0,bets:+e.settled.toFixed(2),n:e.n,open:e.open,res:+e.settled.toFixed(2),untracked:true});});
+  rows.sort((a,b)=>b.res-a.res||a.name.localeCompare(b.name));
+  const sum=f=>+rows.reduce((a,r)=>a+f(r),0).toFixed(2);
+  const gains=sum(r=>r.res>0?r.res:0),losses=sum(r=>r.res<0?-r.res:0),net=+(gains-losses).toFixed(2);
+  let openN=0,openStake=0;
+  visibleBets().forEach(b=>{if(b.status==='pending'&&itemIn(b)){openN++;openStake+=(b.legs||[]).reduce((a,l)=>a+(l.stake||0),0);}});
+  visibleNormals().forEach(n=>{if(n.status==='pending'&&itemIn(n)){openN++;if(n.type!=='Freebet')openStake+=n.stake||0;}});
+  const costs=+(-[...softwareCharges(),...costEntries()].filter(a=>inY(a.date)).reduce((a,x)=>a+x.profit,0)).toFixed(2);
+  return {y,rows,gains,losses,net,declare:Math.max(0,net),dep:sum(r=>r.dep),wd:sum(r=>r.wd),
+    up:rows.filter(r=>r.res>0.004).length,down:rows.filter(r=>r.res<-0.004).length,openN,openStake:+openStake.toFixed(2),costs};
+}
+// Jan–Jun is filing season for last year's return, so it opens on last year if there's anything in it
+function rentaDefaultYear(){const t=todayLocalISO(),cy=t.slice(0,4),py=String(+cy-1);return +t.slice(5,7)<=6&&dataYears().includes(py)?py:cy;}
+let rtYear=null;
+function openRenta(y){rtYear=y||rtYear||rentaDefaultYear();renderRenta();document.getElementById('rtModal').style.display='flex';document.getElementById('rt-body').scrollTop=0;}
+function renderRenta(){
+  const r=rentaYear(rtYear),cy=todayLocalISO().slice(0,4);
+  const sg=v=>(v>0.004?'+':v<-0.004?'−':'')+fmt(Math.abs(v))+' €',cl=v=>v>0.004?'pos':v<-0.004?'neg':'';
+  document.getElementById('rt-title').textContent=`Tax return (Renta) · ${r.y}`;
+  document.getElementById('rt-chips').innerHTML=dataYears().map(y=>`<button class="bkb-chip${y===r.y?' on':''}" data-rty="${y}">${y}</button>`).join('');
+  const it=(l,v,sub,c='')=>`<span><small>${l}</small><b class="${c}">${v}</b>${sub?`<em>${sub}</em>`:''}</span>`;
+  let h=`<div class="total-hero st-hero rt-hero"><div class="th-main">
+    <div class="th-label">Gambling result · 1 Jan → 31 Dec ${r.y}</div>
+    <div class="th-val ${r.net>=0?'pos':'neg'}">${sg(r.net)}</div>
+    <div class="th-pace st-pace">
+      ${it('Gains',sg(r.gains),`${r.up} bookmaker${r.up===1?'':'s'} up`,r.gains>0.004?'pos':'')}
+      ${it('Losses',r.losses>0.004?'−'+fmt(r.losses)+' €':'0.00 €',`${r.down} bookmaker${r.down===1?'':'s'} down`,r.losses>0.004?'neg':'')}
+      ${it('To declare',fmt(r.declare)+' €',r.net<-0.004?'losses only cancel gains, the year is 0':'gains − losses of the year','rt-dec')}
+      ${it('Deposited · withdrawn',`${fmt(r.dep,r.dep>=10000?0:2)} · ${fmt(r.wd,r.wd>=10000?0:2)}`,'€ moved this year')}
+    </div></div></div>`;
+  if(!r.rows.length)h+=`<div class="card st-card"><div class="cb"><div class="bk-hist-empty" style="padding:22px 0;text-align:center">Nothing recorded in ${r.y}.</div></div></div>`;
+  else{
+    const max=Math.max(...r.rows.map(x=>Math.abs(x.res)),0.01);
+    h+=`<div class="card st-card"><div class="ch"><span class="ct">By bookmaker</span><span class="st-hint">deposited · withdrawn · result</span></div><div class="cb"><div class="rt-list">`+
+      r.rows.map(x=>`<div class="rt-row${x.untracked?' rt-un':''}">
+        <div class="rt-l"><b>${esc(x.name)}</b><small>${x.n} bet${x.n===1?'':'s'}${x.open?` · ${x.open} pending`:''}${x.untracked?' · not in Bookmakers':''}</small>
+          <div class="rt-mv"><span>In <b>${fmt(x.dep)} €</b></span><span>Out <b>${fmt(x.wd)} €</b></span></div></div>
+        <div class="rt-r"><b class="${cl(x.res)}">${sg(x.res)}</b>${x.adj?`<small>bets ${sg(x.bets)} · corrections ${sg(x.adj)}</small>`:''}
+          <i class="bks-div"><i class="${x.res<0?'neg':'pos'}" style="width:${(Math.abs(x.res)/max*50).toFixed(1)}%"></i></i></div></div>`).join('')+
+      `</div></div></div>`;
+  }
+  const notes=[
+    `Covers bets dated <b>1 Jan – 31 Dec ${r.y}</b>. The return for ${r.y} is filed between April and June ${+r.y+1}.`,
+    `Each bookmaker's result = its bets that year + the balance corrections you made that year (bonuses, bets you didn't log…). Deposits and withdrawals are only moving your own money: they're not a gain or a loss.`,
+    `Gambling losses only cancel gambling gains of the same year. If the year ends in minus, you declare 0 and the loss doesn't carry over to the next year.`,
+    r.openN?`<b>${r.openN} bet${r.openN===1?'':'s'} of ${r.y} still pending</b> (${fmt(r.openStake)} €): ${r.openN===1?'it counts':'they count'} once settled.`:'',
+    r.costs>0.004?`Software and account costs this year: ${fmt(r.costs)} €. They're in your Profit, but not here: they normally can't be deducted from gambling gains.`:'',
+    `This comes from what you logged in the app. Each bookmaker can give you its own yearly statement (gains and losses): check they match before filing, or show this sheet to whoever does your return.`
+  ].filter(Boolean);
+  h+=`<div class="card st-card"><div class="ch"><span class="ct">Good to know</span></div><div class="cb"><ul class="rt-notes">${notes.map(x=>`<li>${x}</li>`).join('')}</ul></div></div>`;
+  document.getElementById('rt-body').innerHTML=h;
+}
+function rentaCsv(){
+  const r=rentaYear(rtYear);
+  const rows=r.rows.map(x=>[x.name,x.dep,x.wd,x.n,x.bets,x.adj,x.res,x.res>0?x.res:0,x.res<0?-x.res:0,x.untracked?'not in Bookmakers':'']);
+  rows.push([],['Total',r.dep,r.wd,r.rows.reduce((a,x)=>a+x.n,0),'','',r.net,r.gains,r.losses],['To declare (gains − losses, never below 0)','','','','','',r.declare]);
+  csvDownload(`renta-${r.y}.csv`,['Bookmaker','Deposited','Withdrawn','Bets','Bets result','Corrections','Result','Gain','Loss','Note'],rows);
+}
+document.addEventListener('click',e=>{
+  const y=e.target.closest('[data-rty]');if(y){rtYear=y.dataset.rty;renderRenta();return;}
+  if(e.target.closest('[data-rt-open]')){openRenta();return;}
+  if(e.target.id==='rt-csv'){rentaCsv();return;}
+  if(e.target.id==='rt-cancel'||e.target.id==='rtModal')document.getElementById('rtModal').style.display='none';
+});
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('.sc-tax[data-rt-open]')){e.preventDefault();openRenta();}});
 // real profit from the bookmakers' money (same maths as the Hacienda tile) minus every cost; null if no deposits are recorded
 function realProfitInfo(all){
   const bk=visibleCasas().filter(c=>!isBank(c));const dep=bk.reduce((a,c)=>a+(c.amount||0),0);
@@ -7328,7 +7450,7 @@ function renderCasas(filter=''){
     <div class="sc"><div class="sl2">Bookmakers</div><div class="sv2">${vCasas.length}</div></div>
     <div class="sc"><div class="sl2">Total deposited</div><div class="sv2">${fmt(total)} €</div></div>
     ${(()=>{const bk=visibleCasas().filter(c=>!isBank(c)); /* every bookmaker, Unused and other profiles too: it's what you owe Hacienda on */const dep=bk.reduce((a,c)=>a+(c.amount||0),0),bal=bk.reduce((a,c)=>{const m=casaMoney(c,ledger);return a+m.balance+m.inPlay;},0),d=+(dep-bal).toFixed(2);
-      return `<div class="sc sc-tax" title="Every bookmaker (Unused ones too), no bank accounts: deposited ${fmt(dep)} € − balance ${fmt(bal)} € (money in pending bets counts as balance, so it doesn't move while bets are open)."><div class="sl2">Hacienda</div><div class="sv2 ${d>0?'neg':d<0?'pos':''}">${fmt(d)} €<small class="sc-names">${d<0?`up ${fmt(-d)} €`:d>0?`down ${fmt(d)} €`:'even'} · no bank</small></div></div>`;})()}
+      return `<div class="sc sc-tax" data-rt-open role="button" tabindex="0" title="Tap: result per calendar year for the tax return (Renta). Every bookmaker (Unused ones too), no bank accounts: deposited ${fmt(dep)} € − balance ${fmt(bal)} € (money in pending bets counts as balance, so it doesn't move while bets are open)."><div class="sl2">Hacienda</div><div class="sv2 ${d>0?'neg':d<0?'pos':''}">${fmt(d)} €<small class="sc-names">${d<0?`up ${fmt(-d)} €`:d>0?`down ${fmt(d)} €`:'even'} · no bank</small></div></div>`;})()}
     <div class="sc"><div class="sl2">Pending to receive</div><div class="sv2 ${totalPending>0?'yel':''}">${fmt(totalPending)} €</div></div>
     <div class="sc" title="${esc(idleList.map(c=>c.name).join(', '))}"><div class="sl2">Idle ${IDLE_DAYS}+ days</div><div class="sv2 ${idleList.length?'yel':''}">${idleList.length}<small class="sc-names">${idleList.length?esc(idleList.slice(0,3).map(c=>c.name).join(', '))+(idleList.length>3?'…':''):'all active'}</small></div></div>`;
   const list=document.getElementById('casasList');
