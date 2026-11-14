@@ -4732,7 +4732,7 @@ function legRes(l,fb,withSels){
 function fractionLabel(house,odd){if(!(odd>1)||!isFractionalHouse(house))return '';const f=fractionFor(odd);return f?(Math.floor(f.v*10000)/10000).toFixed(4).replace(/0+$/,''):'';}
 // one shared formatter per number of decimals: toLocaleString builds a new one on every call, which made long lists slow
 const _nf=new Map();
-function fmt(n,d=2){let f=_nf.get(d);if(!f){f=new Intl.NumberFormat('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});_nf.set(d,f);}return f.format(Number(n));}
+function fmt(n,d=2){let f=_nf.get(d);if(!f){f=new Intl.NumberFormat('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});_nf.set(d,f);}let v=Number(n);if(Math.abs(v)<0.5*Math.pow(10,-d))v=0;return f.format(v);} // never '-0.00'
 function hourOnly(t){return t&&/^\d{1,2}/.test(t)?String(parseInt(t,10)).padStart(2,'0')+':00':'';}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function catName(id){if(!id)return'';const c=D.categories.find(x=>x.id===id);return c?c.name:'';}
@@ -7678,7 +7678,7 @@ function renderCasas(filter=''){
         <div class="bk-bal"><div class="bk-bal-val ${pCls}">${fmt(amt)} €</div><div class="bk-bal-sub">balance</div></div>
       </div>
       ${isBank(c)?bankMoneyHtml(c):`<div class="bk-money">
-        <div><span>Deposited</span><b>${fmt(mny.deposited)} €</b></div>
+        <div title="Deposits minus withdrawals: the money of yours that is still in this bookmaker"><span>Net deposited</span><b>${fmt(mny.deposited)} €</b><small class="bk-dir">in − out</small></div>
         <div><span>Bet results</span><b class="${mny.settled>0?'pos':mny.settled<0?'neg':''}">${mny.settled>0?'+':''}${fmt(mny.settled)} €</b></div>
         <div><span>In pending bets${mny.open?` (${mny.open})`:''}</span><b class="${mny.inPlay>0?'yel':''}">${fmt(mny.inPlay)} €</b></div>
         ${(()=>{const d=+(mny.deposited-amt).toFixed(2);return `<div><span>Deposited − balance</span><b class="${d>0?'neg':d<0?'pos':''}">${fmt(d)} €</b><small class="bk-dir ${d>0?'neg':d<0?'pos':''}">${d<0?`you're up ${fmt(-d)} €`:d>0?`you're down ${fmt(d)} €`:'even'}</small></div>`;})()}
