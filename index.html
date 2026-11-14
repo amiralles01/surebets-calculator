@@ -541,6 +541,9 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,
 .rt-f input{font-size:16px}
 .rt-eb{grid-column:1/-1;display:flex;justify-content:flex-end;gap:8px}
 @media(max-width:600px){.rt-edit{grid-template-columns:minmax(0,1fr)}}
+.rt-oth .ch{cursor:pointer}.rt-oth-p{margin:0 0 10px;font-size:12.5px;color:var(--muted);line-height:1.45}
+.rt-olist{display:flex;flex-direction:column}.rt-o{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--border);font-size:13px}
+.rt-o small{color:var(--faint);font-size:11px;margin-left:8px}.rt-o b{font-family:var(--mono);font-weight:600;opacity:.75}.rt-o b.pos{color:var(--green)}.rt-o b.neg{color:var(--red)}
 .rt-notes{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--muted);line-height:1.45}.rt-notes b{color:var(--text)}
 @media(max-width:600px){.rt-hero .th-val{font-size:40px}.rt-r{min-width:0}.rt-r>small{white-space:normal;text-align:right;max-width:120px}.rt-r .bks-div{width:64px}}
 .st-hero{margin:0}
@@ -4514,8 +4517,12 @@ function rentaYear(y){
   const inY=d=>!!d&&d.slice(0,4)===y,itemIn=x=>inY(x.date||x.resolveDate),cy=todayLocalISO().slice(0,4);
   const ledger=bookmakerLedger(itemIn),betYears=bkBetYears(),used=new Set(),rows=[];
   visibleCasas().filter(c=>!isBank(c)).forEach(c=>{const k=bkKey((c.name||'').trim());if(k)used.add(k);const r=rentaCasa(c,y,ledger,betYears,cy);if(r)rows.push(r);});
-  ledger.forEach((e,k)=>{if(used.has(k)||(!e.n&&!e.open&&!e.settled))return; // bets at a bookmaker you don't track in Bookmakers
-    const b=+e.settled.toFixed(2);rows.push({key:k,name:e.name,dep:0,wd:0,adj:0,bets:b,byBets:b,n:e.n,open:e.open,res:b,mode:'bets',untracked:true});});
+  // bets under a name that isn't in Bookmakers (old names, typos: 'Casa 1', 'Wina'…). Their money is already inside the real
+  // bookmaker's deposits, withdrawals and balance, so adding them would count it twice: listed apart, never in the totals.
+  const others=[];
+  ledger.forEach((e,k)=>{if(used.has(k)||(!e.n&&!e.open&&!e.settled))return;
+    others.push({key:k,name:e.name,n:e.n,open:e.open,res:+e.settled.toFixed(2)});});
+  others.sort((a,b)=>b.n-a.n||a.name.localeCompare(b.name));
   rows.sort((a,b)=>b.res-a.res||a.name.localeCompare(b.name));
   const sum=f=>+rows.reduce((a,r)=>a+f(r),0).toFixed(2);
   const gains=sum(r=>r.res>0?r.res:0),losses=sum(r=>r.res<0?-r.res:0),net=+(gains-losses).toFixed(2);
@@ -4523,7 +4530,7 @@ function rentaYear(y){
   visibleBets().forEach(b=>{if(b.status==='pending'&&itemIn(b)){openN++;openStake+=(b.legs||[]).reduce((a,l)=>a+(l.stake||0),0);}});
   visibleNormals().forEach(n=>{if(n.status==='pending'&&itemIn(n)){openN++;if(n.type!=='Freebet')openStake+=n.stake||0;}});
   const costs=+(-[...softwareCharges(),...costEntries()].filter(a=>inY(a.date)).reduce((a,x)=>a+x.profit,0)).toFixed(2);
-  return {y,cy,rows,gains,losses,net,declare:Math.max(0,net),dep:sum(r=>r.dep),wd:sum(r=>r.wd),byBets:sum(r=>r.byBets),
+  return {y,cy,rows,others,othersRes:+others.reduce((a,x)=>a+x.res,0).toFixed(2),gains,losses,net,declare:Math.max(0,net),dep:sum(r=>r.dep),wd:sum(r=>r.wd),byBets:sum(r=>r.byBets),
     missing:rows.filter(r=>r.mode==='bets'&&!r.untracked).length,
     up:rows.filter(r=>r.res>0.004).length,down:rows.filter(r=>r.res<-0.004).length,openN,openStake:+openStake.toFixed(2),costs};
 }
@@ -4531,7 +4538,7 @@ function rentaYear(y){
 function rentaDefaultYear(){const t=todayLocalISO(),cy=t.slice(0,4),py=String(+cy-1);return +t.slice(5,7)<=6&&dataYears().includes(py)?py:cy;}
 let rtYear=null;
 function openRenta(y){rtYear=y||rtYear||rentaDefaultYear();rtEdit=null;renderRenta();document.getElementById('rtModal').style.display='flex';document.getElementById('rt-body').scrollTop=0;}
-let rtEdit=null; // id of the bookmaker whose values are open for editing
+let rtEdit=null,rtOthersOpen=false; // id of the bookmaker whose values are open for editing
 function renderRenta(){
   const r=rentaYear(rtYear),cy=r.cy,py=String(+r.y-1);
   const sg=v=>(v>0.004?'+':v<-0.004?'−':'')+fmt(Math.abs(v))+' €',cl=v=>v>0.004?'pos':v<-0.004?'neg':'';
@@ -4555,8 +4562,6 @@ function renderRenta(){
     const v=x=>x==null?'?':fmt(x)+' €';
     h+=`<div class="card st-card"><div class="ch"><span class="ct">By bookmaker</span><span class="st-hint">withdrawn − deposited + balance 31 Dec − balance 1 Jan · tap to edit</span></div><div class="cb"><div class="rt-list">`+
       r.rows.map(x=>{
-        if(x.untracked)return `<div class="rt-row rt-un"><div class="rt-l"><b>${esc(x.name)}</b><small>${x.n} settled bet${x.n===1?'':'s'} · not in Bookmakers, counted by bets</small></div>
-          <div class="rt-r"><b class="${cl(x.res)}">${sg(x.res)}</b><i class="bks-div"><i class="${x.res<0?'neg':'pos'}" style="width:${(Math.abs(x.res)/max*50).toFixed(1)}%"></i></i></div></div>`;
         const ed=rtEdit===x.cid,d=+(x.res-x.byBets).toFixed(2),t=x.typed;
         const mark=k=>t[k]?' class="rt-typed"':'';
         let row=`<div class="rt-row rt-ed${ed?' open':''}${x.mode==='bets'?' rt-miss':''}" data-rtedit="${x.cid}" role="button" tabindex="0">
@@ -4579,6 +4584,10 @@ function renderRenta(){
         return row;}).join('')+
       `</div></div></div>`;
   }
+  if(r.others.length){const on=rtOthersOpen,nb=r.others.reduce((a,x)=>a+x.n,0);
+    h+=`<div class="card st-card rt-oth"><div class="ch" data-rtoth role="button" tabindex="0"><span class="ct">Other names · not counted</span><span class="st-hint">${r.others.length} name${r.others.length===1?'':'s'} · ${nb} bet${nb===1?'':'s'} · ${on?'hide':'show'}</span></div>
+      ${on?`<div class="cb"><p class="rt-oth-p">Bets saved under a name that isn't in Bookmakers (old names, typos…). That money already went through the real bookmaker's deposits, withdrawals and balance, so it isn't added again. If one of them is a real bookmaker you used, add it in Bookmakers with its totals.</p><div class="rt-olist">`+
+        r.others.map(x=>`<div class="rt-o"><span>${esc(x.name)}<small>${x.n} bet${x.n===1?'':'s'}${x.open?` · ${x.open} pending`:''}</small></span><b class="${cl(x.res)}">${sg(x.res)}</b></div>`).join('')+`</div></div>`:''}</div>`;}
   const notes=[
     `Each bookmaker's result is <b>withdrawn − deposited + balance on 31 Dec − balance on 1 Jan</b>${r.y===cy?' (this year: the balance now, money in open bets included)':''}. That's what your accounts really did, even with bets you never logged. Your logged bets are shown next to it to see the difference.`,
     `The return for ${r.y} is filed between April and June ${+r.y+1}. Gambling losses only cancel gambling gains of the same year: if the year ends in minus, you declare 0 and nothing carries over.`,
@@ -4603,7 +4612,8 @@ function rtSave(cid,clear){
 }
 function rentaCsv(){
   const r=rentaYear(rtYear),n=v=>v==null?'':v;
-  const rows=r.rows.map(x=>[x.name,n(x.wd),n(x.dep),n(x.start),n(x.end),x.third||0,x.res,x.byBets,x.res>0?x.res:0,x.res<0?-x.res:0,x.untracked?'not in Bookmakers, by bets':x.mode==='bets'?'balance missing, by bets':'']);
+  const rows=r.rows.map(x=>[x.name,n(x.wd),n(x.dep),n(x.start),n(x.end),x.third||0,x.res,x.byBets,x.res>0?x.res:0,x.res<0?-x.res:0,x.mode==='bets'?'balance missing, by bets':'']);
+  r.others.forEach(x=>rows.push([x.name+' (other name, not counted)','','','','','','',x.res,'','','not in Bookmakers: already inside the real bookmaker\'s money']));
   rows.push([],['Total',r.wd,r.dep,'','','',r.net,r.byBets,r.gains,r.losses],['To declare (gains − losses, never below 0)','','','','','',r.declare]);
   csvDownload(`renta-${r.y}.csv`,['Bookmaker','Withdrawn','Deposited','Balance 1 Jan','Balance 31 Dec','Lost by someone else','Result','Logged bets','Gain','Loss','Note'],rows);
 }
@@ -4611,6 +4621,7 @@ document.addEventListener('click',e=>{
   const y=e.target.closest('[data-rty]');if(y){rtYear=y.dataset.rty;rtEdit=null;renderRenta();return;}
   const sv=e.target.closest('[data-rtsave]');if(sv){rtSave(+sv.dataset.rtsave,false);return;}
   const au=e.target.closest('[data-rtauto]');if(au){rtSave(+au.dataset.rtauto,true);return;}
+  if(e.target.closest('[data-rtoth]')){rtOthersOpen=!rtOthersOpen;renderRenta();return;}
   if(e.target.closest('.rt-edit'))return;
   const ed=e.target.closest('[data-rtedit]');if(ed){const id=+ed.dataset.rtedit;rtEdit=rtEdit===id?null:id;renderRenta();
     if(rtEdit!=null){const b=document.querySelector(`[data-rtbox="${id}"]`);if(b)b.scrollIntoView({block:'nearest',behavior:'smooth'});}return;}
@@ -4619,7 +4630,7 @@ document.addEventListener('click',e=>{
   if(e.target.id==='rt-cancel'||e.target.id==='rtModal')document.getElementById('rtModal').style.display='none';
 });
 document.addEventListener('keydown',e=>{if(!e.target.matches)return;
-  if((e.key==='Enter'||e.key===' ')&&e.target.matches('.sc-tax[data-rt-open],[data-rtedit]')){e.preventDefault();e.target.click();}
+  if((e.key==='Enter'||e.key===' ')&&e.target.matches('.sc-tax[data-rt-open],[data-rtedit],[data-rtoth]')){e.preventDefault();e.target.click();}
   if(e.key==='Enter'&&e.target.matches('[data-rtf]')){e.preventDefault();const b=e.target.closest('[data-rtbox]');rtSave(+b.dataset.rtbox,false);}});
 // real profit from the bookmakers' money (same maths as the Hacienda tile) minus every cost; null if no deposits are recorded
 function realProfitInfo(all){
