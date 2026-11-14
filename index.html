@@ -6940,6 +6940,7 @@ function pendCompactHtml(kind,item,tw){
 let pendLastShown=[];
 function pendShownMarked(){return pendLastShown.filter(x=>pendHasMark(x.kind,x.item));}
 function renderPendientes(){
+  try{pendFixNames();}catch(e){}
   const ae=document.activeElement,typing=ae&&ae.matches&&ae.matches('#pendList [data-note]')?{k:ae.dataset.note,v:ae.value,c:ae.selectionStart}:null;
   renderPendientesInner();
   if(typing){const el=document.querySelector(`#pendList [data-note="${typing.k}"]`);if(el){el.value=typing.v;el.focus();try{el.setSelectionRange(typing.c,typing.c);}catch(e){}}}
@@ -9051,8 +9052,28 @@ function evKey(b){return matchName(b.event)+'|'+(b.date||'');}
 const _mnMemo=new Map(); // the same few hundred event names are normalised again and again on every list
 function matchName(e){e=String(e||'');let r=_mnMemo.get(e);if(r!=null)return r;
   r=e.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
-  .replace(/\s+(vs\.?|v\.?|-|–|—|x)\s+/g,' vs ').replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();
+  .replace(/\s+(vs\.?|v\.?|-|–|—|x)\s+/g,' vs ').replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim().replace(/^tie (?=.+ vs )/,'');
   if(_mnMemo.size>20000)_mnMemo.clear();_mnMemo.set(e,r);return r;}
+// some bookmakers' names reach Telegram as "Tie Portugal vs Denmark": the word in front isn't part of the match
+function evClean(e){return String(e||'').replace(/^\s*tie\s+(?=\S.*\s(?:vs\.?|v\.?|-|–|—|x)\s)/i,'');}
+// Spanish names of national teams (and a few clubs) → the English ones ESPN and most bookmakers use, so
+// "Portugal vs Dinamarca" and "Portugal vs Denmark" are the same match and both get the live score.
+// Applied to text already lower-cased and without accents.
+const TEAM_ES={'dinamarca':'denmark','alemania':'germany','inglaterra':'england','francia':'france','espana':'spain','italia':'italy',
+  'paises bajos':'netherlands','holanda':'netherlands','belgica':'belgium','suiza':'switzerland','suecia':'sweden','noruega':'norway',
+  'finlandia':'finland','islandia':'iceland','irlanda del norte':'northern ireland','irlanda':'ireland','escocia':'scotland','gales':'wales',
+  'polonia':'poland','republica checa':'czechia','rep checa':'czechia','chequia':'czechia','czech republic':'czechia','eslovaquia':'slovakia',
+  'hungria':'hungary','rumania':'romania','grecia':'greece','turquia':'turkey','turkiye':'turkey','croacia':'croatia',
+  'eslovenia':'slovenia','bosnia y herzegovina':'bosnia herzegovina','bosnia herzegovina':'bosnia herzegovina','macedonia del norte':'north macedonia',
+  'ucrania':'ukraine','rusia':'russia','bielorrusia':'belarus','azerbaiyan':'azerbaijan','kazajistan':'kazakhstan','lituania':'lithuania',
+  'letonia':'latvia','chipre':'cyprus','luxemburgo':'luxembourg','islas feroe':'faroe islands','moldavia':'moldova','brasil':'brazil',
+  'estados unidos':'united states','ee uu':'united states','eeuu':'united states','usa':'united states','japon':'japan','corea del sur':'south korea',
+  'republica de corea':'south korea','korea republic':'south korea','arabia saudi':'saudi arabia','arabia saudita':'saudi arabia','catar':'qatar',
+  'irak':'iraq','jordania':'jordan','emiratos arabes unidos':'united arab emirates','emiratos arabes':'united arab emirates','marruecos':'morocco',
+  'argelia':'algeria','tunez':'tunisia','egipto':'egypt','costa de marfil':'ivory coast','cote d ivoire':'ivory coast','camerun':'cameroon',
+  'sudafrica':'south africa','cabo verde':'cape verde','nueva zelanda':'new zealand','napoles':'napoli','estrella roja':'red star'};
+const _teamRe=new RegExp('(^|[^a-z0-9])('+Object.keys(TEAM_ES).sort((a,b)=>b.length-a.length).join('|')+')(?![a-z0-9])','g');
+function teamEn(s){return String(s||'').replace(_teamRe,(m,pre,w)=>pre+TEAM_ES[w]);}
 // ── Same match written differently ("SSC Napoli vs Lazio Rome" / "Nápoles vs Lazio"): a new bet takes the name
 // of the pending bets of that match you already have, so Pending, "#2 on this match", linked marks and times stay together.
 // Each side = 4-letter roots of its words (napoli / napoles → napo); both sides must share a root, around the same time.
@@ -9066,7 +9087,7 @@ const MS_TAG=/^(b|ii|iii|w|women|womens|fem|femenino|femenina|feminine|ladies|re
 const _msMemo=new Map();
 function matchSides(ev){
   const nm=matchName(ev);let r=_msMemo.get(nm);if(r!==undefined)return r;
-  const parts=nm.replace(/\bathletic club\b/g,'athletic bilbao').split(' vs ');r=null;
+  const parts=teamEn(nm).replace(/\bathletic club\b/g,'athletic bilbao').split(' vs ');r=null;
   if(parts.length===2){
     const side=p=>{const ws=p.split(' ').filter(Boolean).map(w=>w in MS_ALIAS?MS_ALIAS[w]:w).filter(Boolean);
       return {roots:[...new Set(ws.filter(w=>w.length>=4&&!MS_NOISE.has(w)&&!/^\d/.test(w)).map(w=>w.slice(0,4)))],nums:ws.filter(w=>/^\d/.test(w)),tags:ws.filter(w=>MS_TAG.test(w)).sort().join(' ')};};
@@ -9101,6 +9122,31 @@ function unifyMatchName(src){ // → the name it had before, or '' if it was kep
   });
   if(!best)return '';
   const was=src.event;src.event=best.event;src.evAlias=was;return was;
+}
+// pending bets already saved under different spellings of the same match ("Portugal vs Dinamarca" ×2 and
+// "Tie Portugal vs Denmark") get one name — the one most of them use — so they're grouped and all get the live score.
+// Only bets that came from Telegram (or whose typed name has nothing extra) are renamed; the old name stays in evAlias.
+let _pfnSig='';
+function pendFixNames(){
+  const pend=[...(D.bets||[]),...(D.normals||[])].filter(o=>o.status==='pending'&&o.event&&matchSides(o.event));
+  const sig=pend.map(o=>o.id+':'+o.event).join('|');if(sig===_pfnSig)return false;
+  let ch=false;
+  const ren=(o,ev)=>{if(o.event===ev)return;if(!o.evAlias)o.evAlias=o.event;o.event=ev;ch=true;};
+  pend.forEach(o=>{const c=evClean(o.event);if(c!==o.event)ren(o,c);});
+  const done=new Set();
+  pend.forEach(a=>{
+    if(done.has(a))return;
+    const g=pend.filter(o=>!done.has(o)&&(o===a||sameMatchWhen(a,o)&&sameMatchName(a.event,o.event)));
+    g.forEach(o=>done.add(o));
+    if(new Set(g.map(o=>matchName(o.event))).size<2)return;
+    const tg=g.filter(o=>o.comp);if(!tg.length)return;
+    const n=new Map();tg.forEach(o=>{const k=matchName(o.event);n.set(k,(n.get(k)||0)+1);});
+    const best=tg.slice().sort((x,y)=>n.get(matchName(y.event))-n.get(matchName(x.event))||x.id-y.id)[0];
+    g.forEach(o=>{if(matchName(o.event)!==matchName(best.event)&&(o.comp||nameCovered(o.event,best.event)))ren(o,best.event);});
+  });
+  _pfnSig=pend.map(o=>o.id+':'+o.event).join('|');
+  if(ch)save();
+  return ch;
 }
 function unifyMsg(was,item){return was?` · named like your other bets: ${item.event}`:'';}
 // ── Bets typed with a short name ("Fritz aces", "Tirante doble falta"): no " vs ", so no live score, Match or
@@ -9448,7 +9494,7 @@ function parseBotFormat(txt,at){
   const lines=txt.split(/\n/);
   const head=clean(lines[0]||'').split(/\s·\s/).map(x=>x.trim());
   const mid=head.some(x=>/^middles?$/i.test(x));
-  const ev=(head.find(x=>x&&!/^middles?$/i.test(x))||'').trim();
+  const ev=evClean((head.find(x=>x&&!/^middles?$/i.test(x))||'').trim());
   const matchHouse=tgHouse;
   const legs=[];let cur=null;
   lines.forEach(l=>{
@@ -9491,7 +9537,7 @@ function parseEvFormat(txt,at){
   if(!/^\W*\+EV\b/i.test((lines[0]||'').trim())||!/cuota:\s*\d/i.test(txt))return null;
   const clean=l=>l.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{20E3}\u{2B50}]/gu,'').replace(/\s+/g,' ').trim();
   const head=clean(lines[0]).split(/\s·\s/).map(x=>x.trim()).filter(Boolean);
-  const ev=head.find(x=>!/^\+?EV\b/i.test(x))||'';
+  const ev=evClean(head.find(x=>!/^\+?EV\b/i.test(x))||'');
   const pm=txt.match(/\bEV\s*([+-]?\d+(?:[.,]\d+)?)\s*%/i);
   const evPct=pm?parseFloat(pm[1].replace(',','.')):null;
   const pl=lines.find(l=>/^\s*🎯/u.test(l));
@@ -9615,7 +9661,7 @@ const arWhere=new Map();   // bet id → {f, d}: the feed and day its match turn
 const arNorm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9.+\- ]+/g,' ').replace(/\s+/g,' ').trim();
 const AR_STOP=new Set('fc cf cd ud sd rc ac sc afc sv fk sk club de del la el los las the and vs real'.split(' '));
 const AR_VS=/\s+(?:vs\.?|v\.?|-|–|—|x|@)\s+/i;
-const arToks=s=>arNorm(s).replace(/[.+\-]/g,' ').split(' ').filter(t=>t.length>=3&&!AR_STOP.has(t)&&!/^\d+$/.test(t));
+const arToks=s=>teamEn(arNorm(s).replace(/[.+\-]/g,' ')).split(' ').filter(t=>t.length>=3&&!AR_STOP.has(t)&&!/^\d+$/.test(t));
 function arTokMatch(a,b){return a===b||(a.length>=4&&b.length>=4&&(a.startsWith(b)||b.startsWith(a)));}
 // how well a piece of text ("Mensik", "Atlético Madrid") names a competitor (0 = not at all)
 function arNameScore(txt,comp){
