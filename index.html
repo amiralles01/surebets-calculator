@@ -2211,6 +2211,9 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .pc-row.promo{box-shadow:inset 4px 0 0 var(--hl),var(--lift)}
 .pc-row.twin:not(.promo){box-shadow:inset 3px 0 0 var(--ball),var(--lift)}
 .pc-row.wd{box-shadow:inset 3px 0 0 var(--cyan),var(--lift)}
+.wdg{cursor:pointer}.wdg.open{box-shadow:inset 3px 0 0 var(--cyan),0 0 0 1.5px var(--cyan),var(--lift)}
+.wdg-sub{margin-left:18px;opacity:.96}
+@media(max-width:600px){.wdg-sub{margin-left:10px}}
 .pc-time{grid-area:time;justify-self:start;display:inline-flex;align-items:center;gap:3px;padding:3px 7px;border-radius:6px;background:var(--raised);
   color:var(--muted);font-size:12.5px;font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pc-time.done{background:var(--gdim);color:var(--green)}
@@ -6821,7 +6824,8 @@ function renderPendDays(allVisible){
 function pendDayHeader(list,idx){
   const d=list[idx].item.date||'';
   if(idx>0&&(list[idx-1].item.date||'')===d)return '';
-  const n=list.filter(x=>(x.item.date||'')===d).length;
+  // a line that groups several withdrawals counts as all of them (and its opened rows aren't counted twice)
+  const n=list.filter(x=>(x.item.date||'')===d).reduce((a,x)=>a+(x.kind==='wdg'?x.item.n:x.sub?0:1),0);
   const od=d&&d<shiftedISO(0);
   return `<div class="pend-day-h${od?' od':''}">${pendDayLabel(d)}${od?' · overdue':''} <span class="pd-n">${n}</span></div>`;
 }
@@ -6933,6 +6937,58 @@ function renderPendientes(){
   renderPendientesInner();
   if(typing){const el=document.querySelector(`#pendList [data-note="${typing.k}"]`);if(el){el.value=typing.v;el.focus();try{el.setSelectionRange(typing.c,typing.c);}catch(e){}}}
 }
+const pendWdOpen=new Set(); // groups of withdrawals opened to see each one
+function pendWdFullHtml(w){
+  return`<div class="pend-item wd">
+        <div class="pend-top">
+          <div>
+            <div class="pend-ev">Withdrawal – ${esc(w.casaName)} <span class="type-badge-kind">${w.dest||'Bookmaker'}</span></div>
+            <div class="pend-meta">${pendHouseChip([w.casaName])}<span>${fmtDate(w.date)}</span><span>Amount: ${fmt(w.amount)} €</span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button class="btn-reject wd-cancel" data-cancel-wd="${w.cid}:${w.hid}" title="Cancel this withdrawal: the money goes back to ${esc(w.casaName)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Cancel</button>
+            <button class="btn-accept" data-confirm-wd="${w.cid}:${w.hid}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Confirm received</button>
+            ${hideBtnHtml('wd:'+w.cid+':'+w.hid,true)}
+          </div>
+        </div>
+      </div>`;
+}
+// one line for several withdrawals of the same bookmaker and day
+function pendWdGroupHtml(g){
+  const open=pendWdOpen.has(g.key),day=g.date?new Date(g.date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'—';
+  const sub=`${g.dest||'several destinations'} · ${open?'tap to close':'tap to see them'}`;
+  const btns=`<button class="btn-void pc-act" data-wdg-toggle="1">${open?'Hide':'Show'} ${g.n}</button><button class="btn-accept pc-act" data-confirm-wdg="${esc(g.key)}" title="Confirm the ${g.n} withdrawals at once"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Confirm all</button>`;
+  if(pendView==='compact')return `<div class="pc-row wd wdg${open?' open':''}" data-wdg="${esc(g.key)}" role="button" tabindex="0" aria-expanded="${open}">
+      <span class="pc-time">${day}</span>
+      <div class="pc-ev"><b>${g.n} withdrawals – ${esc(g.casaName)}</b><span class="pc-sub">${sub}</span></div>
+      <span class="pc-profit">${fmt(g.amount)} €</span>
+      <div class="pc-legs">${btns}</div>
+      <span class="pc-tail"></span>
+    </div>`;
+  return `<div class="pend-item wd wdg${open?' open':''}" data-wdg="${esc(g.key)}" role="button" tabindex="0" aria-expanded="${open}">
+      <div class="pend-top">
+        <div>
+          <div class="pend-ev">${g.n} withdrawals – ${esc(g.casaName)} <span class="type-badge-kind">${sub}</span></div>
+          <div class="pend-meta">${pendHouseChip([g.casaName])}<span>${fmtDate(g.date)}</span><span>Total: ${fmt(g.amount)} €</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">${btns}</div>
+      </div>
+    </div>`;
+}
+// every pending withdrawal of a group: 'bookmaker id|day|…'
+function pendWdGroupItems(key){
+  const [cid,date]=key.split('|');const c=D.casas.find(x=>x.id===+cid);
+  return c?(c.history||[]).filter(h=>h.type==='wd'&&h.status==='pending'&&(h.date||'')===date&&!isHidden('wd:'+c.id+':'+h.id)).map(h=>({c,h})):[];
+}
+function confirmWithdrawalGroup(key){
+  const list=pendWdGroupItems(key);if(!list.length)return;
+  const c=list[0].c,ids=new Set([c.id,...list.map(x=>x.h.toBank).filter(Boolean)]);
+  const snap=D.casas.filter(x=>ids.has(x.id)).map(x=>JSON.stringify(x));
+  const tot=list.reduce((a,x)=>a+(x.h.amount||0),0);
+  list.forEach(x=>confirmWithdrawal(c.id,x.h.id));
+  pendWdOpen.delete(key);
+  toast(`${list.length} withdrawals of ${c.name} confirmed · ${fmt(tot)} €`,'Undo',()=>{snap.forEach(j=>{const o=JSON.parse(j),i=D.casas.findIndex(x=>x.id===o.id);if(i>=0)D.casas[i]=o;});save();updateBadges();rerenderActivePage();});
+}
 function renderPendientesInner(){
   if(typeof pendDisarm==='function')pendDisarm();
   const pendSBAll=D.bets.filter(b=>b.status==='pending').map(b=>({kind:'sb',item:b}));
@@ -6971,17 +7027,29 @@ function renderPendientesInner(){
     ex.sort((a,b)=>(!a.grp)-(!b.grp)||a.grp.localeCompare(b.grp,'en',{sensitivity:'base'})||dKey(a).localeCompare(dKey(b)));
     visible=ex;
   }
+  // several withdrawals of one bookmaker on the same day take one line (tap it to see each one)
+  {const gk=x=>x.item.cid+'|'+(x.item.date||'')+'|'+(x.grp||''),byG=new Map(),seen=new Set(),out=[];
+    visible.forEach(x=>{if(x.kind!=='wd')return;const k=gk(x);if(!byG.has(k))byG.set(k,[]);byG.get(k).push(x);});
+    visible.forEach(x=>{
+      if(x.kind!=='wd'){out.push(x);return;}
+      const k=gk(x),g=byG.get(k);if(g.length<2){out.push(x);return;}
+      if(seen.has(k))return;seen.add(k);
+      const dests=[...new Set(g.map(y=>y.item.dest||''))];
+      out.push({kind:'wdg',grp:x.grp,item:{key:k,cid:x.item.cid,casaName:x.item.casaName,date:x.item.date,n:g.length,amount:g.reduce((a,y)=>a+(y.item.amount||0),0),dest:dests.length===1?dests[0]:'',ids:g.map(y=>y.item.hid)}});
+      if(pendWdOpen.has(k))g.forEach(y=>out.push({...y,sub:true}));
+    });
+    visible=out;}
   const pendLedger=bookmakerLedger();
   const pendTw=twinInfo(D.bets.filter(b=>b.status==='pending'));
   const groupHeader=(lst,idx)=>{
     if(pendSort!=='house')return pendDayHeader(lst,idx);
     const g=lst[idx].grp;if(idx>0&&lst[idx-1].grp===g)return '';
-    const grp=lst.filter(x=>x.grp===g);
+    const grp=lst.filter(x=>x.grp===g),grpN=grp.reduce((a,x)=>a+(x.kind==='wdg'?x.item.n:x.sub?0:1),0);
     const exp=grp.reduce((a,{kind,item})=>a+(kind==='sb'?(item.profit||0):kind==='nm'?(item.potentialWin||0):0),0);
     const casa=g?D.casas.find(c=>bkKey(c.name||'')===bkKey(g)):null;
     const mny=casa?casaMoney(casa,pendLedger):null;
     const inPlayG=g?(pendLedger.get(bkKey(g))||{inPlay:0}).inPlay:0;
-    return `<div class="pend-day-h">${g?esc(g):'No bookmaker'} <span class="pd-n">${grp.length} · ${exp>=0?'+':''}${fmt(exp)} € expected · ${fmt(inPlayG)} € in play${mny?` · balance ${fmt(mny.balance)} €`:''}</span></div>`;
+    return `<div class="pend-day-h">${g?esc(g):'No bookmaker'} <span class="pd-n">${grpN} · ${exp>=0?'+':''}${fmt(exp)} € expected · ${fmt(inPlayG)} € in play${mny?` · balance ${fmt(mny.balance)} €`:''}</span></div>`;
   };
   if(!visible.length&&!hidden.length){
     const filtered=pendQuery.trim()||pendOnlyPromo||pendHouse!=='all';
@@ -6990,23 +7058,8 @@ function renderPendientesInner(){
   }
   const mkN=shown.filter(x=>pendHasMark(x.kind,x.item)).length;
   const bulk=mkN?`<div class="pend-bulk"><span><b>${mkN}</b> marked, not resolved yet</span><button class="btn-accept" data-resolve-all>${PEND_IC.check}Resolve ${mkN>1?'all '+mkN:'it'}</button></div>`:'';
-  list.innerHTML=bulk+visible.map(({kind,item},idx)=>groupHeader(visible,idx)+(pendView==='compact'?pendCompactHtml(kind,item,pendTw):(()=>{
-    if(kind==='wd'){
-      const w=item;
-      return`<div class="pend-item wd">
-        <div class="pend-top">
-          <div>
-            <div class="pend-ev">Withdrawal – ${esc(w.casaName)} <span class="type-badge-kind">${w.dest||'Bookmaker'}</span></div>
-            <div class="pend-meta">${pendHouseChip([w.casaName])}<span>${fmtDate(w.date)}</span><span>Amount: ${fmt(w.amount)} €</span></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <button class="btn-reject wd-cancel" data-cancel-wd="${w.cid}:${w.hid}" title="Cancel this withdrawal: the money goes back to ${esc(w.casaName)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Cancel</button>
-            <button class="btn-accept" data-confirm-wd="${w.cid}:${w.hid}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Confirm received</button>
-            ${hideBtnHtml('wd:'+w.cid+':'+w.hid,true)}
-          </div>
-        </div>
-      </div>`;
-    }
+  list.innerHTML=bulk+visible.map(({kind,item,sub},idx)=>groupHeader(visible,idx)+(kind==='wdg'?pendWdGroupHtml(item):sub?`<div class="wdg-sub">${pendView==='compact'?pendCompactHtml(kind,item,pendTw):pendWdFullHtml(item)}</div>`:pendView==='compact'?pendCompactHtml(kind,item,pendTw):(()=>{
+    if(kind==='wd')return pendWdFullHtml(item);
     if(kind==='sb'){
       const b=item;
       const promos=itemPromos('sb',b);const pr=promos.find(Boolean);
@@ -11389,6 +11442,10 @@ document.addEventListener('click',e=>{
   if(ub){unhideItem(ub.dataset.unhidekey);updateBadges();rerenderActivePage();return;}
   const sb2=e.target.closest('[data-showhidden]');
   if(sb2){const k=sb2.dataset.showhidden;showHiddenFor[k]=!showHiddenFor[k];rerenderActivePage();return;}
+  const cwg=e.target.closest('[data-confirm-wdg]');
+  if(cwg){confirmWithdrawalGroup(cwg.dataset.confirmWdg);updateBadges();rerenderActivePage();return;}
+  const wg=e.target.closest('[data-wdg]');
+  if(wg){const k=wg.dataset.wdg;if(pendWdOpen.has(k))pendWdOpen.delete(k);else pendWdOpen.add(k);rerenderActivePage();return;}
   const cwd=e.target.closest('[data-confirm-wd]');
   if(cwd){const[cid,eid]=cwd.dataset.confirmWd.split(':').map(Number);confirmWithdrawal(cid,eid);updateBadges();rerenderActivePage();return;}
   const xwd=e.target.closest('[data-cancel-wd]');
