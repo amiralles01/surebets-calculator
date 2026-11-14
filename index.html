@@ -4258,7 +4258,7 @@ function openGapModal(){
   if(Math.abs(g.third)>=0.01)rows.push(row('Lost by someone else','money a friend put in your account and lost: not your loss',g.third));
   if(Math.abs(g.rest)>=0.01)rows.push(row('Other money in your bookmakers','no bet or Set balance explains it: casino, bonuses, a deposit not registered…',g.rest));
   document.getElementById('adj-title').textContent='Not in bets';
-  document.getElementById('adj-sub').textContent=`Total Profit is your bookmakers' real result (Hacienda ${sg(g.real.hac)}: withdrawn − deposited + balance) minus costs (${fmt(g.real.costs)} €). This is what that real money has and your bets don't, or the other way round.`;
+  document.getElementById('adj-sub').textContent=`Total Profit is your bookmakers' real result (Hacienda ${sg(g.real.hac)}: withdrawn − deposited + balance${g.real.third?`, plus ${fmt(g.real.third)} € a friend lost`:''}) minus costs (${fmt(g.real.costs)} €). This is what that real money has and your bets don't, or the other way round.`;
   document.getElementById('adj-list').innerHTML=rows.join('')+`<div class="adj-item adj-tot"><div class="adj-l"><b>= Not in bets</b></div><span class="adj-v ${g.real.gap>0?'pos':'neg'}">${sg(g.real.gap)}</span></div>`;
   adjModalYm=null;document.getElementById('adjModal').style.display='flex';
 }
@@ -4522,7 +4522,7 @@ function rentaCasa(c,y,ledgerY,betYears,cy){
   const dep=tv('dep',o.dep)??auto.dep,wd=tv('wd',o.wd)??auto.wd,third=num(o.third)||0;
   const adj=+(c.adjLog||[]).filter(a=>inY(a.date)).reduce((a,x)=>a+(x.delta||0),0).toFixed(2);
   const bets=e?+e.settled.toFixed(2):0,n=e?e.n:0,open=e?e.open:0,byBets=+(bets+adj).toFixed(2);
-  const money=start!=null&&end!=null?+(wd-dep+end-start+third).toFixed(2):null;
+  const money=start!=null&&end!=null?+(wd-dep+end-start).toFixed(2):null; // a friend's losses stay in: the bookmaker reports them in your name
   const typed={dep:tv('dep',o.dep)!=null,wd:tv('wd',o.wd)!=null,third:!!third,start:num(yb[String(+y-1)])!=null,end:tv('end',yb[y])!=null};
   const any=dep||wd||bets||n||open||adj||third||Object.values(typed).some(Boolean)||(y===cy&&now);
   if(!any)return null;
@@ -4586,7 +4586,7 @@ function renderRenta(){
         let row=`<div class="rt-row rt-ed${ed?' open':''}${x.mode==='bets'?' rt-miss':''}" data-rtedit="${x.cid}" role="button" tabindex="0">
         <div class="rt-l"><b>${esc(x.name)}</b>
           <div class="rt-mv"><span>Out <b${mark('wd')}>${fmt(x.wd)} €</b></span><span>In <b${mark('dep')}>${fmt(x.dep)} €</b></span></div>
-          <div class="rt-mv"><span>1 Jan <b${mark('start')}>${v(x.start)}</b></span><span>${x.live?'Now':'31 Dec'} <b${mark('end')}>${v(x.end)}</b></span>${x.third?`<span>Others lost <b class="rt-typed">${fmt(x.third)} €</b></span>`:''}</div>
+          <div class="rt-mv"><span>1 Jan <b${mark('start')}>${v(x.start)}</b></span><span>${x.live?'Now':'31 Dec'} <b${mark('end')}>${v(x.end)}</b></span>${x.third?`<span>Friend lost <b class="rt-typed">${fmt(x.third)} €</b> (Total Profit only)</span>`:''}</div>
           ${x.undated&&!t.dep&&!t.wd?`<div class="rt-warn">Some deposits/withdrawals have no date (typed by hand), so they aren't in any year here. Tap and type this year's withdrawn and deposited.</div>`:''}</div>
         <div class="rt-r"><b class="${cl(x.res)}">${sg(x.res)}</b>
           <small>${x.mode==='bets'?`balance missing · by logged bets${x.adj?' and corrections':''}`:`logged in the app ${sg(x.bets)}${Math.abs(d)>=0.01?` · <em class="${cl(d)}">${sg(d)} not logged</em>`:''}`}</small>
@@ -4599,7 +4599,7 @@ function renderRenta(){
             ${L.dep?'':inp('dep',`Deposited in ${r.y}`,x.dep,x.auto.dep,'empty = the deposits dated that year')}
             ${inp('start',`Balance on 1 Jan ${r.y}`,x.start,x.auto.start,x.auto.start===0?'empty = 0, you had nothing before':'what was in it, open bets included')}
             ${L.end?'':inp('end',`Balance on 31 Dec ${r.y}`,x.end,x.auto.end,'what was in it, open bets included')}
-            ${inp('third','Lost by someone else',x.third||null,0,'money a friend put in and lost here: not your loss')}
+            ${inp('third','Lost by someone else',x.third||null,0,'money a friend put in and lost here: Renta counts it like the bookmaker; only Total Profit adds it back')}
             <div class="rt-eb"><button class="btn-s" data-rtauto="${x.cid}">Back to automatic</button><button class="btn-reg" data-rtsave="${x.cid}" style="width:auto;padding:9px 18px;margin:0">Save</button></div>
           </div>`;}
         return row;}).join('')+
@@ -4660,10 +4660,13 @@ function realProfitInfo(all){
   const bk=visibleCasas().filter(c=>!isBank(c));const dep=bk.reduce((a,c)=>a+casaCashFlow(c).in,0);
   if(!(dep>0))return null;
   const ledger=bookmakerLedger();
-  const hac=+bk.reduce((a,c)=>a+casaReal(c,ledger),0).toFixed(2); // withdrawn − deposited + balance (+ others' losses)
+  // Hacienda = what the bookmakers report: withdrawn − deposited + balance (a friend's deposits count, they're in your name)
+  const third=+bk.reduce((a,c)=>a+casaThird(c),0).toFixed(2);
+  const hac=+(bk.reduce((a,c)=>a+casaReal(c,ledger),0)-third).toFixed(2);
   const costs=+(-(all||[]).filter(e=>e.cat==='cost'||e.cat==='software'||e.cat==='expense').reduce((a,e)=>a+e.profit,0)).toFixed(2);
   const recorded=(all||[]).reduce((a,e)=>a+e.profit,0);
-  return {hac,costs,real:+(hac-costs).toFixed(2),gap:+(hac-costs-recorded).toFixed(2)};
+  // your profit adds back what a friend lost on your account: not your money
+  return {hac,third,costs,real:+(hac+third-costs).toFixed(2),gap:+(hac+third-costs-recorded).toFixed(2)};
 }
 function trackInfo(){return D.track&&D.track.from?D.track:null;}
 // only what happens inside the tracking window counts
@@ -5913,7 +5916,7 @@ function renderProfit(){
         <div class="th-main">
           <div class="th-label">Total Profit</div>
           <div class="th-val ${headline>=0?'pos':'neg'}">${headline>=0?'+':''}${fmt(headline)} €</div>
-          ${real?`<div class="th-real">Bookmakers ${real.hac>=0?'+':''}${fmt(real.hac)} € − costs ${fmt(real.costs)} €</div>`:''}
+          ${real?`<div class="th-real">Bookmakers ${real.hac>=0?'+':''}${fmt(real.hac)} €${real.third?` + lost by a friend ${fmt(real.third)} €`:''} − costs ${fmt(real.costs)} €</div>`:''}
           ${paceHtml(all)}
         </div>
         ${monthChartHtml(visibleKeys,months)}
@@ -7629,8 +7632,8 @@ function renderCasas(filter=''){
       return `<div class="sc" title="Everything you put into the bookmakers of this view, all time, and everything you took out. Bank accounts don't count."><div class="sl2">Deposited</div><div class="sv2">${fmt(inn)} €<small class="sc-names">${fmt(out)} € withdrawn</small></div></div>`;})()}
     ${(()=>{const bk=visibleCasas().filter(c=>!isBank(c)); /* every bookmaker, Unused and other profiles too: it's what you owe Hacienda on */
       const cfs=bk.map(c=>casaCashFlow(c)),inn=cfs.reduce((a,f)=>a+f.in,0),out=cfs.reduce((a,f)=>a+f.out,0),bal=bk.reduce((a,c)=>{const m=casaMoney(c,ledger);return a+m.balance+m.inPlay;},0),th=bk.reduce((a,c)=>a+casaThird(c),0);
-      const r=+(out-inn+bal+th).toFixed(2);
-      return `<div class="sc sc-tax" data-rt-open role="button" tabindex="0" title="Tap: result per calendar year for the tax return (Renta). Every bookmaker (Unused ones too), no bank accounts: withdrawn ${fmt(out)} € − deposited ${fmt(inn)} € + balance ${fmt(bal)} € (money in pending bets included)${th?` + ${fmt(th)} € lost by someone else`:''}."><div class="sl2">Hacienda</div><div class="sv2 ${r>0?'pos':r<0?'neg':''}">${r>0?'+':''}${fmt(r)} €<small class="sc-names">${r>0?`up`:r<0?`down`:'even'} · all bookmakers</small></div></div>`;})()}
+      const r=+(out-inn+bal).toFixed(2);
+      return `<div class="sc sc-tax" data-rt-open role="button" tabindex="0" title="Tap: result per calendar year for the tax return (Renta). Every bookmaker (Unused ones too), no bank accounts: withdrawn ${fmt(out)} € − deposited ${fmt(inn)} € + balance ${fmt(bal)} € (money in pending bets included)${th?`. The ${fmt(th)} € a friend lost count here as the bookmaker reports them (your name); Total Profit adds them back`:''}."><div class="sl2">Hacienda</div><div class="sv2 ${r>0?'pos':r<0?'neg':''}">${r>0?'+':''}${fmt(r)} €<small class="sc-names">${r>0?`up`:r<0?`down`:'even'} · all bookmakers</small></div></div>`;})()}
     <div class="sc"><div class="sl2">Pending to receive</div><div class="sv2 ${totalPending>0?'yel':''}">${fmt(totalPending)} €</div></div>
     <div class="sc" title="${esc(idleList.map(c=>c.name).join(', '))}"><div class="sl2">Idle ${IDLE_DAYS}+ days</div><div class="sv2 ${idleList.length?'yel':''}">${idleList.length}<small class="sc-names">${idleList.length?esc(idleList.slice(0,3).map(c=>c.name).join(', '))+(idleList.length>3?'…':''):'all active'}</small></div></div>`;
   const list=document.getElementById('casasList');
@@ -7686,7 +7689,7 @@ function renderCasas(filter=''){
         <div class="bk-cash-form">
           <label><span>Total deposited</span><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="bk-cash-in" value="${f.in}"><span class="isuf">€</span></div></label>
           <label><span>Total withdrawn</span><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="bk-cash-out" value="${f.out}"><span class="isuf">€</span></div></label>
-          ${(()=>{const cy=todayLocalISO().slice(0,4),t=+((c.rt&&c.rt[cy]&&c.rt[cy].third)||0);return `<label title="Money someone else (a friend) put in this account and lost: it isn't your loss, so it's added back in Hacienda and Renta ${cy}"><span>Lost by someone else · ${cy}</span><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="bk-cash-third" value="${t?t:''}" placeholder="0"><span class="isuf">€</span></div></label>`;})()}
+          ${(()=>{const cy=todayLocalISO().slice(0,4),t=+((c.rt&&c.rt[cy]&&c.rt[cy].third)||0);return `<label title="Money someone else (a friend) put in this account and lost: it isn't your loss, so Total Profit adds it back. Hacienda and Renta ${cy} count it as the bookmaker reports it (in your name)"><span>Lost by someone else · ${cy}</span><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="bk-cash-third" value="${t?t:''}" placeholder="0"><span class="isuf">€</span></div></label>`;})()}
           <button class="btn-reg" data-bk-cash-save="${c.id}" style="width:auto;padding:9px 16px;margin:0">Save</button>
           ${f.edited?`<button class="btn-s" data-bk-cash-reset="${c.id}" style="width:auto;padding:9px 16px;margin:0">Back to automatic</button>`:''}
         </div>
@@ -7760,7 +7763,7 @@ function renderCasas(filter=''){
           const cell=(l,v,sub)=>`<div class="bk-cash${mode==='cash'?' on':''}" role="button" tabindex="0" data-bk-toggle="cash" data-cid="${c.id}" title="Tap to type the real totals from the bookmaker's website"><span>${l}${f.edited?' · edited':''} ${ed}</span><b>${fmt(v)} €</b>${sub?`<small class="bk-dir">${sub}</small>`:''}</div>`;
           return cell('Deposited',f.in,'all time')+cell('Withdrawn',f.out,f.pendOut?`${fmt(f.pendOut)} € on its way`:'all time')+
           `<div><span>In pending bets${mny.open?` (${mny.open})`:''}</span><b class="${mny.inPlay>0?'yel':''}">${fmt(mny.inPlay)} €</b></div>
-          <div title="Withdrawn ${fmt(f.out)} − deposited ${fmt(f.in)} + balance ${fmt(amt)} + pending ${fmt(mny.inPlay)}${th?` + ${fmt(th)} lost by others`:''}: what your bets here really made you, logged or not. It's what goes to Hacienda."><span>Bet results</span><b class="${cl(real)}">${sg(real)}</b><small class="bk-dir">out − in + balance${th?` · +${fmt(th)} others`:''}</small></div>
+          <div title="Withdrawn ${fmt(f.out)} − deposited ${fmt(f.in)} + balance ${fmt(amt)} + pending ${fmt(mny.inPlay)}${th?` + ${fmt(th)} lost by others`:''}: what your bets here really made you, logged or not. Hacienda counts it without the others' part."><span>Bet results</span><b class="${cl(real)}">${sg(real)}</b><small class="bk-dir">out − in + balance${th?` · +${fmt(th)} others`:''}</small></div>
           <div title="The result of the bets you logged here${mny.adj?` (balance corrections: ${sg(mny.adj)})`:''}"><span>Logged in the app</span><b class="${cl(mny.settled)}">${sg(mny.settled)}</b><small class="bk-dir">${Math.abs(nl)>=0.01?`${sg(nl)} not logged`:'matches Bet results'}</small></div>`;})()}
       </div>`}
       <div class="bk-actions">
