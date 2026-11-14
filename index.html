@@ -1895,6 +1895,11 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .bk-money b{font-size:15px;font-weight:600}
 .bk-money b.pos{color:var(--green)}.bk-money b.neg{color:var(--red)}.bk-money b.yel{color:var(--yellow)}
 @media(max-width:600px){.bk-money{grid-template-columns:1fr 1fr;padding:0 14px 12px}.bk-money .bk-cash{grid-column:1/-1}}
+.bk-money .bk-cash{cursor:pointer;border-radius:8px;margin:-4px -6px;padding:4px 6px;transition:background .15s}
+.bk-money .bk-cash:hover,.bk-money .bk-cash.on{background:rgba(27,36,32,.05)}
+.bk-cash-ed{width:11px;height:11px;vertical-align:-1px;opacity:.55}
+.bk-cash-form{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:flex-end}
+.bk-cash-form label{display:flex;flex-direction:column;gap:3px;flex:1 1 140px;font-size:12px;color:var(--muted)}
 
 .ps-head,.ps-leg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,.9fr) 34px;gap:8px;align-items:center}
 .ps-head{font-size:11px;color:var(--faint);margin-bottom:6px}
@@ -7285,8 +7290,10 @@ function casaCashFlow(c){
   const wd=(c.history||[]).filter(h=>h.type==='wd');
   const out=+wd.reduce((a,h)=>a+(h.amount||0),0).toFixed(2);
   const pendOut=+wd.filter(h=>h.status==='pending').reduce((a,h)=>a+(h.amount||0),0).toFixed(2);
-  const inn=+Math.max(0,(c.amount||0)+out).toFixed(2);
-  return {in:inn,out,pendOut,net:+(out-inn).toFixed(2)};
+  const a=c.cashAdj||{};
+  const autoIn=+Math.max(0,(c.amount||0)+out).toFixed(2);
+  const inn=+(autoIn+(a.in||0)).toFixed(2), outT=+(out+(a.out||0)).toFixed(2);
+  return {in:inn,out:outT,pendOut,net:+(outT-inn).toFixed(2),autoIn,autoOut:out,edited:!!(a.in||a.out)};
 }
 function casaMoney(c,ledger){
   const e=(ledger||bookmakerLedger()).get(bkKey(c.name||''))||{settled:0,inPlay:0,open:0};
@@ -7370,6 +7377,18 @@ function renderCasas(filter=''){
           ${pend>0?`<button class="btn-s" data-bk-clear-pending="${c.id}" style="width:auto;padding:9px 16px">Mark as received</button>`:''}
         </div>
       </div>`;
+    }else if(mode==='cash'){
+      const f=casaCashFlow(c);
+      panelHtml=`<div class="bk-panel">
+        <div class="bk-panel-title">Money put in and taken out of ${esc(c.name)} (all time)</div>
+        <div class="bk-cash-form">
+          <label><span>Total deposited</span><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="bk-cash-in" value="${f.in}"><span class="isuf">€</span></div></label>
+          <label><span>Total withdrawn</span><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="bk-cash-out" value="${f.out}"><span class="isuf">€</span></div></label>
+          <button class="btn-reg" data-bk-cash-save="${c.id}" style="width:auto;padding:9px 16px;margin:0">Save</button>
+          ${f.edited?`<button class="btn-s" data-bk-cash-reset="${c.id}" style="width:auto;padding:9px 16px;margin:0">Back to automatic</button>`:''}
+        </div>
+        <div class="bk-hist-empty" style="margin-top:8px">Only changes this figure (balance and Profit stay the same). New deposits and withdrawals keep adding on top.${f.edited?` Automatic: ${fmt(f.autoIn)} € in · ${fmt(f.autoOut)} € out.`:''}</div>
+      </div>`;
     }else if(mode==='bal'){
       panelHtml=`<div class="bk-panel">
         <div class="bk-panel-title">Real balance you see in ${esc(c.name)} right now (without the money in pending bets)</div>
@@ -7423,7 +7442,7 @@ function renderCasas(filter=''){
         }).join('')}</div>`}
       </div>`;
     }
-    return`<div class="bk-card${bkMoreOpen.has(c.id)||(mode&&mode!=='dep'&&mode!=='wd'&&mode!=='bets')?' more':''}">
+    return`<div class="bk-card${bkMoreOpen.has(c.id)||(mode&&mode!=='dep'&&mode!=='wd'&&mode!=='bets'&&mode!=='cash')?' more':''}">
       <div class="bk-main">
         <div class="bk-avatar">${esc(bkInitials(c.name))}</div>
         <div class="bk-info">
@@ -7437,13 +7456,13 @@ function renderCasas(filter=''){
         <div><span>Bet results</span><b class="${mny.settled>0?'pos':mny.settled<0?'neg':''}">${mny.settled>0?'+':''}${fmt(mny.settled)} €</b></div>
         <div><span>In pending bets${mny.open?` (${mny.open})`:''}</span><b class="${mny.inPlay>0?'yel':''}">${fmt(mny.inPlay)} €</b></div>
         ${(()=>{const d=+(mny.deposited-amt).toFixed(2);return `<div><span>Deposited − balance</span><b class="${d>0?'neg':d<0?'pos':''}">${fmt(d)} €</b><small class="bk-dir ${d>0?'neg':d<0?'pos':''}">${d<0?`you're up ${fmt(-d)} €`:d>0?`you're down ${fmt(d)} €`:'even'}</small></div>`;})()}
-        ${(()=>{const f=casaCashFlow(c);return `<div class="bk-cash" title="Only deposits and withdrawals, whatever is in the account now doesn't count: put in ${fmt(f.in)} €, taken out ${fmt(f.out)} €${f.pendOut?` (${fmt(f.pendOut)} € still on its way)`:''}"><span>Withdrawn − deposited</span><b class="${f.net>0?'pos':f.net<0?'neg':''}">${f.net>0?'+':''}${fmt(f.net)} €</b><small class="bk-dir">${fmt(f.in)} in · ${fmt(f.out)} out${f.pendOut?` · ${fmt(f.pendOut)} on its way`:''}</small></div>`;})()}
+        ${(()=>{const f=casaCashFlow(c);return `<div class="bk-cash${mode==='cash'?' on':''}" role="button" tabindex="0" data-bk-toggle="cash" data-cid="${c.id}" title="Tap to edit. Only deposits and withdrawals, whatever is in the account now doesn't count: put in ${fmt(f.in)} €, taken out ${fmt(f.out)} €${f.pendOut?` (${fmt(f.pendOut)} € still on its way)`:''}"><span>Withdrawn − deposited${f.edited?' · edited':''} <svg class="bk-cash-ed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span><b class="${f.net>0?'pos':f.net<0?'neg':''}">${f.net>0?'+':''}${fmt(f.net)} €</b><small class="bk-dir">${fmt(f.in)} in · ${fmt(f.out)} out${f.pendOut?` · ${fmt(f.pendOut)} on its way`:''}</small></div>`;})()}
       </div>`}
       <div class="bk-actions">
         <button class="bk-btn dep${mode==='dep'?' on':''}" data-bk-toggle="dep" data-cid="${c.id}">+ Deposit</button>
         <button class="bk-btn wd${mode==='wd'?' on':''}" data-bk-toggle="wd" data-cid="${c.id}">− Withdraw</button>
         ${isBank(c)?'':`<button class="bk-btn bets${mode==='bets'?' on':''}" data-bk-toggle="bets" data-cid="${c.id}">Bets</button>`}
-        <button class="bk-btn bk-morebtn" data-bk-more="${c.id}">${bkMoreOpen.has(c.id)||(mode&&mode!=='dep'&&mode!=='wd'&&mode!=='bets')?'Less':'More'}</button>
+        <button class="bk-btn bk-morebtn" data-bk-more="${c.id}">${bkMoreOpen.has(c.id)||(mode&&mode!=='dep'&&mode!=='wd'&&mode!=='bets'&&mode!=='cash')?'Less':'More'}</button>
         <span class="bk-secs">
         ${isBank(c)?'':`<button class="bk-btn${mode==='pending'?' on':''}" data-bk-toggle="pending" data-cid="${c.id}">Pending transfer</button>`}
         <button class="bk-btn${mode==='hist'?' on':''}" data-bk-toggle="hist" data-cid="${c.id}">History</button>
@@ -7584,7 +7603,7 @@ document.getElementById('c-save').addEventListener('click',()=>{
 });
 document.getElementById('casasSearch').addEventListener('input',e=>renderCasas(e.target.value));
 document.getElementById('casasList').addEventListener('change',e=>{if(e.target.id==='bk-cost-since'){const b=document.getElementById('bk-cost-past');if(b)b.innerHTML=costPastHtml(e.target.value);}});
-document.getElementById('casasList').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('.bk-tile')){e.preventDefault();e.target.click();}});
+document.getElementById('casasList').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('.bk-tile,.bk-cash')){e.preventDefault();e.target.click();}});
 // Esc closes the dialog on top (through its Cancel button, so it cleans up like a click would)
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
@@ -7618,6 +7637,23 @@ document.getElementById('casasList').addEventListener('click',e=>{
     if(bkbKind){bkBetsKind=bkbKind.dataset.bkbKind;bkBetsN=40;}
     if(bkbMore)bkBetsN+=40;
     renderCasas(document.getElementById('casasSearch').value);return;
+  }
+  const cashSave=e.target.closest('[data-bk-cash-save]');
+  if(cashSave){
+    const c=D.casas.find(x=>x.id===+cashSave.dataset.bkCashSave);if(!c)return;
+    const num=id=>{const v=(document.getElementById(id).value||'').trim().replace(/\s/g,'');if(!v)return NaN;return parseFloat(v.includes(',')&&!v.includes('.')?v.replace(',','.'):v.replace(/,/g,''));};
+    const vi=num('bk-cash-in'),vo=num('bk-cash-out');
+    if(!(vi>=0)||!(vo>=0)){toast('Write both amounts');return;}
+    const f=casaCashFlow({...c,cashAdj:null});
+    const adj={in:+(vi-f.autoIn).toFixed(2),out:+(vo-f.autoOut).toFixed(2)};
+    if(adj.in||adj.out)c.cashAdj=adj;else delete c.cashAdj;
+    openBkPanel=null;save();renderCasas(document.getElementById('casasSearch').value);
+    toast(`${c.name}: withdrawn − deposited ${fmt(+(vo-vi).toFixed(2))} €`);return;
+  }
+  const cashReset=e.target.closest('[data-bk-cash-reset]');
+  if(cashReset){
+    const c=D.casas.find(x=>x.id===+cashReset.dataset.bkCashReset);if(!c)return;
+    delete c.cashAdj;openBkPanel=null;save();renderCasas(document.getElementById('casasSearch').value);return;
   }
   const toggleBtn=e.target.closest('[data-bk-toggle]');
   if(toggleBtn){
