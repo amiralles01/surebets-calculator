@@ -521,7 +521,11 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,
 .rt-hero .rt-dec{color:#fff;text-decoration:underline 2px rgba(255,255,255,.35);text-underline-offset:4px}
 .rt-list{display:flex;flex-direction:column;gap:6px}
 .rt-row{display:flex;gap:12px;align-items:center;padding:10px 12px;background:var(--raised);border-radius:10px;font-size:13px}
-.rt-row.rt-un{opacity:.8;border:1px dashed var(--border)}
+.rt-row.rt-un{border:1px dashed var(--border)}
+.rt-tick{flex-shrink:0;width:26px;height:26px;border-radius:7px;border:2px solid var(--faint);background:transparent;color:transparent;display:grid;place-items:center;padding:0;cursor:pointer}
+.rt-tick svg{width:15px;height:15px}
+.rt-tick.on{background:var(--green);border-color:var(--green);color:#fff}
+.rt-warn{margin-top:5px;font-size:11px;color:#B8860B;line-height:1.35}
 .rt-l{flex:1;min-width:0}.rt-l>b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rt-l>small{display:block;color:var(--faint);font-size:11.5px;margin-top:2px}
 .rt-mv{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:5px;font-size:12px;color:var(--muted)}.rt-mv span{white-space:nowrap}.rt-mv b{font-family:var(--mono);font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
@@ -4464,10 +4468,13 @@ function rentaYear(y){
     const adj=+(c.adjLog||[]).filter(a=>inY(a.date)).reduce((a,x)=>a+(x.delta||0),0).toFixed(2);
     const bets=e?+e.settled.toFixed(2):0,n=e?e.n:0,open=e?e.open:0;
     if(!dep&&!wd&&!adj&&!bets&&!n&&!open)return;
-    rows.push({name:c.name||'?',dep,wd,adj,bets,n,open,res:+(bets+adj).toFixed(2)});
+    // money moved with no date (an amount typed by hand on the bookmaker, totals edited by hand): it can't go into any year
+    const all=c.history||[],net=all.reduce((a,x)=>a+(x.type==='dep'?1:x.type==='wd'?-1:0)*(x.amount||0),0);
+    const ca=c.cashAdj||{},undated=+((c.amount||0)-net).toFixed(2),undatedEdit=!!(ca.in||ca.out);
+    rows.push({key:k||String(c.id),name:c.name||'?',dep,wd,adj,bets,n,open,res:+(bets+adj).toFixed(2),undated:Math.abs(undated)>=0.01?undated:0,undatedEdit});
   });
   ledger.forEach((e,k)=>{if(used.has(k)||(!e.n&&!e.open&&!e.settled))return; // bets at a bookmaker you don't track in Bookmakers
-    rows.push({name:e.name,dep:0,wd:0,adj:0,bets:+e.settled.toFixed(2),n:e.n,open:e.open,res:+e.settled.toFixed(2),untracked:true});});
+    rows.push({key:k,name:e.name,dep:0,wd:0,adj:0,bets:+e.settled.toFixed(2),n:e.n,open:e.open,res:+e.settled.toFixed(2),untracked:true});});
   rows.sort((a,b)=>b.res-a.res||a.name.localeCompare(b.name));
   const sum=f=>+rows.reduce((a,r)=>a+f(r),0).toFixed(2);
   const gains=sum(r=>r.res>0?r.res:0),losses=sum(r=>r.res<0?-r.res:0),net=+(gains-losses).toFixed(2);
@@ -4481,6 +4488,9 @@ function rentaYear(y){
 // Jan–Jun is filing season for last year's return, so it opens on last year if there's anything in it
 function rentaDefaultYear(){const t=todayLocalISO(),cy=t.slice(0,4),py=String(+cy-1);return +t.slice(5,7)<=6&&dataYears().includes(py)?py:cy;}
 let rtYear=null;
+// a tick per bookmaker and year, only a reminder for you (statement asked, checked…): it changes nothing. Synced in D.rtTicks.
+function rtTicks(){if(!D.rtTicks||typeof D.rtTicks!=='object'||Array.isArray(D.rtTicks))D.rtTicks={};return D.rtTicks;}
+const rtTicked=(y,k)=>!!(D.rtTicks&&D.rtTicks[y+'|'+k]);
 function openRenta(y){rtYear=y||rtYear||rentaDefaultYear();renderRenta();document.getElementById('rtModal').style.display='flex';document.getElementById('rt-body').scrollTop=0;}
 function renderRenta(){
   const r=rentaYear(rtYear),cy=todayLocalISO().slice(0,4);
@@ -4500,16 +4510,19 @@ function renderRenta(){
   if(!r.rows.length)h+=`<div class="card st-card"><div class="cb"><div class="bk-hist-empty" style="padding:22px 0;text-align:center">Nothing recorded in ${r.y}.</div></div></div>`;
   else{
     const max=Math.max(...r.rows.map(x=>Math.abs(x.res)),0.01);
-    h+=`<div class="card st-card"><div class="ch"><span class="ct">By bookmaker</span><span class="st-hint">deposited · withdrawn · result</span></div><div class="cb"><div class="rt-list">`+
-      r.rows.map(x=>`<div class="rt-row${x.untracked?' rt-un':''}">
-        <div class="rt-l"><b>${esc(x.name)}</b><small>${x.n} bet${x.n===1?'':'s'}${x.open?` · ${x.open} pending`:''}${x.untracked?' · not in Bookmakers':''}</small>
-          <div class="rt-mv"><span>In <b>${fmt(x.dep)} €</b></span><span>Out <b>${fmt(x.wd)} €</b></span></div></div>
+    const tk=r.rows.filter(x=>rtTicked(r.y,x.key)).length;
+    h+=`<div class="card st-card"><div class="ch"><span class="ct">By bookmaker</span><span class="st-hint">${tk?`${tk}/${r.rows.length} ticked · `:''}deposited · withdrawn · result</span></div><div class="cb"><div class="rt-list">`+
+      r.rows.map(x=>{const on=rtTicked(r.y,x.key);return `<div class="rt-row${x.untracked?' rt-un':''}${on?' rt-on':''}">
+        <button type="button" class="rt-tick${on?' on':''}" data-rttick="${esc(x.key)}" aria-pressed="${on}" title="Tick it to remember something (statement asked, checked…). It changes nothing."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <div class="rt-l"><b>${esc(x.name)}</b><small>${x.n} settled bet${x.n===1?'':'s'}${x.open?` · ${x.open} pending`:''}${x.untracked?' · not in Bookmakers':''}</small>
+          ${x.untracked?'':`<div class="rt-mv"><span>In <b>${fmt(x.dep)} €</b></span><span>Out <b>${fmt(x.wd)} €</b></span></div>`}
+          ${x.undated||x.undatedEdit?`<div class="rt-warn">Some deposits/withdrawals have no date (typed on the bookmaker${x.undatedEdit?' or totals edited':''}), so they're in no year. The result doesn't change.</div>`:''}</div>
         <div class="rt-r"><b class="${cl(x.res)}">${sg(x.res)}</b>${x.adj?`<small>bets ${sg(x.bets)} · corrections ${sg(x.adj)}</small>`:''}
-          <i class="bks-div"><i class="${x.res<0?'neg':'pos'}" style="width:${(Math.abs(x.res)/max*50).toFixed(1)}%"></i></i></div></div>`).join('')+
+          <i class="bks-div"><i class="${x.res<0?'neg':'pos'}" style="width:${(Math.abs(x.res)/max*50).toFixed(1)}%"></i></i></div></div>`;}).join('')+
       `</div></div></div>`;
   }
   const notes=[
-    `Covers bets dated <b>1 Jan – 31 Dec ${r.y}</b>. The return for ${r.y} is filed between April and June ${+r.y+1}.`,
+    `Covers bets dated <b>1 Jan – 31 Dec ${r.y}</b> (the day of the bet, not the day it was settled). The return for ${r.y} is filed between April and June ${+r.y+1}.`,
     `Each bookmaker's result = its bets that year + the balance corrections you made that year (bonuses, bets you didn't log…). Deposits and withdrawals are only moving your own money: they're not a gain or a loss.`,
     `Gambling losses only cancel gambling gains of the same year. If the year ends in minus, you declare 0 and the loss doesn't carry over to the next year.`,
     r.openN?`<b>${r.openN} bet${r.openN===1?'':'s'} of ${r.y} still pending</b> (${fmt(r.openStake)} €): ${r.openN===1?'it counts':'they count'} once settled.`:'',
@@ -4521,12 +4534,14 @@ function renderRenta(){
 }
 function rentaCsv(){
   const r=rentaYear(rtYear);
-  const rows=r.rows.map(x=>[x.name,x.dep,x.wd,x.n,x.bets,x.adj,x.res,x.res>0?x.res:0,x.res<0?-x.res:0,x.untracked?'not in Bookmakers':'']);
+  const rows=r.rows.map(x=>[x.name,x.untracked?'':x.dep,x.untracked?'':x.wd,x.n,x.bets,x.adj,x.res,x.res>0?x.res:0,x.res<0?-x.res:0,rtTicked(r.y,x.key)?'✓':'',[x.untracked?'not in Bookmakers':'',x.undated||x.undatedEdit?'some deposits/withdrawals have no date':''].filter(Boolean).join(' · ')]);
   rows.push([],['Total',r.dep,r.wd,r.rows.reduce((a,x)=>a+x.n,0),'','',r.net,r.gains,r.losses],['To declare (gains − losses, never below 0)','','','','','',r.declare]);
-  csvDownload(`renta-${r.y}.csv`,['Bookmaker','Deposited','Withdrawn','Bets','Bets result','Corrections','Result','Gain','Loss','Note'],rows);
+  csvDownload(`renta-${r.y}.csv`,['Bookmaker','Deposited','Withdrawn','Settled bets','Bets result','Corrections','Result','Gain','Loss','Ticked','Note'],rows);
 }
 document.addEventListener('click',e=>{
   const y=e.target.closest('[data-rty]');if(y){rtYear=y.dataset.rty;renderRenta();return;}
+  const tk=e.target.closest('[data-rttick]');if(tk){const t=rtTicks(),k=rtYear+'|'+tk.dataset.rttick;if(t[k])delete t[k];else t[k]=1;save();
+    const st=document.getElementById('rt-body').scrollTop;renderRenta();document.getElementById('rt-body').scrollTop=st;return;}
   if(e.target.closest('[data-rt-open]')){openRenta();return;}
   if(e.target.id==='rt-csv'){rentaCsv();return;}
   if(e.target.id==='rt-cancel'||e.target.id==='rtModal')document.getElementById('rtModal').style.display='none';
