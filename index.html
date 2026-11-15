@@ -2576,6 +2576,16 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .bkt-top .bk-tick{margin-right:0}
 .bkt-name{font-size:13px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
 .bk-tile.idle .bkt-name::after{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ball,var(--yellow));margin-left:5px;vertical-align:middle}
+.bkt-cred{flex:none;display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:700;color:#8a5a00;background:rgba(244,197,61,.32);border:1px solid rgba(217,162,27,.45);border-radius:99px;padding:0 6px;font-family:var(--mono);cursor:pointer}
+.bkt-cred svg{width:10px;height:10px}
+.bkt-cred.exp{color:var(--faint);background:transparent;border-color:var(--border2);text-decoration:line-through}
+.bk-cred-tag{display:inline-flex;align-items:center;gap:4px;color:#8a5a00;background:rgba(244,197,61,.28);border:1px solid rgba(217,162,27,.4);border-radius:99px;padding:1px 8px;font-weight:700;cursor:pointer;font-size:inherit}
+.bk-cred-tag svg{width:11px;height:11px}.bk-cred-tag.exp{color:var(--faint);background:transparent;border-color:var(--border2)}
+.bk-cred-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;align-items:end}
+.bk-cred-form label>span{display:block;font-size:11.5px;color:var(--muted);margin-bottom:4px}
+.bk-cred-form input[type=date],.bk-cred-form input[type=text]:not(.ii){width:100%}
+.nf-cred{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#8a5a00;background:rgba(244,197,61,.16);border:1px solid rgba(217,162,27,.35);border-radius:9px;padding:6px 10px}
+.nf-cred>span{flex:1;min-width:0}.nf-cred b{font-family:var(--mono)}.nf-cred-use{flex:none;white-space:nowrap;font:inherit;font-weight:700;color:#7A5600;background:rgba(244,197,61,.45);border:1px solid rgba(217,162,27,.5);border-radius:8px;padding:5px 10px;cursor:pointer}
 .bkt-pend{flex:none;font-size:10.5px;font-weight:700;color:#8a6a00;background:var(--ydim);border-radius:99px;padding:1px 6px;font-family:var(--mono)}
 .bkt-bal{font-family:var(--mono);font-size:18px;font-weight:800;letter-spacing:-.5px;margin-top:4px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .bkt-bal.pos{color:var(--green)}.bkt-bal.neg{color:var(--red)}.bkt-bal.zer{color:var(--muted)}
@@ -2587,6 +2597,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 @media(hover:hover){.bk-tile:hover{transform:translateY(-1px);box-shadow:0 2px 4px rgba(27,36,32,.05),0 14px 28px -16px rgba(27,36,32,.38),var(--glass-hi)}
   .bk-tile.on:hover{box-shadow:0 0 0 2px var(--pitch2),0 14px 28px -16px rgba(27,36,32,.38)}}
 @media(max-width:600px){
+  .bkt-cred{font-size:9.5px;padding:0 4px;gap:2px}.bkt-cred svg{display:none}
   .bk-vbar{gap:6px}
   .bk-vbar .bks-per button{padding:5px 8px;font-size:11.5px}
   .bk-vtot{margin-left:0;width:100%;order:-1;font-size:12.5px}
@@ -2942,6 +2953,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
               <div><label class="fl" id="nf-odd-label">Odds</label><input type="text" inputmode="decimal" autocomplete="off" id="nf-odd" placeholder="1.80" step="0.01" min="1.01"></div>
               <div><label class="fl" id="nf-stake-label">Amount staked (€)</label><input type="text" inputmode="decimal" autocomplete="off" id="nf-stake" placeholder="20" step="0.01" min="0"></div>
             </div>
+            <div class="nf-cred" id="nf-cred" style="display:none"></div>
             <div class="two-col">
               <div><label class="fl">Date</label><input type="date" id="nf-date"></div>
               <div><label class="fl">Ends ~ (hour)</label><select id="nf-time" class="hour-sel"><option value="">--</option><option value="00:00">00h</option><option value="01:00">01h</option><option value="02:00">02h</option><option value="03:00">03h</option><option value="04:00">04h</option><option value="05:00">05h</option><option value="06:00">06h</option><option value="07:00">07h</option><option value="08:00">08h</option><option value="09:00">09h</option><option value="10:00">10h</option><option value="11:00">11h</option><option value="12:00">12h</option><option value="13:00">13h</option><option value="14:00">14h</option><option value="15:00">15h</option><option value="16:00">16h</option><option value="17:00">17h</option><option value="18:00">18h</option><option value="19:00">19h</option><option value="20:00">20h</option><option value="21:00">21h</option><option value="22:00">22h</option><option value="23:00">23h</option></select></div>
@@ -6248,7 +6260,7 @@ document.getElementById('nbList').addEventListener('click',e=>{
   if(editBtn){openNormalModal(+editBtn.dataset.editNid);return;}
   const btn=e.target.closest('.bd2[data-nid]');if(!btn)return;
   if(!confirm('Delete this entry?'))return;
-  D.normals=D.normals.filter(n=>n.id!==+btn.dataset.nid);save();updateBadges();
+  refundCredit(D.normals.find(n=>n.id===+btn.dataset.nid));D.normals=D.normals.filter(n=>n.id!==+btn.dataset.nid);save();updateBadges();
   renderNormals(document.getElementById('nbSearch').value);renderProfit();
 });
 document.getElementById('nbList').addEventListener('change',e=>{
@@ -7610,6 +7622,30 @@ function casaCashFlow(c){
 }
 // money still on its way to you: old one-off pendingTransfer + withdrawals not yet confirmed received
 function casaPendIn(c){return +((c.pendingTransfer||0)+casaCashFlow(c).pendOut).toFixed(2);}
+// Bet credits (créditos de apuesta / bonus to bet with) waiting at a bookmaker: c.credit {amount, exp 'YYYY-MM-DD'|'', note}.
+// Not money: they never touch the balance, deposits or Profit. A Freebet saved at that bookmaker uses them up (n.credit {cid,amt}).
+const GIFT_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>';
+function credExpired(c){const k=c&&c.credit;return !!(k&&k.exp&&k.exp<todayLocalISO());}
+function casaCredit(c){const k=c&&c.credit;return k&&k.amount>0&&!credExpired(c)?+k.amount:0;}
+function credExpLabel(c){const k=c.credit;if(!k||!k.exp)return '';const n=-daysAgo(k.exp);return n<0?'expired':n===0?'expires today':n===1?'expires tomorrow':n<=14?`expires in ${n} days`:'until '+fmtDate(k.exp);}
+function setCredit(c,amount,exp,note){
+  amount=+(+amount||0).toFixed(2);
+  if(amount>0)c.credit={amount,...(exp?{exp}:{}),...(note?{note}:{})};else delete c.credit;
+}
+// a freebet saved at a bookmaker with credits takes its stake out of them
+function useCredit(n){
+  if(n.type!=='Freebet')return null;const c=casaFor(n.house);const have=casaCredit(c);if(!(have>0))return null;
+  const amt=+Math.min(have,n.stake||0).toFixed(2);if(!(amt>0))return null;
+  const {exp,note}=c.credit;setCredit(c,have-amt,exp,note);n.credit={cid:c.id,amt,...(exp?{exp}:{}),...(note?{note}:{})};
+  return {c,amt,left:casaCredit(c)};
+}
+// a pending freebet that used credits gets deleted → they go back to the bookmaker
+function refundCredit(n){
+  if(!n||!n.credit||n.status!=='pending')return;const c=D.casas.find(x=>x.id===n.credit.cid);if(!c)return;
+  const k=c.credit&&!credExpired(c)?c.credit:{};setCredit(c,(k.amount||0)+n.credit.amt,k.exp||n.credit.exp,k.note||n.credit.note);
+}
+function credTagHtml(c,cls){const k=c.credit;if(!k||!(k.amount>0))return '';const ex=credExpired(c),el=credExpLabel(c);
+  return `<button type="button" class="${cls}${ex?' exp':''}" data-bk-toggle="cred" data-cid="${c.id}" title="Bet credits ${fmt(k.amount)} €${el?' · '+el:''}${k.note?' · '+esc(k.note):''}">${GIFT_SVG}${cls==='bkt-cred'?fmt(k.amount,k.amount%1?2:0):`Credits ${fmt(k.amount)} €${el?' · '+el:''}`}</button>`;}
 function casaMoney(c,ledger){
   const e=(ledger||bookmakerLedger()).get(bkKey(c.name||''))||{settled:0,inPlay:0,open:0};
   const deposited=c.amount||0, adj=c.balAdj||0;
@@ -7645,6 +7681,8 @@ function renderCasas(filter=''){
       const cfs=bk.map(c=>casaCashFlow(c)),inn=cfs.reduce((a,f)=>a+f.in,0),out=cfs.reduce((a,f)=>a+f.out,0),bal=bk.reduce((a,c)=>{const m=casaMoney(c,ledger);return a+m.balance+m.inPlay;},0),th=bk.reduce((a,c)=>a+casaThird(c),0);
       const r=+(out-inn+bal).toFixed(2);
       return `<div class="sc sc-tax" data-rt-open role="button" tabindex="0" title="Tap: result per calendar year for the tax return (Renta). Every bookmaker (Unused ones too), no bank accounts: withdrawn ${fmt(out)} € − deposited ${fmt(inn)} € + balance ${fmt(bal)} € (money in pending bets included)${th?`. The ${fmt(th)} € a friend lost count here as the bookmaker reports them (your name); Total Profit adds them back`:''}."><div class="sl2">Hacienda</div><div class="sv2 ${r>0?'pos':r<0?'neg':''}">${r>0?'+':''}${fmt(r)} €<small class="sc-names">${r>0?`up`:r<0?`down`:'even'} · all bookmakers</small></div></div>`;})()}
+    ${(()=>{const w=vCasas.filter(c=>casaCredit(c)>0).sort((a,b)=>casaCredit(b)-casaCredit(a)),t=w.reduce((a,c)=>a+casaCredit(c),0);if(!w.length)return '';
+      return `<div class="sc" title="Bet credits waiting to be used: ${esc(w.map(c=>c.name+' '+fmt(casaCredit(c))+' €').join(', '))}. Not money: they don't count in the balance."><div class="sl2">Bet credits</div><div class="sv2 yel">${fmt(t)} €<small class="sc-names">${esc(w.slice(0,3).map(c=>c.name).join(', '))+(w.length>3?'…':'')}</small></div></div>`;})()}
     <div class="sc"><div class="sl2">Pending to receive</div><div class="sv2 ${totalPending>0?'yel':''}">${fmt(totalPending)} €</div></div>
     <div class="sc" title="${esc(idleList.map(c=>c.name).join(', '))}"><div class="sl2">Idle ${IDLE_DAYS}+ days</div><div class="sv2 ${idleList.length?'yel':''}">${idleList.length}<small class="sc-names">${idleList.length?esc(idleList.slice(0,3).map(c=>c.name).join(', '))+(idleList.length>3?'…':''):'all active'}</small></div></div>`;
   const list=document.getElementById('casasList');
@@ -7669,6 +7707,7 @@ function renderCasas(filter=''){
       actHtml=a&&a.last?`<div class="bk-act${daysAgo(a.last)>IDLE_DAYS?' idle':''}" title="Date of the last bet placed here">${daysAgo(a.last)>IDLE_DAYS?'Idle · ':''}last bet ${agoLabel(a.last)}${a.month?` · ${a.month} this month`:''}</div>`:`<div class="bk-act">no bets yet</div>`;}
     const swPaid=softwareCharges().filter(x=>x.casaId===c.id).reduce((a,x)=>a-x.profit,0);
     if(swPaid>0)metaBits.push(`<span style="color:var(--red)">Software: −${fmt(swPaid)} €</span>`);
+    if(c.credit&&c.credit.amount>0)metaBits.push(credTagHtml(c,'bk-cred-tag'));
     if(pend>0)metaBits.push(`<span style="color:var(--yellow)">Pending: ${fmt(pend)} €</span>`);
     if(pendWdCount>0)metaBits.push(`<span style="color:var(--yellow)">${pendWdCount} withdrawal${pendWdCount>1?'s':''} awaiting confirmation</span>`);
     const isOpen=!!(openBkPanel&&openBkPanel.cid===c.id);
@@ -7739,6 +7778,19 @@ function renderCasas(filter=''){
           <button class="btn-reg" data-cost-add="${c.id}" style="width:auto;padding:9px 16px;margin:0">Add</button>
         </div>
       </div>`;
+    }else if(mode==='cred'){
+      const k=c.credit||{};
+      panelHtml=`<div class="bk-panel">
+        <div class="bk-panel-title">Bet credits available in ${esc(c.name)}</div>
+        <div class="bk-cred-form">
+          <label><span>Amount</span><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="bk-cred-amt" value="${k.amount>0?k.amount:''}" placeholder="0"><span class="isuf">€</span></div></label>
+          <label><span>Expires (optional)</span><input type="date" id="bk-cred-exp" value="${k.exp||''}"></label>
+          <label><span>Note (optional)</span><input type="text" id="bk-cred-note" value="${esc(k.note||'')}" placeholder="E.g. min odds 1.50, football" autocomplete="off"></label>
+          <button class="btn-reg" data-bk-cred-save="${c.id}" style="width:auto;padding:9px 16px;margin:0">Save</button>
+          ${k.amount>0?`<button class="btn-s" data-bk-cred-clear="${c.id}" style="width:auto;padding:9px 16px;margin:0">Used up</button>`:''}
+        </div>
+        <div class="bk-hist-empty" style="margin-top:8px">Just a reminder of what you have to bet with here: it doesn't change the balance or Profit. When you save a Freebet at ${esc(c.name)} its stake comes off these credits by itself.</div>
+      </div>`;
     }else if(mode==='bets'){
       panelHtml=bkBetsPanelHtml(c);
     }else if(mode==='hist'){
@@ -7784,6 +7836,7 @@ function renderCasas(filter=''){
         <button class="bk-btn bk-morebtn" data-bk-more="${c.id}">${bkMoreOpen.has(c.id)||(mode&&mode!=='dep'&&mode!=='wd'&&mode!=='bets'&&mode!=='cash')?'Less':'More'}</button>
         <span class="bk-secs">
         ${isBank(c)?'':`<button class="bk-btn${mode==='pending'?' on':''}" data-bk-toggle="pending" data-cid="${c.id}">Pending transfer</button>`}
+        ${isBank(c)?'':`<button class="bk-btn${mode==='cred'?' on':''}" data-bk-toggle="cred" data-cid="${c.id}">Bet credits${casaCredit(c)?` · ${fmt(casaCredit(c))} €`:''}</button>`}
         <button class="bk-btn${mode==='hist'?' on':''}" data-bk-toggle="hist" data-cid="${c.id}">History</button>
         <button class="bk-btn${mode==='bal'?' on':''}" data-bk-toggle="bal" data-cid="${c.id}">Set balance</button>
         <button class="bk-btn${mode==='costs'?' on':''}" data-bk-toggle="costs" data-cid="${c.id}">Monthly costs${activeCosts(c).length?` · ${fmt(activeCosts(c).reduce((a,k)=>a+k.amount,0))} €`:''}</button>
@@ -7818,7 +7871,7 @@ function renderCasas(filter=''){
         :m.inPlay>0?`<span class="yel">${fmt(m.inPlay)} € in play${m.open>1?` (${m.open})`:''}</span>`
         :a&&a.last?`<span class="${idle?'yel':''}">${idle?'idle · ':''}${agoLabel(a.last)}</span>`:`<span>no bets yet</span>`;
       return `<div class="bk-tile ${cls}${bkFocus===c.id?' on':''}${idle?' idle':''}" data-bk-focus="${c.id}" role="button" tabindex="0" title="${esc(c.name)}">
-        <div class="bkt-top">${bkTickHtml(c)}<span class="bkt-name">${esc(c.name)}</span>${pend>0?`<span class="bkt-pend" title="Pending to receive: ${fmt(pend)} €">+${fmt(pend,0)}</span>`:''}</div>
+        <div class="bkt-top">${bkTickHtml(c)}<span class="bkt-name">${esc(c.name)}</span>${credTagHtml(c,'bkt-cred')}${pend>0?`<span class="bkt-pend" title="Pending to receive: ${fmt(pend)} €">+${fmt(pend,0)}</span>`:''}</div>
         <div class="bkt-bal ${cls}">${fmt(b)} €</div>
         <div class="bkt-sub">${sub}</div>
         <div class="bkt-bar"><i style="width:${b>0?Math.max(2,b/maxBal*100).toFixed(1):0}%"></i></div>
@@ -7948,6 +8001,24 @@ document.getElementById('casasList').addEventListener('click',e=>{
   if(sb){bkSort=sb.dataset.bksort;try{localStorage.setItem('sb_bk_sort',bkSort);}catch(_){}renderCasas(document.getElementById('casasSearch').value);return;}
   const tk=e.target.closest('[data-bk-tick]');
   if(tk){const c=D.casas.find(x=>x.id===+tk.dataset.bkTick);if(c){if(c.tick)delete c.tick;else c.tick=true;save();renderCasas(document.getElementById('casasSearch').value);}return;}
+  const cs=e.target.closest('[data-bk-cred-save]');
+  if(cs){
+    const c=D.casas.find(x=>x.id===+cs.dataset.bkCredSave);if(!c)return;
+    const v=(document.getElementById('bk-cred-amt').value||'').trim().replace(/\s/g,''),a=parseFloat(v.includes(',')&&!v.includes('.')?v.replace(',','.'):v.replace(/,/g,''))||0;
+    if(a<0){toast('Write the amount');return;}
+    setCredit(c,a,document.getElementById('bk-cred-exp').value,document.getElementById('bk-cred-note').value.trim());
+    openBkPanel=null;save();renderCasas(document.getElementById('casasSearch').value);
+    toast(a>0?`${c.name}: ${fmt(a)} € of bet credits`:`${c.name}: no bet credits`);return;
+  }
+  const cc=e.target.closest('[data-bk-cred-clear]');
+  if(cc){
+    const c=D.casas.find(x=>x.id===+cc.dataset.bkCredClear);if(!c)return;const old=c.credit;
+    delete c.credit;openBkPanel=null;save();renderCasas(document.getElementById('casasSearch').value);
+    toast(`${c.name}: bet credits used up`,'Undo',()=>{c.credit=old;save();renderCasas(document.getElementById('casasSearch').value);});return;
+  }
+  const ctag=e.target.closest('.bkt-cred');
+  if(ctag){const id=+ctag.dataset.cid;bkFocus=id;openBkPanel={cid:id,mode:'cred'};renderCasas(document.getElementById('casasSearch').value);
+    const o=document.getElementById('bkOpen');if(o)o.scrollIntoView({behavior:'smooth',block:'nearest'});return;}
   const ft=e.target.closest('[data-bk-focus]');
   if(ft){const id=+ft.dataset.bkFocus;bkFocus=bkFocus===id?null:id;
     if(openBkPanel&&openBkPanel.cid!==bkFocus)openBkPanel=null;
@@ -8154,7 +8225,7 @@ function isUnusedCasa(c,ledger){
 function autoUnusedCasa(c,ledger){
   const m=casaMoney(c,ledger);
   if(isBank(c)||activeCosts(c).length)return false;
-  if(Math.abs(m.balance)>=0.005||m.inPlay>0||m.open>0||(c.pendingTransfer||0)>0)return false;
+  if(Math.abs(m.balance)>=0.005||m.inPlay>0||m.open>0||(c.pendingTransfer||0)>0||casaCredit(c)>0)return false;
   const cutoff=shiftedISO(-7);
   if((c.history||[]).some(h=>(h.type==='dep'||h.type==='wd')&&(h.date||'')>=cutoff))return false;
   if(c.id>1e12&&c.id>Date.now()-7*864e5)return false; // just created
@@ -8528,7 +8599,7 @@ document.getElementById('catItemsList').addEventListener('click',e=>{
   const delNid=e.target.closest('[data-catdel-nid]');
   if(delNid){
     if(!confirm('Delete this entry?'))return;
-    D.normals=D.normals.filter(n=>n.id!==+delNid.dataset.catdelNid);save();updateBadges();
+    refundCredit(D.normals.find(n=>n.id===+delNid.dataset.catdelNid));D.normals=D.normals.filter(n=>n.id!==+delNid.dataset.catdelNid);save();updateBadges();
     renderCategorias();renderProfit();
     return;
   }
@@ -11344,8 +11415,19 @@ function syncComboOdd(){
     document.getElementById('nf-odd-label').textContent=nfIsCombi()?'Total odds':'Odds';
   }
 }
+// New bet: the bookmaker chosen has bet credits → say so (on Freebet, with a button to use them all as the stake)
+function renderNfCred(){
+  const el=document.getElementById('nf-cred');if(!el)return;
+  const c=casaFor(document.getElementById('nf-house').value),a=casaCredit(c);
+  if(!(a>0)||sbMode()){el.style.display='none';return;}
+  const fb=newBetType==='Freebet',el2=credExpLabel(c);
+  el.style.display='';
+  el.innerHTML=`${GIFT_SVG.replace('<svg','<svg style="width:14px;height:14px;flex:none"')}<span>${esc(c.name)} has <b>${fmt(a)} €</b> of bet credits${el2?' · '+el2:''}${c.credit.note?' · '+esc(c.credit.note):''}${fb?'':'. Switch to Freebet to use them'}</span>${fb&&parseFloat(document.getElementById('nf-stake').value)!==a?`<button class="nf-cred-use" id="nfCredUse" type="button">Use ${fmt(a)} €</button>`:''}`;
+  const b=document.getElementById('nfCredUse');if(b)b.onclick=()=>{document.getElementById('nf-stake').value=a;renderNfResult();};
+}
 function renderNfResult(){
   if(sbMode())return;
+  renderNfCred();
   const rawOdd=parseFloat(document.getElementById('nf-odd').value)||0;
   const stake=parseFloat(document.getElementById('nf-stake').value)||0;
   const isFb=newBetType==='Freebet',house=document.getElementById('nf-house').value;
@@ -11410,13 +11492,14 @@ function saveNewNormal(){
   if(nfFun)bet.fun=1;
   if(nfTg&&nfTg.ev===ev){if(nfTg.comp)bet.comp=nfTg.comp;if(nfTg.evPct!=null)bet.evPct=nfTg.evPct;if(nfTg.fair)bet.fair=nfTg.fair;}
   const fromTg=!!nfTg;nfTg=null;if(tgCur&&tgCur.single)tgCur=null;
+  const cu=useCredit(bet);
   D.normals.unshift(bet);const uw=unifyMatchName(bet);const mw=bet.time?syncMatchWhen(bet):[];
   save();updateBadges();renderPendientes();renderNormals(document.getElementById('nbSearch').value);renderProfit();
   newBetCat=null;
   const wasFun=nfFun;
   if(combi||nfFun){nfCombi=false;nfFun=false;setBetType(type);} // the next bet starts as a single opportunity bet again
   resetNfForm();renderRepeatSel();
-  toast(`${wasFun?'Funbet':type}${sels.length?' combi':''} saved to pending · +${fmt(bet.potentialWin)} € if it wins${matchWhenMsg(mw)}${unifyMsg(uw,bet)}`,'View pending',()=>navTo('pendientes'));
+  toast(`${wasFun?'Funbet':type}${sels.length?' combi':''} saved to pending · +${fmt(bet.potentialWin)} € if it wins${cu?` · ${fmt(cu.amt)} € of credits used at ${cu.c.name}${cu.left?` (${fmt(cu.left)} € left)`:''}`:''}${matchWhenMsg(mw)}${unifyMsg(uw,bet)}`,'View pending',()=>navTo('pendientes'));
   // registered from Telegram: back to the calculator with the next message waiting there
   if(fromTg&&(D.tgInbox||[]).length){if(tgNext(true))setTimeout(focusStake,0);}
 }
