@@ -10903,7 +10903,7 @@ function loadEvNormal(p,type){
   document.getElementById('nf-time').value=p.time||'';
   document.getElementById('nf-pick').value=p.pick||'';
   document.getElementById('nf-notes').value=p.evPct!=null?`+EV ${fmt(p.evPct)}%`:'+EV';
-  document.getElementById('nf-stake').value='';
+  document.getElementById('nf-stake').value='';nfCredKey='';nfCredAuto=null;
   nfTg={ev:p.ev,comp:p.comp||'',pick:p.pick||'',evPct:p.evPct,fair:p.fair};
   const nc=document.getElementById('nf-category');nc.dataset.manual='';
   if(newBetCat==null){if(p.comp){const id=autoCategory(p.comp,p.pick);fillCategorySelect(nc,id);document.getElementById('nf-cat-w').classList.toggle('auto',id!=null);}else nfGuessCat();}
@@ -11444,14 +11444,19 @@ function syncComboOdd(){
   }
 }
 // New bet: the bookmaker chosen has bet credits → say so (on Freebet, with a button to use them all as the stake)
+let nfCredAuto=null,nfCredKey=''; // stake value filled in from bet credits (so it can follow the bookmaker / type)
 function renderNfCred(){
   const el=document.getElementById('nf-cred');if(!el)return;
-  const c=casaFor(document.getElementById('nf-house').value),a=casaCredit(c);
+  const c=casaFor(document.getElementById('nf-house').value),a=casaCredit(c),st=document.getElementById('nf-stake');
+  // Freebet at a bookmaker with credits: the stake fills in with them by itself, unless you typed your own amount
+  const auto=st.value===''||(nfCredAuto!=null&&st.value===String(nfCredAuto));
+  const key=newBetType+'|'+(c?c.id:'');const changed=key!==nfCredKey;nfCredKey=key; // only when the bookmaker or type changes, never while you type the stake
+  if(changed&&auto&&!sbMode()){const v=newBetType==='Freebet'&&a>0?a:null;if(v!=null)st.value=v;else if(nfCredAuto!=null&&st.value!=='')st.value='';nfCredAuto=v;}
   if(!(a>0)||sbMode()){el.style.display='none';return;}
   const fb=newBetType==='Freebet',el2=credExpLabel(c);
   el.style.display='';
   el.innerHTML=`${GIFT_SVG.replace('<svg','<svg style="width:14px;height:14px;flex:none"')}<span>${esc(c.name)} has <b>${fmt(a)} €</b> of bet credits${el2?' · '+el2:''}${c.credit.note?' · '+esc(c.credit.note):''}${fb?'':'. Switch to Freebet to use them'}</span>${fb&&parseFloat(document.getElementById('nf-stake').value)!==a?`<button class="nf-cred-use" id="nfCredUse" type="button">Use ${fmt(a)} €</button>`:''}`;
-  const b=document.getElementById('nfCredUse');if(b)b.onclick=()=>{document.getElementById('nf-stake').value=a;renderNfResult();};
+  const b=document.getElementById('nfCredUse');if(b)b.onclick=()=>{document.getElementById('nf-stake').value=a;nfCredAuto=a;renderNfResult();};
 }
 function renderNfResult(){
   if(sbMode())return;
@@ -11490,7 +11495,7 @@ function renderNfResult(){
 function resetNfForm(){
   if(tgCur&&tgCur.single&&tgRequeue())save(); // a Telegram value bet that wasn't saved goes back to the inbox
   nfTg=null;
-  ['nf-event','nf-pick','nf-odd','nf-stake','nf-notes','nf-time'].forEach(id=>document.getElementById(id).value='');
+  ['nf-event','nf-pick','nf-odd','nf-stake','nf-notes','nf-time'].forEach(id=>document.getElementById(id).value='');nfCredKey='';nfCredAuto=null;
   nfSels=nfIsCombi()?[{name:'',odd:''},{name:'',odd:''}]:[];
   renderNfSels();syncComboOdd();renderNfResult();
   document.getElementById('nf-category').dataset.manual='';nfGuessCat();
