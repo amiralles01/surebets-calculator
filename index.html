@@ -2586,6 +2586,16 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .bk-cred-form input[type=date],.bk-cred-form input[type=text]:not(.ii){width:100%}
 .nf-cred{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#8a5a00;background:rgba(244,197,61,.16);border:1px solid rgba(217,162,27,.35);border-radius:9px;padding:6px 10px}
 .nf-cred>span{flex:1;min-width:0}.nf-cred b{font-family:var(--mono)}.nf-cred-use{flex:none;white-space:nowrap;font:inherit;font-weight:700;color:#7A5600;background:rgba(244,197,61,.45);border:1px solid rgba(217,162,27,.5);border-radius:8px;padding:5px 10px;cursor:pointer}
+.cred-chip{display:inline-flex;align-items:center;gap:5px}.cred-chip svg{width:13px;height:13px;color:#b07d00}.cred-chip.active svg{color:inherit}
+.sc-cred{cursor:pointer}
+.cred-list{margin-bottom:12px}.cred-list .ct{display:inline-flex;align-items:center;gap:7px}.cred-list .ct svg{width:16px;height:16px;color:#b07d00}
+.cred-tot{margin-left:auto;font-family:var(--mono);font-weight:700;color:#8a5a00;font-size:13.5px}
+.cred-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid var(--border);cursor:pointer}
+.cred-row:hover{background:rgba(244,197,61,.08)}
+.cred-n{flex:1;min-width:0}.cred-n b{display:block;font-size:14px}.cred-n small{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cred-n em{font-style:normal}.cred-n em.soon{color:var(--red);font-weight:600}
+.cred-a{font-family:var(--mono);font-weight:800;font-size:15px;color:#8a5a00;white-space:nowrap}
+.cred-row.exp .cred-a{color:var(--faint);text-decoration:line-through}
 .bkt-pend{flex:none;font-size:10.5px;font-weight:700;color:#8a6a00;background:var(--ydim);border-radius:99px;padding:1px 6px;font-family:var(--mono)}
 .bkt-bal{font-family:var(--mono);font-size:18px;font-weight:800;letter-spacing:-.5px;margin-top:4px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .bkt-bal.pos{color:var(--green)}.bkt-bal.neg{color:var(--red)}.bkt-bal.zer{color:var(--muted)}
@@ -7661,6 +7671,7 @@ function renderCasas(filter=''){
   const ledger0=bookmakerLedger();
   const byProfile=c=>{
     const un=isUnusedCasa(c,ledger0);
+    if(bkProfileSel==='credits')return !!(c.credit&&c.credit.amount>0); // every bookmaker with credits, Unused too
     if(bkProfileSel==='unused')return un;
     if(un)return false;
     return bkProfileSel==='all'?true:(bkProfileSel==='none'?!c.profileId:c.profileId===bkProfileSel);
@@ -7682,12 +7693,13 @@ function renderCasas(filter=''){
       const r=+(out-inn+bal).toFixed(2);
       return `<div class="sc sc-tax" data-rt-open role="button" tabindex="0" title="Tap: result per calendar year for the tax return (Renta). Every bookmaker (Unused ones too), no bank accounts: withdrawn ${fmt(out)} € − deposited ${fmt(inn)} € + balance ${fmt(bal)} € (money in pending bets included)${th?`. The ${fmt(th)} € a friend lost count here as the bookmaker reports them (your name); Total Profit adds them back`:''}."><div class="sl2">Hacienda</div><div class="sv2 ${r>0?'pos':r<0?'neg':''}">${r>0?'+':''}${fmt(r)} €<small class="sc-names">${r>0?`up`:r<0?`down`:'even'} · all bookmakers</small></div></div>`;})()}
     ${(()=>{const w=vCasas.filter(c=>casaCredit(c)>0).sort((a,b)=>casaCredit(b)-casaCredit(a)),t=w.reduce((a,c)=>a+casaCredit(c),0);if(!w.length)return '';
-      return `<div class="sc" title="Bet credits waiting to be used: ${esc(w.map(c=>c.name+' '+fmt(casaCredit(c))+' €').join(', '))}. Not money: they don't count in the balance."><div class="sl2">Bet credits</div><div class="sv2 yel">${fmt(t)} €<small class="sc-names">${esc(w.slice(0,3).map(c=>c.name).join(', '))+(w.length>3?'…':'')}</small></div></div>`;})()}
+      return `<div class="sc sc-cred" data-bk-cred-open role="button" tabindex="0" title="Tap: every bookmaker with credits. Bet credits waiting to be used: ${esc(w.map(c=>c.name+' '+fmt(casaCredit(c))+' €').join(', '))}. Not money: they don't count in the balance."><div class="sl2">Bet credits</div><div class="sv2 yel">${fmt(t)} €<small class="sc-names">${esc(w.slice(0,3).map(c=>c.name).join(', '))+(w.length>3?'…':'')}</small></div></div>`;})()}
     <div class="sc"><div class="sl2">Pending to receive</div><div class="sv2 ${totalPending>0?'yel':''}">${fmt(totalPending)} €</div></div>
     <div class="sc" title="${esc(idleList.map(c=>c.name).join(', '))}"><div class="sl2">Idle ${IDLE_DAYS}+ days</div><div class="sv2 ${idleList.length?'yel':''}">${idleList.length}<small class="sc-names">${idleList.length?esc(idleList.slice(0,3).map(c=>c.name).join(', '))+(idleList.length>3?'…':''):'all active'}</small></div></div>`;
   const list=document.getElementById('casasList');
   const visible=items.filter(c=>!isHidden('casa:'+c.id));
   const hidden=items.filter(c=>isHidden('casa:'+c.id));
+  if(bkProfileSel==='credits'&&!visible.length){list.innerHTML=emptyStateHtml('No bookmaker has bet credits right now. To add them: open a bookmaker → More → Bet credits.');return;}
   if(!visible.length&&!hidden.length){list.innerHTML=emptyStateHtml(D.casas.length?'No bookmakers match this view.':'You have no bookmakers tracked yet.');return;}
   const sorted=bkSortList(visible,ledger,act);
   const cardHtml=c=>{
@@ -7695,7 +7707,7 @@ function renderCasas(filter=''){
     const pend=casaPendIn(c);
     const pendWdCount=(c.history||[]).filter(h=>h.type==='wd'&&h.status==='pending').length;
     const metaBits=[];
-    if(bkProfileSel==='all'||bkProfileSel==='unused'){
+    if(bkProfileSel==='all'||bkProfileSel==='unused'||bkProfileSel==='credits'){
       const prof=c.profileId?(D.bkProfiles||[]).find(p=>p.id===c.profileId):null;
       metaBits.push(`<span class="type-badge-kind">${esc(prof?prof.name:'No profile')}</span>`);
     }
@@ -7855,7 +7867,14 @@ function renderCasas(filter=''){
   // Unused bookmakers really hold 0 €: if the app still shows money there, offer to set them to 0 (a logged Set balance)
   const stale=bkProfileSel==='unused'?staleUnused(ledger):[];
   const staleHtml=stale.length?`<div class="bk-stale"><div><b>${stale.length} Unused bookmaker${stale.length>1?'s':''} still show${stale.length>1?'':'s'} money in the app</b><small>${stale.map(x=>`${esc(x.c.name)} ${fmt(x.bal)} €`).join(' · ')}. If ${stale.length>1?'they really have':'it really has'} 0 € (withdrawn, closed or banned), set ${stale.length>1?'them':'it'} to 0: it's saved as a Set balance and Profit counts it.</small></div><button class="btn-reg" data-bk-zero-unused="1" style="width:auto;margin:0;padding:9px 16px">Set to 0</button></div>`:'';
-  const bar=staleHtml+`<div class="bk-vbar">
+  const credHtml=bkProfileSel==='credits'?(()=>{
+    const live=sorted.filter(c=>casaCredit(c)>0),tot=live.reduce((a,c)=>a+casaCredit(c),0);
+    const ord=[...sorted].sort((a,b)=>(credExpired(a)-credExpired(b))||((a.credit.exp||'9999')<(b.credit.exp||'9999')?-1:(a.credit.exp||'9999')>(b.credit.exp||'9999')?1:0)||b.credit.amount-a.credit.amount);
+    return `<div class="card cred-list"><div class="ch"><span class="ct">${GIFT_SVG}Bet credits</span><span class="cred-tot">${fmt(tot)} € · ${live.length} bookmaker${live.length===1?'':'s'}</span></div>
+      ${ord.map(c=>{const k=c.credit,ex=credExpired(c),el=credExpLabel(c),soon=!ex&&k.exp&&-daysAgo(k.exp)<=3;
+        return `<div class="cred-row${ex?' exp':''}" data-cred-go="${c.id}" role="button" tabindex="0"><span class="cred-n"><b>${esc(c.name)}</b><small>${[el?`<em class="${soon||ex?'soon':''}">${el}</em>`:'no expiry',k.note?esc(k.note):''].filter(Boolean).join(' · ')}</small></span><span class="cred-a">${fmt(k.amount)} €</span>${ex?'':`<button class="unhidebtn" data-cred-new="${c.id}" title="New bet: Freebet at ${esc(c.name)}">Use</button>`}</div>`;}).join('')}
+      <div class="bk-hist-empty" style="padding:8px 14px 10px">Soonest to expire first. Tap a bookmaker to change or clear its credits · Use opens a Freebet there.</div></div>`;})():'';
+  const bar=staleHtml+credHtml+`<div class="bk-vbar">
     <div class="bks-per" id="bkViewSeg"><button data-bkview="grid" class="${bkView==='grid'?'on':''}">Grid</button><button data-bkview="cards" class="${bkView==='cards'?'on':''}">Cards</button></div>
     <div class="bks-per" id="bkSortSeg">${BK_SORTS.map(([k,l])=>`<button data-bksort="${k}" class="${bkSort===k?'on':''}">${l}</button>`).join('')}</div>
     <div class="bk-vtot">${sorted.length} bookmaker${sorted.length===1?'':'s'} · <b class="${visTot>=0?'pos':'neg'}">${fmt(visTot)} €</b></div>
@@ -8016,6 +8035,12 @@ document.getElementById('casasList').addEventListener('click',e=>{
     delete c.credit;openBkPanel=null;save();renderCasas(document.getElementById('casasSearch').value);
     toast(`${c.name}: bet credits used up`,'Undo',()=>{c.credit=old;save();renderCasas(document.getElementById('casasSearch').value);});return;
   }
+  const cn=e.target.closest('[data-cred-new]');
+  if(cn){const c=D.casas.find(x=>x.id===+cn.dataset.credNew);if(!c)return;goNewBet('Freebet');const h=document.getElementById('nf-house');h.innerHTML=houseOptionsHtml(c.name,'Choose bookmaker…');h.value=h.querySelector('option[selected]')?.value||c.name;
+    document.getElementById('nf-stake').value=casaCredit(c)||'';renderNfResult();return;}
+  const cg=e.target.closest('[data-cred-go]');
+  if(cg){const id=+cg.dataset.credGo;bkFocus=id;openBkPanel={cid:id,mode:'cred'};if(bkView!=='grid')bkMoreOpen.add(id);renderCasas(document.getElementById('casasSearch').value);
+    const o=document.getElementById('bkOpen')||document.querySelector('#bk-cred-amt');if(o)o.scrollIntoView({behavior:'smooth',block:'center'});return;}
   const ctag=e.target.closest('.bkt-cred');
   if(ctag){const id=+ctag.dataset.cid;bkFocus=id;openBkPanel={cid:id,mode:'cred'};renderCasas(document.getElementById('casasSearch').value);
     const o=document.getElementById('bkOpen');if(o)o.scrollIntoView({behavior:'smooth',block:'nearest'});return;}
@@ -8209,6 +8234,7 @@ document.getElementById('casasList').addEventListener('keydown',e=>{
   }
 });
 
+document.getElementById('casasStats').addEventListener('click',e=>{if(e.target.closest('[data-bk-cred-open]')){bkProfileSel='credits';bkFocus=null;renderCasas(document.getElementById('casasSearch').value);document.getElementById('bkProfileTabs').scrollIntoView({behavior:'smooth',block:'start'});}});
 // Profiles: group bookmakers by the person who owns the account (e.g. different family members).
 let bkProfileSel='all'; // 'all' (active) | 'none' | 'unused' | profileId
 // A bookmaker is "unused" when it has 0 € balance, nothing in play, and no deposit/withdrawal in the last 7 days
@@ -8241,6 +8267,8 @@ function renderBkProfileTabs(){
     html+=`<div class="cat-chip profile-chip ${active?'active':''}" data-bkprofile="${p.id}">${esc(p.name)}${active?`<span class="profile-del" data-bkprofile-del="${p.id}" title="Delete profile">×</span>`:''}</div>`;
   });
   html+=`<div class="cat-chip ${bkProfileSel==='unused'?'active':''}" data-bkprofile="unused" title="Bookmakers you moved here, plus the ones with 0 € balance, nothing in play and no deposits or withdrawals in the last 7 days">Unused${nUnused?` (${nUnused})`:''}</div>`;
+  {const nC=D.casas.filter(c=>casaCredit(c)>0).length;
+  html+=`<div class="cat-chip cred-chip ${bkProfileSel==='credits'?'active':''}" data-bkprofile="credits" title="Every bookmaker with bet credits, in one list">${GIFT_SVG}Credits${nC?` (${nC})`:''}</div>`;}
   html+=`<button class="btn-s" id="bkProfileAddBtn" style="margin-left:auto">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Add profile</button>`;
@@ -8271,7 +8299,7 @@ document.getElementById('bkProfileTabs').addEventListener('click',e=>{
   const tab=e.target.closest('[data-bkprofile]');
   if(tab){
     const v=tab.dataset.bkprofile;
-    bkProfileSel=(v==='all'||v==='none'||v==='unused')?v:+v;
+    bkProfileSel=(v==='all'||v==='none'||v==='unused'||v==='credits')?v:+v;
     renderCasas(document.getElementById('casasSearch').value);
   }
 });
