@@ -6832,7 +6832,7 @@ function pendDayHeader(list,idx){
   const d=list[idx].item.date||'';
   if(idx>0&&(list[idx-1].item.date||'')===d)return '';
   // a line that groups several withdrawals counts as all of them (and its opened rows aren't counted twice)
-  const n=list.filter(x=>(x.item.date||'')===d).reduce((a,x)=>a+(x.kind==='wdg'?x.item.n:x.sub?0:1),0);
+  const n=list.filter(x=>(x.item.date||'')===d&&x.kind!=='wd'&&x.kind!=='wdg').length;
   const od=d&&d<shiftedISO(0);
   return `<div class="pend-day-h${od?' od':''}">${pendDayLabel(d)}${od?' · overdue':''} <span class="pd-n">${n}</span></div>`;
 }
@@ -7035,6 +7035,9 @@ function renderPendientesInner(){
     ex.sort((a,b)=>(!a.grp)-(!b.grp)||a.grp.localeCompare(b.grp,'en',{sensitivity:'base'})||dKey(a).localeCompare(dKey(b)));
     visible=ex;
   }
+  // every withdrawal goes together at the end of the list (not mixed among each day's bets), oldest first
+  {const isW=x=>x.kind==='wd',w=visible.filter(isW).sort((a,b)=>(a.item.date||'9999').localeCompare(b.item.date||'9999')||(a.item.casaName||'').localeCompare(b.item.casaName||'','en',{sensitivity:'base'}));
+    visible=[...visible.filter(x=>!isW(x)),...w];}
   // several withdrawals of one bookmaker on the same day take one line (tap it to see each one)
   {const gk=x=>x.item.cid+'|'+(x.item.date||'')+'|'+(x.grp||''),byG=new Map(),seen=new Set(),out=[];
     visible.forEach(x=>{if(x.kind!=='wd')return;const k=gk(x);if(!byG.has(k))byG.set(k,[]);byG.get(k).push(x);});
@@ -7049,10 +7052,16 @@ function renderPendientesInner(){
     visible=out;}
   const pendLedger=bookmakerLedger();
   const pendTw=twinInfo(D.bets.filter(b=>b.status==='pending'));
+  const isWdRow=x=>x.kind==='wd'||x.kind==='wdg';
   const groupHeader=(lst,idx)=>{
+    if(isWdRow(lst[idx])){
+      if(idx>0&&isWdRow(lst[idx-1]))return '';
+      const ws=lst.filter(x=>isWdRow(x)&&!x.sub),n=ws.reduce((a,x)=>a+(x.kind==='wdg'?x.item.n:1),0),tot=ws.reduce((a,x)=>a+(x.item.amount||0),0);
+      return `<div class="pend-day-h wd-h">Withdrawals on the way <span class="pd-n">${n} · ${fmt(tot)} €</span></div>`;
+    }
     if(pendSort!=='house')return pendDayHeader(lst,idx);
-    const g=lst[idx].grp;if(idx>0&&lst[idx-1].grp===g)return '';
-    const grp=lst.filter(x=>x.grp===g),grpN=grp.reduce((a,x)=>a+(x.kind==='wdg'?x.item.n:x.sub?0:1),0);
+    const g=lst[idx].grp;if(idx>0&&lst[idx-1].grp===g&&!isWdRow(lst[idx-1]))return '';
+    const grp=lst.filter(x=>x.grp===g&&!isWdRow(x)),grpN=grp.length;
     const exp=grp.reduce((a,{kind,item})=>a+(kind==='sb'?(item.profit||0):kind==='nm'?(item.potentialWin||0):0),0);
     const casa=g?D.casas.find(c=>bkKey(c.name||'')===bkKey(g)):null;
     const mny=casa?casaMoney(casa,pendLedger):null;
