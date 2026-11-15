@@ -2925,6 +2925,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
           <div class="ch"><span class="ct" id="nfTitle">Bet details</span><span style="font-size:11.5px;color:var(--faint)" id="nfHelp"></span><button class="tool" id="reuseBtnNf" style="margin-left:auto" title="Reuse one of your pending bets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>From pending</span></button></div>
           <div class="cb nf-grid">
             <div><label class="fl">Event</label><input type="text" id="nf-event" placeholder="Spain vs Portugal" autocomplete="off"></div>
+            <div id="nf-pick-w"><label class="fl">Market / line <span style="font-weight:400;color:var(--faint)">(optional)</span></label><input type="text" id="nf-pick" placeholder="E.g. Mbappé 1.5+ shots · Corners O9.5" autocomplete="off"></div>
             <div class="two-col">
               <div><label class="fl">Bookmaker</label><select id="nf-house"><option value="">Choose bookmaker…</option></select></div>
               <div id="nf-cat-w"><label class="fl">Category (optional)</label><select id="nf-category"><option value="">No category</option></select></div>
@@ -9321,7 +9322,7 @@ function applyBetTemplate(L,withOdds){
     sbPrefill=null;
     nfCombi=isCombi(b);setBetType(b.type==='Freebet'?'Freebet':'Normal');
     const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v??'';};
-    set('nf-event',b.event);set('nf-stake',b.stake);set('nf-date',b.date||todayISO());set('nf-time',hourOnly(b.time));set('nf-notes',b.notes);set('nf-odd',isCombi(b)?'':(od(b.odd)||''));
+    set('nf-event',b.event);set('nf-pick',isCombi(b)?'':b.pick);set('nf-stake',b.stake);set('nf-date',b.date||todayISO());set('nf-time',hourOnly(b.time));set('nf-notes',b.notes);set('nf-odd',isCombi(b)?'':(od(b.odd)||''));
     const h=document.getElementById('nf-house');h.innerHTML=houseOptionsHtml(b.house||'','Choose bookmaker…');h.value=b.house||'';
     fillCategorySelect(document.getElementById('nf-category'),b.categoryId??null);
     if(withOdds){nfFun=!!b.fun&&b.type!=='Freebet';const f=document.getElementById('nf-fun');if(f)f.checked=nfFun;}
@@ -10641,7 +10642,7 @@ function nfGuessCat(){
   if(nfTg&&nfTg.comp&&nfTg.ev===ev)return;
   const sels=nfIsCombi()?nfSels.map(x=>x.name||'').join(' '):'';
   catGuessNew(document.getElementById('nf-category'),document.getElementById('nf-cat-w'),
-    {event:ev,date:document.getElementById('nf-date').value,txt:[String(ev).split(AR_VS).join(' '),sels,document.getElementById('nf-notes').value].join(' '),res:sels});
+    {event:ev,date:document.getElementById('nf-date').value,txt:[String(ev).split(AR_VS).join(' '),sels,nfIsCombi()?'':document.getElementById('nf-pick').value,document.getElementById('nf-notes').value].join(' '),res:sels});
 }
 document.getElementById('q-cat').addEventListener('change',e=>{e.target.dataset.manual='1';document.getElementById('q-cat-w').classList.remove('auto');});
 ['q-event','q-market','q-date'].forEach(id=>document.getElementById(id).addEventListener('change',qGuessCat));
@@ -10801,7 +10802,8 @@ function loadEvNormal(p,type){
   const nfH=document.getElementById('nf-house');nfH.innerHTML=houseOptionsHtml(l.house,'Choose bookmaker…');nfH.value=nfH.querySelector('option[selected]')?.value||l.house;
   if(p.date)document.getElementById('nf-date').value=p.date;
   document.getElementById('nf-time').value=p.time||'';
-  document.getElementById('nf-notes').value=[p.evPct!=null?`+EV ${fmt(p.evPct)}%`:'+EV',p.pick].filter(Boolean).join(' · ');
+  document.getElementById('nf-pick').value=p.pick||'';
+  document.getElementById('nf-notes').value=p.evPct!=null?`+EV ${fmt(p.evPct)}%`:'+EV';
   document.getElementById('nf-stake').value='';
   nfTg={ev:p.ev,comp:p.comp||'',pick:p.pick||'',evPct:p.evPct,fair:p.fair};
   const nc=document.getElementById('nf-category');nc.dataset.manual='';
@@ -11312,6 +11314,7 @@ function setBetType(type){
   document.getElementById('nf-fun').checked=nfFun;
   document.getElementById('nf-stake-label').textContent=m.stake;
   document.getElementById('nf-sels-wrap').style.display=nfCombi?'':'none';
+  document.getElementById('nf-pick-w').style.display=nfCombi?'none':''; // a combi's selections carry their own markets
   if(nfCombi&&!nfSels.length){nfSels=[{name:'',odd:''},{name:'',odd:''}];}
   refreshBookmakerList();
   const nfH=document.getElementById('nf-house');nfH.innerHTML=houseOptionsHtml(nfH.value,'Choose bookmaker…');
@@ -11377,7 +11380,7 @@ function renderNfResult(){
 function resetNfForm(){
   if(tgCur&&tgCur.single&&tgRequeue())save(); // a Telegram value bet that wasn't saved goes back to the inbox
   nfTg=null;
-  ['nf-event','nf-odd','nf-stake','nf-notes','nf-time'].forEach(id=>document.getElementById(id).value='');
+  ['nf-event','nf-pick','nf-odd','nf-stake','nf-notes','nf-time'].forEach(id=>document.getElementById(id).value='');
   nfSels=nfIsCombi()?[{name:'',odd:''},{name:'',odd:''}]:[];
   renderNfSels();syncComboOdd();renderNfResult();
   document.getElementById('nf-category').dataset.manual='';nfGuessCat();
@@ -11403,8 +11406,9 @@ function saveNewNormal(){
     notes:document.getElementById('nf-notes').value.trim(),
     categoryId:catVal?+catVal:null};
   if(sels.length)bet.selections=sels;
+  {const pk=combi?'':document.getElementById('nf-pick').value.trim();if(pk)bet.pick=pk;}
   if(nfFun)bet.fun=1;
-  if(nfTg&&nfTg.ev===ev){if(nfTg.comp)bet.comp=nfTg.comp;if(nfTg.pick)bet.pick=nfTg.pick;if(nfTg.evPct!=null)bet.evPct=nfTg.evPct;if(nfTg.fair)bet.fair=nfTg.fair;}
+  if(nfTg&&nfTg.ev===ev){if(nfTg.comp)bet.comp=nfTg.comp;if(nfTg.evPct!=null)bet.evPct=nfTg.evPct;if(nfTg.fair)bet.fair=nfTg.fair;}
   const fromTg=!!nfTg;nfTg=null;if(tgCur&&tgCur.single)tgCur=null;
   D.normals.unshift(bet);const uw=unifyMatchName(bet);const mw=bet.time?syncMatchWhen(bet):[];
   save();updateBadges();renderPendientes();renderNormals(document.getElementById('nbSearch').value);renderProfit();
@@ -11430,14 +11434,14 @@ document.getElementById('nf-house').addEventListener('change',renderNfResult);
 document.getElementById('nf-fun').addEventListener('change',e=>{nfFun=e.target.checked;renderNfResult();});
 document.getElementById('nf-combi').addEventListener('change',e=>{
   nfCombi=e.target.checked;
-  if(nfCombi){const o=parseFloat(document.getElementById('nf-odd').value);nfSels=[{name:'',odd:o>1?String(o):''},{name:'',odd:''}];}
+  if(nfCombi){const o=parseFloat(document.getElementById('nf-odd').value),pk=document.getElementById('nf-pick').value.trim();nfSels=[{name:pk,odd:o>1?String(o):''},{name:'',odd:''}];document.getElementById('nf-pick').value='';}
   else{nfSels=[];}
   setBetType(newBetType);renderTgCard();
   const f=document.querySelector(`#nf-sels [data-seln="0"]`);if(nfCombi&&f)f.focus();
 });
 // a +EV message pasted into Event (or Notes) fills in the whole form for this type
 document.getElementById('nf-category').addEventListener('change',e=>{e.target.dataset.manual='1';document.getElementById('nf-cat-w').classList.remove('auto');});
-['nf-event','nf-date'].forEach(id=>document.getElementById(id).addEventListener('change',nfGuessCat));
+['nf-event','nf-pick','nf-date'].forEach(id=>document.getElementById(id).addEventListener('change',nfGuessCat));
 ['nf-event','nf-notes'].forEach(id=>document.getElementById(id).addEventListener('paste',e=>{
   const t=(e.clipboardData||window.clipboardData)?.getData('text')||'';const pe=parseEvFormat(t);if(!pe)return;
   e.preventDefault();if(tgRequeue())save();loadEvInto(pe);setTimeout(focusStake,30);
