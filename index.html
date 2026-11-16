@@ -6137,9 +6137,21 @@ document.getElementById('sbList').addEventListener('click',e=>{
   // Delete button
   const btn=e.target.closest('[data-bid]');if(!btn)return;
   if(!confirm('Delete this surebet?'))return;
-  D.bets=D.bets.filter(b=>b.id!==+btn.dataset.bid);save();updateBadges();
-  renderSurebets(document.getElementById('sbSearch').value);renderProfit();
+  deleteBetUndo('sb',+btn.dataset.bid,()=>{renderSurebets(document.getElementById('sbSearch').value);renderProfit();});
 });
+// delete one bet from a list, with Undo (a pending freebet that used bet credits gives them back, Undo takes them again)
+function deleteBetUndo(kind,id,after){
+  const arr=kind==='nm'?D.normals:D.bets,i=arr.findIndex(x=>x.id===id);if(i<0)return;const it=arr[i];
+  const cc=kind==='nm'&&it.credit?D.casas.find(c=>c.id===it.credit.cid):null,oldCred=cc&&cc.credit?{...cc.credit}:null;
+  if(kind==='nm')refundCredit(it);
+  if(kind==='nm')D.normals=D.normals.filter(x=>x.id!==id);else D.bets=D.bets.filter(x=>x.id!==id);
+  save();updateBadges();after();
+  toast(`${kind==='nm'?'Entry':'Surebet'} deleted`,'Undo',()=>{
+    if(kind==='nm'){if(!D.normals.some(x=>x.id===id))D.normals.splice(Math.min(i,D.normals.length),0,it);if(cc){if(oldCred)cc.credit=oldCred;else delete cc.credit;}}
+    else if(!D.bets.some(x=>x.id===id))D.bets.splice(Math.min(i,D.bets.length),0,it);
+    save();updateBadges();after();});
+}
+
 // Accepts either a raw JSON array, or an object like {bets:[...]} / {normals:[...]}
 // keyOrKeys puede ser una clave única ("bets") o una lista de alias a probar (["bets","surebets"])
 function extractImportArray(parsed, keyOrKeys){
@@ -6336,8 +6348,7 @@ document.getElementById('nbList').addEventListener('click',e=>{
   if(editBtn){openNormalModal(+editBtn.dataset.editNid);return;}
   const btn=e.target.closest('.bd2[data-nid]');if(!btn)return;
   if(!confirm('Delete this entry?'))return;
-  refundCredit(D.normals.find(n=>n.id===+btn.dataset.nid));D.normals=D.normals.filter(n=>n.id!==+btn.dataset.nid);save();updateBadges();
-  renderNormals(document.getElementById('nbSearch').value);renderProfit();
+  deleteBetUndo('nm',+btn.dataset.nid,()=>{renderNormals(document.getElementById('nbSearch').value);renderProfit();});
 });
 document.getElementById('nbList').addEventListener('change',e=>{
   const sel=e.target.closest('.ns[data-nid]');if(!sel)return;
@@ -8746,15 +8757,13 @@ document.getElementById('catItemsList').addEventListener('click',e=>{
   const delNid=e.target.closest('[data-catdel-nid]');
   if(delNid){
     if(!confirm('Delete this entry?'))return;
-    refundCredit(D.normals.find(n=>n.id===+delNid.dataset.catdelNid));D.normals=D.normals.filter(n=>n.id!==+delNid.dataset.catdelNid);save();updateBadges();
-    renderCategorias();renderProfit();
+    deleteBetUndo('nm',+delNid.dataset.catdelNid,()=>{renderCategorias();renderProfit();});
     return;
   }
   const delBid=e.target.closest('[data-catdel-bid]');
   if(delBid){
     if(!confirm('Delete this surebet?'))return;
-    D.bets=D.bets.filter(b=>b.id!==+delBid.dataset.catdelBid);save();updateBadges();
-    renderCategorias();renderProfit();
+    deleteBetUndo('sb',+delBid.dataset.catdelBid,()=>{renderCategorias();renderProfit();});
     return;
   }
 });
