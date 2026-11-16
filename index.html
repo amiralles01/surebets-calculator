@@ -601,6 +601,7 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,
 .st-dayl{display:flex;flex-direction:column;gap:16px;min-width:0}
 .st-green .st-meter{margin-bottom:0}
 .st-dayg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.st-runs{margin-top:0}.st-day:disabled{cursor:default}
 .st-day{text-align:left;font:inherit;color:inherit;background:var(--raised);border:1px solid transparent;border-radius:10px;padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;gap:3px;min-width:0}
 .st-day:hover{border-color:var(--faint)}
 .st-day small{font-size:10.5px;color:var(--faint);font-weight:650;text-transform:uppercase;letter-spacing:.5px}
@@ -4340,11 +4341,19 @@ function dtStats(rows){
       e.n++;if(r.free)e.free+=l.s;else e.cash+=l.s;bk.set(k,e);});
   });
   const dk=Object.keys(days).sort((a,b)=>days[b]-days[a]);
+  // in date order: the deepest fall from a high point (drawdown) and the longest runs of green / red days (days you bet)
+  const run={dd:0,ddFrom:null,ddTo:null,win:0,winFrom:null,winTo:null,lose:0,loseFrom:null,loseTo:null,cur:0,curFrom:null};
+  {let cum=0,peak=0,peakD=null,first=null,w=0,wf=null,l=0,lf=null;
+   Object.keys(days).sort().forEach(d=>{const v=days[d];if(first==null)first=d;cum+=v;
+     if(cum>peak){peak=cum;peakD=d;}const fall=peak-cum;if(fall>run.dd+0.004){run.dd=fall;run.ddFrom=peakD||first;run.ddTo=d;}
+     if(v>0.004){w=w?w+1:1;if(w===1)wf=d;l=0;if(w>run.win){run.win=w;run.winFrom=wf;run.winTo=d;}}
+     else if(v<-0.004){l=l?l+1:1;if(l===1)lf=d;w=0;if(l>run.lose){run.lose=l;run.loseFrom=lf;run.loseTo=d;}}
+     run.cur=w?w:l?-l:0;run.curFrom=w?wf:l?lf:null;});}
   const wd=[0,1,2,3,4,5,6].map(()=>({sum:0,n:0}));
   dk.forEach(d=>{const i=(new Date(d+'T00:00:00').getDay()+6)%7;wd[i].sum+=days[d];wd[i].n++;});
   return{cat,cash,free,pl,roi:setCash>0?setCashPl/setCash*100:null,fbConv:fbSet>0?fbSetPl/fbSet*100:null,fbN,fbWon,fbSet,fbSetPl,fbWonPl,open,openStake,n:rows.length,
     sb,nm,top:top&&top.pl>0.004?top:null,low:low&&low.pl<-0.004?low:null,wd,
-    days,best:dk.length?dk[0]:null,worst:dk.length?dk[dk.length-1]:null,activeDays:dk.length,greenDays:dk.filter(d=>days[d]>0.004).length,
+    days,run,best:dk.length?dk[0]:null,worst:dk.length?dk[dk.length-1]:null,activeDays:dk.length,greenDays:dk.filter(d=>days[d]>0.004).length,
     bk:[...bk.values()].sort((a,b)=>(b.cash+b.free)-(a.cash+a.free))};
 }
 function dtPeriod(p){
@@ -4458,7 +4467,14 @@ function dashHtml(rows,s,o){
     const betT=(l,r)=>r?`<button type="button" class="st-day" data-dtday="${r.d}"><small>${l}</small><b class="${cl(r.pl)}">${sg(r.pl)}</b><em>${esc(r.x.event||'(No event)')}</em></button>`:'';
     h+=`<div class="card st-card"><div class="ch"><span class="ct">Days</span><span class="st-hint">${s.activeDays} with bets · ${sg(s.pl/s.activeDays)} per day</span></div><div class="cb st-days">
       <div class="st-dayl"><div class="st-green"><div class="st-big"><b>${fmt(s.greenDays/s.activeDays*100,0)}%</b><span>green days · ${s.greenDays} of ${s.activeDays}</span></div>${meter(s.greenDays/s.activeDays*100,'var(--green)')}</div>
-        <div class="st-dayg">${dayT('Best day',s.best)}${dayT('Worst day',s.worst)}${betT('Biggest win',s.top)}${betT('Biggest loss',s.low)}</div></div>
+        <div class="st-dayg">${dayT('Best day',s.best)}${dayT('Worst day',s.worst)}${betT('Biggest win',s.top)}${betT('Biggest loss',s.low)}</div>
+        ${(()=>{const r=s.run,sd=d=>+d.slice(8)+' '+MONTH_NAMES_EN[+d.slice(5,7)-1].slice(0,3)+(d.slice(0,4)!==todayLocalISO().slice(0,4)?' '+d.slice(2,4):''),rng=(f,t)=>f===t?sd(f):`${sd(f)} → ${sd(t)}`,dn=n=>`${n} day${n===1?'':'s'}`;
+          const tile=(l,v,c,f,t,sub,tip)=>`<button type="button" class="st-day" ${f?`data-dtrange="${f}|${t}"`:'disabled'} title="${tip}"><small>${l}</small><b class="${c}">${v}</b><em>${sub}</em></button>`;
+          return `<div class="st-dayg st-runs">`+
+            tile('Biggest drop',r.dd>0.004?'−'+fmt(r.dd)+' €':'none',r.dd>0.004?'neg':'',r.ddFrom,r.ddTo,r.dd>0.004?rng(r.ddFrom,r.ddTo):'never went down','The most the result fell from a high point before recovering (drawdown). Tap: those days')+
+            tile('Longest green run',r.win?dn(r.win):'—',r.win?'pos':'',r.winFrom,r.winTo,r.win?rng(r.winFrom,r.winTo):'&nbsp;','Most days with bets in a row that ended in profit')+
+            tile('Longest red run',r.lose?dn(r.lose):'—',r.lose?'neg':'',r.loseFrom,r.loseTo,r.lose?rng(r.loseFrom,r.loseTo):'&nbsp;','Most days with bets in a row that ended in a loss')+
+            tile('Now',r.cur?dn(Math.abs(r.cur)):'—',r.cur>0?'pos':r.cur<0?'neg':'',r.curFrom,r.curFrom&&s.activeDays?Object.keys(s.days).sort().pop():'',r.cur>0?'green in a row':r.cur<0?'red in a row':'&nbsp;','Your current run of green or red days')+`</div>`;})()}</div>
       <div class="st-wd" title="Average result of the days you bet, by weekday">${s.wd.map((w,i)=>{const a=w.n?w.sum/w.n:0,hh=Math.abs(a)/wmax*46;
         return `<div class="st-wdc"><em class="${cl(a)}">${w.n?(a>0?'+':'')+fmt(a,0):'·'}</em><div class="st-wdb"><i class="${a<0?'neg':'pos'}" style="height:${hh.toFixed(1)}px"></i></div><small>${WD[i]}</small></div>`;}).join('')}<span class="st-wdt">average per weekday, €</span></div>
     </div></div>`;
