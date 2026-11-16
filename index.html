@@ -7776,7 +7776,7 @@ function renderCasas(filter=''){
       const cut=shiftedISO(-30),legs=[];D.bets.forEach(b=>{if((b.date||'')>=cut&&b.status!=='anulada')(b.legs||[]).forEach(l=>{if(l.stake>0)legs.push(+l.stake);});});
       if(legs.length<5)return '';legs.sort((x,y)=>x-y);const usual=Math.round(legs[Math.floor(legs.length/2)]);
       const low=vCasas.filter(c=>!isBank(c)&&!isUnusedCasa(c,ledger0)).map(c=>({c,b:casaMoney(c,ledger).balance})).filter(x=>x.b>=0&&x.b<usual).sort((x,y)=>x.b-y.b);
-      return `<div class="sc" title="Bookmakers with less than your usual surebet stake (${usual} €, the middle stake of your last 30 days): ${esc(low.map(x=>x.c.name+' '+fmt(x.b)+' €').join(', '))||'none'}"><div class="sl2">Low balance</div><div class="sv2 ${low.length?'yel':''}">${low.length}<small class="sc-names">under ${usual} €${low.length?' · '+esc(low.slice(0,3).map(x=>x.c.name).join(', '))+(low.length>3?'…':''):' · all fine'}</small></div></div>`;})()}
+      return `<div class="sc" data-bk-low role="button" tabindex="0" title="Tap: sort the bookmakers from the lowest balance. Bookmakers with less than your usual surebet stake (${usual} €, the middle stake of your last 30 days): ${esc(low.map(x=>x.c.name+' '+fmt(x.b)+' €').join(', '))||'none'}"><div class="sl2">Low balance</div><div class="sv2 ${low.length?'yel':''}">${low.length}<small class="sc-names">under ${usual} €${low.length?' · '+esc(low.slice(0,3).map(x=>x.c.name).join(', '))+(low.length>3?'…':''):' · all fine'}</small></div></div>`;})()}
     <div class="sc"><div class="sl2">Pending to receive</div><div class="sv2 ${totalPending>0?'yel':''}">${fmt(totalPending)} €</div></div>
     <div class="sc" title="${esc(idleList.map(c=>c.name).join(', '))}"><div class="sl2">Idle ${IDLE_DAYS}+ days</div><div class="sv2 ${idleList.length?'yel':''}">${idleList.length}<small class="sc-names">${idleList.length?esc(idleList.slice(0,3).map(c=>c.name).join(', '))+(idleList.length>3?'…':''):'all active'}</small></div></div>`;
   const list=document.getElementById('casasList');
@@ -8005,12 +8005,12 @@ function renderCasas(filter=''){
 let bkView=(()=>{try{return localStorage.getItem('sb_bk_view')||'grid';}catch(e){return 'grid';}})(); // 'grid' | 'cards'
 let bkSort=(()=>{try{return localStorage.getItem('sb_bk_sort')||'bal';}catch(e){return 'bal';}})();
 let bkFocus=null; // id of the bookmaker opened from the grid
-const BK_SORTS=[['bal','Balance'],['name','A–Z'],['play','In play'],['last','Last bet']];
+const BK_SORTS=[['bal','Balance'],['low','Lowest'],['name','A–Z'],['play','In play'],['last','Last bet']];
 function bkSortList(arr,ledger,act){
   const bal=c=>casaMoney(c,ledger).balance;
   const last=c=>{const a=act.get(bkKey(c.name||''));return a&&a.last?a.last:'';};
   const byName=(a,b)=>(a.name||'').localeCompare(b.name||'',undefined,{sensitivity:'base'});
-  const f={name:byName,
+  const f={name:byName,low:(a,b)=>bal(a)-bal(b)||byName(a,b),
     play:(a,b)=>casaMoney(b,ledger).inPlay-casaMoney(a,ledger).inPlay||bal(b)-bal(a),
     last:(a,b)=>(last(b)>last(a)?1:last(b)<last(a)?-1:0)||bal(b)-bal(a)}[bkSort]||((a,b)=>bal(b)-bal(a)||byName(a,b));
   return [...arr].sort(f);
@@ -8351,7 +8351,7 @@ document.getElementById('casasList').addEventListener('keydown',e=>{
   }
 });
 
-document.getElementById('casasStats').addEventListener('click',e=>{if(e.target.closest('[data-bk-cred-open]')){bkProfileSel='credits';bkFocus=null;renderCasas(document.getElementById('casasSearch').value);document.getElementById('bkProfileTabs').scrollIntoView({behavior:'smooth',block:'start'});}});
+document.getElementById('casasStats').addEventListener('click',e=>{if(e.target.closest('[data-bk-low]')){bkSort='low';try{localStorage.setItem('sb_bk_sort','low');}catch(_){}bkProfileSel='all';renderCasas(document.getElementById('casasSearch').value);document.getElementById('bkSortSeg')?.scrollIntoView({behavior:'smooth',block:'start'});return;}if(e.target.closest('[data-bk-cred-open]')){bkProfileSel='credits';bkFocus=null;renderCasas(document.getElementById('casasSearch').value);document.getElementById('bkProfileTabs').scrollIntoView({behavior:'smooth',block:'start'});}});
 // Profiles: group bookmakers by the person who owns the account (e.g. different family members).
 let bkProfileSel='all'; // 'all' (active) | 'none' | 'unused' | profileId
 // A bookmaker is "unused" when it has 0 € balance, nothing in play, and no deposit/withdrawal in the last 7 days
@@ -11119,14 +11119,14 @@ function renderCalcTab(tab){
       <div id="f-result" style="margin-top:16px;max-width:420px"></div>`;
     document.getElementById('f-calc-btn').addEventListener('click',calcFreebet);
   }else if(tab==='exchange'){
-    const m=exMode(),cm=localStorage.getItem('sb_ex_comm')??'2';
+    const m=exMode(),cm=localStorage.getItem('sb_ex_comm')??'5';
     body.innerHTML=`
       <div style="display:flex;flex-direction:column;gap:13px;max-width:420px">
         <div class="bkb-chips" id="ex-modes" style="margin:0">${[['normal','Normal bet'],['snr','Freebet'],['sr','Freebet (stake back)']].map(([k,l])=>`<button type="button" class="bkb-chip${m===k?' on':''}" data-exm="${k}">${l}</button>`).join('')}</div>
         <div><label class="fl" id="ex-stake-l">${m==='normal'?'Back stake':'Freebet value'}</label><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="ex-stake" placeholder="E.g. 50"><span class="isuf">€</span></div></div>
         <div><label class="fl">Back odds (bookmaker)</label><input type="text" inputmode="decimal" autocomplete="off" id="ex-back" placeholder="E.g. 3.20"></div>
         <div><label class="fl">Lay odds (exchange)</label><input type="text" inputmode="decimal" autocomplete="off" id="ex-lay" placeholder="E.g. 3.30"></div>
-        <div><label class="fl">Exchange commission</label><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="ex-comm" value="${esc(cm)}"><span class="isuf">%</span></div></div>
+        <div><label class="fl">Exchange commission <span style="font-weight:500;color:var(--faint)">· yours, it's remembered</span></label><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="ex-comm" value="${esc(cm)}"><span class="isuf">%</span></div></div>
       </div>
       <div id="ex-result" style="margin-top:16px;max-width:420px"></div>`;
     document.getElementById('ex-modes').addEventListener('click',e=>{const b=e.target.closest('[data-exm]');if(!b)return;localStorage.setItem('sb_ex_mode',b.dataset.exm);
