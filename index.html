@@ -7999,7 +7999,11 @@ function renderCasas(filter=''){
       ${ord.map(c=>{const k=c.credit,ex=credExpired(c),el=credExpLabel(c),soon=!ex&&k.exp&&-daysAgo(k.exp)<=3;
         return `<div class="cred-row${ex?' exp':''}" data-cred-go="${c.id}" role="button" tabindex="0"><span class="cred-n"><b>${esc(c.name)}</b><small>${[el?`<em class="${soon||ex?'soon':''}">${el}</em>`:'no expiry',k.note?esc(k.note):''].filter(Boolean).join(' · ')}</small></span><span class="cred-a">${fmt(k.amount)} €</span>${ex?'':`<button class="unhidebtn" data-cred-new="${c.id}" title="New bet: Freebet at ${esc(c.name)}">Use</button>`}</div>`;}).join('')}
       <div class="bk-hist-empty" style="padding:8px 14px 10px">Soonest to expire first. Tap a bookmaker to change or clear its credits · Use opens a Freebet there.</div></div>`;})():'';
-  const bar=staleHtml+credHtml+`<div class="bk-vbar">
+  // Limited tab: how much money is still inside the limited bookmakers (balance + pending bets)
+  const limHtml=bkProfileSel==='limited'?(()=>{const L=sorted.filter(c=>!isBank(c)).map(c=>{const m=casaMoney(c,ledger);return {c,b:m.balance,p:m.inPlay};}).filter(x=>x.b+x.p>=0.01).sort((x,y)=>(y.b+y.p)-(x.b+x.p));
+    if(!L.length)return '';const tb=L.reduce((a,x)=>a+x.b,0),tp=L.reduce((a,x)=>a+x.p,0);
+    return `<div class="bk-stale bk-limmoney"><div><b>${fmt(tb+tp)} € still inside limited bookmakers</b><small>${L.map(x=>`${esc(x.c.name)} ${fmt(x.b)} €${x.p>=0.01?` + ${fmt(x.p)} € in pending bets`:''}`).join(' · ')}. ${tb>=0.01?`Balance you could withdraw now: ${fmt(tb)} €.`:''}</small></div></div>`;})():'';
+  const bar=staleHtml+credHtml+limHtml+`<div class="bk-vbar">
     <div class="bks-per" id="bkViewSeg"><button data-bkview="grid" class="${bkView==='grid'?'on':''}">Grid</button><button data-bkview="cards" class="${bkView==='cards'?'on':''}">Cards</button></div>
     <div class="bks-per" id="bkSortSeg">${BK_SORTS.map(([k,l])=>`<button data-bksort="${k}" class="${bkSort===k?'on':''}">${l}</button>`).join('')}</div>
     <div class="bk-vtot">${sorted.length} bookmaker${sorted.length===1?'':'s'} · <b class="${visTot>=0?'pos':'neg'}">${fmt(visTot)} €</b></div>
