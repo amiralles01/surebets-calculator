@@ -2598,6 +2598,10 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .nf-lim{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#9A2E1A;background:rgba(210,65,43,.08);border:1px solid rgba(210,65,43,.3);border-radius:9px;padding:6px 10px}
 .nf-lim b{font-family:var(--mono)}
 .lim-chip{color:#B4361F}
+.wd-age{font-size:11px;font-weight:650;color:var(--faint);white-space:nowrap}
+.wd-age.late{color:#B4361F;background:rgba(210,65,43,.1);border-radius:99px;padding:0 7px}
+.wd-h .wd-age{flex:none}.wd-h .pd-n{white-space:nowrap;flex:none}
+@media(max-width:600px){.wd-h{flex-wrap:wrap;row-gap:4px}.wd-h::after{display:none}}
 .nf-cred{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#8a5a00;background:rgba(244,197,61,.16);border:1px solid rgba(217,162,27,.35);border-radius:9px;padding:6px 10px}
 .nf-cred>span{flex:1;min-width:0}.nf-cred b{font-family:var(--mono)}.nf-cred-use{flex:none;white-space:nowrap;font:inherit;font-weight:700;color:#7A5600;background:rgba(244,197,61,.45);border:1px solid rgba(217,162,27,.5);border-radius:8px;padding:5px 10px;cursor:pointer}
 .cred-chip{display:inline-flex;align-items:center;gap:5px}.cred-chip svg{width:13px;height:13px;color:#b07d00}.cred-chip.active svg{color:inherit}
@@ -6947,7 +6951,7 @@ function pendCompactHtml(kind,item,tw){
     const w=item;
     return `<div class="pc-row wd">
       <span class="pc-time">${w.date?new Date(w.date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'—'}</span>
-      <div class="pc-ev"><b>Withdrawal – ${esc(w.casaName)}</b><span class="pc-sub">${w.dest||'Bookmaker'}</span></div>
+      <div class="pc-ev"><b>Withdrawal – ${esc(w.casaName)}</b><span class="pc-sub">${w.dest||'Bookmaker'} ${wdAgeHtml(w.date)}</span></div>
       <span class="pc-profit">${fmt(w.amount)} €</span>
       <div class="pc-legs"><button class="btn-reject pc-act" data-cancel-wd="${w.cid}:${w.hid}" title="Cancel this withdrawal: the money goes back to ${esc(w.casaName)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Cancel</button><button class="btn-accept pc-act" data-confirm-wd="${w.cid}:${w.hid}">${PEND_IC.check}Confirm received</button></div>
       <span class="pc-tail">${hideBtnHtml(key,true)}</span>
@@ -6997,12 +7001,16 @@ function renderPendientes(){
   if(typing){const el=document.querySelector(`#pendList [data-note="${typing.k}"]`);if(el){el.value=typing.v;el.focus();try{el.setSelectionRange(typing.c,typing.c);}catch(e){}}}
 }
 const pendWdOpen=new Set(); // groups of withdrawals opened to see each one
+// a withdrawal still not received after WD_LATE_DAYS gets a red 'n days' so it doesn't go unnoticed
+const WD_LATE_DAYS=5;
+function wdAgeHtml(date){if(!date)return '';const n=daysAgo(date);if(!(n>=1))return '';const late=n>=WD_LATE_DAYS;
+  return `<span class="wd-age${late?' late':''}" title="${late?`Asked ${n} days ago and still not received: check it with the bookmaker or your bank`:`Asked ${n} day${n===1?'':'s'} ago`}">${n} day${n===1?'':'s'}${late?' · late':''}</span>`;}
 function pendWdFullHtml(w){
   return`<div class="pend-item wd">
         <div class="pend-top">
           <div>
             <div class="pend-ev">Withdrawal – ${esc(w.casaName)} <span class="type-badge-kind">${w.dest||'Bookmaker'}</span></div>
-            <div class="pend-meta">${pendHouseChip([w.casaName])}<span>${fmtDate(w.date)}</span><span>Amount: ${fmt(w.amount)} €</span></div>
+            <div class="pend-meta">${pendHouseChip([w.casaName])}<span>${fmtDate(w.date)}</span>${wdAgeHtml(w.date)}<span>Amount: ${fmt(w.amount)} €</span></div>
           </div>
           <div style="display:flex;align-items:center;gap:6px">
             <button class="btn-reject wd-cancel" data-cancel-wd="${w.cid}:${w.hid}" title="Cancel this withdrawal: the money goes back to ${esc(w.casaName)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Cancel</button>
@@ -7019,7 +7027,7 @@ function pendWdGroupHtml(g){
   const btns=`<button class="btn-void pc-act" data-wdg-toggle="1">${open?'Hide':'Show'} ${g.n}</button><button class="btn-accept pc-act" data-confirm-wdg="${esc(g.key)}" title="Confirm the ${g.n} withdrawals at once"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Confirm all</button>`;
   if(pendView==='compact')return `<div class="pc-row wd wdg${open?' open':''}" data-wdg="${esc(g.key)}" role="button" tabindex="0" aria-expanded="${open}">
       <span class="pc-time">${day}</span>
-      <div class="pc-ev"><b>${g.n} withdrawals – ${esc(g.casaName)}</b><span class="pc-sub">${sub}</span></div>
+      <div class="pc-ev"><b>${g.n} withdrawals – ${esc(g.casaName)}</b><span class="pc-sub">${sub} ${wdAgeHtml(g.date)}</span></div>
       <span class="pc-profit">${fmt(g.amount)} €</span>
       <div class="pc-legs">${btns}</div>
       <span class="pc-tail"></span>
@@ -7028,7 +7036,7 @@ function pendWdGroupHtml(g){
       <div class="pend-top">
         <div>
           <div class="pend-ev">${g.n} withdrawals – ${esc(g.casaName)} <span class="type-badge-kind">${sub}</span></div>
-          <div class="pend-meta">${pendHouseChip([g.casaName])}<span>${fmtDate(g.date)}</span><span>Total: ${fmt(g.amount)} €</span></div>
+          <div class="pend-meta">${pendHouseChip([g.casaName])}<span>${fmtDate(g.date)}</span>${wdAgeHtml(g.date)}<span>Total: ${fmt(g.amount)} €</span></div>
         </div>
         <div style="display:flex;align-items:center;gap:6px">${btns}</div>
       </div>
@@ -7108,7 +7116,8 @@ function renderPendientesInner(){
     if(isWdRow(lst[idx])){
       if(idx>0&&isWdRow(lst[idx-1]))return '';
       const ws=lst.filter(x=>isWdRow(x)&&!x.sub),n=ws.reduce((a,x)=>a+(x.kind==='wdg'?x.item.n:1),0),tot=ws.reduce((a,x)=>a+(x.item.amount||0),0);
-      return `<div class="pend-day-h wd-h">Withdrawals on the way <span class="pd-n">${n} · ${fmt(tot)} €</span></div>`;
+      const late=ws.filter(x=>x.item.date&&daysAgo(x.item.date)>=WD_LATE_DAYS).reduce((a,x)=>a+(x.kind==='wdg'?x.item.n:1),0);
+      return `<div class="pend-day-h wd-h">Withdrawals on the way <span class="pd-n">${n} · ${fmt(tot)} €</span>${late?`<span class="wd-age late">${late} late</span>`:''}</div>`;
     }
     if(pendSort!=='house')return pendDayHeader(lst,idx);
     const g=lst[idx].grp;if(idx>0&&lst[idx-1].grp===g&&!isWdRow(lst[idx-1]))return '';
