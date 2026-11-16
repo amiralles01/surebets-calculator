@@ -6183,7 +6183,7 @@ document.getElementById('sbFile').addEventListener('change',e=>{
     try{
       const parsed=JSON.parse(ev.target.result);
       const incoming=extractImportArray(parsed,'bets');
-      if(!incoming){alert('El JSON debe ser un array de surebets, o un objeto {"bets":[...]}.');return;}
+      if(!incoming){alert('The JSON must be a list of surebets, or {"bets":[...]} (a full backup works too).');return;}
       if(!confirm(`Importar ${incoming.length} surebets?`))return;
       const exist=new Set(D.bets.map(b=>b.id));
       D.bets=[...incoming.filter(b=>!exist.has(b.id)),...D.bets];
@@ -6204,7 +6204,7 @@ document.getElementById('nbFile').addEventListener('change',e=>{
     try{
       const parsed=JSON.parse(ev.target.result);
       const incoming=extractImportArray(parsed,'normals');
-      if(!incoming){alert('El JSON debe ser un array de normales/freebets, o un objeto {"normals":[...]}.');return;}
+      if(!incoming){alert('The JSON must be a list of normal bets / freebets, or {"normals":[...]} (a full backup works too).');return;}
       if(!confirm(`Importar ${incoming.length} normales/freebets?`))return;
       const exist=new Set(D.normals.map(n=>n.id));
       D.normals=[...incoming.filter(n=>!exist.has(n.id)),...D.normals];
@@ -6256,7 +6256,7 @@ function importManual(data){
   if(data===undefined){
     const ta=document.getElementById('jsonImportInput');
     const raw=ta?ta.value.trim():'';
-    if(!raw){showJsonError('Pega primero el JSON que quieres importar.');return false;}
+    if(!raw){showJsonError('Paste the JSON you want to import first.');return false;}
     try{parsed=JSON.parse(raw);}catch(err){showJsonError('Invalid JSON: '+err.message);return false;}
   }else if(typeof data==='string'){
     try{parsed=JSON.parse(data);}catch(err){showJsonError('Invalid JSON: '+err.message);return false;}
@@ -6270,7 +6270,7 @@ function importManual(data){
   const normalsArr=Array.isArray(parsed)?null:extractImportArray(parsed,['normals','bets_and_freebets','freebets','normales']);
 
   if(!betsArr && !normalsArr){
-    showJsonError('No se han reconocido datos. Usa {"bets":[...]}, {"normals":[...]} o ambos a la vez (o un array de surebets).');
+    showJsonError('Nothing to import found. Use {"bets":[...]}, {"normals":[...]}, both, a list of surebets or a full backup.');
     return false;
   }
 
@@ -6279,8 +6279,7 @@ function importManual(data){
   if(normalsArr){const before=D.normals.length;D.normals=mergeById(D.normals,normalsArr);addedNormals=D.normals.length-before;}
 
   try{
-    console.log('Guardando datos importados manualmente…',{addedBets,addedNormals});
-    save();
+        save();
     updateBadges();
     renderSurebets(document.getElementById('sbSearch')?.value||'');
     renderNormals(document.getElementById('nbSearch')?.value||'');
@@ -7747,7 +7746,6 @@ function renderCasas(filter=''){
   document.getElementById('casasStats').innerHTML=`
     <div class="sc"><div class="sl2">Balance available</div><div class="sv2 ${totBal>=0?'pos':'neg'}">${fmt(totBal)} €</div></div>
     <div class="sc"><div class="sl2">In pending bets</div><div class="sv2 ${totPlay>0?'yel':''}">${fmt(totPlay)} €</div></div>
-    <div class="sc"><div class="sl2">Bookmakers</div><div class="sv2">${vCasas.length}</div></div>
     ${(()=>{const f=vCasas.filter(c=>!isBank(c)).map(c=>casaCashFlow(c)),inn=f.reduce((a,x)=>a+x.in,0),out=f.reduce((a,x)=>a+x.out,0);
       return `<div class="sc" title="Everything you put into the bookmakers of this view, all time, and everything you took out. Bank accounts don't count."><div class="sl2">Deposited</div><div class="sv2">${fmt(inn)} €<small class="sc-names">${fmt(out)} € withdrawn</small></div></div>`;})()}
     ${(()=>{const bk=visibleCasas().filter(c=>!isBank(c)); /* every bookmaker, Unused and other profiles too: it's what you owe Hacienda on */
@@ -7756,6 +7754,11 @@ function renderCasas(filter=''){
       return `<div class="sc sc-tax" data-rt-open role="button" tabindex="0" title="Tap: result per calendar year for the tax return (Renta). Every bookmaker (Unused ones too), no bank accounts: withdrawn ${fmt(out)} € − deposited ${fmt(inn)} € + balance ${fmt(bal)} € (money in pending bets included)${th?`. The ${fmt(th)} € a friend lost count here as the bookmaker reports them (your name); Total Profit adds them back`:''}."><div class="sl2">Hacienda</div><div class="sv2 ${r>0?'pos':r<0?'neg':''}">${r>0?'+':''}${fmt(r)} €<small class="sc-names">${r>0?`up`:r<0?`down`:'even'} · all bookmakers</small></div></div>`;})()}
     ${(()=>{const w=vCasas.filter(c=>casaCredit(c)>0).sort((a,b)=>casaCredit(b)-casaCredit(a)),t=w.reduce((a,c)=>a+casaCredit(c),0);if(!w.length)return '';
       return `<div class="sc sc-cred" data-bk-cred-open role="button" tabindex="0" title="Tap: every bookmaker with credits. Bet credits waiting to be used: ${esc(w.map(c=>c.name+' '+fmt(casaCredit(c))+' €').join(', '))}. Not money: they don't count in the balance."><div class="sl2">Bet credits</div><div class="sv2 yel">${fmt(t)} €<small class="sc-names">${esc(w.slice(0,3).map(c=>c.name).join(', '))+(w.length>3?'…':'')}</small></div></div>`;})()}
+    ${(()=>{ // bookmakers where a usual surebet stake doesn't fit any more: time to deposit (or move money) there
+      const cut=shiftedISO(-30),legs=[];D.bets.forEach(b=>{if((b.date||'')>=cut&&b.status!=='anulada')(b.legs||[]).forEach(l=>{if(l.stake>0)legs.push(+l.stake);});});
+      if(legs.length<5)return '';legs.sort((x,y)=>x-y);const usual=Math.round(legs[Math.floor(legs.length/2)]);
+      const low=vCasas.filter(c=>!isBank(c)&&!isUnusedCasa(c,ledger0)).map(c=>({c,b:casaMoney(c,ledger).balance})).filter(x=>x.b>=0&&x.b<usual).sort((x,y)=>x.b-y.b);
+      return `<div class="sc" title="Bookmakers with less than your usual surebet stake (${usual} €, the middle stake of your last 30 days): ${esc(low.map(x=>x.c.name+' '+fmt(x.b)+' €').join(', '))||'none'}"><div class="sl2">Low balance</div><div class="sv2 ${low.length?'yel':''}">${low.length}<small class="sc-names">under ${usual} €${low.length?' · '+esc(low.slice(0,3).map(x=>x.c.name).join(', '))+(low.length>3?'…':''):' · all fine'}</small></div></div>`;})()}
     <div class="sc"><div class="sl2">Pending to receive</div><div class="sv2 ${totalPending>0?'yel':''}">${fmt(totalPending)} €</div></div>
     <div class="sc" title="${esc(idleList.map(c=>c.name).join(', '))}"><div class="sl2">Idle ${IDLE_DAYS}+ days</div><div class="sv2 ${idleList.length?'yel':''}">${idleList.length}<small class="sc-names">${idleList.length?esc(idleList.slice(0,3).map(c=>c.name).join(', '))+(idleList.length>3?'…':''):'all active'}</small></div></div>`;
   const list=document.getElementById('casasList');
