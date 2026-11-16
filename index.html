@@ -584,6 +584,8 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,
 .st-tn small,.st-ts small{display:block;font-size:11.5px;color:var(--faint);margin-top:2px;font-family:var(--sans,inherit);font-weight:400}
 .st-tn small{padding-left:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .st-mob{display:none}
+.st-work-g{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.st-work-g>div{min-width:0}.st-work-g small{display:block;font-size:11.5px;color:var(--muted)}.st-work-g b{display:block;font-family:var(--mono);font-size:17px;font-weight:650;margin-top:2px;white-space:nowrap}.st-work-g b.pos{color:var(--green)}.st-work-g b.neg{color:var(--red)}.st-work-g i{display:block;font-style:normal;font-size:11px;color:var(--faint);margin-top:2px}
+@media(max-width:600px){.st-work-g{grid-template-columns:1fr 1fr}}
 .st-ts,.st-tr{text-align:right;font-family:var(--mono);font-weight:650;font-size:14.5px;white-space:nowrap}
 .st-tr{position:relative;padding-bottom:8px}
 .st-tr .st-lock{display:block;font-size:11px;font-weight:500;color:var(--muted);margin-top:1px}
@@ -929,7 +931,7 @@ body.drag-folder-active .tr-rootdrop{display:block}
 .sbr-leg{display:grid;grid-template-columns:1fr 1.3fr;gap:8px;align-items:center}
 .sbr-leg-info{font-size:12px;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sbr-leg-info b{color:var(--text);font-weight:600}
-.sbr-leg.edit{grid-template-columns:1fr 1fr 1fr;grid-template-areas:'info info info' 'house odd stake'}
+.sbr-leg.edit{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr);grid-template-areas:'info info info' 'house odd stake'}
 .sbr-leg.edit .sbr-leg-info,.sbr-leg.edit .sbr-leg-res,.sbr-leg.edit .sbr-leg-top{grid-area:info}
 .sbr-leg.edit .sbr-leg-top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center}
 .sbr-leg.edit .sbr-leg-top .bd2{width:30px;height:30px}
@@ -4498,6 +4500,15 @@ function dashHtml(rows,s,o){
         <span class="st-ts">${eur(e.stake)}<small>staked</small></span>
         <span class="st-tr ${cl(e.pl)}">${sg(e.pl)}<small class="st-lock" title="What these surebets should have paid">locked ${sg(e.lock,0)}</small><i class="bks-div"><i class="${e.pl<0?'neg':'pos'}" style="width:${(Math.abs(e.pl)/mx*50).toFixed(1)}%"></i></i></span>
         <span class="st-tp"><em class="bks-roi ${cl(roi||0)}" title="Got ÷ staked (settled)">${pc(roi)}</em></span></div>`;}).join('')+`</div></div></div>`;}}
+  // ── your money at work: last 30 days of bets against the money you have in bookmakers + bank now
+  if(!o.sheet&&!o.oneDay){const br=bankrollSummary(),cap=br.bankroll+br.inTransit,s30=dtStats(dtRows(shiftedISO(-29),todayLocalISO()));
+    if(cap>=1&&s30.n){const m=s30.pl/cap*100,turn=(s30.cash+s30.free)/cap;
+      h+=`<div class="card st-card st-work"><div class="ch"><span class="ct">Your money at work</span><span class="st-hint" title="Bets of the last 30 days compared with all your money now (bookmakers + bank, pending bets included)">last 30 days</span></div><div class="cb"><div class="st-work-g">
+        <div><small>Bankroll now</small><b>${eur(cap)}</b></div>
+        <div><small>Bets result</small><b class="${cl(s30.pl)}">${sg(s30.pl)}</b></div>
+        <div title="Bets result of the last 30 days ÷ bankroll now"><small>Return on bankroll</small><b class="${cl(m)}">${pc(m)}</b><i>≈ ${pc(m*12,0)} a year at this pace</i></div>
+        <div title="Everything you staked in the last 30 days ÷ bankroll now: how many times your money went round"><small>Money turned over</small><b>${fmt(turn,1)}×</b><i>${eur(s30.cash+s30.free)} staked</i></div>
+      </div></div></div>`;}}
   // ── three focus cards: surebets, freebets, normal bets
   const meter=(p,c,mark)=>`<div class="st-meter" style="--c:${c}"><i style="width:${Math.max(0,Math.min(100,p||0)).toFixed(1)}%"></i>${mark!=null?`<u style="left:${mark}%"></u>`:''}</div>`;
   const kv=(l,v,c='',id='')=>`<div class="st-kv"><span>${l}</span><b class="${c}"${id?` id="${id}"`:''}>${v}</b></div>`;
