@@ -941,6 +941,7 @@ body.drag-folder-active .tr-rootdrop{display:block}
 .sbr-sum{flex-wrap:wrap;gap:4px 12px}.sbr-sum b{font-family:var(--mono)}.sbr-sum b.pend-preview-pos{color:var(--green)}.sbr-sum b.pend-preview-neg{color:var(--red)}
 .sbr-leg.edit input{min-width:0}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.two-col>*{min-width:0}.two-col input[type=date],.two-col input[type=time]{min-width:0;max-width:100%;box-sizing:border-box}
 input[type=date],input[type=time]{width:100%;background:var(--inp);border:1px solid var(--border);border-radius:7px;
   padding:8px 11px;color:var(--text);font-size:14px;outline:none;color-scheme:light;transition:border-color var(--t),box-shadow var(--t)}
 input[type=date]:focus,input[type=time]:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,90,65,.13)}
@@ -6833,7 +6834,7 @@ function renderPromoPanel(){
       <label class="pf-odd"><span>Min. odds</span><input type="text" inputmode="decimal" id="pr-odd" placeholder="3.00"></label>
       <label class="pf-stake"><span>Min. stake <i>optional</i></span><input type="text" inputmode="decimal" id="pr-stake" placeholder="5 €"></label>
       <label class="pf-name"><span>Name <i>optional</i></span><input type="text" id="pr-label" placeholder="The Walking Bet" maxlength="40"></label>
-      <label class="pf-from"><span>From <i>optional</i></span><input type="date" id="pr-from"></label>
+      <label class="pf-from"><span>From <i>optional</i></span><input type="date" id="pr-pfrom"></label>
       <label class="pf-until"><span>Until <i>optional</i></span><input type="date" id="pr-until"></label>
       <button class="btn-reg pf-add" id="pr-add">Add highlight</button>
     </div>
@@ -6852,7 +6853,7 @@ document.getElementById('pendPromo').addEventListener('click',e=>{
     const minOdd=promoNum(document.getElementById('pr-odd').value);
     if(!house){alert('Add your bookmakers in Bookmakers first.');return;}
     if(!(minOdd>1)){alert('Enter the minimum odds, e.g. 3.00');document.getElementById('pr-odd').focus();return;}
-    const from=document.getElementById('pr-from').value,until=document.getElementById('pr-until').value;
+    const from=document.getElementById("pr-pfrom").value,until=document.getElementById('pr-until').value;
     if(from&&until&&until<from){alert('"Until" is before "From".');return;}
     const used=new Set(promoRules().map(r=>r.color));
     const color=PROMO_COLORS.find(c=>!used.has(c))||PROMO_COLORS[promoRules().length%PROMO_COLORS.length];
