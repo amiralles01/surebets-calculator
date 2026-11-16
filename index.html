@@ -2152,7 +2152,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .br-start>div{flex:1;min-width:160px}.br-start .btn-reg,.br-start .btn-s{width:auto;margin:0;padding:10px 16px}
 .br-sub{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);font-size:13px}.br-sub small{color:var(--faint)}
 .br-edit{margin-top:10px}
-.br-foot{margin-top:12px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:flex-end}
+.br-foot{margin-top:12px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;flex-wrap:wrap;gap:6px 18px}
 .br-head .link-btn{font-size:12px}
 
 .oi-wrap{position:relative;min-width:0}.oi-wrap .oi{width:100%}
@@ -5819,7 +5819,7 @@ function bankrollCardHtml(all){
   if(!t)return `<div class="br-card" id="brCard">
       <div class="br-head"><b>Count your whole bankroll</b><span>Total Profit already comes from your bookmakers' real money (Hacienda − costs). Pick a day and, from then on, each Set balance and bank expense also goes into its own month, instead of only into "Not in bets".</span></div>
       <div class="br-start"><div><label class="fl">Start counting from</label><input type="date" id="brFrom" value="${today}" max="${today}"></div><button class="btn-reg" id="brStart">Start</button></div>
-      <div class="br-foot"><button class="link-btn" id="brBackup">Download a full backup (JSON)</button></div>
+      <div class="br-foot"><button class="link-btn" id="brBackup">Download a full backup (JSON)</button><button class="link-btn" id="brRestore" title="Brings back the bets that are in a backup file but not in the app. Nothing else changes.">Bring back bets from a backup</button></div>
     </div>`;
   const preAll=all.filter(e=>e.date<t.from&&!isHidden('month:'+e.date.slice(0,7)));
   const pre=preAll.reduce((a,e)=>a+e.profit,0),preSw=preAll.filter(e=>e.cat==='software').reduce((a,e)=>a+e.profit,0),preCost=preAll.filter(e=>e.cat==='cost').reduce((a,e)=>a+e.profit,0);
@@ -5850,11 +5850,12 @@ function bankrollCardHtml(all){
       <div class="br-edit" id="brEditBox" style="display:none">
         <div class="br-start"><div><label class="fl">Count from</label><input type="date" id="brFrom" value="${t.from}" max="${today}"></div><button class="btn-reg" id="brStart">Save</button><button class="btn-s" id="brReset" title="Take today's bankroll as the new starting point">Restart from now</button><button class="btn-s" id="brStop">Stop counting</button></div>
       </div>
-      <div class="br-foot"><button class="link-btn" id="brBackup">Download a full backup (JSON)</button></div>
+      <div class="br-foot"><button class="link-btn" id="brBackup">Download a full backup (JSON)</button><button class="link-btn" id="brRestore" title="Brings back the bets that are in a backup file but not in the app. Nothing else changes.">Bring back bets from a backup</button></div>
     </div>`;
 }
-document.getElementById('totalHero').addEventListener('click',e=>{
-  const t=e.target;
+// the bankroll card lives in Profit › Money & costs (#bankrollBox), not inside the hero: listen on the whole page
+document.addEventListener('click',e=>{
+  const t=e.target;if(!t.closest||!t.closest('#totalHero,#bankrollBox'))return;
   if(t.closest('#brEdit')){const b=document.getElementById('brEditBox');b.style.display=b.style.display==='none'?'':'none';return;}
   if(t.closest('#brStart')){
     const from=document.getElementById('brFrom').value||todayLocalISO();
@@ -5865,6 +5866,8 @@ document.getElementById('totalHero').addEventListener('click',e=>{
   }
   if(t.closest('#brReset')){const from=document.getElementById('brFrom').value||todayLocalISO();D.track={from,setAt:Date.now(),...bankrollSnapshot()};save();renderProfit();toast('New starting point saved');return;}
   if(t.closest('#brStop')){const old=D.track;delete D.track;save();renderProfit();toast('Back to bet results only','Undo',()=>{D.track=old;save();renderProfit();});return;}
+  if(t.closest('#brRestore')){const f=document.createElement('input');f.type='file';f.accept='.json,application/json';
+    f.onchange=()=>{const file=f.files&&f.files[0];if(!file)return;const rd=new FileReader();rd.onload=()=>restoreFromBackup(rd.result);rd.readAsText(file);};f.click();return;}
   if(t.closest('#brBackup')){
     const blob=new Blob([JSON.stringify(D,null,1)],{type:'application/json'});
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`surebets_backup_${todayLocalISO()}.json`;a.click();return;
@@ -6238,6 +6241,21 @@ function mergeById(target, incoming){
   return[...fresh,...target];
 }
 
+// a full backup → only the surebets and normal bets / freebets the app no longer has come back (by id). Bookmakers, balances,
+// settings and the bets you still have are left as they are. Undo takes them out again.
+function restoreFromBackup(text){
+  let B;try{B=JSON.parse(text);}catch(e){toast('That file is not a backup (JSON)');return;}
+  const bs=Array.isArray(B&&B.bets)?B.bets:[],ns=Array.isArray(B&&B.normals)?B.normals:[];
+  if(!bs.length&&!ns.length){toast('No bets found in that file');return;}
+  const hb=new Set(D.bets.map(x=>x.id)),hn=new Set(D.normals.map(x=>x.id));
+  const mb=bs.filter(x=>x&&x.id!=null&&!hb.has(x.id)),mn=ns.filter(x=>x&&x.id!=null&&!hn.has(x.id));
+  if(!mb.length&&!mn.length){toast('Nothing missing: every bet in the backup is already in the app');return;}
+  if(!confirm(`The backup has ${mb.length} surebet${mb.length===1?'':'s'} and ${mn.length} normal bet${mn.length===1?'':'s'}/freebet${mn.length===1?'':'s'} that are not in the app (deleted since then). Bring them back? Nothing else changes.`))return;
+  D.bets=[...mb,...D.bets];D.normals=[...mn,...D.normals];
+  save();updateBadges();renderProfit();
+  const ib=new Set(mb.map(x=>x.id)),in_=new Set(mn.map(x=>x.id));
+  toast(`${mb.length+mn.length} bet${mb.length+mn.length===1?'':'s'} brought back`,'Undo',()=>{D.bets=D.bets.filter(x=>!ib.has(x.id));D.normals=D.normals.filter(x=>!in_.has(x.id));save();updateBadges();renderProfit();});
+}
 function showJsonError(msg){
   const errBox=document.getElementById('jsonImportError');
   if(errBox){errBox.textContent=msg;errBox.style.display='block';}
