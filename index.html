@@ -2602,6 +2602,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .wd-age.late{color:#B4361F;background:rgba(210,65,43,.1);border-radius:99px;padding:0 7px}
 .wd-h .wd-age{flex:none}.wd-h .pd-n{white-space:nowrap;flex:none}
 @media(max-width:600px){.wd-h{flex-wrap:wrap;row-gap:4px}.wd-h::after{display:none}}
+.tb-more{display:contents}.tb-more[hidden]{display:none}
 .nf-cred{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#8a5a00;background:rgba(244,197,61,.16);border:1px solid rgba(217,162,27,.35);border-radius:9px;padding:6px 10px}
 .nf-cred>span{flex:1;min-width:0}.nf-cred b{font-family:var(--mono)}.nf-cred-use{flex:none;white-space:nowrap;font:inherit;font-weight:700;color:#7A5600;background:rgba(244,197,61,.45);border:1px solid rgba(217,162,27,.5);border-radius:8px;padding:5px 10px;cursor:pointer}
 .cred-chip{display:inline-flex;align-items:center;gap:5px}.cred-chip svg{width:13px;height:13px;color:#b07d00}.cred-chip.active svg{color:inherit}
@@ -3066,11 +3067,13 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
       <div class="tb">
         <input type="text" id="sbSearch" placeholder="Search event or bookmaker…">
         <button class="btn-s" id="sbCsv" title="Spreadsheet for Excel / Google Sheets (the day filter applies)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="12" y1="3" x2="12" y2="21"/></svg>Excel</button>
+        <button class="btn-s tb-morebtn" data-tbmore="sb" title="Export / import JSON">More</button>
+        <span class="tb-more" id="sbTbMore" hidden>
         <button class="btn-s" id="sbExport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
         <button class="btn-s" id="sbImport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import</button>
         <input type="file" id="sbFile" accept=".json" style="display:none">
         <button class="btn-s" id="jsonImportOpenSb" title="Paste JSON manually"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>Paste JSON</button>
-        <button class="btn-d" id="sbClear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Clear all</button>
+        </span>
       </div>
       <div id="sbList"></div>
     </div>
@@ -3081,10 +3084,13 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
       <div class="tb">
         <input type="text" id="nbSearch" placeholder="Search event…">
         <button class="btn-s" id="nbCsv" title="Spreadsheet for Excel / Google Sheets (the day filter applies)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="12" y1="3" x2="12" y2="21"/></svg>Excel</button>
+        <button class="btn-s tb-morebtn" data-tbmore="nb" title="Export / import JSON">More</button>
+        <span class="tb-more" id="nbTbMore" hidden>
         <button class="btn-s" id="nbExport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
         <button class="btn-s" id="nbImport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import</button>
         <input type="file" id="nbFile" accept=".json" style="display:none">
         <button class="btn-s" id="jsonImportOpenNb" title="Paste JSON manually"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>Paste JSON</button>
+        </span>
       </div>
       <div id="nbList"></div>
     </div>
@@ -5611,7 +5617,8 @@ function renderSurebets(filter=''){
   const wonProfit=vBets.reduce((a,b)=>a+betProfit(b),0);
   document.getElementById('sbStats').innerHTML=`
     <div class="sc"><div class="sl2">Total surebets</div><div class="sv2">${vBets.length}</div></div>
-    <div class="sc"><div class="sl2">Won</div><div class="sv2 pos">${won.length}</div></div>
+    ${(()=>{const st=vBets.filter(b=>b.status==='won'||b.status==='lost'),stk=st.reduce((a,b)=>a+betStake(b),0),roi=stk>0?wonProfit/stk*100:null;
+      return `<div class="sc" title="Surebet profit ÷ what you staked on the settled ones (${fmt(stk)} €)"><div class="sl2">ROI</div><div class="sv2 ${roi==null?'':roi>=0?'pos':'neg'}">${roi==null?'—':(roi>0?'+':'')+fmt(roi)+'%'}<small class="sc-names">${won.length} won of ${st.length}</small></div></div>`;})()}
     <div class="sc"><div class="sl2">Pending</div><div class="sv2 yel">${vBets.filter(b=>b.status==='pending').length}</div></div>
     <div class="sc"><div class="sl2">Surebet profit</div><div class="sv2 ${wonProfit>=0?'pos':'neg'}">${wonProfit>=0?'+':''}${fmt(wonProfit)} €</div></div>`;
   const list=document.getElementById('sbList');
@@ -6172,11 +6179,8 @@ document.getElementById('sbFile').addEventListener('change',e=>{
     }catch(err){alert('Error: '+err.message);}
   };r.readAsText(file);e.target.value='';
 });
-document.getElementById('sbClear').addEventListener('click',()=>{
-  if(!confirm('Delete ALL surebets? This cannot be undone.'))return;
-  D.bets=[];save();updateBadges();renderSurebets();renderProfit();
-});
 
+document.querySelectorAll('[data-tbmore]').forEach(b=>b.addEventListener('click',()=>{const m=document.getElementById(b.dataset.tbmore+'TbMore');m.hidden=!m.hidden;b.textContent=m.hidden?'More':'Less';}));
 document.getElementById('nbExport').addEventListener('click',()=>{
   const blob=new Blob([JSON.stringify({normals:D.normals},null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`normales_${todayLocalISO()}.json`;a.click();
