@@ -570,6 +570,7 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,
 .st-share{display:flex;gap:3px;height:10px;margin-bottom:16px}
 .st-share i{background:var(--c);border-radius:3px;min-width:5px}
 .st-types{display:flex;flex-direction:column}
+.st-mrow{font:inherit;color:inherit;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;cursor:pointer;width:100%}.st-mrow:first-child{border-top:0}
 .st-catd>summary{list-style:none;cursor:pointer}.st-catd>summary::-webkit-details-marker{display:none}
 .st-catd+.st-type,.st-catd+.st-catd>summary .st-type,.st-type+.st-catd>summary .st-type{border-top:1px solid var(--border)}
 .st-cats>.st-catd:first-child>summary .st-type{border-top:0;padding-top:0}
@@ -4338,7 +4339,7 @@ const DT_CATS=[['surebet','Surebets'],['middle','Middles'],['normal','Normal'],[
 function dtStats(rows){
   const cat={};DT_CATS.forEach(([k])=>cat[k]={n:0,cash:0,free:0,pl:0,setStake:0,setPl:0,open:0,voids:0});
   let cash=0,free=0,pl=0,setCash=0,setCashPl=0,fbSet=0,fbSetPl=0,fbN=0,fbWon=0,fbWonPl=0,open=0,openStake=0;
-  const days={},bk=new Map(),byCat=new Map(),bySub=new Map();
+  const days={},bk=new Map(),byCat=new Map(),bySub=new Map(),byMonth=new Map();
   // surebets (real ones, with legs), normal bets paid with money, single biggest win / loss
   const sb={n:0,stake:0,setN:0,setPl:0,mN:0,mSum:0,mPos:0,voids:0},nm={won:0,lost:0,oddN:0,oddSum:0,stake:0,n:0};let top=null,low=null;
   rows.forEach(r=>{const c=cat[r.cat]||cat.normal;c.n++;if(r.free)c.free+=r.stake;else c.cash+=r.stake;c.pl+=r.pl;pl+=r.pl;
@@ -4348,7 +4349,7 @@ function dtStats(rows){
     if(r.cat==='none')return; // poker, old totals…: they're in the result, never in wagered / ROI / bookmakers
     {const cid=r.x.categoryId||0,root=cid?catRootOf(cid)||0:0,add=(m,k)=>{const e=m.get(k)||{n:0,cash:0,free:0,pl:0,setCash:0,setPl:0};e.n++;
         if(r.free)e.free+=r.stake;else{e.cash+=r.stake;if(r.done){e.setCash+=r.stake;e.setPl+=r.pl;}}e.pl+=r.pl;m.set(k,e);};
-      add(byCat,root);if(cid&&cid!==root)add(bySub,cid);}
+      add(byCat,root);if(cid&&cid!==root)add(bySub,cid);add(byMonth,(r.d||'').slice(0,7));}
     if(r.free)free+=r.stake;else cash+=r.stake;
     if(r.st==='pending'&&!r.free)openStake+=r.stake;
     if(r.done){if(r.free){fbSet+=r.stake;fbSetPl+=r.pl;fbN++;if(r.st==='won'||(!r.st&&r.pl>0)){fbWon++;fbWonPl+=r.pl;}}else{setCash+=r.stake;setCashPl+=r.pl;}}
@@ -4372,7 +4373,7 @@ function dtStats(rows){
   dk.forEach(d=>{const i=(new Date(d+'T00:00:00').getDay()+6)%7;wd[i].sum+=days[d];wd[i].n++;});
   return{cat,cash,free,pl,roi:setCash>0?setCashPl/setCash*100:null,fbConv:fbSet>0?fbSetPl/fbSet*100:null,fbN,fbWon,fbSet,fbSetPl,fbWonPl,open,openStake,n:rows.length,
     sb,nm,top:top&&top.pl>0.004?top:null,low:low&&low.pl<-0.004?low:null,wd,
-    days,run,byCat,bySub,best:dk.length?dk[0]:null,worst:dk.length?dk[dk.length-1]:null,activeDays:dk.length,greenDays:dk.filter(d=>days[d]>0.004).length,
+    days,run,byCat,bySub,byMonth,best:dk.length?dk[0]:null,worst:dk.length?dk[dk.length-1]:null,activeDays:dk.length,greenDays:dk.filter(d=>days[d]>0.004).length,
     bk:[...bk.values()].sort((a,b)=>(b.cash+b.free)-(a.cash+a.free))};
 }
 function dtPeriod(p){
@@ -4469,6 +4470,17 @@ function dashHtml(rows,s,o){
         <span class="st-tp"><em class="bks-roi ${cl(roi||0)}" title="Result ÷ staked with your money (settled)">${pc(roi)}</em></span></div>`;};
     h+=`<div class="card st-card"><div class="ch"><span class="ct">By category</span><span class="st-hint">your categories · tap one for its sub-categories</span></div><div class="cb"><div class="st-types st-cats">`+
       L.map(([id,e])=>{const kids=id?subsOf(id):[];return kids.length?`<details class="st-catd"><summary>${row(id,e,false,kids.length)}</summary>${kids.map(([k,x])=>row(k,x,true)).join('')}</details>`:row(id,e,false);}).join('')+`</div></div></div>`;
+  }
+  // ── by month: staked, result and ROI of each month, newest first, and the average month
+  if(!o.oneDay&&s.byMonth.size>1){
+    const M=[...s.byMonth.entries()].filter(([k])=>/^\d{4}-\d{2}$/.test(k)).sort((a,b)=>b[0].localeCompare(a[0])),mx=Math.max(...M.map(([,e])=>Math.abs(e.pl)),0.01);
+    const sc=M.reduce((a,[,e])=>a+e.setCash,0),avgRoi=sc>0?M.reduce((a,[,e])=>a+e.setPl,0)/sc*100:null,avgPl=M.reduce((a,[,e])=>a+e.pl,0)/M.length;
+    h+=`<div class="card st-card"><div class="ch"><span class="ct">By month</span><span class="st-hint" title="Result per month on average, and the ROI of all these months together (each month weighs what you staked in it)">${M.length} months · average ${sg(avgPl)} · ROI ${pc(avgRoi)}</span></div><div class="cb"><div class="st-types st-months">`+
+      M.map(([k,e])=>{const roi=e.setCash>0?e.setPl/e.setCash*100:null,st=e.cash+e.free;
+        return `<button type="button" class="st-type st-mrow" data-dtrange="${k}-01|${k}-31"><span class="st-tn"><b>${MONTH_NAMES_EN[+k.slice(5)-1]} ${k.slice(0,4)}</b><small>${e.n} bet${e.n===1?'':'s'}<span class="st-mob"> · ${fmt(st,st>=1000?0:2)} €</span></small></span>
+        <span class="st-ts">${eur(st)}<small>staked${e.free?` · ${fmt(e.free,0)} FB`:''}</small></span>
+        <span class="st-tr ${cl(e.pl)}">${sg(e.pl)}<i class="bks-div"><i class="${e.pl<0?'neg':'pos'}" style="width:${(Math.abs(e.pl)/mx*50).toFixed(1)}%"></i></i></span>
+        <span class="st-tp"><em class="bks-roi ${cl(roi||0)}" title="Result ÷ staked with your money (settled)">${pc(roi)}</em></span></button>`;}).join('')+`</div></div></div>`;
   }
   // ── three focus cards: surebets, freebets, normal bets
   const meter=(p,c,mark)=>`<div class="st-meter" style="--c:${c}"><i style="width:${Math.max(0,Math.min(100,p||0)).toFixed(1)}%"></i>${mark!=null?`<u style="left:${mark}%"></u>`:''}</div>`;
