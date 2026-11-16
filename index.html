@@ -2584,6 +2584,13 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .bk-cred-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;align-items:end}
 .bk-cred-form label>span{display:block;font-size:11.5px;color:var(--muted);margin-bottom:4px}
 .bk-cred-form input[type=date],.bk-cred-form input[type=text]:not(.ii){width:100%}
+.lim-tag{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:700;color:#B4361F;background:rgba(210,65,43,.1);border:1px solid rgba(210,65,43,.35);border-radius:99px;padding:0 6px;white-space:nowrap;cursor:pointer;font-family:inherit;line-height:1.6}
+.lim-tag svg{width:10px;height:10px}
+.bkt-top .lim-tag{flex:none;font-size:9.5px;padding:0 5px}
+.bkn .lim-tag{margin-left:6px;vertical-align:1px;cursor:default}
+.nf-lim{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#9A2E1A;background:rgba(210,65,43,.08);border:1px solid rgba(210,65,43,.3);border-radius:9px;padding:6px 10px}
+.nf-lim b{font-family:var(--mono)}
+.lim-chip{color:#B4361F}
 .nf-cred{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#8a5a00;background:rgba(244,197,61,.16);border:1px solid rgba(217,162,27,.35);border-radius:9px;padding:6px 10px}
 .nf-cred>span{flex:1;min-width:0}.nf-cred b{font-family:var(--mono)}.nf-cred-use{flex:none;white-space:nowrap;font:inherit;font-weight:700;color:#7A5600;background:rgba(244,197,61,.45);border:1px solid rgba(217,162,27,.5);border-radius:8px;padding:5px 10px;cursor:pointer}
 .cred-chip{display:inline-flex;align-items:center;gap:5px}.cred-chip svg{width:13px;height:13px;color:#b07d00}.cred-chip.active svg{color:inherit}
@@ -2964,6 +2971,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
               <div><label class="fl" id="nf-stake-label">Amount staked (€)</label><input type="text" inputmode="decimal" autocomplete="off" id="nf-stake" placeholder="20" step="0.01" min="0"></div>
             </div>
             <div class="nf-cred" id="nf-cred" style="display:none"></div>
+            <div class="nf-lim" id="nf-lim" style="display:none"></div>
             <div class="two-col">
               <div><label class="fl">Date</label><input type="date" id="nf-date"></div>
               <div><label class="fl">Ends ~ (hour)</label><select id="nf-time" class="hour-sel"><option value="">--</option><option value="00:00">00h</option><option value="01:00">01h</option><option value="02:00">02h</option><option value="03:00">03h</option><option value="04:00">04h</option><option value="05:00">05h</option><option value="06:00">06h</option><option value="07:00">07h</option><option value="08:00">08h</option><option value="09:00">09h</option><option value="10:00">10h</option><option value="11:00">11h</option><option value="12:00">12h</option><option value="13:00">13h</option><option value="14:00">14h</option><option value="15:00">15h</option><option value="16:00">16h</option><option value="17:00">17h</option><option value="18:00">18h</option><option value="19:00">19h</option><option value="20:00">20h</option><option value="21:00">21h</option><option value="22:00">22h</option><option value="23:00">23h</option></select></div>
@@ -5138,10 +5146,12 @@ function renderResult(){
   const short=valid.map((o,i)=>bal[i]!=null&&stakes[i]>bal[i]+0.004);
   const shortIdx=short.map((x,i)=>x?i:-1).filter(i=>i>=0);
   const canFit=shortIdx.length&&shortIdx.every(i=>bal[i]>=1);
+  const limIdx=valid.map((o,i)=>{const m=limMax(casaFor(o.house));return m&&stakes[i]>m+0.004?i:-1;}).filter(i=>i>=0);
+  const limWarn=limIdx.length?`<div class="reg-warn"><div><b>Over the limit</b>${limIdx.map(i=>`<span>${esc(valid[i].house)} is limited to ${fmt(limMax(casaFor(valid[i].house)))}&nbsp;€ · stake ${fmt(stakes[i])}&nbsp;€</span>`).join('')}</div>${canFit?'':`<button class="tool" id="fitLimBtn" title="Lowers the total so every stake fits under its limit">Fit to limit</button>`}</div>`:'';
   const balWarn=shortIdx.length?`<div class="reg-warn"><div><b>Not enough balance</b>${shortIdx.map(i=>`<span>${esc(valid[i].house)} needs ${fmt(stakes[i])}&nbsp;€ · has ${fmt(bal[i])}&nbsp;€</span>`).join('')}</div>${canFit?`<button class="tool" id="fitBalBtn" title="Lowers the total so every stake fits in its bookmaker">Fit to balance</button>`:''}</div>`:'';
   const badgeHtml=isMid?`<div class="badge bm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 8 3 12 7 16"/><polyline points="17 8 21 12 17 16"/><line x1="3" y1="12" x2="21" y2="12"/></svg>Middle</div>`:isSurebet?`<div class="badge bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Surebet</div>`:
     `<div class="badge br"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>No surebet</div>`;
-  const bkHtml=valid.map((o,i)=>`<div class="bkr"><div><div class="bkn">${esc(o.house||`Bookmaker ${i+1}`)}</div><div class="bks">${esc(o.result||`Outcome ${i+1}`)} · Odds ${fmt(o.odd)}${fractionLabel(o.house,o.odd)?` <span class="frac-tag" title="This bookmaker pays with the exact fraction behind the odds it shows">pays ${fractionLabel(o.house,o.odd)}</span>`:''}${gN&&gN[i]>1?` <span class="grp-tag g${res.g[i]%4}" title="Same outcome at ${gN[i]} bookmakers: they win together">${gN[i]} bookmakers</span>`:''}</div>${bal[i]!=null?`<div class="bk-left${short[i]?' short':''}">${short[i]?'Only ':''}${fmt(bal[i])} € available</div>`:''}</div><div class="bkv"><div class="bkst">${fmt(stakes[i])} €${o.manualStake>0?` <span style="color:var(--yellow);font-size:10px;font-weight:600">${o.fromPreset?'SAVED':'MANUAL'}</span>`:''}</div><div class="bkr2">return ${fmt(returns[i])} €</div><div class="bkm">${gN&&gN[i]>1?'outcome':'min.'} ${fmt(res.split?res.groupRet[res.g[i]]:returns[i])} €</div></div></div>`).join('');
+  const bkHtml=valid.map((o,i)=>`<div class="bkr"><div><div class="bkn">${esc(o.house||`Bookmaker ${i+1}`)}${limTagHtml(casaFor(o.house))}</div><div class="bks">${esc(o.result||`Outcome ${i+1}`)} · Odds ${fmt(o.odd)}${fractionLabel(o.house,o.odd)?` <span class="frac-tag" title="This bookmaker pays with the exact fraction behind the odds it shows">pays ${fractionLabel(o.house,o.odd)}</span>`:''}${gN&&gN[i]>1?` <span class="grp-tag g${res.g[i]%4}" title="Same outcome at ${gN[i]} bookmakers: they win together">${gN[i]} bookmakers</span>`:''}</div>${bal[i]!=null?`<div class="bk-left${short[i]?' short':''}">${short[i]?'Only ':''}${fmt(bal[i])} € available</div>`:''}</div><div class="bkv"><div class="bkst">${fmt(stakes[i])} €${o.manualStake>0?` <span style="color:var(--yellow);font-size:10px;font-weight:600">${o.fromPreset?'SAVED':'MANUAL'}</span>`:''}</div><div class="bkr2">return ${fmt(returns[i])} €</div><div class="bkm">${gN&&gN[i]>1?'outcome':'min.'} ${fmt(res.split?res.groupRet[res.g[i]]:returns[i])} €</div></div></div>`).join('');
   const bW=Math.min(sumPct/1.3,100);
   const head=isMid?`<div class="card ph2 mid">${badgeHtml}<div class="pp ${both>=0?'pos':'neg'}">${both>=0?'+':''}${fmt(both)} €</div><div class="ps">If both win${winTxt?` (it ends on <b>${winTxt}</b>)`:''} · if only one wins: <span class="hi ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span></div></div>`
     :`<div class="card ph2 ${isSurebet?'sb':''}">${badgeHtml}<div class="pp ${profit>=0?'pos':'neg'}">${s}${fmt(profitPct)} %</div><div class="ps">Guaranteed profit: <span class="hi ${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €</span></div></div>`;
@@ -5156,11 +5166,12 @@ function renderResult(){
       ${isMid?`<div class="sr"><span class="sl">Profit if both win</span><span class="sv ${both>=0?'pos':'neg'}">${both>=0?'+':''}${fmt(both)} €</span></div>`:''}
       <div class="pw"><div class="pl"><span>Sum of implied probabilities</span><span>${fmt(sumPct)} %</span></div><div class="pt"><div class="pf ${sumPct>100?'over':''}" style="width:${bW}%"></div></div></div>
     </div>
-    ${midHint}${balWarn}<div id="dupWarn"></div>
+    ${midHint}${balWarn}${limWarn}<div id="dupWarn"></div>
     <button class="btn-reg" id="regBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>${isMid?'Register middle':isSurebet?'Register':'Register anyway (negative ROI)'} <kbd class="kbd">Enter</kbd></button>
     ${presetHitHtml(valid,stakes)}`;
   document.getElementById('regBtn').addEventListener('click',quickRegister);
   const fb=document.getElementById('fitBalBtn');if(fb)fb.addEventListener('click',fitToBalance);
+  const fl=document.getElementById('fitLimBtn');if(fl)fl.addEventListener('click',()=>fitToBalance(true));
   const tm=document.getElementById('toMidBtn');if(tm)tm.addEventListener('click',()=>{setBetType('Middle');toast('Switched to Middle — press Register');});
   const qb=document.getElementById('qBar');
   if(qb){qb.innerHTML=`<div class="q-bar-info"><b class="${profit>=0?'pos':'neg'}">${s}${fmt(profit)} €${isMid?` · <span class="${both>=0?'pos':'neg'}" title="If both win">↔ ${both>=0?'+':''}${fmt(both)} €</span>`:''}</b><span>${valid.map((o,i)=>`<i class="${short[i]?'q-short':''}">${fmt(stakes[i])}€</i>`).join(' / ')}</span><em class="q-dup" id="qDup"></em></div>${canFit?`<button class="tool" id="qFitBtn">Fit</button>`:''}<button class="btn-reg" id="qBarBtn">Register</button>`;
@@ -5188,7 +5199,7 @@ function renderDupWarn(){
 ['q-event','q-market'].forEach(id=>document.getElementById(id).addEventListener('input',renderDupWarn));
 // Lowers the total (and any fixed stakes) until every stake fits in what its bookmaker has
 let fitBaseTotal=null; // total before "Fit to balance", put back after registering
-function fitToBalance(){
+function fitToBalance(onlyLim){onlyLim=onlyLim===true;
   let ok=false;
   const v0=outcomes.filter(o=>o.odd>1).map(o=>o.odd);
   if(findPreset(v0))psSkipKey=presetKey(v0); // don't let saved stakes jump back in
@@ -5196,7 +5207,7 @@ function fitToBalance(){
   for(let k=0;k<40;k++){
     const res=calculate();if(!res)return;
     const led=cachedLedger();let f=1;
-    res.valid.forEach((o,i)=>{const c=casaFor(o.house);if(!c)return;const b=casaMoney(c,led).balance;if(b>=0&&res.stakes[i]>b+0.004)f=Math.min(f,Math.max(0,b)/res.stakes[i]);});
+    res.valid.forEach((o,i)=>{const c=casaFor(o.house);if(!c)return;const b0=onlyLim?-1:casaMoney(c,led).balance,m=limMax(c),b=m&&(b0<0||m<b0)?m:b0;if(b>=0&&res.stakes[i]>b+0.004)f=Math.min(f,Math.max(0,b)/res.stakes[i]);});
     if(f>=1){ok=true;break;}
     if(k)f*=0.99; // rounding pushed it back over: shave a little more
     outcomes.forEach(o=>{if(o.manualStake>0){o.manualStake=Math.floor(o.manualStake*f*100)/100;o.fromPreset=false;}});
@@ -5204,7 +5215,7 @@ function fitToBalance(){
     renderOutcomes();
   }
   render();
-  toast(ok?`Stakes fitted to your balance · total ${fmt(calculate()?.actualTotal||totalInv)} €`:"Couldn't fit the stakes — check the balances");
+  toast(ok?`Stakes fitted to your ${onlyLim?'limits':'balance'+(outcomes.some(o=>limMax(casaFor(o.house)))?' and limits':'')} · total ${fmt(calculate()?.actualTotal||totalInv)} €`:"Couldn't fit the stakes — check the balances");
 }
 
 function render(){autoPreset();renderOutcomes();renderResult();renderPsQuick();renderPsBanner();}
@@ -7635,6 +7646,14 @@ function refundCredit(n){
 }
 function credTagHtml(c,cls){const k=c.credit;if(!k||!(k.amount>0))return '';const ex=credExpired(c),el=credExpLabel(c);
   return `<button type="button" class="${cls}${ex?' exp':''}" data-bk-toggle="cred" data-cid="${c.id}" title="Bet credits ${fmt(k.amount)} €${el?' · '+el:''}${k.note?' · '+esc(k.note):''}">${GIFT_SVG}${cls==='bkt-cred'?fmt(k.amount,k.amount%1?2:0):`Credits ${fmt(k.amount)} €${el?' · '+el:''}`}</button>`;}
+// Limited ("limitada"): the bookmaker cut how much you can bet. c.lim {since 'YYYY-MM-DD', max € (0 = unknown), note}.
+// Just information: it never changes balances or Profit. New bet warns when a stake is over the max.
+const LIM_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="5.6" y1="5.6" x2="18.4" y2="18.4"/></svg>';
+function casaLim(c){return c&&c.lim?c.lim:null;}
+function limMax(c){const l=casaLim(c);return l&&l.max>0?+l.max:0;}
+function limLabel(c,short){const l=casaLim(c);if(!l)return '';const m=limMax(c);return short?(m?'max '+fmt(m,m%1?2:0):'limited'):`Limited${m?' · max '+fmt(m)+' €':''}${l.since?' · since '+fmtDate(l.since):''}`;}
+function limTagHtml(c,btn){const l=casaLim(c);if(!l)return '';const t=`${limLabel(c)}${l.note?' · '+esc(l.note):''}`;
+  return btn?`<button type="button" class="lim-tag" data-bk-toggle="lim" data-cid="${c.id}" title="${t}">${LIM_SVG}${limLabel(c,true)}</button>`:`<span class="lim-tag" title="${t}">${LIM_SVG}${limLabel(c,true)}</span>`;}
 function casaMoney(c,ledger){
   const e=(ledger||bookmakerLedger()).get(bkKey(c.name||''))||{settled:0,inPlay:0,open:0};
   const deposited=c.amount||0, adj=c.balAdj||0;
@@ -7651,6 +7670,7 @@ function renderCasas(filter=''){
   const byProfile=c=>{
     const un=isUnusedCasa(c,ledger0);
     if(bkProfileSel==='credits')return !!(c.credit&&c.credit.amount>0); // every bookmaker with credits, Unused too
+    if(bkProfileSel==='limited')return !!casaLim(c); // every limited bookmaker, Unused too
     if(bkProfileSel==='unused')return un;
     if(un)return false;
     return bkProfileSel==='all'?true:(bkProfileSel==='none'?!c.profileId:c.profileId===bkProfileSel);
@@ -7678,6 +7698,7 @@ function renderCasas(filter=''){
   const list=document.getElementById('casasList');
   const visible=items.filter(c=>!isHidden('casa:'+c.id));
   const hidden=items.filter(c=>isHidden('casa:'+c.id));
+  if(bkProfileSel==='limited'&&!visible.length){list.innerHTML=emptyStateHtml('No bookmaker is marked as limited. To mark one: open it → More → Limited.');return;}
   if(bkProfileSel==='credits'&&!visible.length){list.innerHTML=emptyStateHtml('No bookmaker has bet credits right now. To add them: open a bookmaker → More → Bet credits.');return;}
   if(!visible.length&&!hidden.length){list.innerHTML=emptyStateHtml(D.casas.length?'No bookmakers match this view.':'You have no bookmakers tracked yet.');return;}
   const sorted=bkSortList(visible,ledger,act);
@@ -7686,11 +7707,12 @@ function renderCasas(filter=''){
     const pend=casaPendIn(c);
     const pendWdCount=(c.history||[]).filter(h=>h.type==='wd'&&h.status==='pending').length;
     const metaBits=[];
-    if(bkProfileSel==='all'||bkProfileSel==='unused'||bkProfileSel==='credits'){
+    if(bkProfileSel==='all'||bkProfileSel==='unused'||bkProfileSel==='credits'||bkProfileSel==='limited'){
       const prof=c.profileId?(D.bkProfiles||[]).find(p=>p.id===c.profileId):null;
       metaBits.push(`<span class="type-badge-kind">${esc(prof?prof.name:'No profile')}</span>`);
     }
     if(isBank(c))metaBits.push(`<span class="type-badge-kind bank-badge">Bank account</span>`);
+    if(casaLim(c))metaBits.push(limTagHtml(c,true));
     if(c.unused===true)metaBits.push(`<span class="type-badge-kind">Moved to Unused</span>`);
     if(c.notes)metaBits.push(esc(c.notes));
     let actHtml='';
@@ -7782,6 +7804,19 @@ function renderCasas(filter=''){
         </div>
         <div class="bk-hist-empty" style="margin-top:8px">Just a reminder of what you have to bet with here: it doesn't change the balance or Profit. When you save a Freebet at ${esc(c.name)} its stake comes off these credits by itself.</div>
       </div>`;
+    }else if(mode==='lim'){
+      const l=c.lim||{};
+      panelHtml=`<div class="bk-panel">
+        <div class="bk-panel-title">${l.since?'Limited':'Did'} ${esc(c.name)} ${l.since?'':'limit your stakes?'}</div>
+        <div class="bk-cred-form">
+          <label><span>Max stake now (optional)</span><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="bk-lim-max" value="${l.max>0?l.max:''}" placeholder="?"><span class="isuf">€</span></div></label>
+          <label><span>Since</span><input type="date" id="bk-lim-since" value="${l.since||todayLocalISO()}"></label>
+          <label><span>Note (optional)</span><input type="text" id="bk-lim-note" value="${esc(l.note||'')}" placeholder="E.g. only football, odds cut" autocomplete="off"></label>
+          <button class="btn-reg" data-bk-lim-save="${c.id}" style="width:auto;padding:9px 16px;margin:0">${l.since?'Save':'Mark as limited'}</button>
+          ${l.since?`<button class="btn-s" data-bk-lim-clear="${c.id}" style="width:auto;padding:9px 16px;margin:0">Not limited anymore</button>`:''}
+        </div>
+        <div class="bk-hist-empty" style="margin-top:8px">Only a label: it doesn't change the balance or Profit. New bet warns you when a stake here is over the max, and the Limited tab lists every limited bookmaker.</div>
+      </div>`;
     }else if(mode==='bets'){
       panelHtml=bkBetsPanelHtml(c);
     }else if(mode==='hist'){
@@ -7828,6 +7863,7 @@ function renderCasas(filter=''){
         <span class="bk-secs">
         ${isBank(c)?'':`<button class="bk-btn${mode==='pending'?' on':''}" data-bk-toggle="pending" data-cid="${c.id}">Pending transfer</button>`}
         ${isBank(c)?'':`<button class="bk-btn${mode==='cred'?' on':''}" data-bk-toggle="cred" data-cid="${c.id}">Bet credits${casaCredit(c)?` · ${fmt(casaCredit(c))} €`:''}</button>`}
+        ${isBank(c)?'':`<button class="bk-btn${mode==='lim'?' on':''}" data-bk-toggle="lim" data-cid="${c.id}">${casaLim(c)?esc(limLabel(c).split(' · since')[0]):'Limited?'}</button>`}
         <button class="bk-btn${mode==='hist'?' on':''}" data-bk-toggle="hist" data-cid="${c.id}">History</button>
         <button class="bk-btn${mode==='bal'?' on':''}" data-bk-toggle="bal" data-cid="${c.id}">Set balance</button>
         <button class="bk-btn${mode==='costs'?' on':''}" data-bk-toggle="costs" data-cid="${c.id}">Monthly costs${activeCosts(c).length?` · ${fmt(activeCosts(c).reduce((a,k)=>a+k.amount,0))} €`:''}</button>
@@ -7869,7 +7905,7 @@ function renderCasas(filter=''){
         :m.inPlay>0?`<span class="yel">${fmt(m.inPlay)} € in play${m.open>1?` (${m.open})`:''}</span>`
         :a&&a.last?`<span class="${idle?'yel':''}">${idle?'idle · ':''}${agoLabel(a.last)}</span>`:`<span>no bets yet</span>`;
       return `<div class="bk-tile ${cls}${bkFocus===c.id?' on':''}${idle?' idle':''}" data-bk-focus="${c.id}" role="button" tabindex="0" title="${esc(c.name)}">
-        <div class="bkt-top">${bkTickHtml(c)}<span class="bkt-name">${esc(c.name)}</span>${credTagHtml(c,'bkt-cred')}${pend>0?`<span class="bkt-pend" title="Pending to receive: ${fmt(pend)} €">+${fmt(pend,0)}</span>`:''}</div>
+        <div class="bkt-top">${bkTickHtml(c)}<span class="bkt-name">${esc(c.name)}</span>${limTagHtml(c,true)}${credTagHtml(c,'bkt-cred')}${pend>0?`<span class="bkt-pend" title="Pending to receive: ${fmt(pend)} €">+${fmt(pend,0)}</span>`:''}</div>
         <div class="bkt-bal ${cls}">${fmt(b)} €</div>
         <div class="bkt-sub">${sub}</div>
         <div class="bkt-bar"><i style="width:${b>0?Math.max(2,b/maxBal*100).toFixed(1):0}%"></i></div>
@@ -7999,6 +8035,21 @@ document.getElementById('casasList').addEventListener('click',e=>{
   if(sb){bkSort=sb.dataset.bksort;try{localStorage.setItem('sb_bk_sort',bkSort);}catch(_){}renderCasas(document.getElementById('casasSearch').value);return;}
   const tk=e.target.closest('[data-bk-tick]');
   if(tk){const c=D.casas.find(x=>x.id===+tk.dataset.bkTick);if(c){if(c.tick)delete c.tick;else c.tick=true;save();renderCasas(document.getElementById('casasSearch').value);}return;}
+  const ls=e.target.closest('[data-bk-lim-save]');
+  if(ls){
+    const c=D.casas.find(x=>x.id===+ls.dataset.bkLimSave);if(!c)return;
+    const v=(document.getElementById('bk-lim-max').value||'').trim().replace(/\s/g,'').replace(',','.'),m=Math.max(0,parseFloat(v)||0);
+    const since=document.getElementById('bk-lim-since').value||todayLocalISO(),note=document.getElementById('bk-lim-note').value.trim();
+    c.lim={since,...(m>0?{max:+m.toFixed(2)}:{}),...(note?{note}:{})};
+    openBkPanel=null;save();renderCasas(document.getElementById('casasSearch').value);
+    toast(`${c.name}: limited${m>0?' · max '+fmt(m)+' €':''}`);return;
+  }
+  const lc=e.target.closest('[data-bk-lim-clear]');
+  if(lc){
+    const c=D.casas.find(x=>x.id===+lc.dataset.bkLimClear);if(!c)return;const old=c.lim;
+    delete c.lim;openBkPanel=null;save();renderCasas(document.getElementById('casasSearch').value);
+    toast(`${c.name}: not limited`,'Undo',()=>{c.lim=old;save();renderCasas(document.getElementById('casasSearch').value);});return;
+  }
   const cs=e.target.closest('[data-bk-cred-save]');
   if(cs){
     const c=D.casas.find(x=>x.id===+cs.dataset.bkCredSave);if(!c)return;
@@ -8020,6 +8071,9 @@ document.getElementById('casasList').addEventListener('click',e=>{
   const cg=e.target.closest('[data-cred-go]');
   if(cg){const id=+cg.dataset.credGo;bkFocus=id;openBkPanel={cid:id,mode:'cred'};if(bkView!=='grid')bkMoreOpen.add(id);renderCasas(document.getElementById('casasSearch').value);
     const o=document.getElementById('bkOpen')||document.querySelector('#bk-cred-amt');if(o)o.scrollIntoView({behavior:'smooth',block:'center'});return;}
+  const ltag=e.target.closest('.bkt-top .lim-tag');
+  if(ltag){const id=+ltag.dataset.cid;bkFocus=id;openBkPanel={cid:id,mode:'lim'};renderCasas(document.getElementById('casasSearch').value);
+    const o=document.getElementById('bkOpen');if(o)o.scrollIntoView({behavior:'smooth',block:'nearest'});return;}
   const ctag=e.target.closest('.bkt-cred');
   if(ctag){const id=+ctag.dataset.cid;bkFocus=id;openBkPanel={cid:id,mode:'cred'};renderCasas(document.getElementById('casasSearch').value);
     const o=document.getElementById('bkOpen');if(o)o.scrollIntoView({behavior:'smooth',block:'nearest'});return;}
@@ -8248,6 +8302,8 @@ function renderBkProfileTabs(){
   html+=`<div class="cat-chip ${bkProfileSel==='unused'?'active':''}" data-bkprofile="unused" title="Bookmakers you moved here, plus the ones with 0 € balance, nothing in play and no deposits or withdrawals in the last 7 days">Unused${nUnused?` (${nUnused})`:''}</div>`;
   {const nC=D.casas.filter(c=>casaCredit(c)>0).length;
   html+=`<div class="cat-chip cred-chip ${bkProfileSel==='credits'?'active':''}" data-bkprofile="credits" title="Every bookmaker with bet credits, in one list">${GIFT_SVG}Credits${nC?` (${nC})`:''}</div>`;}
+  {const nL=D.casas.filter(c=>casaLim(c)).length;
+  if(nL||bkProfileSel==='limited')html+=`<div class="cat-chip lim-chip ${bkProfileSel==='limited'?'active':''}" data-bkprofile="limited" title="Every bookmaker that limited your stakes">Limited${nL?` (${nL})`:''}</div>`;}
   html+=`<button class="btn-s" id="bkProfileAddBtn" style="margin-left:auto">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Add profile</button>`;
@@ -8278,7 +8334,7 @@ document.getElementById('bkProfileTabs').addEventListener('click',e=>{
   const tab=e.target.closest('[data-bkprofile]');
   if(tab){
     const v=tab.dataset.bkprofile;
-    bkProfileSel=(v==='all'||v==='none'||v==='unused'||v==='credits')?v:+v;
+    bkProfileSel=(v==='all'||v==='none'||v==='unused'||v==='credits'||v==='limited')?v:+v;
     renderCasas(document.getElementById('casasSearch').value);
   }
 });
@@ -11504,9 +11560,17 @@ function renderNfCred(){
   el.innerHTML=`${GIFT_SVG.replace('<svg','<svg style="width:14px;height:14px;flex:none"')}<span>${esc(c.name)} has <b>${fmt(a)} €</b> of bet credits${el2?' · '+el2:''}${c.credit.note?' · '+esc(c.credit.note):''}${fb?'':'. Switch to Freebet to use them'}</span>${fb&&parseFloat(document.getElementById('nf-stake').value)!==a?`<button class="nf-cred-use" id="nfCredUse" type="button">Use ${fmt(a)} €</button>`:''}`;
   const b=document.getElementById('nfCredUse');if(b)b.onclick=()=>{document.getElementById('nf-stake').value=a;nfCredAuto=a;renderNfResult();};
 }
+function renderNfLim(){
+  const el=document.getElementById('nf-lim');if(!el)return;
+  const c=casaFor(document.getElementById('nf-house').value),l=casaLim(c);
+  if(!l||sbMode()){el.style.display='none';return;}
+  const m=limMax(c),st=parseFloat(document.getElementById('nf-stake').value)||0,over=m&&st>m+0.004;
+  el.style.display='';
+  el.innerHTML=`${LIM_SVG.replace('<svg','<svg style="width:14px;height:14px;flex:none"')}<span>${over?`<b>Over the limit:</b> ${esc(c.name)} lets you bet up to <b>${fmt(m)} €</b>`:`${esc(c.name)} is limited${m?` · max <b>${fmt(m)} €</b>`:''}`}${l.note?' · '+esc(l.note):''}</span>`;
+}
 function renderNfResult(){
   if(sbMode())return;
-  renderNfCred();
+  renderNfCred();renderNfLim();
   const rawOdd=parseFloat(document.getElementById('nf-odd').value)||0;
   const stake=parseFloat(document.getElementById('nf-stake').value)||0;
   const isFb=newBetType==='Freebet',house=document.getElementById('nf-house').value;
