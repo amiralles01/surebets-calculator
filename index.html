@@ -5621,7 +5621,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-bets-more]
 function renderSurebets(filter=''){
   if(!betsListShown('page-surebets'))return;
   const myTw=twinInfo(D.bets);
-  const bets=D.bets.filter(b=>betsDayMatch(b.date)&&(!betsFlag||flagOf(b))).filter(b=>!filter||b.event.toLowerCase().includes(filter.toLowerCase())||(b.market||'').toLowerCase().includes(filter.toLowerCase())||b.legs.some(l=>l.house&&l.house.toLowerCase().includes(filter.toLowerCase())));
+  const bets=D.bets.filter(b=>betsDayMatch(b.date)&&(!betsFlag||flagOf(b))).filter(b=>{if(!filter)return true;const q=filter.toLowerCase();return (b.event||'').toLowerCase().includes(q)||(b.market||'').toLowerCase().includes(q)||(b.legs||[]).some(l=>(l.house||'').toLowerCase().includes(q));});
   const vBets=visibleBets().filter(b=>betsDayMatch(b.date));
   renderBetsDays();
   const won=vBets.filter(b=>b.status==='won');
@@ -5679,7 +5679,7 @@ function isFun(x){return !!(x&&x.fun);}
 function nmCat(n){return isFun(n)?'fun':n.type==='Freebet'?'freebet':'normal';}
 function renderNormals(filter=''){
   if(!betsListShown('page-normales'))return;
-  const items=D.normals.filter(n=>betsDayMatch(n.date)&&(!betsFlag||flagOf(n))&&betsFunMatch(n)).filter(n=>!filter||n.event.toLowerCase().includes(filter.toLowerCase()));
+  const items=D.normals.filter(n=>betsDayMatch(n.date)&&(!betsFlag||flagOf(n))&&betsFunMatch(n)).filter(n=>{if(!filter)return true;const q=filter.toLowerCase();return [n.event,n.market,n.house,n.pick,n.notes].some(v=>String(v||'').toLowerCase().includes(q));});
   const vNorm=visibleNormals().filter(n=>betsDayMatch(n.date)&&betsFunMatch(n));
   renderBetsDays();
   const pendCount=vNorm.filter(n=>n.status==='pending').length;
