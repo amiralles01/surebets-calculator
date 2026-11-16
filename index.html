@@ -6226,7 +6226,7 @@ document.getElementById('sbFile').addEventListener('change',e=>{
       const parsed=JSON.parse(ev.target.result);
       const incoming=extractImportArray(parsed,'bets');
       if(!incoming){alert('The JSON must be a list of surebets, or {"bets":[...]} (a full backup works too).');return;}
-      if(!confirm(`Importar ${incoming.length} surebets?`))return;
+      if(!confirm(`Import ${incoming.length} surebet${incoming.length===1?'':'s'}?`))return;
       const exist=new Set(D.bets.map(b=>b.id));
       D.bets=[...incoming.filter(b=>!exist.has(b.id)),...D.bets];
       save();updateBadges();renderSurebets();renderProfit();alert('Importado correctamente.');
@@ -6247,7 +6247,7 @@ document.getElementById('nbFile').addEventListener('change',e=>{
       const parsed=JSON.parse(ev.target.result);
       const incoming=extractImportArray(parsed,'normals');
       if(!incoming){alert('The JSON must be a list of normal bets / freebets, or {"normals":[...]} (a full backup works too).');return;}
-      if(!confirm(`Importar ${incoming.length} normales/freebets?`))return;
+      if(!confirm(`Import ${incoming.length} normal bet${incoming.length===1?'':'s'}/freebet${incoming.length===1?'':'s'}?`))return;
       const exist=new Set(D.normals.map(n=>n.id));
       D.normals=[...incoming.filter(n=>!exist.has(n.id)),...D.normals];
       save();updateBadges();renderNormals();renderProfit();alert('Importado correctamente.');
@@ -8380,10 +8380,12 @@ document.getElementById('casasList').addEventListener('click',e=>{
     return;
   }
   const delBtn=e.target.closest('[data-cid]');if(!delBtn)return;
-  if(!confirm('Delete this bookmaker?'))return;
-  D.casas=D.casas.filter(c=>c.id!==+delBtn.dataset.cid);save();updateBadges();
-  if(openBkPanel&&openBkPanel.cid===+delBtn.dataset.cid)openBkPanel=null;
+  const dcid=+delBtn.dataset.cid,di=D.casas.findIndex(c=>c.id===dcid),dc=D.casas[di];if(!dc)return;
+  if(!confirm(`Delete ${dc.name||'this bookmaker'}? Its balance history goes with it.`))return;
+  D.casas=D.casas.filter(c=>c.id!==dcid);save();updateBadges();
+  if(openBkPanel&&openBkPanel.cid===dcid)openBkPanel=null;
   renderCasas(document.getElementById('casasSearch').value);
+  toast(`${dc.name||'Bookmaker'} deleted`,'Undo',()=>{if(D.casas.some(c=>c.id===dcid))return;D.casas.splice(Math.min(di,D.casas.length),0,dc);save();updateBadges();renderCasas(document.getElementById('casasSearch').value);});
 });
 document.getElementById('casasList').addEventListener('keydown',e=>{
   if(e.key==='Enter'&&e.target.id==='bk-panel-amount'){
@@ -8754,13 +8756,17 @@ document.getElementById('catList').addEventListener('click',e=>{
   const delBtn=e.target.closest('[data-catdel]');
   if(delBtn){
     if(!confirm('Delete this category? Bets will move to "No category" and its subcategories will move up a level.'))return;
-    const cid=+delBtn.dataset.catdel;
+    const cid=+delBtn.dataset.catdel,ci=D.categories.findIndex(c=>c.id===cid),cat=D.categories[ci];if(!cat)return;
+    const up=cat.parentId||null,bIds=D.bets.filter(b=>b.categoryId===cid).map(b=>b.id),nIds=D.normals.filter(n=>n.categoryId===cid).map(n=>n.id),kids=D.categories.filter(c=>c.parentId===cid).map(c=>c.id);
     D.categories=D.categories.filter(c=>c.id!==cid);
     D.bets.forEach(b=>{if(b.categoryId===cid)b.categoryId=null;});
     D.normals.forEach(n=>{if(n.categoryId===cid)n.categoryId=null;});
-    D.categories.forEach(c=>{if(c.parentId===cid)c.parentId=null;});
+    D.categories.forEach(c=>{if(c.parentId===cid)c.parentId=up;}); // one level up: into the deleted one's parent
     if(catSelId===cid)catSelId='all';
     save();renderCategorias();
+    toast(`${cat.name||'Category'} deleted`,'Undo',()=>{if(D.categories.some(c=>c.id===cid))return;D.categories.splice(Math.min(ci,D.categories.length),0,cat);
+      const bs=new Set(bIds),ns=new Set(nIds),ks=new Set(kids);D.bets.forEach(b=>{if(bs.has(b.id)&&b.categoryId==null)b.categoryId=cid;});D.normals.forEach(n=>{if(ns.has(n.id)&&n.categoryId==null)n.categoryId=cid;});
+      D.categories.forEach(c=>{if(ks.has(c.id)&&(c.parentId||null)===up)c.parentId=cid;});save();renderCategorias();});
     return;
   }
   const item=e.target.closest('[data-cfid]');if(!item)return;
