@@ -6449,7 +6449,7 @@ document.getElementById('m-save').addEventListener('click',()=>{
   if(editingNormalId){
     const n=D.normals.find(x=>x.id===editingNormalId);
     if(n){
-      n.event=ev||n.event||'(Sin evento)';n.type=type;ctApply(n);
+      n.event=ev||n.event||'(No event)';n.type=type;ctApply(n);
       if(document.getElementById('m-fun').checked)n.fun=1;else delete n.fun;
       const pk=document.getElementById('m-pick').value.trim();
       if(pk!==(n.pick||'')){if(pk)n.pick=pk;else delete n.pick;dropAutoMark(n);}
@@ -8561,7 +8561,7 @@ const noteModal=document.getElementById('noteModal');
 function openNoteModal(id){
   editingNoteId=id||null;
   const n=id?D.notes.find(x=>x.id===id):null;
-  document.getElementById('noteModalTitle').textContent=n?'Editar nota':'Nueva nota';
+  document.getElementById('noteModalTitle').textContent=n?'Edit note':'New note';
   document.getElementById('note-title').value=n?n.title:'';
   document.getElementById('note-content').value=n?n.content:'';
   document.getElementById('note-completed').checked=n?!!n.completed:false;
@@ -8687,7 +8687,7 @@ function renderCategorias(){
   const list=document.getElementById('catItemsList');
   const visible=items.filter(({kind,item})=>!isHidden((kind==='sb'?'sb:':'nm:')+item.id));
   const hidden=items.filter(({kind,item})=>isHidden((kind==='sb'?'sb:':'nm:')+item.id));
-  if(!visible.length&&!hidden.length){list.innerHTML=emptyStateHtml('No hay apuestas en esta vista.');return;}
+  if(!visible.length&&!hidden.length){list.innerHTML=emptyStateHtml('No bets in this view.');return;}
   const sMap={pending:['Pending','sp'],won:['Won','sw'],lost:['Lost','sl3'],anulada:['Void','sa']};
   const page=betsPageOf('cat',catSelId+'|'+catTypeFilter,visible);
   list.innerHTML=page.map(({kind,item})=>{
@@ -11381,7 +11381,7 @@ function renderCalendar(){
     let cls='cal-cell';let inner=`<div class="cal-daynum">${d}</div>`;
     if(val!==undefined&&Math.abs(val)>0.001){
       cls+=val>0?' cal-pos':' cal-neg';
-      inner+=`<div class="cal-amt">€${fmt(Math.abs(val),0)}</div>`;
+      inner+=`<div class="cal-amt">${fmt(Math.abs(val),0)} €</div>`;
     }
     const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     html+=`<div class="${cls}"${val!==undefined?` data-dtday="${ds}" title="See this day"`:''}>${inner}</div>`;
