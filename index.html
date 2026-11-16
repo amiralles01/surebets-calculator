@@ -3285,6 +3285,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
           <button class="calc-tab" data-calc="novig">No-Vig</button>
           <button class="calc-tab" data-calc="hedge">Hedge</button>
           <button class="calc-tab" data-calc="freebet">Free Bet</button>
+          <button class="calc-tab" data-calc="exchange">Exchange (lay)</button>
           <button class="calc-tab" data-calc="hold">Hold</button>
         </div>
         <div class="cb" id="calcBody"></div>
@@ -4362,7 +4363,6 @@ function dtPersList(){const cy=todayLocalISO().slice(0,4);return DT_PERS.slice(0
 const isDtPer=v=>DT_PERS.some(p=>p[0]===v)||/^y\d{4}$/.test(v||'');
 function dtChipsHtml(cur,attr){return dtPersList().map(([k,l])=>`<button class="bkb-chip${cur===k?' on':''}" ${attr}="${k}">${l}</button>`).join('');}
 function dtDayLabel(d){return new Date(d+'T00:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
-const FB_IC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>';
 const dtCatColor=k=>(PROFIT_CATS.find(x=>x[0]===k)||[])[2]||'#999';
 // result over time inside the period: a bar per day (≤ 45 days), per week (≤ 30 weeks) or per month. A bar opens its own details.
 function dtBuckets(days,from,to){
@@ -4907,7 +4907,6 @@ let showHiddenFor={sb:false,nb:false,pend:false,casas:false,notas:false,cat:fals
 function sign(n){return n>0?'+':n<0?'':'';}
 // Shared kick-off date+time helpers, used by pending/history/modals
 function fmtWhen(date,time){if(!date)return '';return fmtDate(date)+(time?` · ends ~${String(parseInt(time,10)).padStart(2,'0')}h`:'');}
-function whenKey(o){return (o.date||'')+' '+(o.time||'');}
 function isPlaceholderHouse(s){return /^(bookmaker|casa) \d+$/i.test((s||'').trim());}
 function bkKey(s){return (s||'').trim().toLowerCase();}
 const POPULAR_BOOKS=['Bet365','Bwin','Winamax','William Hill','Betfair','1xBet','Codere','Marathonbet','Pinnacle','Interwetten','Kirolbet','Sportium','Betway','888sport','Unibet','Betsson','Luckia','Retabet','Paf','Versus'];
@@ -5383,24 +5382,6 @@ function applySbEd(b){
   return changed;
 }
 function readSbrHouses(){return [...document.querySelectorAll('#sbr-legs [data-legi]')].map(i=>i.value.trim());}
-function openSbRegModal(){
-  const res=calculate();if(!res)return;
-  editingSbId=null;
-  refreshBookmakerList();
-  document.getElementById('sbRegModalTitle').textContent='Register surebet';
-  document.getElementById('sbr-save').textContent='Register in pending';
-  const pf=sbPrefill;
-  document.getElementById('sbr-event').value=pf?pf.event||'':'';
-  document.getElementById('sbr-market').value=pf?pf.market||'':'';
-  renderSbrLegs(res.valid.map(o=>({house:o.house,result:o.result,odd:o.odd})));
-  document.getElementById('sbr-start').value=pf&&pf.date?pf.date:todayLocalISO();
-  document.getElementById('sbr-time').value=pf?hourOnly(pf.time):'';
-  fillCategorySelect(document.getElementById('sbr-category'),pf&&newBetCat==null?pf.categoryId:newBetCat);
-  document.getElementById('sbr-notes').value='';
-  document.getElementById('sbr-kind-w').style.display='none';
-  renderSbCt();
-  document.getElementById('sbRegModal').style.display='flex';
-}
 function openSbEditModal(id){
   if(convDraft&&convDraft.bet.id!==id)convDraft=null;
   const b=sbById(id);if(!b)return;
@@ -5624,7 +5605,6 @@ function nmPill(n){return typePill(n.type==='Freebet'?'Freebet':'Normal')+(isCom
 // Funbets: bets placed just because. Every other bet (all the old ones too) counts as an 'Opportunity' bet.
 function isFun(x){return !!(x&&x.fun);}
 function nmCat(n){return isFun(n)?'fun':n.type==='Freebet'?'freebet':'normal';}
-function houseTag(h){return h?`<span>${esc(h)}</span>`:'';}
 function renderNormals(filter=''){
   if(!betsListShown('page-normales'))return;
   const items=D.normals.filter(n=>betsDayMatch(n.date)&&(!betsFlag||flagOf(n))&&betsFunMatch(n)).filter(n=>!filter||n.event.toLowerCase().includes(filter.toLowerCase()));
@@ -6453,7 +6433,6 @@ function renderMCt(){const el=document.getElementById('m-ct');el.style.display=e
 function sbCurType(){return document.getElementById('sbr-kind').value==='mid'?'middle':'surebet';}
 function renderSbCt(){const el=document.getElementById('sbr-ct');const on=!!editingSbId&&!(convDraft&&convDraft.bet.id===editingSbId);el.style.display=on?'flex':'none';if(on){if(ctPick===sbCurType())ctPick=null;el.innerHTML=ctRowHtml(sbCurType(),false);}}
 function ctApply(x){if(ctPick)x.cnt=ctPick;else delete x.cnt;ctPick=null;}
-function ctTidy(kind,x){if(x.cnt&&x.cnt===baseCat(kind,x))delete x.cnt;}
 document.getElementById('m-type').addEventListener('change',renderMCt);
 document.getElementById('m-fun').addEventListener('change',renderMCt);
 document.getElementById('sbr-kind').addEventListener('change',renderSbCt);
@@ -10947,7 +10926,7 @@ document.getElementById('tgCard').addEventListener('click',e=>{
 document.getElementById('tgSetBtn').addEventListener('click',()=>{tgOpenCfg=!tgOpenCfg;renderTgCard();if(tgOpenCfg)setTimeout(()=>document.getElementById('tgTok')?.focus(),30);});
 
 // ══════════════════════════════════════════
-//  CALCULADORAS — Kelly · No-Vig · Hedge · Free Bet · Hold
+//  CALCULADORAS — Kelly · No-Vig · Hedge · Free Bet · Exchange · Hold
 // ══════════════════════════════════════════
 let novigRows=[{id:1,label:'',odd:''},{id:2,label:'',odd:''}],novigNextId=3;
 let holdRows=[{id:1,label:'',odd:''},{id:2,label:'',odd:''}],holdNextId=3;
@@ -10955,6 +10934,7 @@ const CALC_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 
 function renderCalcTab(tab){
   document.querySelectorAll('.calc-tab').forEach(b=>b.classList.toggle('active',b.dataset.calc===tab));
+  const on=document.querySelector(`.calc-tab[data-calc="${tab}"]`);if(on&&on.parentElement.scrollWidth>on.parentElement.clientWidth)on.parentElement.scrollLeft=on.offsetLeft-12;
   const body=document.getElementById('calcBody');
   if(tab==='kelly'){
     body.innerHTML=`
@@ -10994,17 +10974,33 @@ function renderCalcTab(tab){
       <div style="display:flex;flex-direction:column;gap:13px;max-width:420px">
         <div><label class="fl">Free Bet value</label><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="f-value" placeholder="E.g. 25" min="0" step="0.01"><span class="isuf">€</span></div></div>
         <div><label class="fl">Bet odds</label><input type="text" inputmode="decimal" autocomplete="off" id="f-odds" placeholder="E.g. 4.00" min="1.01" step="0.01"></div>
+        <div><label class="fl">Opposite odds at another bookmaker <span style="font-weight:500;color:var(--faint)">· optional, to lock the profit</span></label><input type="text" inputmode="decimal" autocomplete="off" id="f-opp" placeholder="E.g. 1.30" min="1.01" step="0.01"></div>
         <button class="btn-reg" id="f-calc-btn">${CALC_ICON}Calculate</button>
       </div>
       <div id="f-result" style="margin-top:16px;max-width:420px"></div>`;
     document.getElementById('f-calc-btn').addEventListener('click',calcFreebet);
+  }else if(tab==='exchange'){
+    const m=exMode(),cm=localStorage.getItem('sb_ex_comm')??'2';
+    body.innerHTML=`
+      <div style="display:flex;flex-direction:column;gap:13px;max-width:420px">
+        <div class="bkb-chips" id="ex-modes" style="margin:0">${[['normal','Normal bet'],['snr','Freebet'],['sr','Freebet (stake back)']].map(([k,l])=>`<button type="button" class="bkb-chip${m===k?' on':''}" data-exm="${k}">${l}</button>`).join('')}</div>
+        <div><label class="fl" id="ex-stake-l">${m==='normal'?'Back stake':'Freebet value'}</label><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="ex-stake" placeholder="E.g. 50"><span class="isuf">€</span></div></div>
+        <div><label class="fl">Back odds (bookmaker)</label><input type="text" inputmode="decimal" autocomplete="off" id="ex-back" placeholder="E.g. 3.20"></div>
+        <div><label class="fl">Lay odds (exchange)</label><input type="text" inputmode="decimal" autocomplete="off" id="ex-lay" placeholder="E.g. 3.30"></div>
+        <div><label class="fl">Exchange commission</label><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="ex-comm" value="${esc(cm)}"><span class="isuf">%</span></div></div>
+      </div>
+      <div id="ex-result" style="margin-top:16px;max-width:420px"></div>`;
+    document.getElementById('ex-modes').addEventListener('click',e=>{const b=e.target.closest('[data-exm]');if(!b)return;localStorage.setItem('sb_ex_mode',b.dataset.exm);
+      document.querySelectorAll('#ex-modes [data-exm]').forEach(x=>x.classList.toggle('on',x===b));document.getElementById('ex-stake-l').textContent=b.dataset.exm==='normal'?'Back stake':'Freebet value';calcExchange();});
+    ['ex-stake','ex-back','ex-lay','ex-comm'].forEach(id=>document.getElementById(id).addEventListener('input',calcExchange));
+    calcExchange();
   }else if(tab==='hold'){
     body.innerHTML=`
       <div style="max-width:520px">
         <div class="oh" style="grid-template-columns:1fr 100px 32px"><div class="cl">Outcome</div><div class="cl" style="text-align:right">Odds</div><div></div></div>
         <div id="holdRowsList"></div>
         <button class="ba" id="holdAddBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add outcome</button>
-        <button class="btn-reg" id="hold-calc-btn" style="margin-top:14px">${CALC_ICON}Calcular</button>
+        <button class="btn-reg" id="hold-calc-btn" style="margin-top:14px">${CALC_ICON}Calculate</button>
       </div>
       <div id="ho-result" style="margin-top:16px;max-width:520px"></div>`;
     renderHoldRowsList();
@@ -11034,15 +11030,15 @@ function calcKelly(){
   const edge=(p-1/odds)*100;
   out.innerHTML=`
     <div class="card ph2 ${hasEdge?'sb':''}">
-      <div class="badge ${hasEdge?'bg':'br'}">${hasEdge?'Valor positivo (+EV)':'Sin valor — no apostar'}</div>
+      <div class="badge ${hasEdge?'bg':'br'}">${hasEdge?'Positive value (+EV)':'No value — don\'t bet'}</div>
       <div class="pp ${hasEdge?'pos':'neg'}">${fmt(Math.max(f,0)*100)} %</div>
       <div class="ps">Kelly fraction of bankroll</div>
     </div>
     <div class="card" style="margin-top:12px">
-      <div class="sr"><span class="sl">Cantidad sugerida (Kelly completo)</span><span class="sv ${hasEdge?'pos':''}">${fmt(stake)} €</span></div>
+      <div class="sr"><span class="sl">Suggested stake (full Kelly)</span><span class="sv ${hasEdge?'pos':''}">${fmt(stake)} €</span></div>
       <div class="sr"><span class="sl">½ Kelly (recommended, less variance)</span><span class="sv ${hasEdge?'pos':''}">${fmt(stake/2)} €</span></div>
       <div class="sr"><span class="sl">Implied probability of the odds</span><span class="sv">${fmt(100/odds)} %</span></div>
-      <div class="sr"><span class="sl">Tu ventaja estimada (edge)</span><span class="sv ${edge>=0?'pos':'neg'}">${edge>=0?'+':''}${fmt(edge)} %</span></div>
+      <div class="sr"><span class="sl">Your estimated edge</span><span class="sv ${edge>=0?'pos':'neg'}">${edge>=0?'+':''}${fmt(edge)} %</span></div>
     </div>`;
 }
 
@@ -11078,9 +11074,9 @@ function calcNovig(){
   const fairOdds=fairP.map(p=>1/p);
   out.innerHTML=`
     <div class="card ph2">
-      <div class="badge ${overround>=0?'br':'bg'}">Margen del mercado</div>
+      <div class="badge ${overround>=0?'br':'bg'}">Market margin</div>
       <div class="pp ${overround>=0?'neg':'pos'}">${overround>=0?'+':''}${fmt(overround)} %</div>
-      <div class="ps">Overround sobre el 100% ideal</div>
+      <div class="ps">Overround above the fair 100%</div>
     </div>
     <div class="card" style="margin-top:12px">${rows.map((r,i)=>`
       <div class="bkr"><div><div class="bkn">${esc(r.label)||'Outcome '+(i+1)}</div><div class="bks">Original odds ${fmt(odds[i])}</div></div>
@@ -11117,9 +11113,9 @@ function calcHold(){
   const hold=(sum-1)*100;
   out.innerHTML=`
     <div class="card ph2">
-      <div class="badge ${hold>=0?'br':'bg'}">Hold de la casa</div>
+      <div class="badge ${hold>=0?'br':'bg'}">Bookmaker hold</div>
       <div class="pp ${hold>=0?'neg':'pos'}">${hold>=0?'+':''}${fmt(hold)} %</div>
-      <div class="ps">Margen que se queda la casa de apuestas</div>
+      <div class="ps">The share the bookmaker keeps</div>
     </div>
     <div class="card" style="margin-top:12px">${rows.map((r,i)=>`
       <div class="sr"><span class="sl">${esc(r.label)||'Outcome '+(i+1)}</span><span class="sv">Odds ${fmt(odds[i])} · Implied prob. ${fmt(100/odds[i])} %</span></div>`).join('')}
@@ -11144,30 +11140,80 @@ function calcHedge(){
       <div class="ps">Guaranteed result no matter who wins</div>
     </div>
     <div class="card" style="margin-top:12px">
-      <div class="sr"><span class="sl">Apostar en el lado contrario</span><span class="sv pos">${fmt(hedgeStake)} €</span></div>
+      <div class="sr"><span class="sl">Bet on the opposite side</span><span class="sv pos">${fmt(hedgeStake)} €</span></div>
       <div class="sr"><span class="sl">Total outlay</span><span class="sv">${fmt(totalOutlay)} €</span></div>
-      <div class="sr"><span class="sl">Si dejas correr la original (sin cobertura)</span><span class="sv ${noHedgeProfit>=0?'pos':'neg'}">${noHedgeProfit>=0?'+':''}${fmt(noHedgeProfit)} €</span></div>
+      <div class="sr"><span class="sl">If you let the original run (no hedge)</span><span class="sv ${noHedgeProfit>=0?'pos':'neg'}">${noHedgeProfit>=0?'+':''}${fmt(noHedgeProfit)} €</span></div>
     </div>`;
 }
 
-// ── 4. Free Bet ──
+// ── 4. Free Bet ── what a freebet (stake not returned) is worth, and how to lock it at another bookmaker
 function calcFreebet(){
   const value=parseFloat(document.getElementById('f-value').value);
   const odds=parseFloat(document.getElementById('f-odds').value);
+  const opp=parseFloat(document.getElementById('f-opp').value);
   const out=document.getElementById('f-result');
-  if(!(value>0)||!(odds>1)){out.innerHTML=emptyStateHtml('Introduce el valor de la free bet y la cuota (mayor de 1,00).');return;}
+  if(!(value>0)||!(odds>1)){out.innerHTML=emptyStateHtml('Enter the freebet value and the odds (greater than 1.00).');return;}
   const profit=(odds-1)*value;
-  const extraction=(odds-1)/odds*100;
-  out.innerHTML=`
-    <div class="card ph2 sb">
-      <div class="badge bg">Beneficio neto si gana</div>
-      <div class="pp pos">+${fmt(profit)} €</div>
-      <div class="ps">La casa no devuelve el importe de la Free Bet, solo las ganancias</div>
+  if(opp>1){
+    // cover the other side so both outcomes pay the same: hedge × opp = freebet winnings
+    const hedge=cents(profit/opp),win=cents(profit-hedge),lose=cents(hedge*opp-hedge),locked=Math.min(win,lose),conv=locked/value*100;
+    out.innerHTML=`
+    <div class="card ph2 ${locked>=0?'sb':''}">
+      <div class="badge ${locked>=0?'bg':'br'}">Locked in, whatever happens</div>
+      <div class="pp ${locked>=0?'pos':'neg'}">${locked>=0?'+':''}${fmt(locked)} €</div>
+      <div class="ps">${fmt(conv,1)}% of the freebet turned into money${conv>=70?' · good':conv>=60?' · ok':' · look for better odds'}</div>
     </div>
     <div class="card" style="margin-top:12px">
-      <div class="sr"><span class="sl">Valor de la Free Bet</span><span class="sv">${fmt(value)} €</span></div>
-      <div class="sr"><span class="sl">Si pierde</span><span class="sv">0 € (no arriesgas capital propio)</span></div>
-      <div class="sr"><span class="sl">Conversion rate (vs. fair odds)</span><span class="sv">${fmt(extraction)} %</span></div>
+      <div class="sr"><span class="sl">Bet with your money on the opposite side</span><span class="sv pos">${fmt(hedge)} € @ ${fmt(opp)}</span></div>
+      <div class="sr"><span class="sl">If the freebet wins</span><span class="sv ${win>=0?'pos':'neg'}">${win>=0?'+':''}${fmt(win)} €</span></div>
+      <div class="sr"><span class="sl">If the opposite side wins</span><span class="sv ${lose>=0?'pos':'neg'}">${lose>=0?'+':''}${fmt(lose)} €</span></div>
+      <div class="sr"><span class="sl">Margin of the two odds</span><span class="sv">${fmt((1/odds+1/opp)*100)} %</span></div>
+    </div>`;
+    return;
+  }
+  out.innerHTML=`
+    <div class="card ph2 sb">
+      <div class="badge bg">Net profit if it wins</div>
+      <div class="pp pos">+${fmt(profit)} €</div>
+      <div class="ps">The bookmaker doesn't give the freebet back, only the winnings</div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="sr"><span class="sl">Freebet value</span><span class="sv">${fmt(value)} €</span></div>
+      <div class="sr"><span class="sl">If it loses</span><span class="sv">0 € (none of your money at risk)</span></div>
+      <div class="sr"><span class="sl">Most it can convert (fair odds)</span><span class="sv">${fmt((odds-1)/odds*100)} %</span></div>
+    </div>
+    <div class="bks-note" style="margin-top:8px">Add the opposite odds at another bookmaker to see how much you lock in for sure.</div>`;
+}
+
+// ── 6. Exchange (lay) ── back at a bookmaker, lay the same outcome at an exchange (Betfair Exchange…) with its commission.
+// normal: your money is staked · snr: freebet, stake not returned · sr: freebet that returns its stake
+function exMode(){const m=localStorage.getItem('sb_ex_mode');return m==='snr'||m==='sr'?m:'normal';}
+function exCalc(mode,B,ob,ol,c){
+  const back=mode==='snr'?B*(ob-1):B*ob;               // what the back bet pays on top of nothing (freebet) / incl. stake (normal)
+  const lay=back/(ol-c);                                 // equal result on both sides
+  const liab=lay*(ol-1);
+  const ifBack=(mode==='normal'?B*(ob-1):back)-liab;     // back wins: winnings − liability
+  const ifLay=lay*(1-c)-(mode==='normal'?B:0);           // lay wins: lay stake minus commission (− your back stake)
+  return {lay:cents(lay),liab:cents(liab),ifBack:cents(ifBack),ifLay:cents(ifLay)};
+}
+function calcExchange(){
+  const num=id=>parseFloat((document.getElementById(id).value||'').replace(',','.'));
+  const B=num('ex-stake'),ob=num('ex-back'),ol=num('ex-lay'),cRaw=num('ex-comm'),c=(isFinite(cRaw)?cRaw:0)/100,mode=exMode();
+  if(isFinite(cRaw))localStorage.setItem('sb_ex_comm',String(cRaw));
+  const out=document.getElementById('ex-result');
+  if(!(B>0)||!(ob>1)||!(ol>1)||!(c>=0&&c<0.5)){out.innerHTML=emptyStateHtml('Enter the stake, the back odds and the lay odds (greater than 1.00).');return;}
+  const r=exCalc(mode,B,ob,ol,c),res=Math.min(r.ifBack,r.ifLay),fb=mode!=='normal';
+  out.innerHTML=`
+    <div class="card ph2 ${res>=0?'sb':''}">
+      <div class="badge ${res>=0?'bg':'br'}">${fb?'Freebet turned into money':res>=0?'Profit either way':'Qualifying loss'}</div>
+      <div class="pp ${res>=0?'pos':'neg'}">${res>=0?'+':''}${fmt(res)} €</div>
+      <div class="ps">${fb?`${fmt(res/B*100,1)}% of the freebet`:`${fmt(res/B*100,2)}% of your stake`}</div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="sr"><span class="sl">Lay stake at the exchange</span><span class="sv pos">${fmt(r.lay)} € @ ${fmt(ol)}</span></div>
+      <div class="sr"><span class="sl">Liability (money you need at the exchange)</span><span class="sv">${fmt(r.liab)} €</span></div>
+      <div class="sr"><span class="sl">If the bookmaker bet wins</span><span class="sv ${r.ifBack>=0?'pos':'neg'}">${r.ifBack>=0?'+':''}${fmt(r.ifBack)} €</span></div>
+      <div class="sr"><span class="sl">If the lay wins</span><span class="sv ${r.ifLay>=0?'pos':'neg'}">${r.ifLay>=0?'+':''}${fmt(r.ifLay)} €</span></div>
     </div>`;
 }
 
@@ -11175,7 +11221,7 @@ function calcFreebet(){
 //  PROFILE (Google account → sidebar + Perfil header)
 // ══════════════════════════════════════════
 function setProfileUI(user){
-  const name=user.displayName||user.email||'Usuario';
+  const name=user.displayName||user.email||'User';
   const initial=name.charAt(0).toUpperCase();
   [['sbAvatar','sbAvatarFallback','sbName'],['perfilAvatar','perfilAvatarFallback','perfilName']].forEach(([avId,fbId,nmId])=>{
     const av=document.getElementById(avId),fb=document.getElementById(fbId),nm=document.getElementById(nmId);
@@ -11599,7 +11645,7 @@ const pgMeta={
   notas:{title:'Notes',sub:'Your notes organized into folders'},
   categorias:{title:'Categories',sub:'Organize your bets into your own categories'},
   perfil:{title:'Profile',sub:'Your personal stats and performance'},
-  calculadoras:{title:'Calculators',sub:'Kelly, No-Vig, Hedge, Free Bet, Hold and your saved stakes'},
+  calculadoras:{title:'Calculators',sub:'Freebets, exchange lay, hedge, Kelly, margins and your saved stakes'},
   presets:{title:'Saved stakes',sub:'The stakes you always use for some odds — filled in by themselves in New bet. Tap Edit to change one.'},
 };
 // pages that live inside another one, reached with the tabs at the top of it
