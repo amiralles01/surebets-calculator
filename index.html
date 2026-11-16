@@ -586,6 +586,7 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,
 .st-mob{display:none}
 .st-ts,.st-tr{text-align:right;font-family:var(--mono);font-weight:650;font-size:14.5px;white-space:nowrap}
 .st-tr{position:relative;padding-bottom:8px}
+.st-tr .st-lock{display:block;font-size:11px;font-weight:500;color:var(--muted);margin-top:1px}
 .st-tr.pos{color:var(--green)}.st-tr.neg{color:var(--red)}
 .st-tp{text-align:right}.st-tp .bks-roi{min-width:66px}
 .st-grid{display:grid;gap:14px;grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch}
@@ -4336,10 +4337,13 @@ function dtRows(from,to){
   return out;
 }
 const DT_CATS=[['surebet','Surebets'],['middle','Middles'],['normal','Normal'],['fun','Funbets'],['freebet','Freebets'],['none','No category']];
+// margin bands for 'Surebets by margin' (profit % when placed)
+const SB_MARGINS=[[-1e9,0,'Below 0 %'],[0,1,'0–1 %'],[1,2,'1–2 %'],[2,3,'2–3 %'],[3,5,'3–5 %'],[5,1e9,'5 % or more']];
 function dtStats(rows){
   const cat={};DT_CATS.forEach(([k])=>cat[k]={n:0,cash:0,free:0,pl:0,setStake:0,setPl:0,open:0,voids:0});
   let cash=0,free=0,pl=0,setCash=0,setCashPl=0,fbSet=0,fbSetPl=0,fbN=0,fbWon=0,fbWonPl=0,open=0,openStake=0;
   const days={},bk=new Map(),byCat=new Map(),bySub=new Map(),byMonth=new Map();
+  const byMargin=SB_MARGINS.map(([lo,hi,l])=>({lo,hi,l,n:0,stake:0,setN:0,pl:0,lock:0,voids:0,miss:0}));
   // surebets (real ones, with legs), normal bets paid with money, single biggest win / loss
   const sb={n:0,stake:0,setN:0,setPl:0,mN:0,mSum:0,mPos:0,voids:0},nm={won:0,lost:0,oddN:0,oddSum:0,stake:0,n:0};let top=null,low=null;
   rows.forEach(r=>{const c=cat[r.cat]||cat.normal;c.n++;if(r.free)c.free+=r.stake;else c.cash+=r.stake;c.pl+=r.pl;pl+=r.pl;
@@ -4356,6 +4360,8 @@ function dtStats(rows){
     if(r.done&&(!top||r.pl>top.pl))top=r;if(r.done&&(!low||r.pl<low.pl))low=r;
     if(r.kind==='sb'){if(r.st==='anulada')sb.voids++;else if(r.stake>0){sb.n++;sb.stake+=r.stake;if(r.done){sb.setN++;sb.setPl+=r.pl;}
         if(typeof r.x.profitPct==='number'){sb.mN++;sb.mSum+=r.x.profitPct;if(r.x.profitPct>0)sb.mPos++;}}}
+    if(r.kind==='sb'&&r.cat==='surebet'&&typeof r.x.profitPct==='number'){const m=r.x.profitPct,e=byMargin.find(e=>m>=e.lo&&m<e.hi);
+      if(e){if(r.st==='anulada')e.voids++;else if(r.stake>0){e.n++;e.stake+=r.stake;if(r.done){const lk=r.x.expectedProfit!=null?+r.x.expectedProfit:r.stake*m/100;e.setN++;e.pl+=r.pl;e.lock+=lk;if(r.pl<lk-0.5)e.miss++;}}}}
     else if(!r.free&&(r.st==='won'||r.st==='lost')){nm.n++;nm.stake+=r.stake;if(r.st==='won')nm.won++;else nm.lost++;if(r.x.odd>1){nm.oddN++;nm.oddSum+=+r.x.odd;}}
     r.legs.forEach(l=>{const k=bkKey((l.h||'').trim());if(!k)return;const e=bk.get(k)||{name:(l.h||'').trim(),cash:0,free:0,n:0};
       e.n++;if(r.free)e.free+=l.s;else e.cash+=l.s;bk.set(k,e);});
@@ -4373,7 +4379,7 @@ function dtStats(rows){
   dk.forEach(d=>{const i=(new Date(d+'T00:00:00').getDay()+6)%7;wd[i].sum+=days[d];wd[i].n++;});
   return{cat,cash,free,pl,roi:setCash>0?setCashPl/setCash*100:null,fbConv:fbSet>0?fbSetPl/fbSet*100:null,fbN,fbWon,fbSet,fbSetPl,fbWonPl,open,openStake,n:rows.length,
     sb,nm,top:top&&top.pl>0.004?top:null,low:low&&low.pl<-0.004?low:null,wd,
-    days,run,byCat,bySub,byMonth,best:dk.length?dk[0]:null,worst:dk.length?dk[dk.length-1]:null,activeDays:dk.length,greenDays:dk.filter(d=>days[d]>0.004).length,
+    days,run,byCat,bySub,byMonth,byMargin,best:dk.length?dk[0]:null,worst:dk.length?dk[dk.length-1]:null,activeDays:dk.length,greenDays:dk.filter(d=>days[d]>0.004).length,
     bk:[...bk.values()].sort((a,b)=>(b.cash+b.free)-(a.cash+a.free))};
 }
 function dtPeriod(p){
@@ -4482,6 +4488,15 @@ function dashHtml(rows,s,o){
         <span class="st-tr ${cl(e.pl)}">${sg(e.pl)}<i class="bks-div"><i class="${e.pl<0?'neg':'pos'}" style="width:${(Math.abs(e.pl)/mx*50).toFixed(1)}%"></i></i></span>
         <span class="st-tp"><em class="bks-roi ${cl(roi||0)}" title="Result ÷ staked with your money (settled)">${pc(roi)}</em></span></button>`;}).join('')+`</div></div></div>`;
   }
+  // ── surebets by margin: how many, staked, what they locked in vs what they really got, and how many were voided
+  {const B=(s.byMargin||[]).filter(e=>e.n||e.voids);
+   if(!o.oneDay&&B.length>1&&B.reduce((a,e)=>a+e.n,0)>=10){const mx=Math.max(...B.map(e=>Math.abs(e.pl)),0.01);
+    h+=`<div class="card st-card"><div class="ch"><span class="ct">Surebets by margin</span><span class="st-hint" title="Margin = the profit % the surebet had when you placed it. 'Got' = what it really paid once settled; 'locked' = what it should have paid. Big margins are often bookmaker errors that get voided.">locked in vs got · voided</span></div><div class="cb"><div class="st-types st-margins">`+
+      B.map(e=>{const roi=e.stake>0&&e.setN?e.pl/e.stake*100:null;
+        return `<div class="st-type"><span class="st-tn"><b>${e.l}</b><small>${e.n} placed${e.voids?` · <span class="neg">${e.voids} voided</span>`:''}<span class="st-mob"> · ${fmt(e.stake,0)} €</span></small></span>
+        <span class="st-ts">${eur(e.stake)}<small>staked</small></span>
+        <span class="st-tr ${cl(e.pl)}">${sg(e.pl)}<small class="st-lock" title="What these surebets should have paid">locked ${sg(e.lock,0)}</small><i class="bks-div"><i class="${e.pl<0?'neg':'pos'}" style="width:${(Math.abs(e.pl)/mx*50).toFixed(1)}%"></i></i></span>
+        <span class="st-tp"><em class="bks-roi ${cl(roi||0)}" title="Got ÷ staked (settled)">${pc(roi)}</em></span></div>`;}).join('')+`</div></div></div>`;}}
   // ── three focus cards: surebets, freebets, normal bets
   const meter=(p,c,mark)=>`<div class="st-meter" style="--c:${c}"><i style="width:${Math.max(0,Math.min(100,p||0)).toFixed(1)}%"></i>${mark!=null?`<u style="left:${mark}%"></u>`:''}</div>`;
   const kv=(l,v,c='',id='')=>`<div class="st-kv"><span>${l}</span><b class="${c}"${id?` id="${id}"`:''}>${v}</b></div>`;
