@@ -3308,11 +3308,10 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
       <div class="card">
         <div class="calc-tabs" id="calcTabs">
           <button class="calc-tab active" data-calc="kelly">Kelly Criterion</button>
-          <button class="calc-tab" data-calc="novig">No-Vig</button>
+          <button class="calc-tab" data-calc="novig">No-Vig &amp; margin</button>
           <button class="calc-tab" data-calc="hedge">Hedge</button>
           <button class="calc-tab" data-calc="freebet">Free Bet</button>
           <button class="calc-tab" data-calc="exchange">Exchange (lay)</button>
-          <button class="calc-tab" data-calc="hold">Hold</button>
         </div>
         <div class="cb" id="calcBody"></div>
       </div>
@@ -11066,10 +11065,9 @@ document.getElementById('tgCard').addEventListener('click',e=>{
 document.getElementById('tgSetBtn').addEventListener('click',()=>{tgOpenCfg=!tgOpenCfg;renderTgCard();if(tgOpenCfg)setTimeout(()=>document.getElementById('tgTok')?.focus(),30);});
 
 // ══════════════════════════════════════════
-//  CALCULADORAS — Kelly · No-Vig · Hedge · Free Bet · Exchange · Hold
+//  CALCULADORAS — Kelly · No-Vig (margin) · Hedge · Free Bet · Exchange
 // ══════════════════════════════════════════
 let novigRows=[{id:1,label:'',odd:''},{id:2,label:'',odd:''}],novigNextId=3;
-let holdRows=[{id:1,label:'',odd:''},{id:2,label:'',odd:''}],holdNextId=3;
 const CALC_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>';
 
 function renderCalcTab(tab){
@@ -11134,19 +11132,7 @@ function renderCalcTab(tab){
       document.querySelectorAll('#ex-modes [data-exm]').forEach(x=>x.classList.toggle('on',x===b));document.getElementById('ex-stake-l').textContent=b.dataset.exm==='normal'?'Back stake':'Freebet value';calcExchange();});
     ['ex-stake','ex-back','ex-lay','ex-comm'].forEach(id=>document.getElementById(id).addEventListener('input',calcExchange));
     calcExchange();
-  }else if(tab==='hold'){
-    body.innerHTML=`
-      <div style="max-width:520px">
-        <div class="oh" style="grid-template-columns:1fr 100px 32px"><div class="cl">Outcome</div><div class="cl" style="text-align:right">Odds</div><div></div></div>
-        <div id="holdRowsList"></div>
-        <button class="ba" id="holdAddBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add outcome</button>
-        <button class="btn-reg" id="hold-calc-btn" style="margin-top:14px">${CALC_ICON}Calculate</button>
-      </div>
-      <div id="ho-result" style="margin-top:16px;max-width:520px"></div>`;
-    renderHoldRowsList();
-    document.getElementById('holdAddBtn').addEventListener('click',()=>{holdRows.push({id:holdNextId++,label:'',odd:''});renderHoldRowsList();});
-    document.getElementById('hold-calc-btn').addEventListener('click',calcHold);
-    wireHoldRowEvents();
+
   }
 }
 document.getElementById('calcTabs').addEventListener('click',e=>{
@@ -11221,44 +11207,6 @@ function calcNovig(){
     <div class="card" style="margin-top:12px">${rows.map((r,i)=>`
       <div class="bkr"><div><div class="bkn">${esc(r.label)||'Outcome '+(i+1)}</div><div class="bks">Original odds ${fmt(odds[i])}</div></div>
       <div class="bkv"><div class="bkst">${fmt(fairP[i]*100)} %</div><div class="bkr2">Fair odds ${fmt(fairOdds[i])}</div></div></div>`).join('')}
-    </div>`;
-}
-
-// ── 5. Hold / Margen ── (shares the dynamic-rows UI pattern with No-Vig)
-function renderHoldRowsList(){
-  document.getElementById('holdRowsList').innerHTML=holdRows.map((r,idx)=>`
-    <div class="dynrow">
-      <input type="text" class="dyn-label" data-rid="${r.id}" placeholder="Outcome ${idx+1}" value="${esc(r.label)}">
-      <input type="text" inputmode="decimal" autocomplete="off" class="oi dyn-odd" data-rid="${r.id}" placeholder="1,00" value="${r.odd}" min="1.01" step="0.01">
-      <button class="bd dyn-remove" data-rid="${r.id}"${holdRows.length<=2?' style="opacity:.3;pointer-events:none"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
-    </div>`).join('');
-}
-function wireHoldRowEvents(){
-  const list=document.getElementById('holdRowsList');
-  list.addEventListener('input',e=>{
-    const rid=+e.target.dataset.rid;const r=holdRows.find(x=>x.id===rid);if(!r)return;
-    if(e.target.classList.contains('dyn-label'))r.label=e.target.value;else r.odd=e.target.value;
-  });
-  list.addEventListener('click',e=>{
-    const btn=e.target.closest('.dyn-remove');if(!btn||holdRows.length<=2)return;
-    holdRows=holdRows.filter(r=>r.id!==+btn.dataset.rid);renderHoldRowsList();
-  });
-}
-function calcHold(){
-  const rows=holdRows.filter(r=>parseFloat(r.odd)>1);
-  const out=document.getElementById('ho-result');
-  if(rows.length<2){out.innerHTML=emptyStateHtml('Add at least 2 valid odds (greater than 1.00).');return;}
-  const odds=rows.map(r=>parseFloat(r.odd));
-  const sum=odds.reduce((a,o)=>a+1/o,0);
-  const hold=(sum-1)*100;
-  out.innerHTML=`
-    <div class="card ph2">
-      <div class="badge ${hold>=0?'br':'bg'}">Bookmaker hold</div>
-      <div class="pp ${hold>=0?'neg':'pos'}">${hold>=0?'+':''}${fmt(hold)} %</div>
-      <div class="ps">The share the bookmaker keeps</div>
-    </div>
-    <div class="card" style="margin-top:12px">${rows.map((r,i)=>`
-      <div class="sr"><span class="sl">${esc(r.label)||'Outcome '+(i+1)}</span><span class="sv">Odds ${fmt(odds[i])} · Implied prob. ${fmt(100/odds[i])} %</span></div>`).join('')}
     </div>`;
 }
 
