@@ -2859,8 +2859,9 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .cv-note:empty{display:none}
 #cv-q{font-size:16px}
 
-/* ── Hide profit (switch in the account menu): the Profit tab and every result figure disappear, with no trace ── */
-body.np .ni[data-page="profit"],body.np .tab[data-tab="profit"],body.np .sc-p,body.np .pv,body.np .pp2,body.np .bfr,body.np .real-profit-row,body.np .ni2-pnl,body.np .pc-profit,body.np .pend-preview,body.np .pl-profit,body.np .bkb-pl,body.np .nf-item .nfc.pv{display:none!important}
+/* ── Hide profit (switch in the account menu) ── */
+/* only the daily / monthly profit goes: the Profit tab (calendar, month bars, month cards) and today's "locked in"; every bet keeps its own figures */
+body.np .ni[data-page="profit"],body.np .tab[data-tab="profit"],body.np .today-sub .pv{display:none!important}
 .tab.tab-np{display:none}
 @media(max-width:600px){body.np .tab.tab-np{display:flex}}
 .more-sheet{display:none}
@@ -2970,7 +2971,7 @@ body.np .ni[data-page="profit"],body.np .tab[data-tab="profit"],body.np .sc-p,bo
         <div class="profile-sub" id="sbSub">Synced with Google</div>
       </div>
     </div>
-    <div class="acct-menu" id="acctMenu"><button type="button" class="acct-row" id="acctProfit" data-profit-sw role="switch" aria-checked="true"><span>Show profit<small>Off: the Profit tab and every result are hidden on this device</small></span><i class="acct-sw"></i></button></div>
+    <div class="acct-menu" id="acctMenu"><button type="button" class="acct-row" id="acctProfit" data-profit-sw role="switch" aria-checked="true"><span>Show profit<small>Off: hides the daily and monthly profit (Profit tab) on this device</small></span><i class="acct-sw"></i></button></div>
   </div>
 </aside>
 
@@ -11899,7 +11900,7 @@ function navTo(page){
 }
 document.querySelectorAll('.ni[data-page]').forEach(item=>item.addEventListener('click',()=>navTo(item.dataset.page)));
 
-// ── Hide profit: one switch (eye in the header), remembered on this device. Hides the Profit tab and shows ••• instead of every result ──
+// ── Hide profit: one switch (eye in the header), remembered on this device. Hides the daily and monthly profit (Profit tab) ──
 let hideProfit=false;try{hideProfit=localStorage.getItem('sb_hide_profit')==='1';}catch(e){}
 function applyHideProfit(){
   document.body.classList.toggle('np',hideProfit);
