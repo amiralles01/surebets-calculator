@@ -2750,6 +2750,10 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .thc-lab{position:absolute;left:50%;transform:translateX(-50%);top:calc(var(--top) - 17px);font-size:11px;font-weight:700;color:#fff;white-space:nowrap;font-family:var(--mono);font-variant-numeric:tabular-nums}
 .thc-tip{position:absolute;top:-6px;transform:translate(-50%,-100%);background:#fff;color:#14281d;border-radius:8px;padding:5px 9px;font-size:12px;line-height:1.25;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .12s;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:2;display:flex;flex-direction:column}
 .thc-tip.on{opacity:1}.thc-tip small{color:#5d6b63;font-size:11px}.thc-tip b{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.thc-yr{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:8px;font-size:12.5px;color:#fff}
+.thc-yr b{font-family:var(--mono);font-variant-numeric:tabular-nums;min-width:38px;text-align:center}
+.thc-yr button{width:26px;height:26px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:15px;line-height:1;cursor:pointer;padding:0}
+.thc-yr button:disabled{opacity:.3;cursor:default}
 .thc-x{display:flex;gap:6px;margin-top:6px}.thc-x span{flex:1;text-align:center;font-size:11px;color:var(--pitch-muted,rgba(255,255,255,.6))}
 .thc-x span.cur{color:#fff;font-weight:700}
 .total-hero .th-sub{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:22px}
@@ -5952,15 +5956,20 @@ const PROFIT_CATS=[['surebet','Surebets','#2E9E5B',1],['middle','Middles','#C270
   ['expense','Bank expenses','#8A8F98'],['cost','Monthly costs','#8A8F98'],['software','Software','#8A8F98'],['adjust','Balance corrections','#5B9AA8']];
 function profitCats(hasFun){return PROFIT_CATS.map(([k,n,c,always])=>({k,n,c,always:!!always||(k==='fun'&&hasFun)||(k==='none'&&[...D.bets,...D.normals].some(x=>x.cnt==='none'))}));}
 // last 12 months as bars: up = profit, down = loss; hover / tap shows the month
+// one calendar year at a time (Jan–Dec), this year first; ‹ › go to the other years that have data
+let thcYear=null;
 function monthChartHtml(keys,months){
-  const ks=keys.slice(-12);if(ks.length<2)return '';
-  const v=ks.map(k=>{const m=months[k];return m.surebet+m.middle+m.normal+m.freebet+m.fun+m.none+m.adjust+m.cost+m.expense+m.software;});
+  const years=[...new Set(keys.filter(k=>months[k]).map(k=>k.slice(0,4)))].sort();if(!years.length)return '';
+  const cy=todayLocalISO().slice(0,4),y=thcYear&&years.includes(thcYear)?thcYear:years.includes(cy)?cy:years[years.length-1],yi=years.indexOf(y);
+  const ks=Array.from({length:12},(_,i)=>y+'-'+String(i+1).padStart(2,'0'));
+  const v=ks.map(k=>{const m=months[k];return m?m.surebet+m.middle+m.normal+m.freebet+m.fun+m.none+m.adjust+m.cost+m.expense+m.software:0;});
+  const yNav=`<div class="thc-yr">${years.length>1?`<button type="button" data-thc-yr="${years[yi-1]||''}" ${yi>0?'':'disabled'} aria-label="Previous year">‹</button>`:''}<b>${y}</b>${years.length>1?`<button type="button" data-thc-yr="${years[yi+1]||''}" ${yi<years.length-1?'':'disabled'} aria-label="Next year">›</button>`:''}</div>`;
   const hi=Math.max(...v,0),lo=Math.min(...v,0),span=(hi-lo)||1,H=120,zero=hi/span*H;
   const cur=todayLocalISO().slice(0,7),bi=v.indexOf(Math.max(...v));
   const short=k=>MONTH_NAMES_EN[+k.slice(5)-1].slice(0,3);
-  return `<div class="th-chart" aria-label="Profit per month"><div class="thc-plot" style="height:${H}px"><i class="thc-zero" style="top:${zero.toFixed(1)}px"></i>`+
-    ks.map((k,i)=>{const h=Math.max(2,Math.abs(v[i])/span*H);const top=v[i]>=0?zero-h:zero;
-      return `<button type="button" class="thc-b${v[i]<0?' neg':''}${k===cur?' cur':''}" data-thc="${i}" data-l="${MONTH_NAMES_EN[+k.slice(5)-1]} ${k.slice(0,4)}" data-v="${(v[i]>=0?'+':'')+fmt(v[i])} €" style="--top:${top.toFixed(1)}px;--h:${h.toFixed(1)}px">${i===bi||k===cur?`<span class="thc-lab" style="${v[i]>=0?'':'top:calc(var(--top) + var(--h) + 3px)'}">${v[i]>=0?'+':''}${fmt(v[i],0)}</span>`:''}</button>`;}).join('')+
+  return `<div class="th-chart" aria-label="Profit per month">${yNav}<div class="thc-plot" style="height:${H}px"><i class="thc-zero" style="top:${zero.toFixed(1)}px"></i>`+
+    ks.map((k,i)=>{const h=months[k]?Math.max(2,Math.abs(v[i])/span*H):0;const top=v[i]>=0?zero-h:zero;
+      return `<button type="button" class="thc-b${v[i]<0?' neg':''}${k===cur?' cur':''}"${months[k]?'':' disabled'} data-thc="${i}" data-l="${MONTH_NAMES_EN[+k.slice(5)-1]} ${k.slice(0,4)}" data-v="${(v[i]>=0?'+':'')+fmt(v[i])} €" style="--top:${top.toFixed(1)}px;--h:${h.toFixed(1)}px">${i===bi||k===cur?`<span class="thc-lab" style="${v[i]>=0?'':'top:calc(var(--top) + var(--h) + 3px)'}">${v[i]>=0?'+':''}${fmt(v[i],0)}</span>`:''}</button>`;}).join('')+
     `<div class="thc-tip" id="thcTip"></div></div><div class="thc-x">${ks.map(k=>`<span${k===cur?' class="cur"':''}>${short(k)}</span>`).join('')}</div></div>`;
 }
 function wireMonthChart(){
@@ -5971,6 +5980,7 @@ function wireMonthChart(){
   plot.addEventListener('pointerleave',()=>show(null));
   plot.addEventListener('focusin',e=>show(e.target.closest('[data-thc]')));plot.addEventListener('focusout',()=>show(null));
 }
+document.addEventListener('click',e=>{const b=e.target.closest('[data-thc-yr]');if(!b||!b.dataset.thcYr)return;thcYear=b.dataset.thcYr;renderProfit();});
 let ptEdit=false;
 const PT_EYE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 const PT_EYE_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.83 21.83 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.82 21.82 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
