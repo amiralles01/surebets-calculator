@@ -2855,6 +2855,21 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .cv-note:empty{display:none}
 #cv-q{font-size:16px}
 
+/* ── Hide profit (switch in the account menu): the Profit tab and every result figure disappear, with no trace ── */
+body.np .ni[data-page="profit"],body.np .tab[data-tab="profit"],body.np .sc-p,body.np .pv,body.np .pp2,body.np .bfr,body.np .real-profit-row,body.np .ni2-pnl,body.np .pc-profit,body.np .pend-preview,body.np .pl-profit,body.np .bkb-pl,body.np .nf-item .nfc.pv{display:none!important}
+@media(max-width:600px){body.np .tabbar{grid-template-columns:repeat(4,1fr)}}
+.sb-account{position:relative}
+.sb-account .profile-block{cursor:pointer;border-radius:10px}
+.acct-menu{display:none;position:absolute;left:0;right:0;bottom:calc(100% + 8px);z-index:300;background:#fff;color:#1b2420;border:1px solid var(--border);border-radius:14px;padding:6px;box-shadow:0 14px 34px -14px rgba(16,40,28,.45)}
+.acct-menu.on{display:block}
+.acct-row{display:flex;align-items:center;justify-content:space-between;gap:14px;width:100%;padding:10px 10px;border:none;background:transparent;color:inherit;font:inherit;font-size:14px;font-weight:600;text-align:left;border-radius:10px;cursor:pointer}
+.acct-row:hover{background:rgba(27,36,32,.05)}
+.acct-row small{display:block;font-size:11.5px;font-weight:500;color:var(--muted);margin-top:2px}
+.acct-sw{flex-shrink:0;width:42px;height:24px;border-radius:99px;background:#c9cfcb;position:relative;transition:background .15s}
+.acct-sw::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .15s}
+.acct-row[aria-checked="true"] .acct-sw{background:var(--green)}
+.acct-row[aria-checked="true"] .acct-sw::after{transform:translateX(18px)}
+@media(min-width:601px){.acct-menu{left:auto;right:0;bottom:auto;top:calc(100% + 10px);width:260px}}
 </style>
 </head>
 <body>
@@ -2942,6 +2957,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
         <div class="profile-sub" id="sbSub">Synced with Google</div>
       </div>
     </div>
+    <div class="acct-menu" id="acctMenu"><button type="button" class="acct-row" id="acctProfit" role="switch" aria-checked="true"><span>Show profit<small>Off: the Profit tab and every result are hidden on this device</small></span><i class="acct-sw"></i></button></div>
   </div>
 </aside>
 
@@ -5657,9 +5673,9 @@ function renderSurebets(filter=''){
   document.getElementById('sbStats').innerHTML=`
     <div class="sc"><div class="sl2">Total surebets</div><div class="sv2">${vBets.length}</div></div>
     ${(()=>{const st=vBets.filter(b=>b.status==='won'||b.status==='lost'),stk=st.reduce((a,b)=>a+betStake(b),0),roi=stk>0?wonProfit/stk*100:null;
-      return `<div class="sc" title="Surebet profit ÷ what you staked on the settled ones (${fmt(stk)} €)"><div class="sl2">ROI</div><div class="sv2 ${roi==null?'':roi>=0?'pos':'neg'}">${roi==null?'—':(roi>0?'+':'')+fmt(roi)+'%'}<small class="sc-names">${won.length} won of ${st.length}</small></div></div>`;})()}
+      return `<div class="sc sc-p" title="Surebet profit ÷ what you staked on the settled ones (${fmt(stk)} €)"><div class="sl2">ROI</div><div class="sv2 ${roi==null?'':roi>=0?'pos':'neg'}">${roi==null?'—':(roi>0?'+':'')+fmt(roi)+'%'}<small class="sc-names">${won.length} won of ${st.length}</small></div></div>`;})()}
     <div class="sc"><div class="sl2">Pending</div><div class="sv2 yel">${vBets.filter(b=>b.status==='pending').length}</div></div>
-    <div class="sc"><div class="sl2">Surebet profit</div><div class="sv2 ${wonProfit>=0?'pos':'neg'}">${wonProfit>=0?'+':''}${fmt(wonProfit)} €</div></div>`;
+    <div class="sc sc-p"><div class="sl2">Surebet profit</div><div class="sv2 ${wonProfit>=0?'pos':'neg'}">${wonProfit>=0?'+':''}${fmt(wonProfit)} €</div></div>`;
   const list=document.getElementById('sbList');
   const visible=bets.filter(b=>!isHidden('sb:'+b.id));
   const hidden=bets.filter(b=>isHidden('sb:'+b.id));
@@ -5715,9 +5731,9 @@ function renderNormals(filter=''){
   document.getElementById('nbStats').innerHTML=`
     <div class="sc"><div class="sl2">Total entries</div><div class="sv2">${vNorm.length}</div></div>
     <div class="sc"><div class="sl2">Pending</div><div class="sv2 yel">${pendCount}</div></div>
-    <div class="sc"><div class="sl2">Normal bet profit</div><div class="sv2 ${normProfit>=0?'pos':'neg'}">${normProfit>=0?'+':''}${fmt(normProfit)} €</div></div>
-    <div class="sc"><div class="sl2">Freebet profit</div><div class="sv2 ${fbProfit>=0?'pos':'neg'}">${fbProfit>=0?'+':''}${fmt(fbProfit)} €</div></div>
-    ${funN?`<div class="sc"><div class="sl2">Funbet profit · ${funN}</div><div class="sv2 ${funProfit>=0?'pos':'neg'}">${funProfit>=0?'+':''}${fmt(funProfit)} €</div></div>`:''}`;
+    <div class="sc sc-p"><div class="sl2">Normal bet profit</div><div class="sv2 ${normProfit>=0?'pos':'neg'}">${normProfit>=0?'+':''}${fmt(normProfit)} €</div></div>
+    <div class="sc sc-p"><div class="sl2">Freebet profit</div><div class="sv2 ${fbProfit>=0?'pos':'neg'}">${fbProfit>=0?'+':''}${fmt(fbProfit)} €</div></div>
+    ${funN?`<div class="sc sc-p"><div class="sl2">Funbet profit · ${funN}</div><div class="sv2 ${funProfit>=0?'pos':'neg'}">${funProfit>=0?'+':''}${fmt(funProfit)} €</div></div>`:''}`;
   const list=document.getElementById('nbList');
   const visible=items.filter(n=>!isHidden('nm:'+n.id));
   const hidden=items.filter(n=>isHidden('nm:'+n.id));
@@ -7151,7 +7167,7 @@ function renderPendientesInner(){
   const totalMinRet=pendSB.reduce((a,x)=>a+(x.minReturn||0),0);
   document.getElementById('pendStats').innerHTML=`
     <div class="sc"><div class="sl2">Pending</div><div class="sv2 yel">${pendSB.length+pendNM.length+pendWD.length}</div></div>
-    <div class="sc"><div class="sl2">Expected profit</div><div class="sv2 ${totalExpected>=0?'pos':'neg'}">${totalExpected>=0?'+':''}${fmt(totalExpected)} €</div></div>
+    <div class="sc sc-p"><div class="sl2">Expected profit</div><div class="sv2 ${totalExpected>=0?'pos':'neg'}">${totalExpected>=0?'+':''}${fmt(totalExpected)} €</div></div>
     <div class="sc"><div class="sl2">Staked</div><div class="sv2">${fmt(totalStake)} €</div></div>
     <div class="sc"><div class="sl2">Total min. return</div><div class="sv2">${fmt(totalMinRet)} €</div></div>`;
   const list=document.getElementById('pendList');
@@ -7700,11 +7716,11 @@ function bkBetsPanelHtml(c){
       <div><span>Won · Lost</span><b><em class="pos">${cnt('won')}</em> · <em class="neg">${cnt('lost')}</em></b></div>
       <div><span>Pending</span><b class="${cnt('pending')?'yel':''}">${cnt('pending')}${inPlay?` <small>${fmt(inPlay)} €</small>`:''}</b></div>
       <div><span>Staked</span><b>${fmt(staked)} €</b></div>
-      <div><span>Result here</span><b class="${cl(net)}">${sg(net)}</b></div>
+      <div class="pv"><span>Result here</span><b class="${cl(net)}">${sg(net)}</b></div>
     </div>
     ${kindChips}<div class="bkb-chips">${resChips}</div>
     ${shown.length?`<div class="bkb-list">${rowsHtml}</div>`:`<div class="bk-hist-empty">No bets with this filter.</div>`}
-    <div class="bkb-foot"><span>${shown.length} shown${bkBetsRes!=='all'||bkBetsKind!=='all'?` · result of these: <b class="${cl(shownNet)}">${sg(shownNet)}</b>`:''}</span>${shown.length>page.length?`<button class="bk-btn" data-bkb-more="${c.id}">Show ${Math.min(40,shown.length-page.length)} more</button>`:''}</div>
+    <div class="bkb-foot"><span>${shown.length} shown${bkBetsRes!=='all'||bkBetsKind!=='all'?` · <span class="pv">result of these: </span><b class="pv ${cl(shownNet)}">${sg(shownNet)}</b>`:''}</span>${shown.length>page.length?`<button class="bk-btn" data-bkb-more="${c.id}">Show ${Math.min(40,shown.length-page.length)} more</button>`:''}</div>
   </div>`;
 }
 let _ledgerCache=null;
@@ -7807,7 +7823,7 @@ function renderCasas(filter=''){
     ${(()=>{const bk=visibleCasas().filter(c=>!isBank(c)); /* every bookmaker, Unused and other profiles too: it's what you owe Hacienda on */
       const cfs=bk.map(c=>casaCashFlow(c)),inn=cfs.reduce((a,f)=>a+f.in,0),out=cfs.reduce((a,f)=>a+f.out,0),bal=bk.reduce((a,c)=>{const m=casaMoney(c,ledger);return a+m.balance+m.inPlay;},0),th=bk.reduce((a,c)=>a+casaThird(c),0);
       const r=+(out-inn+bal).toFixed(2);
-      return `<div class="sc sc-tax" data-rt-open role="button" tabindex="0" title="Tap: result per calendar year for the tax return (Renta). Every bookmaker (Unused ones too), no bank accounts: withdrawn ${fmt(out)} € − deposited ${fmt(inn)} € + balance ${fmt(bal)} € (money in pending bets included)${th?`. The ${fmt(th)} € a friend lost count here as the bookmaker reports them (your name); Total Profit adds them back`:''}."><div class="sl2">Hacienda</div><div class="sv2 ${r>0?'pos':r<0?'neg':''}">${r>0?'+':''}${fmt(r)} €<small class="sc-names">${r>0?`up`:r<0?`down`:'even'} · all bookmakers</small></div></div>`;})()}
+      return `<div class="sc sc-tax sc-p" data-rt-open role="button" tabindex="0" title="Tap: result per calendar year for the tax return (Renta). Every bookmaker (Unused ones too), no bank accounts: withdrawn ${fmt(out)} € − deposited ${fmt(inn)} € + balance ${fmt(bal)} € (money in pending bets included)${th?`. The ${fmt(th)} € a friend lost count here as the bookmaker reports them (your name); Total Profit adds them back`:''}."><div class="sl2">Hacienda</div><div class="sv2 ${r>0?'pos':r<0?'neg':''}">${r>0?'+':''}${fmt(r)} €<small class="sc-names">${r>0?`up`:r<0?`down`:'even'} · all bookmakers</small></div></div>`;})()}
     ${(()=>{const w=vCasas.filter(c=>casaCredit(c)>0).sort((a,b)=>casaCredit(b)-casaCredit(a)),t=w.reduce((a,c)=>a+casaCredit(c),0);if(!w.length)return '';
       return `<div class="sc sc-cred" data-bk-cred-open role="button" tabindex="0" title="Tap: every bookmaker with credits. Bet credits waiting to be used: ${esc(w.map(c=>c.name+' '+fmt(casaCredit(c))+' €').join(', '))}. Not money: they don't count in the balance."><div class="sl2">Bet credits</div><div class="sv2 yel">${fmt(t)} €<small class="sc-names">${esc(w.slice(0,3).map(c=>c.name).join(', '))+(w.length>3?'…':'')}</small></div></div>`;})()}
     ${(()=>{ // bookmakers where a usual surebet stake doesn't fit any more: time to deposit (or move money) there
@@ -7974,8 +7990,8 @@ function renderCasas(filter=''){
           const cell=(l,v,sub)=>`<div class="bk-cash${mode==='cash'?' on':''}" role="button" tabindex="0" data-bk-toggle="cash" data-cid="${c.id}" title="Tap to type the real totals from the bookmaker's website"><span>${l}${f.edited?' · edited':''} ${ed}</span><b>${fmt(v)} €</b>${sub?`<small class="bk-dir">${sub}</small>`:''}</div>`;
           return cell('Deposited',f.in,'all time')+cell('Withdrawn',f.out,f.pendOut?`${fmt(f.pendOut)} € on its way`:'all time')+
           `<div><span>In pending bets${mny.open?` (${mny.open})`:''}</span><b class="${mny.inPlay>0?'yel':''}">${fmt(mny.inPlay)} €</b></div>
-          <div title="Withdrawn ${fmt(f.out)} − deposited ${fmt(f.in)} + balance ${fmt(amt)} + pending ${fmt(mny.inPlay)}${th?` + ${fmt(th)} lost by others`:''}: what your bets here really made you, logged or not. Hacienda counts it without the others' part."><span>Bet results</span><b class="${cl(real)}">${sg(real)}</b><small class="bk-dir">out − in + balance${th?` · +${fmt(th)} others`:''}</small></div>
-          <div title="The result of the bets you logged here${mny.adj?` (balance corrections: ${sg(mny.adj)})`:''}"><span>Logged in the app</span><b class="${cl(mny.settled)}">${sg(mny.settled)}</b><small class="bk-dir">${Math.abs(nl)>=0.01?`${sg(nl)} not logged`:'matches Bet results'}</small></div>`;})()}
+          <div title="Withdrawn ${fmt(f.out)} − deposited ${fmt(f.in)} + balance ${fmt(amt)} + pending ${fmt(mny.inPlay)}${th?` + ${fmt(th)} lost by others`:''}: what your bets here really made you, logged or not. Hacienda counts it without the others' part." class="pv"><span>Bet results</span><b class="${cl(real)}">${sg(real)}</b><small class="bk-dir">out − in + balance${th?` · +${fmt(th)} others`:''}</small></div>
+          <div class="pv" title="The result of the bets you logged here${mny.adj?` (balance corrections: ${sg(mny.adj)})`:''}"><span>Logged in the app</span><b class="${cl(mny.settled)}">${sg(mny.settled)}</b><small class="bk-dir">${Math.abs(nl)>=0.01?`${sg(nl)} not logged`:'matches Bet results'}</small></div>`;})()}
       </div>`}
       <div class="bk-actions">
         <button class="bk-btn dep${mode==='dep'?' on':''}" data-bk-toggle="dep" data-cid="${c.id}">+ Deposit</button>
@@ -8688,7 +8704,7 @@ function renderCatNode(c,depth,seen){
   const profit=categoryProfitRollup(c.id);
   const pCls=profit>0?'pos':profit<0?'neg':'';
   let html=`<div class="nf-item ${catSelId===c.id?'active':''}" data-cfid="${c.id}" data-drag-id="${c.id}" draggable="true" style="padding-left:${9+Math.min(depth,20)*16}px">
-    <span class="nfn">${esc(c.name)}</span><span class="nfc ${pCls}">${profit>0?'+':''}${fmt(profit)} €</span>
+    <span class="nfn">${esc(c.name)}</span><span class="nfc pv ${pCls}">${profit>0?'+':''}${fmt(profit)} €</span>
     <svg class="nfmove" data-catmove="${c.id}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="Move…"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
     <svg class="nfdel" data-catdel="${c.id}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
   </div>`;
@@ -11830,6 +11846,7 @@ const ALL_PAGES=['calc','bets','profit','pendientes','casas','notas','categorias
 function navTo(page){
     if(page==='surebets'||page==='normales'){const v=page;page='bets';setTimeout(()=>setBetsView(v));}
     if(String(page).startsWith('profit:')){profitTab=page.slice(7);page='profit';}
+    if(hideProfit&&(page==='profit'||page==='perfil'))page='calc'; // Profit is hidden: its pages can't be opened
     mergeProfitPages();
     curPage=page;
     const item=document.querySelector(`.ni[data-page="${GROUP_OF[page]||page}"]`);
@@ -11862,6 +11879,24 @@ function navTo(page){
 }
 document.querySelectorAll('.ni[data-page]').forEach(item=>item.addEventListener('click',()=>navTo(item.dataset.page)));
 
+// ── Hide profit: one switch (eye in the header), remembered on this device. Hides the Profit tab and shows ••• instead of every result ──
+let hideProfit=false;try{hideProfit=localStorage.getItem('sb_hide_profit')==='1';}catch(e){}
+function applyHideProfit(){
+  document.body.classList.toggle('np',hideProfit);
+  const b=document.getElementById('acctProfit');if(b)b.setAttribute('aria-checked',String(!hideProfit));
+}
+function setHideProfit(on){
+  hideProfit=!!on;try{localStorage.setItem('sb_hide_profit',hideProfit?'1':'0');}catch(e){}
+  applyHideProfit();
+  if(hideProfit&&(curPage==='profit'||curPage==='perfil'))navTo('calc');
+  toast(hideProfit?'Profit hidden':'Profit shown');
+}
+applyHideProfit();
+// tap your name / avatar to open the little account menu with the switch
+document.querySelector('.sb-account .profile-block').addEventListener('click',e=>{e.stopPropagation();document.getElementById('acctMenu').classList.toggle('on');});
+document.getElementById('acctProfit').addEventListener('click',e=>{e.stopPropagation();setHideProfit(!hideProfit);});
+document.addEventListener('click',e=>{const m=document.getElementById('acctMenu');if(m.classList.contains('on')&&!e.target.closest('#acctMenu'))m.classList.remove('on');});
+
 function updateBadges(){
   document.getElementById('sbCount').textContent=visibleBets().length;
   document.getElementById('nbCount').textContent=visibleNormals().length;
@@ -11884,7 +11919,7 @@ function renderTodaySub(){
   const staked=sb.reduce((a,b)=>a+(b.totalStake||0),0)+nm.reduce((a,n)=>a+(n.type==='Freebet'?0:(n.stake||0)),0);
   const locked=sb.reduce((a,b)=>a+(b.expectedProfit!=null?b.expectedProfit:(b.profit||0)),0);
   const n=sb.length+nm.length;
-  el.innerHTML=`<span class="today-sub">Today <b>${n}</b> bet${n>1?'s':''}<i>·</i><b>${fmt(staked,0)} €</b> staked${sb.length?`<i>·</i><b class="${locked>=0?'pos':'neg'}">${locked>=0?'+':''}${fmt(locked)} €</b> locked in`:''}</span>`;
+  el.innerHTML=`<span class="today-sub">Today <b>${n}</b> bet${n>1?'s':''}<i>·</i><b>${fmt(staked,0)} €</b> staked${sb.length?`<span class="pv"><i>·</i><b class="${locked>=0?'pos':'neg'}">${locked>=0?'+':''}${fmt(locked)} €</b> locked in</span>`:''}</span>`;
 }
 
 // Re-renders whichever page is currently on screen. Used after hide/unhide actions,
