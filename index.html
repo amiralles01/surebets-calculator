@@ -2972,7 +2972,7 @@ body.np .ni[data-page="profit"],body.np .tab[data-tab="profit"],body.np .today-s
         <div class="profile-sub" id="sbSub">Synced with Google</div>
       </div>
     </div>
-    <div class="acct-menu" id="acctMenu"><button type="button" class="acct-row" id="acctProfit" data-profit-sw role="switch" aria-checked="true"><span>Show profit<small>Off: hides the daily and monthly profit (Profit tab) on this device</small></span><i class="acct-sw"></i></button></div>
+    <div class="acct-menu" id="acctMenu"><button type="button" class="acct-row" id="acctProfit" data-profit-sw role="switch" aria-checked="true"><span>Show profit<small>Off: hides the daily and monthly profit (Profit tab) in your account</small></span><i class="acct-sw"></i></button></div>
   </div>
 </aside>
 
@@ -11936,11 +11936,18 @@ function applyHideProfit(){
   document.querySelectorAll('[data-profit-sw]').forEach(b=>b.setAttribute('aria-checked',String(!hideProfit)));
   if(!hideProfit)closeMoreSheet();
 }
-function setHideProfit(on){
+function setHideProfit(on,fromCloud){
   hideProfit=!!on;try{localStorage.setItem('sb_hide_profit',hideProfit?'1':'0');}catch(e){}
+  if(!fromCloud){D.hideProfit=hideProfit;save();} // kept in the account: every device signed in with this email follows it
   applyHideProfit();
   if(hideProfit&&(curPage==='profit'||curPage==='perfil'))navTo('calc');
-  toast(hideProfit?'Profit hidden':'Profit shown');
+  if(!fromCloud)toast(hideProfit?'Profit hidden':'Profit shown');
+}
+// after the account's data loads or another device saves: follow the account's choice
+// (a device that had it hidden before this was synced passes its choice up once)
+function syncHideProfit(){
+  if(typeof D.hideProfit!=='boolean'){if(hideProfit){D.hideProfit=true;save();}return;}
+  if(D.hideProfit!==hideProfit)setHideProfit(D.hideProfit,true);
 }
 applyHideProfit();
 // tap your name / avatar to open the little account menu with the switch
@@ -12234,6 +12241,7 @@ function emailToPath(email) {
 
     if (fixSplitBets()) save();
     if (fixAntiguo()) save();
+    syncHideProfit();
     updateBadges();
     render();
     renderTgCard();tgStart();
@@ -12260,6 +12268,7 @@ function emailToPath(email) {
   }
 
   function refreshCurrentView() {
+    syncHideProfit();
     updateBadges();
     const activePage = curPage;
     if (activePage === 'calc') { if (sbMode()) render(); else renderNfResult(); }
