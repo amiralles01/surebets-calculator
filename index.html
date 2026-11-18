@@ -723,6 +723,7 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,
 .btn-reject:hover{border-color:rgba(210,65,43,.4);color:var(--red);background:var(--rdim)}
 .btn-reject.wd-cancel,.btn-reject.pc-act{display:flex;align-items:center;gap:5px}.btn-reject.wd-cancel svg,.btn-reject.pc-act svg{width:13px;height:13px}
 .unhidebtn.wd-cancel:hover{border-color:var(--red);color:var(--red)}
+.unhidebtn.mv-del{display:inline-flex;align-items:center;padding:4px 7px;color:var(--muted,#888)}.unhidebtn.mv-del svg{width:14px;height:14px}.unhidebtn.mv-del:hover{border-color:var(--red);color:var(--red)}
 .btn-void{padding:7px 10px;border-radius:7px;background:transparent;border:1px solid var(--border);
   color:var(--muted);font-size:12px;font-weight:500;transition:all var(--t);white-space:nowrap}
 .btn-void:hover{border-color:rgba(95,105,100,.5);color:var(--muted);background:rgba(95,105,100,.14)}
@@ -5017,6 +5018,33 @@ function cancelWithdrawal(cid,entryId){
   save();
   toast(`Withdrawal cancelled · ${fmt(h.amount)} € back in ${c.name}`,'Undo',()=>{const i=D.casas.findIndex(x=>x.id===cid);if(i>=0)D.casas[i]=JSON.parse(snap);save();updateBadges();rerenderActivePage();});
 }
+// Delete any deposit/withdrawal from a History list, as if it had never been recorded:
+// the balance goes back and the other side of a bank transfer (ING ↔ bookmaker) goes too. Undo puts both back.
+function moveTwin(c,h){
+  const other=(id,f)=>{const o=D.casas.find(x=>x.id===id);if(!o)return null;const l=o.history||[];
+    const e=l.find(x=>x.id===h.id+1&&f(x))||l.find(x=>x.id===h.id-1&&f(x))||l.find(x=>f(x)&&x.amount===h.amount&&x.date===h.date)||l.find(x=>f(x)&&x.amount===h.amount);
+    return e?{o,e}:null;};
+  if(h.type==='dep'&&h.fromBank)return other(h.fromBank,x=>x.type==='wd'&&x.transfer&&x.toId===c.id);
+  if(h.type==='wd'&&h.transfer&&h.toId)return other(h.toId,x=>x.type==='dep'&&x.fromBank===c.id);
+  if(h.type==='wd'&&h.toBank&&h.transferDone)return other(h.toBank,x=>x.type==='dep'&&x.transfer&&x.fromId===c.id);
+  if(h.type==='dep'&&h.transfer&&h.fromId)return other(h.fromId,x=>x.type==='wd'&&x.toBank===c.id&&x.transferDone);
+  return null;
+}
+function undoMove(c,h){ // money back as before the movement: a deposit leaves, a withdrawal returns
+  c.amount=+((c.amount||0)+(h.type==='dep'?-1:1)*(h.amount||0)).toFixed(2);
+  c.history=(c.history||[]).filter(x=>x!==h);
+}
+function deleteMovement(cid,entryId){
+  const c=D.casas.find(x=>x.id===cid);if(!c)return;
+  const h=(c.history||[]).find(x=>x.id===entryId);if(!h)return;
+  const tw=moveTwin(c,h);
+  const what=`${h.type==='dep'?'deposit':'withdrawal'} of ${fmt(h.amount)} € (${fmtDate(h.date)})`;
+  if(!confirm(`Delete this ${what} from ${c.name}?${tw?` Its other side in ${tw.o.name} is deleted too.`:''} The balance${tw?'s go':' goes'} back as if it had never been recorded.`))return;
+  const snaps=[c,...(tw?[tw.o]:[])].map(x=>[x.id,JSON.stringify(x)]);
+  undoMove(c,h);if(tw)undoMove(tw.o,tw.e);
+  save();
+  toast(`${h.type==='dep'?'Deposit':'Withdrawal'} deleted · ${c.name}${tw?' and '+tw.o.name:''}`,'Undo',()=>{snaps.forEach(([id,j])=>{const i=D.casas.findIndex(x=>x.id===id);if(i>=0)D.casas[i]=JSON.parse(j);});save();updateBadges();rerenderActivePage();});
+}
 function hideBtnHtml(key,small){return `<button class="hidebtn${small?' sm':''}" data-hidekey="${esc(key)}" title="Hide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.83 21.83 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.82 21.82 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>`;}
 // Renders the collapsed "Show hidden (N)" toggle, or — once expanded — the toggle
 // plus a small panel listing each hidden item with an Unhide button.
@@ -7992,6 +8020,7 @@ function renderCasas(filter=''){
             <span class="bk-hist-amt ${isWd?'neg':'pos'}">${isWd?'−':'+'}${fmt(h.amount)} €</span>
             ${pendingWd?`<span class="bk-hist-pending">Pending</span><button class="unhidebtn" data-confirm-wd="${c.id}:${h.id}">Confirm received</button><button class="unhidebtn wd-cancel" data-cancel-wd="${c.id}:${h.id}" title="Cancel: the money goes back to this bookmaker">Cancel</button>`:''}
             ${isWd&&!h.transfer&&!h.toBank?`<button class="unhidebtn" data-mv-flip="${c.id}:${h.id}" title="Change what this withdrawal was">${h.expense?'Make it personal':'Make it an expense'}</button>`:''}
+            <button class="unhidebtn mv-del" data-mv-del="${c.id}:${h.id}" title="Delete this movement: the balance goes back${h.fromBank||h.toId||h.fromId||h.transferDone?' and the other side of the transfer is deleted too':''}" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
           </div>`;
         }).join('')}</div>`}
       </div>`;
@@ -11976,6 +12005,8 @@ document.addEventListener('click',e=>{
   if(wg){const k=wg.dataset.wdg;if(pendWdOpen.has(k))pendWdOpen.delete(k);else pendWdOpen.add(k);rerenderActivePage();return;}
   const cwd=e.target.closest('[data-confirm-wd]');
   if(cwd){const[cid,eid]=cwd.dataset.confirmWd.split(':').map(Number);confirmWithdrawal(cid,eid);updateBadges();rerenderActivePage();return;}
+  const mvd=e.target.closest('[data-mv-del]');
+  if(mvd){const[cid,eid]=mvd.dataset.mvDel.split(':').map(Number);deleteMovement(cid,eid);updateBadges();rerenderActivePage();return;}
   const xwd=e.target.closest('[data-cancel-wd]');
   if(xwd){const[cid,eid]=xwd.dataset.cancelWd.split(':').map(Number);cancelWithdrawal(cid,eid);updateBadges();rerenderActivePage();return;}
 });
