@@ -5913,7 +5913,7 @@ function bankrollCardHtml(all){
   const cat=c=>since.filter(e=>e.cat===c).reduce((a,e)=>a+e.profit,0);
   const bets=cat('surebet')+cat('middle')+cat('normal')+cat('freebet')+cat('fun'),corr=cat('adjust'),exp=cat('expense'),cost=cat('cost'),sw=cat('software');
   const real=realProfitInfo(all),gap=real?real.gap:0;
-  const sinceSum=Math.round(since.reduce((a,e)=>a+e.profit,0)*100)/100+0,total=Math.round((pre+sinceSum+gap)*100)/100+0;
+  const sinceSum=Math.round(since.reduce((a,e)=>a+e.profit,0)*100)/100+0,total=real?real.real:Math.round((pre+sinceSum+gap)*100)/100+0;
   const br=bankrollSummary();const now=br.bankroll+br.inTransit;
   const c2=x=>Math.round(x*100)/100+0;
   const drawn=c2(br.drawn-(t.drawn0||0)),putIn=c2(br.putIn-(t.put0||0)),change=c2(now-(t.b0||0)+drawn-putIn);
@@ -6073,7 +6073,8 @@ function renderProfit(){
   // minus costs. Whatever that real money has and your bets don't (slots, bets with a bookmaker that isn't
   // in Bookmakers, typos…) shows as its own tile, so the tiles still add up to the total.
   gapAll=all;const real=realProfitInfo(all);let headline=totalAll;
-  if(real){tot.gap=real.gap;headline=totalAll+real.gap;}
+  // hidden months only leave the tiles and month cards: the bookmakers' real money still holds them, so the headline is always the real figure
+  if(real){tot.gap=real.gap;headline=real.real;}
   // each card can be hidden on its own (Edit cards); hiding only changes what you see, never the totals
   const tileCats=[...cats,...(real&&Math.abs(real.gap)>=0.01?[{k:'gap',n:'Not in bets',c:'#7A8CA8',always:true}]:[])].filter(c=>c.always||tot[c.k]);
   const nHid=tileCats.filter(c=>isHidden('ptile:'+c.k)).length;
