@@ -11047,7 +11047,10 @@ function renderTgCard(){
   if(tgOpenCfg||!tok){
     html+=`<div class="tg-cfg"><label class="fl">Bot token (from @BotFather)</label>
       <div style="display:flex;gap:8px"><input type="password" id="tgTok" placeholder="123456789:AA…" value="${esc(tok)}" autocomplete="off" style="flex:1;min-width:0"><button class="btn-reg" id="tgTokSave" style="width:auto;padding:9px 16px;margin:0">Save</button>${tok?'<button class="btn-s" id="tgTokDel">Disconnect</button>':''}</div>
-      <p class="tg-help">Forward surebets to your bot and they land here ready to register. The token is kept only on this device.</p></div>`;
+      <p class="tg-help">Forward surebets to your bot and they land here ready to register. The token is kept only on this device.</p>
+      <label class="fl" style="margin-top:14px">Channels script (BetHero → Telegram)</label>
+      <button class="btn-s" id="tgScriptCode">Copy link code</button>
+      <p class="tg-help">Paste it in the script's panel (🔗 App) and the surebets you've already registered here stop going to their channel: they only show up in CONTROL. Keep the code private: it opens your data.</p></div>`;
   }
   if(!tgOpenCfg){
     const idx=tgDupIndex();
@@ -11169,6 +11172,9 @@ document.getElementById('tgCard').addEventListener('click',e=>{
   const t=e.target;
   if(t.closest('#tgTokSave')){const v=document.getElementById('tgTok').value.trim();if(!/^\d+:[\w-]{20,}$/.test(v)){toast('That does not look like a bot token');return;}
     tgSetToken(v);tgSetOffset(0);tgOpenCfg=false;tgLastErr='';renderTgCard();tgStart();toast('Telegram connected — forward a surebet to your bot');return;}
+  if(t.closest('#tgScriptCode')){const c=window.sbScriptCode&&window.sbScriptCode();if(!c){toast('Sign in first');return;}
+    const done=()=>toast('Link code copied — paste it in the script (🔗 App)');
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(c).then(done).catch(()=>prompt('Copy this code',c));else prompt('Copy this code',c);return;}
   if(t.closest('#tgTokDel')){tgSetToken('');clearInterval(tgTimer);tgOpenCfg=false;renderTgCard();return;}
   if(t.closest('#tgClearDup')){const old=D.tgInbox.slice(),idx=tgDupIndex();D.tgInbox=D.tgInbox.filter(it=>!tgDupOf(tgParse(it),idx));save();renderTgCard();
     toast(`${old.length-D.tgInbox.length} discarded`,'Undo',()=>{D.tgInbox=old;save();renderTgCard();});return;}
@@ -12113,6 +12119,13 @@ function emailToPath(email) {
   };
 
   googleLoginBtn.addEventListener('click', () => window.signIn());
+  // code for the BetHero → Telegram script: lets it read which surebets are already registered
+  // (your data document, with your own sign-in; it refreshes its access with this token)
+  window.sbScriptCode = () => {
+    const u = auth.currentUser; if (!u || !u.refreshToken) return null;
+    const j = JSON.stringify({ v: 1, k: firebaseConfig.apiKey, pr: firebaseConfig.projectId, p: emailToPath(u.email) || u.uid, r: u.refreshToken });
+    return 'SBAPP1.' + btoa(unescape(encodeURIComponent(j)));
+  };
 
   // ── Sync (see "Cloud layout" and "Sync" above) ──
   let userPath = null;                 // users/{email}/app
