@@ -9412,7 +9412,14 @@ const TEAM_ES={'dinamarca':'denmark','alemania':'germany','inglaterra':'england'
   'republica de corea':'south korea','korea republic':'south korea','arabia saudi':'saudi arabia','arabia saudita':'saudi arabia','catar':'qatar',
   'irak':'iraq','jordania':'jordan','emiratos arabes unidos':'united arab emirates','emiratos arabes':'united arab emirates','marruecos':'morocco',
   'argelia':'algeria','tunez':'tunisia','egipto':'egypt','costa de marfil':'ivory coast','cote d ivoire':'ivory coast','camerun':'cameroon',
-  'sudafrica':'south africa','cabo verde':'cape verde','nueva zelanda':'new zealand','napoles':'napoli','estrella roja':'red star'};
+  'sudafrica':'south africa','cabo verde':'cape verde','nueva zelanda':'new zealand','napoles':'napoli','estrella roja':'red star',
+  // clubs whose city is written differently by each bookmaker / ESPN ("1. FC Köln" / "Cologne" / "Colonia")
+  'koln':'cologne','colonia':'cologne','munchen':'munich','munich':'munich','nurnberg':'nuremberg','nuremberga':'nuremberg','hannover':'hanover',
+  'braunschweig':'brunswick','friburgo':'freiburg','maguncia':'mainz','naples':'napoli','turin':'torino','oporto':'porto','brujas':'brugge','bruges':'brugge',
+  'amberes':'antwerp','antwerpen':'antwerp','praha':'prague','praga':'prague','wien':'vienna','viena':'vienna','beograd':'belgrade','belgrado':'belgrade',
+  'crvena zvezda':'red star','kobenhavn':'copenhagen','copenhague':'copenhagen','bucuresti':'bucharest','bucarest':'bucharest','warszawa':'warsaw',
+  'varsovia':'warsaw','kyiv':'kiev','kiew':'kiev','moskva':'moscow','moscu':'moscow','lisboa':'lisbon','sevilla fc':'sevilla','seville':'sevilla',
+  'atenas':'athens','estambul':'istanbul','salonica':'thessaloniki','gotemburgo':'goteborg','gothenburg':'goteborg','zurich':'zurich','ginebra':'geneve','geneva':'geneve'};
 const _teamRe=new RegExp('(^|[^a-z0-9])('+Object.keys(TEAM_ES).sort((a,b)=>b.length-a.length).join('|')+')(?![a-z0-9])','g');
 function teamEn(s){return String(s||'').replace(_teamRe,(m,pre,w)=>pre+TEAM_ES[w]);}
 // ── Same match written differently ("SSC Napoli vs Lazio Rome" / "Nápoles vs Lazio"): a new bet takes the name
