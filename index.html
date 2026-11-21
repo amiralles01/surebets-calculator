@@ -3024,6 +3024,18 @@ body.np .ni[data-page="profit"],body.np .tab[data-tab="profit"],body.np .today-s
 .ct-opt[data-court-set="hard"] i{background:var(--ct-hard),linear-gradient(180deg,#CFE0CF,#D9E7D8 45%,#C8DBC8)}
 .ct-opt[data-court-set="grass"] i{background:var(--ct-grass),linear-gradient(180deg,#D3E6C6,#DEEDD3 45%,#CFE2C1)}
 .ct-opt[data-court-set="basket"] i{background:var(--ct-basket),linear-gradient(180deg,#EDD6B3,#F2DFC2 45%,#E8CFA8)}
+/* join two names of one match */
+.pj-box{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 12px;background:#FFF8E6;border-bottom:1px solid #F0E2B8}
+.pc-extra .pj-box{flex-basis:100%;border:1px solid #F0E2B8;border-radius:10px}
+.pj-l{font-size:12.5px;font-weight:650;color:#7A5600}
+.pj-opt{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;border:1px solid #E6D49E;background:#fff;font:inherit;font-size:12.5px;cursor:pointer;color:var(--text)}
+.pj-opt:hover{border-color:var(--green);background:var(--gdim)}
+.pj-opt b{font-weight:650}.pj-opt small{color:var(--muted);font-variant-numeric:tabular-nums}
+.pj-opt.same{border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green)}.pj-opt.same b::before{content:'✓ ';color:var(--green)}
+.pj-none{font-size:12.5px;color:var(--muted)}
+.pj-x{margin-left:auto;border:none;background:none;color:var(--muted);cursor:pointer;font-size:13px;padding:4px 6px}
+.pb-hb.on{border-color:#E2B21F;background:#FFF8E6}
+.pc-extra .pj-box .pj-x{display:none}
 </style>
 </head>
 <body>
@@ -7181,6 +7193,7 @@ document.getElementById('pendDays').addEventListener('change',e=>{
 const PEND_IC={
   more:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>',
   edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+  join:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
   add:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
   check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
 };
@@ -7301,10 +7314,10 @@ function pendSbProfit(b){const mk=b.pendMark,cpp=coPartOf(b);return cpp?coPartPr
 // ⋯ panel: details, note, Edit / + bet / Flag / Cash out / Void / Hide
 function pendExtraHtml(kind,item,tw,key){
   if(kind==='sb'){const b=item,legs=b.legs||[];
-    return `<div class="pc-extra">${sbSubHtml(b,tw,true)}<div class="pend-meta">${pendHouseChip([...new Set(legs.map(l=>l.house))])}<span>${fmtWhen(b.date,b.time)}</span>${b.totalStake?`<span>Staked: ${fmt(b.totalStake)} €</span>`:''}${b.minReturn?`<span>Min. return: ${fmt(b.minReturn)} €</span>`:''}</div>
+    return `<div class="pc-extra">${pendBoardOn()?'':pendJoinHtml(b)}${sbSubHtml(b,tw,true)}<div class="pend-meta">${pendHouseChip([...new Set(legs.map(l=>l.house))])}<span>${fmtWhen(b.date,b.time)}</span>${b.totalStake?`<span>Staked: ${fmt(b.totalStake)} €</span>`:''}${b.minReturn?`<span>Min. return: ${fmt(b.minReturn)} €</span>`:''}</div>
         ${pendNoteEdit('sb',b)}<div class="pc-btns">${PEND_EDIT('sb',b.id)}<button class="btn-void pend-add" data-padd="sb:${b.id}" title="Register another bet on this match">+ Bet on this match</button>${flagBtn('sb',b)}<button class="btn-void" data-cashout="sb:${b.id}">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`;}
   const n=item;
-  return `<div class="pc-extra"><div class="pend-meta">${pendHouseChip([n.house])}<span>${fmtWhen(n.date,n.time)}</span><span>Odds ${fmt(n.odd||0)}</span><span>Staked: ${fmt(n.stake||0)} €</span></div>
+  return `<div class="pc-extra">${pendBoardOn()?'':pendJoinHtml(n)}<div class="pend-meta">${pendHouseChip([n.house])}<span>${fmtWhen(n.date,n.time)}</span><span>Odds ${fmt(n.odd||0)}</span><span>Staked: ${fmt(n.stake||0)} €</span></div>
       ${pendNoteEdit('nm',n)}<div class="pc-btns">${PEND_EDIT('nm',n.id)}<button class="btn-void pend-add" data-padd="nm:${n.id}" title="Register another bet on this match">+ Bet on this match</button>${flagBtn('nm',n)}<button class="btn-void" data-cashout="nm:${n.id}">Cash out</button><button class="btn-void" data-pid="${n.id}" data-kind="nm" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`;
 }
 // ══ PENDING BOARD (PC, compact view): one block per match, one line per bet ══
@@ -7350,6 +7363,7 @@ function pendBoardMatch(group,tw,withDate){
   const t=pendStartLabel(st);
   const d=withDate&&first.date?new Date(first.date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
   const mx=group.find(x=>mxOk(x.item)),mxk=mx?mx.kind+':'+mx.item.id:'';
+  const jk=(first.date||'')+'|'+matchName(first.event||'');
   return `<section class="pb-match${isLive?' lv-on':''}">
     <header class="pb-head">
       <span class="pb-time${ended?' done':''}" title="${ended?'Should have ended — ready to settle':st&&st.real?'Kick-off (ESPN)':'Estimated kick-off'}">${ended?PEND_IC.check:''}${[d,t].filter(Boolean).join(' ')||'—'}</span>
@@ -7358,11 +7372,40 @@ function pendBoardMatch(group,tw,withDate){
       <span class="pb-hsp"></span>
       ${group.length>1?`<span class="pb-n">${group.length} bets</span>`:''}
       ${mxk?`<button type="button" class="pb-hb" data-mx="${mxk}" title="Score, stats, goals and cards of this match">${MX_IC}Match</button>`:''}
+      <button type="button" class="pb-hb${pendJoinFor===jk?' on':''}" data-pjoin="${esc(jk)}" title="Same match under another name? Join them">${PEND_IC.join}Join</button>
       <button type="button" class="pb-hb" data-padd="${keys[0]}" title="Register another bet on this match">${PEND_IC.add}Add bet</button>
-    </header>
+    </header>${pendJoinFor===jk?pendJoinHtml(first):''}
     ${group.map(x=>pendBoardRow(x.kind,x.item,tw)).join('')}
   </section>`;
 }
+// ── join two names of one match (Niza vs Paris Saint-Germain = Nice vs PSG): every bet of this one takes the other's name ──
+let pendJoinFor=null; // the match (date|name) whose 'Same match as…' list is open
+function pendJoinCands(item){
+  const me=matchName(item.event||''),st0=pendStart(item.legs?'sb':'nm',item),seen=new Map();
+  [...(D.bets||[]).map(b=>['sb',b]),...(D.normals||[]).map(n=>['nm',n])].forEach(([k,o])=>{
+    if(o.status!=='pending'||(o.date||'')!==(item.date||'')||!o.event)return;const m=matchName(o.event);if(!m||m===me||seen.has(m))return;
+    const st=pendStart(k,o);seen.set(m,{o,st,d:st&&st0?Math.abs(st.m-st0.m):9999,same:sameMatchName(item.event,o.event)});});
+  return [...seen.values()].sort((a,b)=>b.same-a.same||a.d-b.d).slice(0,8);
+}
+function pendJoinHtml(item){
+  const c=pendJoinCands(item);
+  return `<div class="pj-box"><span class="pj-l">Same match as:</span>${c.length?c.map(x=>`<button type="button" class="pj-opt${x.same?' same':''}"${x.same?' title="Looks like the same match"':''} data-pjoin-to="${x.o.legs?'sb':'nm'}:${x.o.id}" data-pjoin-from="${item.legs?'sb':'nm'}:${item.id}"><b>${esc(x.o.event)}</b>${x.st?`<small>${pendStartLabel(x.st)}</small>`:''}</button>`).join(''):'<span class="pj-none">No other pending match that day</span>'}<button type="button" class="pj-x" data-pjoin-close title="Close">✕</button></div>`;
+}
+function pendJoin(fromKey,toKey){
+  const get=k=>{const [kd,id]=k.split(':');return (kd==='sb'?D.bets:D.normals).find(x=>String(x.id)===id);};
+  const a=get(fromKey),b=get(toKey);if(!a||!b)return;
+  const nm=matchName(a.event),ev=b.event;
+  const list=[...(D.bets||[]),...(D.normals||[])].filter(o=>o.status==='pending'&&(o.date||'')===(a.date||'')&&matchName(o.event||'')===nm);
+  const recs=list.map(o=>({o,event:o.event,evAlias:o.evAlias}));
+  list.forEach(o=>{if(!o.evAlias)o.evAlias=o.event;o.event=ev;if(!o.time&&b.time)o.time=b.time;});
+  pendJoinFor=null;save();renderPendientes();
+  toast(`${list.length} bet${list.length>1?'s':''} joined to ${ev}`,'Undo',()=>{recs.forEach(r=>{r.o.event=r.event;if(r.evAlias===undefined)delete r.o.evAlias;else r.o.evAlias=r.evAlias;});save();renderPendientes();});
+}
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-pjoin-to]');if(t){pendJoin(t.dataset.pjoinFrom,t.dataset.pjoinTo);return;}
+  if(e.target.closest('[data-pjoin-close]')){pendJoinFor=null;renderPendientes();return;}
+  const o=e.target.closest('[data-pjoin]');if(o){const k=o.dataset.pjoin;pendJoinFor=pendJoinFor===k?null:k;renderPendientes();}
+});
 let pendLastShown=[];
 function pendShownMarked(){return pendLastShown.filter(x=>pendHasMark(x.kind,x.item));}
 function renderPendientes(){
@@ -9672,7 +9715,7 @@ const TEAM_ES={'dinamarca':'denmark','alemania':'germany','inglaterra':'england'
   'republica de corea':'south korea','korea republic':'south korea','arabia saudi':'saudi arabia','arabia saudita':'saudi arabia','catar':'qatar',
   'irak':'iraq','jordania':'jordan','emiratos arabes unidos':'united arab emirates','emiratos arabes':'united arab emirates','marruecos':'morocco',
   'argelia':'algeria','tunez':'tunisia','egipto':'egypt','costa de marfil':'ivory coast','cote d ivoire':'ivory coast','camerun':'cameroon',
-  'sudafrica':'south africa','cabo verde':'cape verde','nueva zelanda':'new zealand','napoles':'napoli','estrella roja':'red star',
+  'sudafrica':'south africa','cabo verde':'cape verde','nueva zelanda':'new zealand','napoles':'napoli','niza':'nice','estrella roja':'red star',
   // clubs whose city is written differently by each bookmaker / ESPN ("1. FC Köln" / "Cologne" / "Colonia")
   'koln':'cologne','colonia':'cologne','munchen':'munich','munich':'munich','nurnberg':'nuremberg','nuremberga':'nuremberg','hannover':'hanover',
   'braunschweig':'brunswick','friburgo':'freiburg','maguncia':'mainz','naples':'napoli','turin':'torino','oporto':'porto','brujas':'brugge','bruges':'brugge',
