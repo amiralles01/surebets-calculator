@@ -2909,7 +2909,7 @@ body.np .ni[data-page="profit"],body.np .tab[data-tab="profit"],body.np .today-s
 @media(max-width:600px){.mp-chip b{max-width:200px}}
 /* ═════════ PENDING ON PC — the board: one solid block per match, one line per bet ═════════
    Colour only where it means something: live (red), money (green/red), the marked result (green). */
-@media(min-width:821px){
+@media all{ /* PC and phone; the phone layout is adjusted below */
   #page-pendientes{--pb-line:#E5E1D6;--pb-soft:#F5F3EC;--pb-ink:#16211B;--pb-mute:#6E7268}
   /* summary: one dark strip instead of four glass tiles */
   #pendStats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;background:var(--pitch);border-radius:14px;overflow:hidden;
@@ -3036,6 +3036,30 @@ body.np .ni[data-page="profit"],body.np .tab[data-tab="profit"],body.np .today-s
 .pj-x{margin-left:auto;border:none;background:none;color:var(--muted);cursor:pointer;font-size:13px;padding:4px 6px}
 .pb-hb.on{border-color:#E2B21F;background:#FFF8E6}
 .pc-extra .pj-box .pj-x{display:none}
+/* the board on a phone: header on two lines, each bet = market / both legs / profit + actions */
+@media(max-width:820px){
+  #pendStats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #pendStats .sc{padding:10px 14px 11px}
+  #pendStats .sc:nth-child(3){border-left:none!important}
+  #pendStats .sc:nth-child(n+3){border-top:1px solid rgba(255,255,255,.1)!important}
+  #pendStats .sv2{font-size:19px}
+  .pb-head{flex-wrap:wrap;gap:6px 8px;padding:8px 10px}
+  .pb-ev{flex:1 1 0;font-size:15px}
+  .pb-hsp{flex-basis:100%;height:0}
+  .pb-n{margin-right:auto}.pb-hsp+.pb-hb{margin-left:auto}
+  .pb-hb{height:30px;padding:0 9px;font-size:12.5px}
+  .pb-row{grid-template-columns:minmax(0,1fr) auto;gap:8px 10px;padding:10px 10px 8px 12px}
+  .pb-mk,.pb-legs,.pb-row .pc-extra{grid-column:1/-1}
+  .pb-mkt{white-space:normal}
+  .pb-mk2{padding-left:15px}
+  .pb-legs{grid-template-columns:repeat(var(--n,2),minmax(0,1fr));justify-content:stretch}
+  .pb-legs .pc-leg{min-height:44px}
+  .pb-slip{flex:1;width:auto}
+  .pb-nm .pc-mk{width:auto;flex:0 0 74px}
+  .pb-profit{text-align:left;font-size:15px}
+  .pb-ic{width:36px;height:36px}
+}
+@media(max-width:380px){.pb-hb span{display:none}.pb-hb{padding:0 9px}}
 </style>
 </head>
 <body>
@@ -7322,7 +7346,7 @@ function pendExtraHtml(kind,item,tw,key){
 }
 // ══ PENDING BOARD (PC, compact view): one block per match, one line per bet ══
 const pendDeskMQ=matchMedia('(min-width:821px)');
-function pendBoardOn(){return pendView==='compact'&&pendDeskMQ.matches;}
+function pendBoardOn(){return pendView==='compact';}
 pendDeskMQ.addEventListener&&pendDeskMQ.addEventListener('change',()=>{const pg=document.getElementById('page-pendientes');if(pg&&pg.style.display!=='none')renderPendientes();});
 // the match's live state for its header: minute + score, FT + score, or when it starts
 function lvScoreHtml(k){
@@ -7371,9 +7395,9 @@ function pendBoardMatch(group,tw,withDate){
       <span class="pb-live" data-lv="${lk}" data-lvp="score"${mxk?` data-mx="${mxk}"`:''}>${lvScoreHtml(lk)}</span>
       <span class="pb-hsp"></span>
       ${group.length>1?`<span class="pb-n">${group.length} bets</span>`:''}
-      ${mxk?`<button type="button" class="pb-hb" data-mx="${mxk}" title="Score, stats, goals and cards of this match">${MX_IC}Match</button>`:''}
-      <button type="button" class="pb-hb${pendJoinFor===jk?' on':''}" data-pjoin="${esc(jk)}" title="Same match under another name? Join them">${PEND_IC.join}Join</button>
-      <button type="button" class="pb-hb" data-padd="${keys[0]}" title="Register another bet on this match">${PEND_IC.add}Add bet</button>
+      ${mxk?`<button type="button" class="pb-hb" data-mx="${mxk}" title="Score, stats, goals and cards of this match">${MX_IC}<span>Match</span></button>`:''}
+      <button type="button" class="pb-hb${pendJoinFor===jk?' on':''}" data-pjoin="${esc(jk)}" title="Same match under another name? Join them">${PEND_IC.join}<span>Join</span></button>
+      <button type="button" class="pb-hb" data-padd="${keys[0]}" title="Register another bet on this match">${PEND_IC.add}<span>Add bet</span></button>
     </header>${pendJoinFor===jk?pendJoinHtml(first):''}
     ${group.map(x=>pendBoardRow(x.kind,x.item,tw)).join('')}
   </section>`;
