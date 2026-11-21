@@ -2885,35 +2885,7 @@ body.np .ni[data-page="profit"],body.np .tab[data-tab="profit"],body.np .today-s
 .acct-row[aria-checked="true"] .acct-sw{background:var(--green)}
 .acct-row[aria-checked="true"] .acct-sw::after{transform:translateX(18px)}
 @media(min-width:601px){.acct-menu{left:auto;right:0;bottom:auto;top:calc(100% + 10px);width:260px}}
-/* ═════════ PENDING ON PC: cards in columns instead of one wide row per bet ═════════ */
-@media(min-width:821px){
-  #pendList.compact{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px;align-items:stretch}
-  #pendList.compact>:not(.pc-row):not(.wdg-sub){grid-column:1/-1}
-  #pendList.compact .pend-day-h{margin:14px 2px 0}
-  #pendList.compact>.pend-day-h:first-child,#pendList.compact>.pend-bulk+.pend-day-h{margin-top:4px}
-  #pendList.compact .wdg-sub{margin-left:0;display:flex}
-  #pendList.compact .wdg-sub>.pc-row{flex:1}
-  #pendList.compact .pc-row{grid-template-columns:minmax(0,1fr) auto 30px;grid-template-rows:auto auto 1fr;
-    grid-template-areas:"ev profit tail" "ev time tail" "legs legs legs";align-content:start;gap:3px 8px;padding:11px 6px 11px 15px;border-radius:14px}
-  #pendList.compact .pc-row .pc-time{justify-self:end;align-self:start;font-size:11.5px;padding:2px 6px}
-  #pendList.compact .pc-row .pc-profit{align-self:end;font-size:15px}
-  #pendList.compact .pc-row .pc-tail{grid-row:1/3;align-self:start}
-  #pendList.compact .pc-ttl>b{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:1.25}
-  #pendList.compact .pc-row .pc-legs{align-self:end;margin:8px 8px 0 0;grid-template-columns:repeat(var(--n,2),minmax(0,1fr))}
-  #pendList.compact .pc-row .pc-legs.has-res .pc-resolve{grid-column:1/-1;min-height:36px!important}
-  #pendList.compact .pc-row .pc-legs:has(.pc-leg.both){grid-template-columns:repeat(2,minmax(0,1fr))}
-  #pendList.compact .pc-row .pc-legs .pc-leg.both{grid-column:1/-1}
-  #pendList.compact .pc-nm-btns .pc-act,#pendList.compact .pc-row.wd .pc-act{flex:1;justify-content:center}
-  /* ⋯ opens a panel hanging under the card, so the other cards of that row keep their size */
-  #pendList.compact .pc-row:has(.pc-extra){z-index:6;border-radius:14px 14px 0 0}
-  #pendList.compact .pc-row .pc-extra{position:absolute;top:calc(100% - 2px);left:0;right:0;margin:0;padding:10px 12px 12px 15px;
-    background:rgba(255,255,255,.97);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-radius:0 0 14px 14px;
-    border-top:1px dashed var(--border2);box-shadow:var(--shadow-lg)}
-  #pendList.compact .pc-row .pc-extra .pc-btns{flex-wrap:wrap;justify-content:flex-end}
-  #pendList.compact .pc-r{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:1.25}
-}
 /* bookmaker colour dot on each leg · the live stat a bet is on · pending-match chips in New bet */
-.pc-quick{display:none}
 .pc-leg .pc-h::before{content:'';display:inline-block;width:7px;height:7px;border-radius:2px;background:var(--bk,var(--faint));margin-right:5px;vertical-align:1px}
 .lv-stat{position:relative;display:inline-flex;align-items:baseline;gap:5px;padding:1px 8px 3px;border-radius:999px;background:rgba(44,109,180,.1);color:#1F4F86;
   font-size:11.5px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums;overflow:hidden}
@@ -2935,22 +2907,96 @@ body.np .ni[data-page="profit"],body.np .tab[data-tab="profit"],body.np .today-s
 .mp-n{font-size:11px;font-weight:700;background:var(--raised);border-radius:99px;padding:0 6px;color:var(--muted)}
 .mp-more{border:none;background:none;color:var(--green);font:inherit;font-size:12.5px;font-weight:650;cursor:pointer;padding:4px 6px}
 @media(max-width:600px){.mp-chip b{max-width:200px}}
+/* ═════════ PENDING ON PC — the board: one solid block per match, one line per bet ═════════
+   Colour only where it means something: live (red), money (green/red), the marked result (green). */
 @media(min-width:821px){
-  /* a stripe in the match's colour: bets of one match share it */
-  #pendList.compact .pc-row:not(.wd)::after{content:'';position:absolute;left:16px;right:16px;top:0;height:3px;border-radius:0 0 4px 4px;background:var(--mc);opacity:.9}
-  #pendList.compact .pc-row .pc-tail{flex-direction:column;align-items:center;gap:2px}
-  #pendList.compact .pc-quick{display:flex;flex-direction:column;gap:2px}
-  #pendList.compact .pc-quick .pc-more{width:28px;height:28px}
-  #pendList.compact .pc-quick svg{width:14px;height:14px}
-  #pendList.compact .pc-row .pc-time{align-self:center}
-  #pendList.compact .pc-row .pc-profit{padding:2px 9px;border-radius:8px;background:var(--raised)}
-  #pendList.compact .pc-row .pc-profit.pos{background:var(--gdim)}
-  #pendList.compact .pc-row .pc-profit.neg{background:var(--rdim)}
-  #pendList.compact .pc-row .pc-leg:not(.marked):not(.co-done){background:rgba(255,255,255,.88);border-color:rgba(0,0,0,.08)}
-  #pendList.compact .pc-row .pc-leg:not(.marked):hover{border-color:var(--green);background:#fff}
-  #pendList.compact .pc-row .pc-leg:not(.marked) .pc-o{color:#163E6C}
-  #pendList.compact .pc-row:hover::after{opacity:1}
-  #pendList.compact .pc-mline .mkt{white-space:normal;text-overflow:clip;overflow:visible;line-height:1.3}
+  #page-pendientes{--pb-line:#E5E1D6;--pb-soft:#F5F3EC;--pb-ink:#16211B;--pb-mute:#6E7268}
+  /* summary: one dark strip instead of four glass tiles */
+  #pendStats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;background:var(--pitch);border-radius:14px;overflow:hidden;
+    box-shadow:0 8px 24px -14px rgba(20,40,28,.55)}
+  #pendStats .sc{background:none!important;border:none!important;border-radius:0;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+    padding:13px 20px 14px;border-left:1px solid rgba(255,255,255,.1)!important}
+  #pendStats .sc:first-child{border-left:none!important}
+  #pendStats .sc::before{display:none}
+  #pendStats .sl2{color:var(--pitch-muted);font-size:12px;font-weight:600}
+  #pendStats .sv2{color:var(--pitch-ink);font-size:23px}
+  #pendStats .sv2.pos{color:#7EE0A2}#pendStats .sv2.neg{color:#FF9B8A}#pendStats .sv2.yel{color:var(--ball)}
+  #pendList.board{display:flex;flex-direction:column;gap:10px}
+  #pendList.board .pend-bulk{background:#EAF5EE;border-color:#BFDFCB}
+  #pendList.board .pend-day-h{margin:12px 2px 0}
+  #pendList.board>.pend-day-h:first-child,#pendList.board>.pend-bulk+.pend-day-h{margin-top:2px}
+  #pendList.board .pc-row.wd{background:#fff;box-shadow:inset 3px 0 0 var(--cyan);border:1px solid var(--pb-line)}
+  .pb-match{background:#fff;border:1px solid var(--pb-line);border-radius:12px;box-shadow:0 1px 2px rgba(20,30,25,.05);overflow:hidden}
+  .pb-match.lv-on{border-color:#EBC3BA}
+  .pb-head{display:flex;align-items:center;gap:10px;min-height:44px;padding:7px 10px 7px 12px;background:var(--pb-soft);border-bottom:1px solid var(--pb-line)}
+  .pb-match.lv-on .pb-head{background:linear-gradient(90deg,#FBECE8,var(--pb-soft) 55%)}
+  .pb-time{display:inline-flex;align-items:center;justify-content:center;gap:3px;min-width:48px;padding:3px 8px;border-radius:6px;background:var(--pitch);color:#fff;
+    font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
+  .pb-time.done{background:var(--green)}
+  .pb-time svg{width:11px;height:11px}
+  .pb-ev{min-width:0;font-family:var(--display);font-size:15.5px;font-weight:650;letter-spacing:-.015em;color:var(--pb-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pb-live{display:inline-flex;align-items:center;gap:7px;flex:none;cursor:pointer}
+  .pb-live:empty{display:none}
+  .pb-lv{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .pb-lv.in{display:inline-flex;align-items:center;gap:5px;color:var(--red)}
+  .pb-lv.ft,.pb-lv.pre{color:var(--pb-mute);font-weight:650}
+  .pb-sc{padding:1px 8px;border-radius:6px;background:#fff;border:1px solid var(--pb-line);color:var(--pb-ink);font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+  .pb-hsp{flex:1}
+  .pb-n{font-size:12px;font-weight:600;color:var(--pb-mute);white-space:nowrap}
+  .pb-hb{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border-radius:8px;border:1px solid var(--pb-line);background:#fff;
+    color:#3A463F;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;transition:border-color var(--t),color var(--t)}
+  .pb-hb svg{width:13px;height:13px}
+  .pb-hb:hover{border-color:#ADA898;color:var(--pb-ink)}
+  .pb-row{display:grid;grid-template-columns:minmax(0,1fr) auto 88px 150px;align-items:center;gap:6px 16px;padding:8px 10px 8px 16px;border-top:1px solid #EFECE4}
+  .pb-head+.pb-row{border-top:none}
+  .pb-row.marked{background:#F3F9F5}
+  .pb-row.promo{box-shadow:inset 3px 0 0 var(--hl)}
+  .pb-mk{min-width:0;display:flex;flex-direction:column;gap:4px}
+  .pb-mk1{display:flex;align-items:center;gap:7px;min-width:0}
+  .pb-mk1>.type-pill,.pb-mk1>.promo-tag,.pb-mk1>span:not(.pb-mkt){flex-shrink:0}
+  .pb-mkt{display:inline-flex;align-items:center;gap:8px;min-width:0;font-size:13.5px;font-weight:600;color:var(--pb-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pb-mkt i{width:7px;height:7px;border-radius:50%;background:var(--mk);flex:none}
+  .pb-mkt.none{color:var(--pb-mute);font-weight:500}
+  .pb-mk2{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;min-width:0;padding-left:15px}
+  .pb-mk2:not(:has(>:not(:empty))){display:none}
+  .pb-stat:empty{display:none}
+  .pb-mk2 .ar-tag,.pb-mk2 .flag-line{margin:0}
+  .pb-mk2 .pc-note{flex-basis:auto;font-size:12.5px}
+  /* live stat: text + a small meter toward the line */
+  .pb-stat .lv-stat{align-items:center;background:none;padding:0 66px 0 0;color:#2C5E93;font-size:12px;overflow:visible}
+  .pb-stat .lv-stat b{color:#173F6B}
+  .pb-stat .lv-stat::after{content:'';position:absolute;right:0;top:50%;width:56px;height:4px;margin-top:-2px;border-radius:2px;background:#DCE5F0}
+  .pb-stat .lv-stat i{left:auto;right:0;top:50%;bottom:auto;width:56px;height:4px;margin-top:-2px;background:linear-gradient(90deg,#2C6DB4 calc(var(--pn,0)*100%),transparent 0);z-index:1}
+  .pb-stat .lv-stat.over{background:none;color:#1C6B3C}.pb-stat .lv-stat.over b{color:#145A30}
+  .pb-stat .lv-stat.over::after{background:#D3EBDC}.pb-stat .lv-stat.over i{background:var(--green)}
+  .pb-legs{display:grid;grid-template-columns:repeat(var(--n,2),172px);gap:6px;justify-content:end}
+  .pb-legs .pc-leg{padding:5px 10px 6px;border-radius:8px;box-shadow:none}
+  .pb-legs .pc-leg:not(.marked):not(.co-done){background:#F7F6F1;border:1px solid #E3DFD3}
+  .pb-legs .pc-leg:not(.marked):hover{border-color:var(--green);background:#fff}
+  .pb-legs .pc-leg:not(.marked) .pc-o{color:#173F6B}
+  .pb-legs .pc-leg.promo:not(.marked){border-color:var(--hl);box-shadow:inset 0 0 0 1px var(--hl)}
+  .pb-row.marked .pc-leg:not(.marked){opacity:.45}
+  .pb-nm{display:flex;align-items:stretch;gap:6px}
+  .pb-slip{display:flex;flex-direction:column;justify-content:center;gap:1px;width:172px;padding:5px 10px 6px;border-radius:8px;border:1px dashed #DCD7CA;font-size:12px;color:var(--pb-mute)}
+  .pb-slip .pc-h{font-size:12.5px;font-weight:650;color:var(--pb-ink)}
+  .pb-slip::before{display:none}
+  .pb-slip .pc-h::before{content:'';display:inline-block;width:7px;height:7px;border-radius:2px;background:var(--bk,var(--faint));margin-right:5px;vertical-align:1px}
+  .pb-slip-n b{color:#173F6B;font-weight:750}
+  .pb-nm .pc-mk{width:83px;min-height:40px;padding:4px 8px;border-radius:8px}
+  .pb-profit{text-align:right;font-size:14.5px;font-weight:750;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .pb-profit.pos{color:var(--green)}.pb-profit.neg{color:var(--red)}.pb-profit.zero{color:var(--pb-mute)}
+  .pb-act{display:flex;align-items:center;justify-content:flex-end;gap:2px}
+  .pb-act .pc-resolve{min-height:30px!important;padding:4px 11px!important;margin-right:4px;font-size:12.5px!important}
+  .pb-ic{width:30px;height:30px;display:grid;place-items:center;border:none;border-radius:8px;background:transparent;color:#A09C8E;cursor:pointer;transition:background var(--t),color var(--t)}
+  .pb-ic svg{width:15px;height:15px}
+  .pb-ic:hover,.pb-ic.on{background:#EFEDE6;color:var(--pb-ink)}
+  .pb-row .pc-extra{grid-column:1/-1;margin-top:4px}
+  .pb-row .pend-add{display:none} /* the block's header already has Add bet */
+}
+@media(min-width:821px) and (max-width:1180px){
+  .pb-row{grid-template-columns:minmax(0,1fr) auto 80px 146px;gap:6px 10px;padding-left:14px}
+  .pb-hb{padding:0 8px}
+  #pendStats .sc{padding:11px 14px 12px}#pendStats .sv2{font-size:20px}
 }
 </style>
 </head>
@@ -7160,7 +7206,7 @@ function pendCompactHtml(kind,item,tw){
   const open=pendOpen.has(key);
   const withDate=pendSort==='house'||pendDayFilter==='done'||pendDayFilter==='overdue';
   const more=`<button class="pc-more${open?' on':''}" data-pcmore="${esc(key)}" title="More actions" aria-expanded="${open}">${PEND_IC.more}</button>`
-    +(kind==='wd'?'':`<span class="pc-quick"><button class="pc-more" data-pedit="${kind}:${item.id}" title="Edit this bet">${PEND_IC.edit}</button><button class="pc-more" data-padd="${kind}:${item.id}" title="Register another bet on this match">${PEND_IC.add}</button></span>`);
+;
   if(kind==='wd'){
     const w=item;
     return `<div class="pc-row wd">
@@ -7176,35 +7222,104 @@ function pendCompactHtml(kind,item,tw){
     const legs=b.legs||[];
     const mk=b.pendMark;const marked=mk!=null;
     const cpp=coPartOf(b);
-    const legsHtml=legs.length?legs.map((l,li)=>{const r=promos[li];
-      if(cpp&&cpp[li]!=null)return`<span class="pc-leg co-done" title="Cashed out — already in the balance"><span class="pc-h"><mark>${esc(l.house||'—')}</mark></span><span class="pc-o">${fmt(l.odd||0)}</span><span class="pc-r">Cashed ${fmt(cpp[li])} €</span></span>`;
-      return`<button class="pc-leg${r?' promo':''}${mk===li||(mk!=='both'&&legWins(b,mk,li))?' marked':''}" data-pwinbid="${b.id}" data-pwinleg="${li}" title="${mk===li?'Marked as the winner — tap to unmark':'Tap to mark this as the outcome that happened'}" aria-pressed="${mk===li}" style="--bk:${bkBrand(l.house)}${r?';--hl:'+r.color:''}">
-        <span class="pc-h"><mark>${esc(l.house||'—')}</mark></span><span class="pc-o"><mark>${fmt(l.odd||0)}</mark></span><span class="pc-r">${legRes(l)}</span></button>`;}).join('')
-      +(b.mid?`<button class="pc-leg both${mk==='both'?' marked':''}" data-pwinbid="${b.id}" data-pwinleg="both" title="${mk==='both'?'Marked: both won — tap to unmark':'The middle hit: both legs won'}" aria-pressed="${mk==='both'}"><span class="pc-h"><mark>Both</mark></span><span class="pc-o"></span><span class="pc-r">Middle ${midBoth(b)>=0?'+':''}${fmt(midBoth(b))} €</span></button>`:'')
-      :`<button class="pc-mk won pc-act${mk==='won'?' on':''}" data-pid="${b.id}" data-kind="sb" data-action="won">Won</button>`;
-    const p=cpp?coPartProfit(b,mk==null||mk==='won'?null:mk):sbResultProfit(b,mk)??(b.profit||0);
-    return `<div class="pc-row sb${lvIsLive(b)?' lv-on':''}${marked?' marked':''}${pr?' promo':''}${tw.has(b.id)?' twin':''}" style="--mc:${matchHue(b.event)}${pr?';--hl:'+pr.color:''}">
+    const legsHtml=pendSbLegs(b,promos);
+    const p=pendSbProfit(b);
+    return `<div class="pc-row sb${lvIsLive(b)?' lv-on':''}${marked?' marked':''}${pr?' promo':''}${tw.has(b.id)?' twin':''}"${pr?` style="--hl:${pr.color}"`:''}>
       ${pendTimeHtml(b,withDate)}
       <div class="pc-ev"><span class="pc-ttl"><b>${sbTagHtml(b,tw)}${midPill(b)}${cntPill('sb',b)}${esc(b.event)}</b>${promoTag(pr)}</span>${b.market?`<span class="pc-mline">${mktChip(b.market)}</span>`:''}${lvSlot('sb',b)}${mxBtn('sb',b)}${lkChip('sb',b)}${arLine(b,true)}${pendNoteLine('sb',b)}${flagTag('sb',b)}</div>
       <span class="pc-profit ${p>=0?'pos':'neg'}">${p>=0?'+':''}${fmt(p)} €</span>
       <div class="pc-legs${marked?' has-res':''}" style="--n:${Math.max(legs.length+(b.mid?1:0),1)}">${legsHtml}${marked?PEND_RESOLVE('sb',b.id):''}</div>
       <span class="pc-tail">${more}</span>
-      ${open?`<div class="pc-extra">${sbSubHtml(b,tw,true)}<div class="pend-meta">${pendHouseChip([...new Set(legs.map(l=>l.house))])}<span>${fmtWhen(b.date,b.time)}</span>${b.totalStake?`<span>Staked: ${fmt(b.totalStake)} €</span>`:''}${b.minReturn?`<span>Min. return: ${fmt(b.minReturn)} €</span>`:''}</div>
-        ${pendNoteEdit('sb',b)}<div class="pc-btns">${PEND_EDIT('sb',b.id)}<button class="btn-void pend-add" data-padd="sb:${b.id}" title="Register another bet on this match">+ Bet on this match</button>${flagBtn('sb',b)}<button class="btn-void" data-cashout="sb:${b.id}">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`:''}
+      ${open?pendExtraHtml('sb',b,tw,key):''}
     </div>`;
   }
   const n=item;const pr=itemPromo('nm',n);
   const win=n.potentialWin!=null?n.potentialWin:+(((n.stake||0)*((n.odd||1)-1)).toFixed(2));
   const loss=n.potentialLoss!=null?n.potentialLoss:(n.type==='Freebet'?0:-(n.stake||0));
-  return `<div class="pc-row nm${lvIsLive(n)?' lv-on':''}${n.pendMark!=null?' marked':''}${pr?' promo':''}" style="--mc:${matchHue(n.event)}${pr?';--hl:'+pr.color:''}">
+  return `<div class="pc-row nm${lvIsLive(n)?' lv-on':''}${n.pendMark!=null?' marked':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
     ${pendTimeHtml(n,withDate)}
     <div class="pc-ev"><span class="pc-ttl"><b>${esc(n.event)}</b> ${nmPill(n)}${promoTag(pr)}</span>${n.pick?`<span class="pc-mline">${mktChip(n.pick)}</span>`:''}${lvSlot('nm',n)}${mxBtn('nm',n)}${lkChip('nm',n)}${arLine(n,true)}<span class="pc-sub"><span class="pc-nmh${pr?' promo':''}"><mark>${esc(n.house||'No bookmaker')}</mark> @ <mark>${fmt(n.odd||0)}</mark></span> · ${fmt(n.stake||0)} €</span>${pendNoteLine('nm',n)}${flagTag('nm',n)}</div>
     <span class="pc-profit ${n.pendMark==='lost'?'neg':'pos'}" title="If it wins +${fmt(win)} € · if it loses ${fmt(loss)} €">${n.pendMark==='lost'?fmt(loss):'+'+fmt(win)} €</span>
     <div class="pc-legs pc-nm-btns">${pendMarkBtns(n,' pc-act')}${n.pendMark!=null?PEND_RESOLVE('nm',n.id):''}</div>
     <span class="pc-tail">${more}</span>
-    ${open?`<div class="pc-extra"><div class="pend-meta">${pendHouseChip([n.house])}<span>${fmtWhen(n.date,n.time)}</span><span>Odds ${fmt(n.odd||0)}</span><span>Staked: ${fmt(n.stake||0)} €</span></div>
-      ${pendNoteEdit('nm',n)}<div class="pc-btns">${PEND_EDIT('nm',n.id)}<button class="btn-void pend-add" data-padd="nm:${n.id}" title="Register another bet on this match">+ Bet on this match</button>${flagBtn('nm',n)}<button class="btn-void" data-cashout="nm:${n.id}">Cash out</button><button class="btn-void" data-pid="${n.id}" data-kind="nm" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`:''}
+    ${open?pendExtraHtml('nm',n,tw,key):''}
   </div>`;
+}
+// a surebet's leg buttons (tap one to mark it as the outcome that happened)
+function pendSbLegs(b,promos){
+    const legs=b.legs||[],mk=b.pendMark,cpp=coPartOf(b);
+    return legs.length?legs.map((l,li)=>{const r=promos[li];
+      if(cpp&&cpp[li]!=null)return`<span class="pc-leg co-done" title="Cashed out — already in the balance"><span class="pc-h"><mark>${esc(l.house||'—')}</mark></span><span class="pc-o">${fmt(l.odd||0)}</span><span class="pc-r">Cashed ${fmt(cpp[li])} €</span></span>`;
+      return`<button class="pc-leg${r?' promo':''}${mk===li||(mk!=='both'&&legWins(b,mk,li))?' marked':''}" data-pwinbid="${b.id}" data-pwinleg="${li}" title="${mk===li?'Marked as the winner — tap to unmark':'Tap to mark this as the outcome that happened'}" aria-pressed="${mk===li}" style="--bk:${bkBrand(l.house)}${r?';--hl:'+r.color:''}">
+        <span class="pc-h"><mark>${esc(l.house||'—')}</mark></span><span class="pc-o"><mark>${fmt(l.odd||0)}</mark></span><span class="pc-r">${legRes(l)}</span></button>`;}).join('')
+      +(b.mid?`<button class="pc-leg both${mk==='both'?' marked':''}" data-pwinbid="${b.id}" data-pwinleg="both" title="${mk==='both'?'Marked: both won — tap to unmark':'The middle hit: both legs won'}" aria-pressed="${mk==='both'}"><span class="pc-h"><mark>Both</mark></span><span class="pc-o"></span><span class="pc-r">Middle ${midBoth(b)>=0?'+':''}${fmt(midBoth(b))} €</span></button>`:'')
+      :`<button class="pc-mk won pc-act${mk==='won'?' on':''}" data-pid="${b.id}" data-kind="sb" data-action="won">Won</button>`;
+}
+// what a surebet shows as its profit: the marked result's, or the expected one
+function pendSbProfit(b){const mk=b.pendMark,cpp=coPartOf(b);return cpp?coPartProfit(b,mk==null||mk==='won'?null:mk):sbResultProfit(b,mk)??(b.profit||0);}
+// ⋯ panel: details, note, Edit / + bet / Flag / Cash out / Void / Hide
+function pendExtraHtml(kind,item,tw,key){
+  if(kind==='sb'){const b=item,legs=b.legs||[];
+    return `<div class="pc-extra">${sbSubHtml(b,tw,true)}<div class="pend-meta">${pendHouseChip([...new Set(legs.map(l=>l.house))])}<span>${fmtWhen(b.date,b.time)}</span>${b.totalStake?`<span>Staked: ${fmt(b.totalStake)} €</span>`:''}${b.minReturn?`<span>Min. return: ${fmt(b.minReturn)} €</span>`:''}</div>
+        ${pendNoteEdit('sb',b)}<div class="pc-btns">${PEND_EDIT('sb',b.id)}<button class="btn-void pend-add" data-padd="sb:${b.id}" title="Register another bet on this match">+ Bet on this match</button>${flagBtn('sb',b)}<button class="btn-void" data-cashout="sb:${b.id}">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`;}
+  const n=item;
+  return `<div class="pc-extra"><div class="pend-meta">${pendHouseChip([n.house])}<span>${fmtWhen(n.date,n.time)}</span><span>Odds ${fmt(n.odd||0)}</span><span>Staked: ${fmt(n.stake||0)} €</span></div>
+      ${pendNoteEdit('nm',n)}<div class="pc-btns">${PEND_EDIT('nm',n.id)}<button class="btn-void pend-add" data-padd="nm:${n.id}" title="Register another bet on this match">+ Bet on this match</button>${flagBtn('nm',n)}<button class="btn-void" data-cashout="nm:${n.id}">Cash out</button><button class="btn-void" data-pid="${n.id}" data-kind="nm" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`;
+}
+// ══ PENDING BOARD (PC, compact view): one block per match, one line per bet ══
+const pendDeskMQ=matchMedia('(min-width:821px)');
+function pendBoardOn(){return pendView==='compact'&&pendDeskMQ.matches;}
+pendDeskMQ.addEventListener&&pendDeskMQ.addEventListener('change',()=>{const pg=document.getElementById('page-pendientes');if(pg&&pg.style.display!=='none')renderPendientes();});
+// the match's live state for its header: minute + score, FT + score, or when it starts
+function lvScoreHtml(k){
+  const v=lvState.get(k);if(!v)return '';
+  if(v.st==='in')return `<span class="pb-lv in" title="Being played right now — live score from ESPN, updated every minute"><i class="lv-dot"></i>${esc(v.clock||'Live')}</span>${v.score?`<b class="pb-sc">${esc(v.score)}</b>`:''}`;
+  if(v.st==='post')return `<span class="pb-lv ft" title="ESPN says this match has finished">FT</span>${v.score?`<b class="pb-sc">${esc(v.score)}</b>`:''}`;
+  const t=!isNaN(v.start)?new Date(v.start):null;
+  return `<span class="pb-lv pre">${t&&t.getTime()>Date.now()-60000?'Starts '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'):'Not started'}</span>`;
+}
+function pendBoardRow(kind,item,tw){
+  const key=pendKey(kind,item),open=pendOpen.has(key),lk=kind+':'+item.id,st=lvState.get(lk);
+  const pr=kind==='sb'?itemPromos('sb',item).find(Boolean):itemPromo('nm',item);
+  const marked=item.pendMark!=null,mkt=((kind==='sb'?item.market:item.pick)||'').trim();
+  const tags=kind==='sb'?midPill(item)+cntPill('sb',item):nmPill(item);
+  let legs,p,tip='';
+  if(kind==='sb'){
+    const b=item,n=Math.max((b.legs||[]).length+(b.mid?1:0),1);
+    legs=`<div class="pb-legs" style="--n:${n}">${pendSbLegs(b,itemPromos('sb',b))}</div>`;p=pendSbProfit(b);
+  }else{
+    const n=item,win=n.potentialWin!=null?n.potentialWin:+(((n.stake||0)*((n.odd||1)-1)).toFixed(2)),loss=n.potentialLoss!=null?n.potentialLoss:(n.type==='Freebet'?0:-(n.stake||0));
+    legs=`<div class="pb-legs pb-nm"><span class="pb-slip${pr?' promo':''}" style="--bk:${bkBrand(n.house)}"><span class="pc-h"><mark>${esc(n.house||'No bookmaker')}</mark></span><span class="pb-slip-n">${fmt(n.stake||0)} € @ <b>${fmt(n.odd||0)}</b></span></span>${pendMarkBtns(n,'')}</div>`;
+    p=n.pendMark==='lost'?loss:win;tip=`If it wins +${fmt(win)} € · if it loses ${fmt(loss)} €`;
+  }
+  return `<div class="pb-row ${kind}${marked?' marked':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
+    <div class="pb-mk"><div class="pb-mk1">${mkt?`<span class="pb-mkt" style="--mk:${mktColor(mkt)}" title="${esc(mkt)}"><i></i>${esc(mkt)}</span>`:`<span class="pb-mkt none">${kind==='sb'?(item.mid?'Middle':'Surebet'):'Bet'}</span>`}${tags}${promoTag(pr)}</div>
+      <div class="pb-mk2"><span class="pb-stat" data-lv="${lk}" data-lvp="stat">${lvStatHtml(st&&st.stat)}</span>${lkChip(kind,item)}${arLine(item,true)}${pendNoteLine(kind,item)}${flagTag(kind,item)}</div></div>
+    ${legs}
+    <span class="pb-profit ${p>0.004?'pos':p<-0.004?'neg':'zero'}"${tip?` title="${tip}"`:''}>${p>0.004?'+':''}${fmt(p)} €</span>
+    <div class="pb-act">${marked?PEND_RESOLVE(kind,item.id):''}<button class="pb-ic" data-pedit="${kind}:${item.id}" title="Edit this bet">${PEND_IC.edit}</button><button class="pb-ic${open?' on':''}" data-pcmore="${esc(key)}" title="More: note, flag, cash out, void, hide" aria-expanded="${open}">${PEND_IC.more}</button></div>
+    ${open?pendExtraHtml(kind,item,tw,key):''}
+  </div>`;
+}
+function pendBoardMatch(group,tw,withDate){
+  const first=group[0].item,keys=group.map(x=>x.kind+':'+x.item.id);
+  const lk=keys.find(k=>lvState.has(k))||keys[0],live=lvState.get(lk),isLive=!!live&&live.st==='in';
+  const ended=group.every(x=>pendEnded(x.item));
+  const t=first.time?'~'+String(parseInt(first.time,10)).padStart(2,'0')+'h':'';
+  const d=withDate&&first.date?new Date(first.date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
+  const mx=group.find(x=>mxOk(x.item)),mxk=mx?mx.kind+':'+mx.item.id:'';
+  return `<section class="pb-match${isLive?' lv-on':''}">
+    <header class="pb-head">
+      <span class="pb-time${ended?' done':''}" title="${ended?'Should have ended — ready to settle':'Estimated end'}">${ended?PEND_IC.check:''}${[d,t].filter(Boolean).join(' ')||'—'}</span>
+      <b class="pb-ev" title="${esc(first.event||'')}">${esc(first.event||'(No event)')}</b>
+      <span class="pb-live" data-lv="${lk}" data-lvp="score"${mxk?` data-mx="${mxk}"`:''}>${lvScoreHtml(lk)}</span>
+      <span class="pb-hsp"></span>
+      ${group.length>1?`<span class="pb-n">${group.length} bets</span>`:''}
+      ${mxk?`<button type="button" class="pb-hb" data-mx="${mxk}" title="Score, stats, goals and cards of this match">${MX_IC}Match</button>`:''}
+      <button type="button" class="pb-hb" data-padd="${keys[0]}" title="Register another bet on this match">${PEND_IC.add}Add bet</button>
+    </header>
+    ${group.map(x=>pendBoardRow(x.kind,x.item,tw)).join('')}
+  </section>`;
 }
 let pendLastShown=[];
 function pendShownMarked(){return pendLastShown.filter(x=>pendHasMark(x.kind,x.item));}
@@ -7354,6 +7469,22 @@ function renderPendientesInner(){
   }
   const mkN=shown.filter(x=>pendHasMark(x.kind,x.item)).length;
   const bulk=mkN?`<div class="pend-bulk"><span><b>${mkN}</b> marked, not resolved yet</span><button class="btn-accept" data-resolve-all>${PEND_IC.check}Resolve ${mkN>1?'all '+mkN:'it'}</button></div>`:'';
+  const hidPanel=()=>hiddenPanelHtml('pend',hidden.map(({kind,item})=>({key:pendKey(kind,item),label:kind==='wd'?('Withdrawal – '+(item.casaName||'')):(item.event||'(No event)')})));
+  const board=pendBoardOn();list.classList.toggle('board',board);
+  if(board){
+    // bets of one match (same day, same group) go in one block
+    const withDate=pendSort==='house'||pendDayFilter==='done'||pendDayFilter==='overdue';
+    const isBet=x=>x.kind==='sb'||x.kind==='nm',gk=x=>(x.item.date||'')+'|'+(matchName(x.item.event||'')||'#'+x.kind+x.item.id)+'|'+(x.grp||'');
+    let html='',i=0;
+    while(i<visible.length){
+      const x=visible[i];
+      if(isBet(x)){let j=i+1;while(j<visible.length&&isBet(visible[j])&&gk(visible[j])===gk(x))j++;
+        html+=groupHeader(visible,i)+pendBoardMatch(visible.slice(i,j),pendTw,withDate);i=j;continue;}
+      html+=groupHeader(visible,i)+(x.kind==='wdg'?pendWdGroupHtml(x.item):x.sub?`<div class="wdg-sub">${pendCompactHtml(x.kind,x.item,pendTw)}</div>`:pendCompactHtml(x.kind,x.item,pendTw));i++;
+    }
+    list.innerHTML=bulk+html+hidPanel();
+    return;
+  }
   list.innerHTML=bulk+visible.map(({kind,item,sub},idx)=>groupHeader(visible,idx)+(kind==='wdg'?pendWdGroupHtml(item):sub?`<div class="wdg-sub">${pendView==='compact'?pendCompactHtml(kind,item,pendTw):pendWdFullHtml(item)}</div>`:pendView==='compact'?pendCompactHtml(kind,item,pendTw):(()=>{
     if(kind==='wd')return pendWdFullHtml(item);
     if(kind==='sb'){
@@ -10767,7 +10898,7 @@ function lvStatHtml(x){
   if(!x)return '';
   const top=x.lines[x.lines.length-1],pct=top?Math.min(100,Math.round(x.v/top*100)):0,over=x.lines.length&&x.v>x.lines[0];
   const nm=x.name.charAt(0).toUpperCase()+x.name.slice(1);
-  return `<span class="lv-stat${over?' over':''}" title="${esc(nm+(x.team?' of '+x.team:'')+' right now'+(x.both?' ('+x.both+')':'')+' — line '+x.lines.join(' / '))}"><span class="lvs-t">${esc(nm)}${x.team?' · '+esc(x.team):''}</span><b>${x.v}</b>${x.both?`<span class="lvs-b">${esc(x.both)}</span>`:''}<span class="lvs-l">/ ${x.lines.map(fmtLine).join(' – ')}</span><i style="--p:${pct}%"></i></span>`;
+  return `<span class="lv-stat${over?' over':''}" title="${esc(nm+(x.team?' of '+x.team:'')+' right now'+(x.both?' ('+x.both+')':'')+' — line '+x.lines.join(' / '))}"><span class="lvs-t">${esc(nm)}${x.team?' · '+esc(x.team):''}</span><b>${x.v}</b>${x.both?`<span class="lvs-b">(${esc(x.both)})</span>`:''}<span class="lvs-l">· line ${x.lines.map(fmtLine).join(' – ')}</span><i style="--p:${pct}%;--pn:${pct/100}"></i></span>`;
 }
 function fmtLine(n){return String(n);}
 function lvSig(){return [...lvState].map(([k,v])=>k+v.st).sort().join();}
@@ -10785,8 +10916,10 @@ function lvSlot(kind,item){const k=kind+':'+item.id;return `<span class="lv-slot
 // update the tags in place, so a refresh doesn't close what you have open
 function lvPaint(){
   document.querySelectorAll('#pendList [data-lv]').forEach(el=>{
-    const h=lvInner(el.dataset.lv);if(el.innerHTML!==h)el.innerHTML=h;
-    const row=el.closest('.pc-row,.pend-item');if(row)row.classList.toggle('lv-on',(lvState.get(el.dataset.lv)||{}).st==='in');
+    const k=el.dataset.lv,part=el.dataset.lvp;
+    const h=part==='score'?lvScoreHtml(k):part==='stat'?lvStatHtml((lvState.get(k)||{}).stat):lvInner(k);if(el.innerHTML!==h)el.innerHTML=h;
+    if(part==='stat')return;
+    const row=el.closest('.pc-row,.pend-item,.pb-match');if(row)row.classList.toggle('lv-on',(lvState.get(k)||{}).st==='in');
   });
 }
 setInterval(()=>{const pg=document.getElementById('page-pendientes');if(document.visibilityState==='visible'&&pg&&pg.style.display!=='none')lvRefresh(false);},LV_EVERY_SEC*1000);
