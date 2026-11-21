@@ -2912,6 +2912,46 @@ body.np .ni[data-page="profit"],body.np .tab[data-tab="profit"],body.np .today-s
   #pendList.compact .pc-row .pc-extra .pc-btns{flex-wrap:wrap;justify-content:flex-end}
   #pendList.compact .pc-r{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:1.25}
 }
+/* bookmaker colour dot on each leg · the live stat a bet is on · pending-match chips in New bet */
+.pc-quick{display:none}
+.pc-leg .pc-h::before{content:'';display:inline-block;width:7px;height:7px;border-radius:2px;background:var(--bk,var(--faint));margin-right:5px;vertical-align:1px}
+.lv-stat{position:relative;display:inline-flex;align-items:baseline;gap:5px;padding:1px 8px 3px;border-radius:999px;background:rgba(44,109,180,.1);color:#1F4F86;
+  font-size:11.5px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums;overflow:hidden}
+.lv-stat b{font-size:12.5px;font-weight:800;color:#163E6C}
+.lv-stat .lvs-b,.lv-stat .lvs-l{color:#5A7DA6;font-weight:600}
+.lv-stat i{position:absolute;left:0;bottom:0;height:2px;width:var(--p,0%);background:#2C6DB4;border-radius:2px}
+.lv-stat.over{background:rgba(35,130,75,.12);color:#1C6B3C}.lv-stat.over b{color:#145A30}.lv-stat.over i{background:var(--green)}
+.lv-slot:not(:empty){display:inline-flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
+.mpick{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px}
+.mpick:empty{display:none}
+.q-grid .mpick{grid-column:1/-1;margin-top:0}
+.mp-l{font-size:12px;font-weight:600;color:var(--muted);margin-right:2px}
+.mp-chip{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:5px 10px 5px 8px;border-radius:999px;border:1px solid var(--border2);background:var(--surface);
+  color:var(--text);font:inherit;font-size:12.5px;cursor:pointer;transition:border-color var(--t),background var(--t)}
+.mp-chip:hover{border-color:var(--mc);background:var(--raised)}
+.mp-chip i{width:8px;height:8px;border-radius:50%;background:var(--mc);flex:none}
+.mp-chip b{font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
+.mp-chip small{color:var(--muted);font-size:11.5px}
+.mp-n{font-size:11px;font-weight:700;background:var(--raised);border-radius:99px;padding:0 6px;color:var(--muted)}
+.mp-more{border:none;background:none;color:var(--green);font:inherit;font-size:12.5px;font-weight:650;cursor:pointer;padding:4px 6px}
+@media(max-width:600px){.mp-chip b{max-width:200px}}
+@media(min-width:821px){
+  /* a stripe in the match's colour: bets of one match share it */
+  #pendList.compact .pc-row:not(.wd)::after{content:'';position:absolute;left:16px;right:16px;top:0;height:3px;border-radius:0 0 4px 4px;background:var(--mc);opacity:.9}
+  #pendList.compact .pc-row .pc-tail{flex-direction:column;align-items:center;gap:2px}
+  #pendList.compact .pc-quick{display:flex;flex-direction:column;gap:2px}
+  #pendList.compact .pc-quick .pc-more{width:28px;height:28px}
+  #pendList.compact .pc-quick svg{width:14px;height:14px}
+  #pendList.compact .pc-row .pc-time{align-self:center}
+  #pendList.compact .pc-row .pc-profit{padding:2px 9px;border-radius:8px;background:var(--raised)}
+  #pendList.compact .pc-row .pc-profit.pos{background:var(--gdim)}
+  #pendList.compact .pc-row .pc-profit.neg{background:var(--rdim)}
+  #pendList.compact .pc-row .pc-leg:not(.marked):not(.co-done){background:rgba(255,255,255,.88);border-color:rgba(0,0,0,.08)}
+  #pendList.compact .pc-row .pc-leg:not(.marked):hover{border-color:var(--green);background:#fff}
+  #pendList.compact .pc-row .pc-leg:not(.marked) .pc-o{color:#163E6C}
+  #pendList.compact .pc-row:hover::after{opacity:1}
+  #pendList.compact .pc-mline .mkt{white-space:normal;text-overflow:clip;overflow:visible;line-height:1.3}
+}
 </style>
 </head>
 <body>
@@ -3028,7 +3068,7 @@ body.np .ni[data-page="profit"],body.np .tab[data-tab="profit"],body.np .today-s
         <div class="card" id="nfCard" style="display:none">
           <div class="ch"><span class="ct" id="nfTitle">Bet details</span><span style="font-size:11.5px;color:var(--faint)" id="nfHelp"></span><button class="tool" id="reuseBtnNf" style="margin-left:auto" title="Reuse one of your pending bets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>From pending</span></button></div>
           <div class="cb nf-grid">
-            <div><label class="fl">Event</label><input type="text" id="nf-event" placeholder="Spain vs Portugal" autocomplete="off"></div>
+            <div><label class="fl">Event</label><input type="text" id="nf-event" placeholder="Spain vs Portugal" autocomplete="off"><div class="mpick" id="nf-mpick"></div></div>
             <div id="nf-pick-w"><label class="fl">Market / line <span style="font-weight:400;color:var(--faint)">(optional)</span></label><input type="text" id="nf-pick" placeholder="E.g. Mbappé 1.5+ shots · Corners O9.5" autocomplete="off"></div>
             <div class="two-col">
               <div><label class="fl">Bookmaker</label><select id="nf-house"><option value="">Choose bookmaker…</option></select></div>
@@ -3075,6 +3115,7 @@ body.np .ni[data-page="profit"],body.np .tab[data-tab="profit"],body.np .today-s
               <div><label class="fl">Date</label><input type="date" id="q-date"></div>
               <div><label class="fl">Ends ~</label><select id="q-hour" class="hour-sel"><option value="">--</option><option value="00:00">00h</option><option value="01:00">01h</option><option value="02:00">02h</option><option value="03:00">03h</option><option value="04:00">04h</option><option value="05:00">05h</option><option value="06:00">06h</option><option value="07:00">07h</option><option value="08:00">08h</option><option value="09:00">09h</option><option value="10:00">10h</option><option value="11:00">11h</option><option value="12:00">12h</option><option value="13:00">13h</option><option value="14:00">14h</option><option value="15:00">15h</option><option value="16:00">16h</option><option value="17:00">17h</option><option value="18:00">18h</option><option value="19:00">19h</option><option value="20:00">20h</option><option value="21:00">21h</option><option value="22:00">22h</option><option value="23:00">23h</option></select></div>
               <div id="q-cat-w"><label class="fl">Category</label><select id="q-cat"><option value="">No category</option></select></div>
+              <div class="mpick" id="q-mpick"></div>
             </div>
 
             <div class="sbx-sec"><span class="sbx-n">2</span>Odds<small class="kbd-hint">Enter on the last odds registers it</small></div>
@@ -7067,8 +7108,16 @@ document.getElementById('pendDays').addEventListener('change',e=>{
 });
 const PEND_IC={
   more:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>',
+  edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+  add:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
   check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
 };
+// a bookmaker's own colour, so each leg reads at a glance (unknown ones get a steady colour from their name)
+const BK_BRAND=[[/bet365/,'#027B5B'],[/winamax/,'#D6121E'],[/\bpaf\b/,'#1B3A6B'],[/bwin/,'#E8B400'],[/william ?hill/,'#13294B'],[/betfair/,'#F5A800'],[/codere/,'#6AAE1C'],
+  [/888/,'#F26B1D'],[/sportium/,'#00843D'],[/kirol/,'#009FE3'],[/marca/,'#E2001A'],[/betway/,'#1E1E1E'],[/leovegas/,'#FF7A00'],[/betsson/,'#F06400'],[/pokerstars/,'#C8102E'],
+  [/dazn/,'#BDB400'],[/luckia/,'#7AB51D'],[/retabet/,'#0077C8'],[/speedy/,'#7B2CBF'],[/tonybet/,'#E10600'],[/versus/,'#00A3AD'],[/olybet/,'#6E2C91'],[/casumo/,'#7A1FA2'],
+  [/bet777/,'#C9002B'],[/interwetten/,'#F7D117'],[/efbet/,'#D71920'],[/marathon/,'#1E4F91'],[/gran madrid/,'#9B7B2C'],[/pinnacle/,'#E85E13'],[/1xbet/,'#1A5CA8'],[/unibet/,'#147B45']];
+function bkBrand(h){const k=String(h||'').toLowerCase();const f=BK_BRAND.find(([re])=>re.test(k));if(f)return f[1];let x=0;for(let i=0;i<k.length;i++)x=(x*31+k.charCodeAt(i))>>>0;return `hsl(${x%360} 45% 45%)`;}
 function pendTimeHtml(item,withDate){
   const ended=pendEnded(item);
   const t=item.time?'~'+String(parseInt(item.time,10)).padStart(2,'0')+'h':'';
@@ -7110,7 +7159,8 @@ function pendCompactHtml(kind,item,tw){
   const key=pendKey(kind,item);
   const open=pendOpen.has(key);
   const withDate=pendSort==='house'||pendDayFilter==='done'||pendDayFilter==='overdue';
-  const more=`<button class="pc-more${open?' on':''}" data-pcmore="${esc(key)}" title="More actions" aria-expanded="${open}">${PEND_IC.more}</button>`;
+  const more=`<button class="pc-more${open?' on':''}" data-pcmore="${esc(key)}" title="More actions" aria-expanded="${open}">${PEND_IC.more}</button>`
+    +(kind==='wd'?'':`<span class="pc-quick"><button class="pc-more" data-pedit="${kind}:${item.id}" title="Edit this bet">${PEND_IC.edit}</button><button class="pc-more" data-padd="${kind}:${item.id}" title="Register another bet on this match">${PEND_IC.add}</button></span>`);
   if(kind==='wd'){
     const w=item;
     return `<div class="pc-row wd">
@@ -7128,32 +7178,32 @@ function pendCompactHtml(kind,item,tw){
     const cpp=coPartOf(b);
     const legsHtml=legs.length?legs.map((l,li)=>{const r=promos[li];
       if(cpp&&cpp[li]!=null)return`<span class="pc-leg co-done" title="Cashed out — already in the balance"><span class="pc-h"><mark>${esc(l.house||'—')}</mark></span><span class="pc-o">${fmt(l.odd||0)}</span><span class="pc-r">Cashed ${fmt(cpp[li])} €</span></span>`;
-      return`<button class="pc-leg${r?' promo':''}${mk===li||(mk!=='both'&&legWins(b,mk,li))?' marked':''}" data-pwinbid="${b.id}" data-pwinleg="${li}" title="${mk===li?'Marked as the winner — tap to unmark':'Tap to mark this as the outcome that happened'}" aria-pressed="${mk===li}"${r?` style="--hl:${r.color}"`:''}>
+      return`<button class="pc-leg${r?' promo':''}${mk===li||(mk!=='both'&&legWins(b,mk,li))?' marked':''}" data-pwinbid="${b.id}" data-pwinleg="${li}" title="${mk===li?'Marked as the winner — tap to unmark':'Tap to mark this as the outcome that happened'}" aria-pressed="${mk===li}" style="--bk:${bkBrand(l.house)}${r?';--hl:'+r.color:''}">
         <span class="pc-h"><mark>${esc(l.house||'—')}</mark></span><span class="pc-o"><mark>${fmt(l.odd||0)}</mark></span><span class="pc-r">${legRes(l)}</span></button>`;}).join('')
       +(b.mid?`<button class="pc-leg both${mk==='both'?' marked':''}" data-pwinbid="${b.id}" data-pwinleg="both" title="${mk==='both'?'Marked: both won — tap to unmark':'The middle hit: both legs won'}" aria-pressed="${mk==='both'}"><span class="pc-h"><mark>Both</mark></span><span class="pc-o"></span><span class="pc-r">Middle ${midBoth(b)>=0?'+':''}${fmt(midBoth(b))} €</span></button>`:'')
       :`<button class="pc-mk won pc-act${mk==='won'?' on':''}" data-pid="${b.id}" data-kind="sb" data-action="won">Won</button>`;
     const p=cpp?coPartProfit(b,mk==null||mk==='won'?null:mk):sbResultProfit(b,mk)??(b.profit||0);
-    return `<div class="pc-row sb${lvIsLive(b)?' lv-on':''}${marked?' marked':''}${pr?' promo':''}${tw.has(b.id)?' twin':''}"${pr?` style="--hl:${pr.color}"`:''}>
+    return `<div class="pc-row sb${lvIsLive(b)?' lv-on':''}${marked?' marked':''}${pr?' promo':''}${tw.has(b.id)?' twin':''}" style="--mc:${matchHue(b.event)}${pr?';--hl:'+pr.color:''}">
       ${pendTimeHtml(b,withDate)}
       <div class="pc-ev"><span class="pc-ttl"><b>${sbTagHtml(b,tw)}${midPill(b)}${cntPill('sb',b)}${esc(b.event)}</b>${promoTag(pr)}</span>${b.market?`<span class="pc-mline">${mktChip(b.market)}</span>`:''}${lvSlot('sb',b)}${mxBtn('sb',b)}${lkChip('sb',b)}${arLine(b,true)}${pendNoteLine('sb',b)}${flagTag('sb',b)}</div>
       <span class="pc-profit ${p>=0?'pos':'neg'}">${p>=0?'+':''}${fmt(p)} €</span>
       <div class="pc-legs${marked?' has-res':''}" style="--n:${Math.max(legs.length+(b.mid?1:0),1)}">${legsHtml}${marked?PEND_RESOLVE('sb',b.id):''}</div>
       <span class="pc-tail">${more}</span>
       ${open?`<div class="pc-extra">${sbSubHtml(b,tw,true)}<div class="pend-meta">${pendHouseChip([...new Set(legs.map(l=>l.house))])}<span>${fmtWhen(b.date,b.time)}</span>${b.totalStake?`<span>Staked: ${fmt(b.totalStake)} €</span>`:''}${b.minReturn?`<span>Min. return: ${fmt(b.minReturn)} €</span>`:''}</div>
-        ${pendNoteEdit('sb',b)}<div class="pc-btns">${PEND_EDIT('sb',b.id)}${flagBtn('sb',b)}<button class="btn-void" data-cashout="sb:${b.id}">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`:''}
+        ${pendNoteEdit('sb',b)}<div class="pc-btns">${PEND_EDIT('sb',b.id)}<button class="btn-void pend-add" data-padd="sb:${b.id}" title="Register another bet on this match">+ Bet on this match</button>${flagBtn('sb',b)}<button class="btn-void" data-cashout="sb:${b.id}">Cash out</button><button class="btn-void" data-pid="${b.id}" data-kind="sb" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`:''}
     </div>`;
   }
   const n=item;const pr=itemPromo('nm',n);
   const win=n.potentialWin!=null?n.potentialWin:+(((n.stake||0)*((n.odd||1)-1)).toFixed(2));
   const loss=n.potentialLoss!=null?n.potentialLoss:(n.type==='Freebet'?0:-(n.stake||0));
-  return `<div class="pc-row nm${lvIsLive(n)?' lv-on':''}${n.pendMark!=null?' marked':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
+  return `<div class="pc-row nm${lvIsLive(n)?' lv-on':''}${n.pendMark!=null?' marked':''}${pr?' promo':''}" style="--mc:${matchHue(n.event)}${pr?';--hl:'+pr.color:''}">
     ${pendTimeHtml(n,withDate)}
     <div class="pc-ev"><span class="pc-ttl"><b>${esc(n.event)}</b> ${nmPill(n)}${promoTag(pr)}</span>${n.pick?`<span class="pc-mline">${mktChip(n.pick)}</span>`:''}${lvSlot('nm',n)}${mxBtn('nm',n)}${lkChip('nm',n)}${arLine(n,true)}<span class="pc-sub"><span class="pc-nmh${pr?' promo':''}"><mark>${esc(n.house||'No bookmaker')}</mark> @ <mark>${fmt(n.odd||0)}</mark></span> · ${fmt(n.stake||0)} €</span>${pendNoteLine('nm',n)}${flagTag('nm',n)}</div>
     <span class="pc-profit ${n.pendMark==='lost'?'neg':'pos'}" title="If it wins +${fmt(win)} € · if it loses ${fmt(loss)} €">${n.pendMark==='lost'?fmt(loss):'+'+fmt(win)} €</span>
     <div class="pc-legs pc-nm-btns">${pendMarkBtns(n,' pc-act')}${n.pendMark!=null?PEND_RESOLVE('nm',n.id):''}</div>
     <span class="pc-tail">${more}</span>
     ${open?`<div class="pc-extra"><div class="pend-meta">${pendHouseChip([n.house])}<span>${fmtWhen(n.date,n.time)}</span><span>Odds ${fmt(n.odd||0)}</span><span>Staked: ${fmt(n.stake||0)} €</span></div>
-      ${pendNoteEdit('nm',n)}<div class="pc-btns">${PEND_EDIT('nm',n.id)}${flagBtn('nm',n)}<button class="btn-void" data-cashout="nm:${n.id}">Cash out</button><button class="btn-void" data-pid="${n.id}" data-kind="nm" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`:''}
+      ${pendNoteEdit('nm',n)}<div class="pc-btns">${PEND_EDIT('nm',n.id)}<button class="btn-void pend-add" data-padd="nm:${n.id}" title="Register another bet on this match">+ Bet on this match</button>${flagBtn('nm',n)}<button class="btn-void" data-cashout="nm:${n.id}">Cash out</button><button class="btn-void" data-pid="${n.id}" data-kind="nm" data-action="anulada">Void</button>${hideBtnHtml(key,true)}</div></div>`:''}
   </div>`;
 }
 let pendLastShown=[];
@@ -7221,13 +7271,18 @@ function confirmWithdrawalGroup(key){
   toast(`${list.length} withdrawals of ${c.name} confirmed · ${fmt(tot)} €`,'Undo',()=>{snap.forEach(j=>{const o=JSON.parse(j),i=D.casas.findIndex(x=>x.id===o.id);if(i>=0)D.casas[i]=o;});save();updateBadges();rerenderActivePage();});
 }
 function renderPendientesInner(){
+  matchHueMap.clear();
   if(typeof pendDisarm==='function')pendDisarm();
   const pendSBAll=D.bets.filter(b=>b.status==='pending').map(b=>({kind:'sb',item:b}));
   const pendNMAll=D.normals.filter(n=>n.status==='pending').map(n=>({kind:'nm',item:n}));
   const pendWDAll=[];
   D.casas.forEach(c=>{(c.history||[]).forEach(h=>{if(h.type==='wd'&&h.status==='pending')pendWDAll.push({kind:'wd',item:{cid:c.id,hid:h.id,casaName:c.name,amount:h.amount,date:h.date,dest:moveLabel(c,h)}});});});
   const dKey=x=>(x.item.date||'9999-99-99')+' '+(x.item.time||'99:99');
-  const pendAll=[...pendSBAll,...pendNMAll,...pendWDAll].sort((a,b)=>dKey(a).localeCompare(dKey(b)));
+  // bets of the same match stay together: a match sorts by its earliest bet that day, then by its name
+  const mFirst=new Map(),mKey=x=>(x.item.date||'')+'|'+matchName(x.item.event||'');
+  [...pendSBAll,...pendNMAll].forEach(x=>{const k=mKey(x),t=x.item.time||'99:99';if(!mFirst.has(k)||t<mFirst.get(k))mFirst.set(k,t);});
+  const sKey=x=>x.kind==='wd'?dKey(x):(x.item.date||'9999-99-99')+' '+mFirst.get(mKey(x))+' '+matchName(x.item.event||'')+' '+(x.item.time||'99:99');
+  const pendAll=[...pendSBAll,...pendNMAll,...pendWDAll].sort((a,b)=>sKey(a).localeCompare(sKey(b)));
   const notHidden=({kind,item})=>!isHidden(pendKey(kind,item));
   const promoOk=({kind,item})=>!pendOnlyPromo||!!itemPromo(kind,item);
   renderPendTools(pendAll.filter(notHidden));
@@ -7255,7 +7310,7 @@ function renderPendientesInner(){
     // one group per bookmaker; a surebet shows under each bookmaker it uses
     const ex=[];
     visible.forEach(x=>pendHouses(x.kind,x.item).forEach(h=>{if(pendHouse==='all'||bkKey(h)===bkKey(pendHouse))ex.push({...x,grp:h});}));
-    ex.sort((a,b)=>(!a.grp)-(!b.grp)||a.grp.localeCompare(b.grp,'en',{sensitivity:'base'})||dKey(a).localeCompare(dKey(b)));
+    ex.sort((a,b)=>(!a.grp)-(!b.grp)||a.grp.localeCompare(b.grp,'en',{sensitivity:'base'})||sKey(a).localeCompare(sKey(b)));
     visible=ex;
   }
   // every withdrawal goes together at the end of the list (not mixed among each day's bets), oldest first
@@ -7600,6 +7655,8 @@ document.getElementById('pendList').addEventListener('keydown',e=>{if(e.key==='E
 document.getElementById('pendList').addEventListener('click',e=>{
   const no=e.target.closest('[data-note-open]');
   if(no){const k=no.dataset.noteOpen;pendOpen.add(k);renderPendientes();const el=document.querySelector(`#pendList [data-note="${k}"]`);if(el){el.focus();const L=el.value.length;try{el.setSelectionRange(L,L);}catch(err){}}return;}
+  const pa=e.target.closest('[data-padd]');
+  if(pa){const [k,i]=pa.dataset.padd.split(':');const it=(k==='sb'?D.bets:D.normals).find(x=>String(x.id)===i);if(it){navTo('calc');useMatch(it,true);}return;}
   const pe=e.target.closest('[data-pedit]');
   if(pe){const [k,i]=pe.dataset.pedit.split(':');k==='nm'?openNormalModal(+i):openSbEditModal(+i);return;}
   const mo=e.target.closest('[data-pcmore]');
@@ -9726,6 +9783,53 @@ function renderReuseList(){
     return `<button class="ru-it" data-ru="${L.kind}:${b.id}"><div class="ru-ev"><span class="ru-ty">${ruType(L)}</span>${esc(b.event||'(no event)')}</div>${b.market?`<div class="ru-mk">${esc(b.market)}</div>`:''}<div class="ru-lg">${lg}</div><div class="ru-wh">${fmtWhen(b.date,b.time)||'No date'}${st}${b.categoryId?' · '+esc(catName(b.categoryId)):''}</div></button>`;}).join('')
     +(list.length>shown.length?`<div class="ru-empty">${list.length-shown.length} more — search to narrow it down</div>`:'');
 }
+// ── a match you already have pending: one tap fills event, date, hour and category (market and odds stay for you) ──
+function pendMatchList(){
+  const seen=new Map(),today=todayISO();
+  [...D.bets,...(D.normals||[])].forEach(x=>{
+    if(x.status!=='pending'||!(x.event||'').trim()||(x.date&&x.date<today))return;
+    const k=(x.date||'')+'|'+matchName(x.event),o=seen.get(k);
+    if(!o)seen.set(k,{k,item:x,n:1});else{o.n++;if((x.time||'99')<(o.item.time||'99'))o.item=x;}
+  });
+  return [...seen.values()].sort((a,b)=>((a.item.date||'9')+' '+(a.item.time||'99')).localeCompare((b.item.date||'9')+' '+(b.item.time||'99')));
+}
+let mpickAll=false;
+function renderMatchPicks(){
+  const L=pendMatchList(),max=mpickAll?L.length:6;
+  ['q-mpick','nf-mpick'].forEach(id=>{const el=document.getElementById(id);if(!el)return;
+    if(!L.length){el.innerHTML='';return;}
+    const today=todayISO();
+    el.innerHTML=`<span class="mp-l">Add to a match you have:</span>`+L.slice(0,max).map(m=>{const it=m.item,t=it.time?String(parseInt(it.time,10)).padStart(2,'0')+'h':'',d=it.date&&it.date!==today?new Date(it.date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
+      return `<button type="button" class="mp-chip" data-mpick="${esc(m.k)}" style="--mc:${matchHue(it.event)}" title="Fill in ${esc(it.event)}${d?' · '+d:''}${t?' · ends ~'+t:''} — then type the market and odds"><i></i><b>${esc(it.event)}</b>${[d,t].filter(Boolean).length?`<small>${[d,t].filter(Boolean).join(' ')}</small>`:''}${m.n>1?`<span class="mp-n">${m.n}</span>`:''}</button>`;}).join('')
+      +(L.length>6?`<button type="button" class="mp-more" data-mpick-all>${mpickAll?'Fewer':'+'+(L.length-6)+' more'}</button>`:'');
+  });
+}
+function useMatch(it,fromPending){
+  if(!it)return;
+  if(sbMode()){
+    document.getElementById('q-event').value=it.event||'';document.getElementById('q-market').value='';
+    document.getElementById('q-date').value=it.date||todayISO();document.getElementById('q-hour').value=hourOnly(it.time);
+    fillCategorySelect(document.getElementById('q-cat'),it.categoryId??null);document.getElementById('q-cat-w').classList.remove('auto');
+    newBetCat=it.categoryId??null;qComp=it.comp?{ev:(it.event||'').trim(),comp:it.comp}:null;
+    const f=document.getElementById('q-market');if(f)f.focus();
+  }else{
+    const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v??'';};
+    set('nf-event',it.event);set('nf-pick','');set('nf-date',it.date||todayISO());set('nf-time',hourOnly(it.time));
+    fillCategorySelect(document.getElementById('nf-category'),it.categoryId??null);
+    const f=document.getElementById(nfCombi?'nf-stake':'nf-pick');if(f)f.focus();
+  }
+  toast(`${it.event} filled in — now the market and the odds`);
+}
+document.addEventListener('click',e=>{
+  if(e.target.closest('[data-mpick-all]')){mpickAll=!mpickAll;renderMatchPicks();return;}
+  const c=e.target.closest('[data-mpick]');if(!c)return;
+  const m=pendMatchList().find(x=>x.k===c.dataset.mpick);if(m)useMatch(m.item);
+});
+// the same colour for every bet of one match (cards, chips), so they read as a group
+// colours handed out in the order the matches show, so two matches side by side never look alike
+const MATCH_PAL=['#2C6DB4','#E07A1F','#7B4BC9','#1E9E8F','#D2412B','#C9A100','#3F8F3A','#C2408F','#5B6B7F','#8A5A2B'];
+const matchHueMap=new Map();
+function matchHue(ev){const k=matchName(ev||'');if(!matchHueMap.has(k))matchHueMap.set(k,MATCH_PAL[matchHueMap.size%MATCH_PAL.length]);return matchHueMap.get(k);}
 function openReuse(){
   const m=document.getElementById('reuseModal');
   ruKind=sbMode()?'sb':'nm';
@@ -10637,7 +10741,7 @@ async function lvRefresh(force){
       const st=m.done?'post':m.live?'in':'pre';
       const score=ten?(A.ls.length?arScore(m,A,B):'0-0'):(isNaN(A.score)||isNaN(B.score)?'':A.score+'-'+B.score);
       const clock=ten?(A.ls.length?'Set '+A.ls.length:''):(/^(in progress|en curso|live)$/i.test(m.clock)?'':m.clock);
-      lvState.set(key,{st,clock,score,start:m.date,sport:m.sport});
+      lvState.set(key,{st,clock,score,start:m.date,sport:m.sport,stat:st==='pre'?null:lvStatOf(key.startsWith('sb:')?'sb':'nm',item,hit)});
     });
   }finally{
     lvBusy=false;
@@ -10648,14 +10752,32 @@ async function lvRefresh(force){
     if((lvSig()!==before||lkNew)&&pg&&pg.style.display!=='none'&&!typing)renderPendientes();else lvPaint();
   }
 }
+// the stat a bet is on, live: "Shots 14 · line 26.5" for a shots bet, the team's figure for a team market
+function lvStatOf(kind,item,hit){
+  const {m,A,B}=hit;
+  const legs=kind==='sb'?(item.legs||[]).map(l=>arLegSpec(item,l)):[arLegSpec({market:''},{result:item.pick||''})];
+  const specs=legs.filter(x=>x&&x.kind==='stat'&&!x.player);if(!specs.length)return null;
+  const s0=specs[0],v=arStatValue(s0,m,A,B);if(v==null)return null;
+  const lines=[...new Set(specs.filter(x=>x.stat===s0.stat&&x.who===s0.who).map(x=>x.line))].sort((a,b)=>a-b);
+  const both=!s0.who&&A.st&&B.st?`${A.st[s0.stat]}-${B.st[s0.stat]}`:'';
+  const side=s0.who?arSide(s0.who,A,B):null,team=side&&side.length===1&&side[0]!=='draw'?side[0].name:'';
+  return {name:AR_STAT_NAME[s0.stat]||s0.stat,v,lines,both,team};
+}
+function lvStatHtml(x){
+  if(!x)return '';
+  const top=x.lines[x.lines.length-1],pct=top?Math.min(100,Math.round(x.v/top*100)):0,over=x.lines.length&&x.v>x.lines[0];
+  const nm=x.name.charAt(0).toUpperCase()+x.name.slice(1);
+  return `<span class="lv-stat${over?' over':''}" title="${esc(nm+(x.team?' of '+x.team:'')+' right now'+(x.both?' ('+x.both+')':'')+' — line '+x.lines.join(' / '))}"><span class="lvs-t">${esc(nm)}${x.team?' · '+esc(x.team):''}</span><b>${x.v}</b>${x.both?`<span class="lvs-b">${esc(x.both)}</span>`:''}<span class="lvs-l">/ ${x.lines.map(fmtLine).join(' – ')}</span><i style="--p:${pct}%"></i></span>`;
+}
+function fmtLine(n){return String(n);}
 function lvSig(){return [...lvState].map(([k,v])=>k+v.st).sort().join();}
 function lvInner(key){
   const v=lvState.get(key);if(!v)return '';
   if(v.st==='in'){
     const txt=[v.clock,v.score].filter(Boolean).map(esc).join(' · ');
-    return `<span class="lv-tag" title="Being played right now — live score from ESPN, updated every minute"><i class="lv-dot"></i>LIVE${txt?' '+txt:''}</span>`;
+    return `<span class="lv-tag" title="Being played right now — live score from ESPN, updated every minute"><i class="lv-dot"></i>LIVE${txt?' '+txt:''}</span>${lvStatHtml(v.stat)}`;
   }
-  if(v.st==='post')return `<span class="lv-tag end" title="ESPN says this match has finished">Finished${v.score?' '+esc(v.score):''}</span>`;
+  if(v.st==='post')return `<span class="lv-tag end" title="ESPN says this match has finished">Finished${v.score?' '+esc(v.score):''}</span>${lvStatHtml(v.stat)}`;
   const t=!isNaN(v.start)?new Date(v.start):null;
   return `<span class="lv-tag pre" title="ESPN still lists it as not started">${t&&t.getTime()>Date.now()-60000?'Starts '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'):'Not started yet'}</span>`;
 }
@@ -11682,6 +11804,7 @@ const NF_META={
 };
 function setBetType(type){
   newBetType=type||newBetType;
+  try{renderMatchPicks();}catch(e){}
   if(newBetType==='Combi'){newBetType='Normal';nfCombi=true;} // old links / saved state
   document.querySelectorAll('#nbTypes .nbt').forEach(b=>b.classList.toggle('active',b.dataset.bt===newBetType));
   const isSb=sbMode();
