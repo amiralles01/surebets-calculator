@@ -7190,12 +7190,27 @@ const BK_BRAND=[[/bet365/,'#027B5B'],[/winamax/,'#D6121E'],[/\bpaf\b/,'#1B3A6B']
   [/dazn/,'#BDB400'],[/luckia/,'#7AB51D'],[/retabet/,'#0077C8'],[/speedy/,'#7B2CBF'],[/tonybet/,'#E10600'],[/versus/,'#00A3AD'],[/olybet/,'#6E2C91'],[/casumo/,'#7A1FA2'],
   [/bet777/,'#C9002B'],[/interwetten/,'#F7D117'],[/efbet/,'#D71920'],[/marathon/,'#1E4F91'],[/gran madrid/,'#9B7B2C'],[/pinnacle/,'#E85E13'],[/1xbet/,'#1A5CA8'],[/unibet/,'#147B45']];
 function bkBrand(h){const k=String(h||'').toLowerCase();const f=BK_BRAND.find(([re])=>re.test(k));if(f)return f[1];let x=0;for(let i=0;i<k.length;i++)x=(x*31+k.charCodeAt(i))>>>0;return `hsl(${x%360} 45% 45%)`;}
-function pendTimeHtml(item,withDate){
+// when a bet's match starts, in minutes from the bet's day: ESPN's kick-off once it lists the match,
+// else the saved time (the estimated END) minus the usual duration. null = no time at all
+function pendStart(kind,item){
+  const v=lvState.get(kind+':'+item.id);
+  if(v&&v.start!=null&&item.date){const t=new Date(v.start).getTime(),d0=new Date(item.date+'T00:00:00').getTime();if(!isNaN(t)&&!isNaN(d0))return {m:Math.round((t-d0)/60000),real:true};}
+  if(!item.time)return null;
+  const [h,mi]=String(item.time).split(':').map(x=>parseInt(x,10)||0);
+  return {m:h*60+mi-SPORT_HOURS*60,real:false};
+}
+function pendStartLabel(st){
+  if(!st)return '';
+  const m=((st.m%1440)+1440)%1440,h=String(Math.floor(m/60)).padStart(2,'0');
+  return st.real?h+':'+String(m%60).padStart(2,'0'):'~'+h+'h';
+}
+function pendTimeHtml(item,withDate,kind,st){
   const ended=pendEnded(item);
-  const t=item.time?'~'+String(parseInt(item.time,10)).padStart(2,'0')+'h':'';
+  st=st||pendStart(kind||(item.legs?'sb':'nm'),item);
+  const t=pendStartLabel(st);
   const d=withDate&&item.date?new Date(item.date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
   const label=[d,t].filter(Boolean).join(' ')||'—';
-  return `<span class="pc-time${ended?' done':''}" title="${ended?'Should have ended — ready to settle':'Estimated end'}">${ended?PEND_IC.check:''}${label}</span>`;
+  return `<span class="pc-time${ended?' done':''}" title="${ended?'Should have ended — ready to settle':st&&st.real?'Kick-off (ESPN)':'Estimated kick-off'}">${ended?PEND_IC.check:''}${label}</span>`;
 }
 // compact row: one line per bet, outcome buttons inline, rarely-used actions behind "⋯"
 const PEND_RESOLVE=(kind,id)=>`<button class="btn-accept pc-act pc-resolve" data-resolve="${kind}:${id}" title="Settle it with the marked result">${PEND_IC.check}Resolve</button>`;
@@ -7251,7 +7266,7 @@ function pendCompactHtml(kind,item,tw){
     const legsHtml=pendSbLegs(b,promos);
     const p=pendSbProfit(b);
     return `<div class="pc-row sb${lvIsLive(b)?' lv-on':''}${marked?' marked':''}${pr?' promo':''}${tw.has(b.id)?' twin':''}"${pr?` style="--hl:${pr.color}"`:''}>
-      ${pendTimeHtml(b,withDate)}
+      ${pendTimeHtml(b,withDate,'sb')}
       <div class="pc-ev"><span class="pc-ttl"><b>${sbTagHtml(b,tw)}${midPill(b)}${cntPill('sb',b)}${esc(b.event)}</b>${promoTag(pr)}</span>${b.market?`<span class="pc-mline">${mktChip(b.market)}</span>`:''}${lvSlot('sb',b)}${mxBtn('sb',b)}${lkChip('sb',b)}${arLine(b,true)}${pendNoteLine('sb',b)}${flagTag('sb',b)}</div>
       <span class="pc-profit ${p>=0?'pos':'neg'}">${p>=0?'+':''}${fmt(p)} €</span>
       <div class="pc-legs${marked?' has-res':''}" style="--n:${Math.max(legs.length+(b.mid?1:0),1)}">${legsHtml}${marked?PEND_RESOLVE('sb',b.id):''}</div>
@@ -7263,7 +7278,7 @@ function pendCompactHtml(kind,item,tw){
   const win=n.potentialWin!=null?n.potentialWin:+(((n.stake||0)*((n.odd||1)-1)).toFixed(2));
   const loss=n.potentialLoss!=null?n.potentialLoss:(n.type==='Freebet'?0:-(n.stake||0));
   return `<div class="pc-row nm${lvIsLive(n)?' lv-on':''}${n.pendMark!=null?' marked':''}${pr?' promo':''}"${pr?` style="--hl:${pr.color}"`:''}>
-    ${pendTimeHtml(n,withDate)}
+    ${pendTimeHtml(n,withDate,'nm')}
     <div class="pc-ev"><span class="pc-ttl"><b>${esc(n.event)}</b> ${nmPill(n)}${promoTag(pr)}</span>${n.pick?`<span class="pc-mline">${mktChip(n.pick)}</span>`:''}${lvSlot('nm',n)}${mxBtn('nm',n)}${lkChip('nm',n)}${arLine(n,true)}<span class="pc-sub"><span class="pc-nmh${pr?' promo':''}"><mark>${esc(n.house||'No bookmaker')}</mark> @ <mark>${fmt(n.odd||0)}</mark></span> · ${fmt(n.stake||0)} €</span>${pendNoteLine('nm',n)}${flagTag('nm',n)}</div>
     <span class="pc-profit ${n.pendMark==='lost'?'neg':'pos'}" title="If it wins +${fmt(win)} € · if it loses ${fmt(loss)} €">${n.pendMark==='lost'?fmt(loss):'+'+fmt(win)} €</span>
     <div class="pc-legs pc-nm-btns">${pendMarkBtns(n,' pc-act')}${n.pendMark!=null?PEND_RESOLVE('nm',n.id):''}</div>
@@ -7331,12 +7346,13 @@ function pendBoardMatch(group,tw,withDate){
   const first=group[0].item,keys=group.map(x=>x.kind+':'+x.item.id);
   const lk=keys.find(k=>lvState.has(k))||keys[0],live=lvState.get(lk),isLive=!!live&&live.st==='in';
   const ended=group.every(x=>pendEnded(x.item));
-  const t=first.time?'~'+String(parseInt(first.time,10)).padStart(2,'0')+'h':'';
+  let st=null;group.forEach(x=>{const s=pendStart(x.kind,x.item);if(s&&(!st||(s.real&&!st.real)||(s.real===st.real&&s.m<st.m)))st=s;});
+  const t=pendStartLabel(st);
   const d=withDate&&first.date?new Date(first.date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
   const mx=group.find(x=>mxOk(x.item)),mxk=mx?mx.kind+':'+mx.item.id:'';
   return `<section class="pb-match${isLive?' lv-on':''}">
     <header class="pb-head">
-      <span class="pb-time${ended?' done':''}" title="${ended?'Should have ended — ready to settle':'Estimated end'}">${ended?PEND_IC.check:''}${[d,t].filter(Boolean).join(' ')||'—'}</span>
+      <span class="pb-time${ended?' done':''}" title="${ended?'Should have ended — ready to settle':st&&st.real?'Kick-off (ESPN)':'Estimated kick-off'}">${ended?PEND_IC.check:''}${[d,t].filter(Boolean).join(' ')||'—'}</span>
       <b class="pb-ev" title="${esc(first.event||'')}">${esc(first.event||'(No event)')}</b>
       <span class="pb-live" data-lv="${lk}" data-lvp="score"${mxk?` data-mx="${mxk}"`:''}>${lvScoreHtml(lk)}</span>
       <span class="pb-hsp"></span>
@@ -7420,9 +7436,12 @@ function renderPendientesInner(){
   D.casas.forEach(c=>{(c.history||[]).forEach(h=>{if(h.type==='wd'&&h.status==='pending')pendWDAll.push({kind:'wd',item:{cid:c.id,hid:h.id,casaName:c.name,amount:h.amount,date:h.date,dest:moveLabel(c,h)}});});});
   const dKey=x=>(x.item.date||'9999-99-99')+' '+(x.item.time||'99:99');
   // bets of the same match stay together: a match sorts by its earliest bet that day, then by its name
-  const mFirst=new Map(),mKey=x=>(x.item.date||'')+'|'+matchName(x.item.event||'');
-  [...pendSBAll,...pendNMAll].forEach(x=>{const k=mKey(x),t=x.item.time||'99:99';if(!mFirst.has(k)||t<mFirst.get(k))mFirst.set(k,t);});
-  const sKey=x=>x.kind==='wd'?dKey(x):(x.item.date||'9999-99-99')+' '+mFirst.get(mKey(x))+' '+matchName(x.item.event||'')+' '+(x.item.time||'99:99');
+  // ordered by kick-off: a match goes by its real ESPN kick-off if any of its bets has one, else by its earliest estimate
+  const mFirst=new Map(),mKey=x=>(x.item.date||'')+'|'+matchName(x.item.event||''),stOf=new Map();
+  [...pendSBAll,...pendNMAll].forEach(x=>{const st=pendStart(x.kind,x.item);stOf.set(x.item,st);if(!st)return;const k=mKey(x),o=mFirst.get(k);
+    if(!o||(st.real&&!o.real)||(st.real===o.real&&st.m<o.m))mFirst.set(k,st);});
+  const pad=n=>String(n==null?99999:n+2000).padStart(5,'0');
+  const sKey=x=>x.kind==='wd'?dKey(x):(x.item.date||'9999-99-99')+' '+pad((mFirst.get(mKey(x))||{}).m)+' '+matchName(x.item.event||'')+' '+pad((stOf.get(x.item)||{}).m);
   const pendAll=[...pendSBAll,...pendNMAll,...pendWDAll].sort((a,b)=>sKey(a).localeCompare(sKey(b)));
   const notHidden=({kind,item})=>!isHidden(pendKey(kind,item));
   const promoOk=({kind,item})=>!pendOnlyPromo||!!itemPromo(kind,item);
