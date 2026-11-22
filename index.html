@@ -3068,6 +3068,7 @@ body.np .ni[data-page="profit"],body.np .tab[data-tab="profit"],body.np .today-s
   .pb-ic{width:36px;height:36px}
 }
 @media(max-width:380px){.pb-hb span{display:none}.pb-hb{padding:0 9px}}
+@media(max-width:520px){.pb-head:has([data-plink]) .pb-hb:not([data-plink]) span{display:none}}
 </style>
 </head>
 <body>
@@ -3833,6 +3834,7 @@ let D = {bets:[],normals:[],casas:[],notes:[],notesFolders:[],categories:[],hidd
 function ensureShape(){
   ['bets','normals','casas','notes','notesFolders','categories','bkProfiles','poker','presets','tgInbox'].forEach(k=>{if(!Array.isArray(D[k]))D[k]=[];});
   if(!D.hidden||typeof D.hidden!=='object')D.hidden={};
+  if(!D.teamAlias||typeof D.teamAlias!=='object'||Array.isArray(D.teamAlias))D.teamAlias={};
 }
 // ── Cloud layout ──
 // Firestore refuses any document over 1 MiB (≈2,600 surebets, under two months at 45 a day).
@@ -7248,6 +7250,7 @@ document.getElementById('pendDays').addEventListener('change',e=>{
   pendDayFilter=e.target.value||'all';renderPendientes();
 });
 const PEND_IC={
+  find:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>',
   more:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>',
   edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
   join:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
@@ -7429,9 +7432,10 @@ function pendBoardMatch(group,tw,withDate){
       <span class="pb-hsp"></span>
       ${group.length>1?`<span class="pb-n">${group.length} bets</span>`:''}
       ${mxk?`<button type="button" class="pb-hb" data-mx="${mxk}" title="Score, stats, goals and cards of this match">${MX_IC}<span>Match</span></button>`:''}
+      ${!live&&pendLinkWanted(group)?`<button type="button" class="pb-hb${pendLinkFor===jk?' on':''}" data-plink="${esc(jk)}" title="No live score? Pick the real match and it's remembered">${PEND_IC.find}<span>Find</span></button>`:''}
       <button type="button" class="pb-hb${pendJoinFor===jk?' on':''}" data-pjoin="${esc(jk)}" title="Same match under another name? Join them">${PEND_IC.join}<span>Join</span></button>
       <button type="button" class="pb-hb" data-padd="${keys[0]}" title="Register another bet on this match">${PEND_IC.add}<span>Add bet</span></button>
-    </header>${pendJoinFor===jk?pendJoinHtml(first):''}
+    </header>${pendJoinFor===jk?pendJoinHtml(first):''}${pendLinkFor===jk?pendLinkHtml(first):''}
     ${group.map(x=>pendBoardRow(x.kind,x.item,tw)).join('')}
   </section>`;
 }
@@ -7458,7 +7462,62 @@ function pendJoin(fromKey,toKey){
   pendJoinFor=null;save();renderPendientes();
   toast(`${list.length} bet${list.length>1?'s':''} joined to ${ev}`,'Undo',()=>{recs.forEach(r=>{r.o.event=r.event;if(r.evAlias===undefined)delete r.o.evAlias;else r.o.evAlias=r.evAlias;});save();renderPendientes();});
 }
+// ── link a match by hand to the real one (no live score: the names are too different, or it's an odd league) ──
+let pendLinkFor=null,pendLinkBusy=false;
+const pendLinkAsked=new Set(); // matches whose day's scoreboards were all read for the list
+// pendStart counts minutes from the bet's day → a time
+function pendStartAt(kind,item){const st=pendStart(kind,item);return st&&item.date?new Date(item.date+'T00:00:00').getTime()+st.m*60000:NaN;}
+function pendLinkWanted(group){
+  const t=Math.min(...group.map(x=>pendStartAt(x.kind,x.item)).filter(x=>!isNaN(x)));
+  return !isFinite(t)||Date.now()>=t-60*60000;
+}
+function pendLinkCands(item){
+  const parts=String(item.event||'').split(AR_VS),k0=pendStartAt(item.legs?'sb':'nm',item);
+  if(parts.length!==2)return [];
+  return lkEspnPool().filter(m=>isNaN(k0)||isNaN(m.date)||Math.abs(m.date-k0)<=14*3600000).map(m=>{
+    const flip=arOrient(parts,m),sc=arNameFuzzy(parts[0],m.comps[flip?1:0])+arNameFuzzy(parts[1],m.comps[flip?0:1]);
+    return {m,sc,dt:isNaN(k0)||isNaN(m.date)?9e9:Math.abs(m.date-k0)};
+  }).filter(x=>x.sc>0||x.dt<=30*60000).sort((a,b)=>b.sc-a.sc||a.dt-b.dt).slice(0,8);
+}
+function pendLinkHtml(item){
+  const jk=(item.date||'')+'|'+matchName(item.event||'');
+  const c=pendLinkCands(item),hm=t=>{const d=new Date(t);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');};
+  const busy=pendLinkBusy||!pendLinkAsked.has(jk);
+  return `<div class="pj-box pl-box"><span class="pj-l">Which match is it?</span>${c.map(x=>`<button type="button" class="pj-opt${x.sc>=1.5?' same':''}" data-plink-to="${esc(x.m.sport+':'+x.m.id+'|'+x.m.feed[1]+'|'+arDayKey(x.m.date))}" data-plink-from="${item.legs?'sb':'nm'}:${item.id}"><b>${esc(x.m.comps[0].name+' vs '+x.m.comps[1].name)}</b>${isNaN(x.m.date)?'':`<small>${hm(x.m.date)}${x.m.ev&&x.m.ev._lg?' · '+esc(x.m.ev._lg):''}</small>`}</button>`).join('')}${busy?'<span class="pj-none">Looking…</span>':c.length?'':'<span class="pj-none">The live scores don\'t list a match that fits — its league may not be covered</span>'}<button type="button" class="pj-x" data-plink-close title="Close">✕</button></div>`;
+}
+async function pendLinkLoad(item){
+  const jk=(item.date||'')+'|'+matchName(item.event||'');
+  if(pendLinkAsked.has(jk)||pendLinkBusy)return;
+  pendLinkBusy=true;
+  try{await arAsk(new Map(),[[AR_FEEDS.concat(AR_SOCCER),arDays(item)]]);}finally{pendLinkBusy=false;pendLinkAsked.add(jk);if(pendLinkFor===jk)renderPendientes();}
+}
+// one word on each side that only differs ("marsella" ↔ "marseille") is learnt, so new bets find it alone
+function pendLinkLearn(ev,m){
+  const parts=String(ev||'').split(AR_VS);if(parts.length!==2)return;
+  const flip=arOrient(parts,m);
+  [[parts[0],m.comps[flip?1:0]],[parts[1],m.comps[flip?0:1]]].forEach(([txt,c])=>{
+    const t=arToks(txt),un=t.filter(x=>!c.toks.some(y=>arTokMatch(x,y))),cu=c.toks.filter(y=>!MS_NOISE.has(y)&&!t.some(x=>arTokMatch(x,y)));
+    if(un.length===1&&cu.length>=1&&un[0].length>=4){const best=cu.map(y=>[y,arTokSim(un[0],y)]).sort((a,b)=>b[1]-a[1])[0];if(best&&(cu.length===1||best[1]>0))D.teamAlias[un[0]]=best[0];}
+  });
+}
+function pendLink(fromKey,to){
+  const [kd,id]=fromKey.split(':');const a=(kd==='sb'?D.bets:D.normals).find(x=>String(x.id)===id);if(!a)return;
+  const [k,f,d]=to.split('|'),m=lkEspnPool().find(x=>x.sport+':'+x.id===k);
+  const nm=matchName(a.event);
+  const list=[...(D.bets||[]),...(D.normals||[])].filter(o=>o.status==='pending'&&(o.date||'')===(a.date||'')&&matchName(o.event||'')===nm);
+  const recs=list.map(o=>({o,pin:o.lvPin})),al={...(D.teamAlias||{})};
+  list.forEach(o=>{o.lvPin={k,f,d};});
+  if(!D.teamAlias)D.teamAlias={};if(m)pendLinkLearn(a.event,m);
+  const keys=list.map(o=>(o.legs?'sb:':'nm:')+o.id);
+  const reset=()=>{keys.forEach(x=>{lvTried.delete(x);lvWhere.delete(x);lvState.delete(x);});list.forEach(o=>{arWhere.delete(o.id);arTried.delete(o.id);});};
+  reset();pendLinkFor=null;save();renderPendientes();lvRefresh(true);
+  toast(`Linked to ${m?m.comps[0].name+' vs '+m.comps[1].name:'that match'}`,'Undo',()=>{recs.forEach(r=>{if(r.pin===undefined)delete r.o.lvPin;else r.o.lvPin=r.pin;});D.teamAlias=al;reset();save();renderPendientes();lvRefresh(true);});
+}
 document.addEventListener('click',e=>{
+  const lt=e.target.closest('[data-plink-to]');if(lt){pendLink(lt.dataset.plinkFrom,lt.dataset.plinkTo);return;}
+  if(e.target.closest('[data-plink-close]')){pendLinkFor=null;renderPendientes();return;}
+  const lo=e.target.closest('[data-plink]');if(lo){const k=lo.dataset.plink;pendLinkFor=pendLinkFor===k?null:k;pendJoinFor=null;renderPendientes();
+    if(pendLinkFor){const it=[...(D.bets||[]),...(D.normals||[])].find(o=>o.status==='pending'&&((o.date||'')+'|'+matchName(o.event||''))===k);if(it)pendLinkLoad(it);}return;}
   const t=e.target.closest('[data-pjoin-to]');if(t){pendJoin(t.dataset.pjoinFrom,t.dataset.pjoinTo);return;}
   if(e.target.closest('[data-pjoin-close]')){pendJoinFor=null;renderPendientes();return;}
   const o=e.target.closest('[data-pjoin]');if(o){const k=o.dataset.pjoin;pendJoinFor=pendJoinFor===k?null:k;renderPendientes();}
@@ -10431,8 +10490,16 @@ const arWhere=new Map();   // bet id → {f, d}: the feed and day its match turn
 const arNorm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9.+\- ]+/g,' ').replace(/\s+/g,' ').trim();
 const AR_STOP=new Set('fc cf cd ud sd rc ac sc afc sv fk sk club de del la el los las the and vs real'.split(' '));
 const AR_VS=/\s+(?:vs\.?|v\.?|-|–|—|x|@)\s+/i;
-const arToks=s=>teamEn(arNorm(s).replace(/[.+\-]/g,' ')).split(' ').filter(t=>t.length>=3&&!AR_STOP.has(t)&&!/^\d+$/.test(t));
+const arToks=s=>teamEn(arNorm(s).replace(/[.+\-]/g,' ')).split(' ').map(t=>(D.teamAlias&&D.teamAlias[t])||t).filter(t=>t.length>=3&&!AR_STOP.has(t)&&!/^\d+$/.test(t));
 function arTokMatch(a,b){return a===b||(a.length>=4&&b.length>=4&&(a.startsWith(b)||b.startsWith(a)));}
+// spelled differently ("marsella" / "marseille", "atletico" / "atletic"): letter pairs in common, 0 below 0.6
+const _arBg=new Map();
+function arBigr(s){let r=_arBg.get(s);if(!r){r=new Set();for(let i=0;i<s.length-1;i++)r.add(s.slice(i,i+2));if(_arBg.size>5000)_arBg.clear();_arBg.set(s,r);}return r;}
+function arTokSim(a,b){
+  if(arTokMatch(a,b))return 1;if(a.length<4||b.length<4)return 0;
+  const A=arBigr(a),B=arBigr(b);let n=0;A.forEach(x=>{if(B.has(x))n++;});const d=2*n/(A.size+B.size);return d>=0.6?d:0;
+}
+function arNameFuzzy(txt,comp){const t=arToks(txt);if(!t.length)return 0;return t.reduce((a,x)=>a+Math.max(0,...comp.toks.map(y=>arTokSim(x,y))),0)/t.length;}
 // how well a piece of text ("Mensik", "Atlético Madrid") names a competitor (0 = not at all)
 function arNameScore(txt,comp){
   const t=arToks(txt);if(!t.length)return 0;
@@ -10511,20 +10578,49 @@ function arMatches(sport,events,feed,day){
   });
   return out;
 }
-// the match a surebet is about: both sides of "A vs B" must name its two competitors
+// the ESPN match you linked this match to by hand (any pending bet of the same match counts)
+function arPinOf(b){
+  if(b.lvPin)return b.lvPin;
+  const nm=matchName(b.event||'');if(!nm)return null;
+  const o=[...(D.bets||[]),...(D.normals||[])].find(x=>x.lvPin&&x.status==='pending'&&(x.date||'')===(b.date||'')&&matchName(x.event||'')===nm);
+  return o?o.lvPin:null;
+}
+function arOrient(parts,m){
+  const s0=arNameFuzzy(parts[0],m.comps[0])+arNameFuzzy(parts[1],m.comps[1]),s1=arNameFuzzy(parts[0],m.comps[1])+arNameFuzzy(parts[1],m.comps[0]);
+  return s1>s0;
+}
+// the match a surebet is about: both sides of "A vs B" must name its two competitors. When the names don't
+// fit word for word: spelled alike (Marsella / Marseille), or one side exact and kick-off at the same time —
+// and only if no other match fits as well. A match you linked by hand always wins.
 function arFindMatch(b,pool){
   const parts=String(b.event||'').split(AR_VS);if(parts.length!==2)return null;
+  const pin=arPinOf(b);
+  if(pin){const m=pool.find(x=>x.sport+':'+x.id===pin.k);if(m){const flip=arOrient(parts,m);return {sc:1,m,A:m.comps[flip?1:0],B:m.comps[flip?0:1],pin:1};}}
   const end=Date.parse(b.date+'T'+(b.time||'23:00')+':00');
-  let best=null;
+  let best=null;const near=[];
   pool.forEach(m=>{
     if(!isNaN(m.date)&&!isNaN(end)&&Math.abs(end-SPORT_HOURS*3600000-m.date)>36*3600000)return;
+    near.push(m);
     const s00=arNameScore(parts[0],m.comps[0]),s11=arNameScore(parts[1],m.comps[1]);
     const s01=arNameScore(parts[0],m.comps[1]),s10=arNameScore(parts[1],m.comps[0]);
     const [sc,flip]=s00+s11>=s01+s10?[Math.min(s00,s11),false]:[Math.min(s01,s10),true];
     if(sc<0.5)return;
     if(!best||sc>best.sc)best={sc,m,A:m.comps[flip?1:0],B:m.comps[flip?0:1]};
   });
-  return best;
+  if(best)return best;
+  const k0=b.time&&!isNaN(end)?end-SPORT_HOURS*3600000:NaN,c=[];
+  near.forEach(m=>{
+    const close=!isNaN(k0)&&!isNaN(m.date)&&Math.abs(k0-m.date)<=40*60000;
+    [false,true].forEach(flip=>{
+      const a=arNameFuzzy(parts[0],m.comps[flip?1:0]),z=arNameFuzzy(parts[1],m.comps[flip?0:1]);
+      const hi=Math.max(a,z),lo=Math.min(a,z);
+      if(lo>=0.5||(hi>=0.99&&close))c.push({sc:(a+z)/2+(close?0.1:0),m,A:m.comps[flip?1:0],B:m.comps[flip?0:1],fuzzy:1});
+    });
+  });
+  if(!c.length)return null;
+  c.sort((x,y)=>y.sc-x.sc);
+  const other=c.find(x=>x.m!==c[0].m);
+  return other&&c[0].sc-other.sc<0.15?null:c[0]; // two matches fit about as well: better none than the wrong one
 }
 const AR_SKIP=/corner|tarjeta|\bcards?\b|booking|\btiros?\b|\bshots?\b|\baces?\b|dobles? faltas?|double faults?|\bbreaks?\b|jugador|player|goleador|scorer|\banota|asisten|assist|rebote|rebound|\btriples?\b|\bparte\b|mitad|half|\b1h\b|\b2h\b|descanso|periodo|period|\bcuartos?\b|quarter|inning|\bentradas?\b|\bprimer[oa]?s?\b|\bsegund[oa]s?\b|\btercer[oa]?s?\b|\bfirst\b|\bsecond\b|\bthird\b|exact|correct|marcador|impar|odd even|tie.?break|del equipo|team total|equipo local|equipo visitante|minuto|minute|metodo|method|clasifica|qualif|\bpasa\b|avanza|sin recibir|sin encajar|to nil|clean sheet|a cero|carrera|margen|margin|intervalo|race to|primero en|europe[oa]|european|apuesta de sets?|set betting|\bjuego \d|\bgame \d|\d-\d/;
 // "1er Set", "Set 1", "primer set", "1st set" → that set; without one the market is on the whole match
@@ -10744,6 +10840,8 @@ function arSports(){
 // where to look for a bet's match → {first, then, days}: the feed and day it turned up in before, or its sport's
 // feeds; when nothing says the sport ("Ganador" alone) tennis and the NBA first, then football
 function arPlan(b,sports,w=arWhere.get(b.id)){
+  const pin=arPinOf(b),pf=pin&&AR_FEEDS.concat(AR_SOCCER).find(f=>f[1]===pin.f);
+  if(pf)return {first:[pf],then:[],days:[pin.d]};
   if(w)return {first:[w.f],then:[],days:[w.d]};
   const sp=sports.get(arNorm(b.event)),days=arDays(b);
   if(sp==='tennis'||sp==='basket')return {first:AR_FEEDS.filter(f=>f[0]===sp),then:[],days};
