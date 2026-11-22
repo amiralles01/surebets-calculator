@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Surebets → Telegram (canales: fútbol, tenis, basket y 🦫 Circustancial)
 // @namespace    adrian.surebets.telegram
-// @version      3.8.1
+// @version      3.9.0
 // @description  Lee las surebets de BetHero Sports y las reparte por Telegram en 12 canales: fútbol (F1/F2/F3, principales y secundarios), tenis (T1 principales/secundarios, T2 ATP 250), basket (NBA + Euroliga y ⭐️NBA: apuestas de jugador de las estrellas), 🦫 Circustancial (el filtro especial del día), ROI bajo, menos de 1 hora y CONTROL (todo).
 // @author       Adrian
 // @match        https://betherosports.com/es/arbitrage*
@@ -28,7 +28,7 @@
      y recarga la pestaña (cuando la cola está vacía): al arrancar se ejecuta la versión descargada en vez de esta.
      Además Tampermonkey instala la nueva versión por su cuenta (@updateURL) en su próxima comprobación.
      Los tokens de los bots NO están en este código: se guardan en Tampermonkey (ver SECRETOS_SEMILLA). */
-  const AUTO = { url: 'https://raw.githubusercontent.com/amiralles01/surebets-calculator/main/userscripts/surebets-telegram.user.js', version: '3.8.1', clave: 'auto_codigo_v1', fallo: 'auto_fallo_v1', vista: 'auto_version_vista_v1', cadaMin: 5, global: '__sbtgAuto_surebets-telegram' };
+  const AUTO = { url: 'https://raw.githubusercontent.com/amiralles01/surebets-calculator/main/userscripts/surebets-telegram.user.js', version: '3.9.0', clave: 'auto_codigo_v1', fallo: 'auto_fallo_v1', vista: 'auto_version_vista_v1', cadaMin: 5, global: '__sbtgAuto_surebets-telegram' };
   const autoVersionDe = (txt) => { const m = /\/\/ @version\s+([\d.]+)/.exec(String(txt || '').slice(0, 4000)); return m ? m[1] : ''; };
   const autoMasNueva = (a, b) => {
     const x = String(a || '').split('.').map(Number), y = String(b || '').split('.').map(Number);
@@ -171,6 +171,11 @@
     // v3.4.7 · Córners: TODOS salen en F3. Nunca en F1 ni en F2 (Principales ni Secundarios). '' = como antes (F1S / F2S).
     // (Las copias a «Menos de 1 hora» / «Menos de 4 horas» siguen igual.)
     CORNERS_F1_A: 'F3',
+    // v3.9.0 · Córners de partidos de F2 (los que salen en F2 Principales / Secundarios): NO salen en F3 ni en «ROI bajo importante»
+    // solo en el CONTROL. Los de F1 siguen yendo a F3. false = como antes.
+    CORNERS_F2_SOLO_CONTROL: true,
+    // v3.9.0 · Córners (de cualquier partido): NUNCA en «Menos de 1 hora» ni en «Menos de 4 horas». false = como antes.
+    CORNERS_SIN_H1_H4: true,
     // v3.6.0 · ROI alto: toda surebet de MÁS del «desde» % (de cualquier deporte) que iba a salir en un canal sale SOLO en el canal «a» (F3).
     // A «Menos de 1 hora» se sigue copiando como siempre (solo partidos importantes); a «Menos de 4 horas» NO (sinH4).
     // Para volver a como antes: ROI_ALTO_A: null
@@ -581,7 +586,7 @@
 
   /* ═══════════════════ A partir de aquí no hace falta tocar nada ═══════════════════ */
 
-  const VERSION = '3.8.1';
+  const VERSION = '3.9.0';
   const MODO_CODIGO = CONFIG.MODO;
   const ZONAS = {
     segura: { num: '1', emoji: '🟢', nombre: 'NIVEL 1' },
@@ -1744,6 +1749,8 @@
     // 1) Canal según deporte, nivel del partido y tipo de mercado
     let canal = canalDe(comp, merc);
     if (!canal || !CONFIG.CANALES[canal]) return descartar('Sin canal para ' + (comp.deporte || 'este deporte'));
+    // v3.9.0 · Córners de un partido de F2 → solo CONTROL (ni F3 ni ROI bajo). cir: el filtro del día 🦫 sí puede llevárselos.
+    if (CONFIG.CORNERS_F2_SOLO_CONTROL && comp.deporte === 'futbol' && /^F2/.test(canal) && CORNERS_RE.test(textoPatas(a))) return Object.assign(descartar(`Córners de un partido de F2 (${comp.comp}) → solo CONTROL (ni F3 ni ROI bajo)`, canal), { cir: true });
     // Fútbol: las tarjetas y los córners solo salen en partidos de nivel 1 (F1S); en nivel 2 y 3 → solo CONTROL
     if (comp.deporte === 'futbol' && merc.prop) {
       const txt = textoPatas(a);
@@ -1804,6 +1811,7 @@
     const m1 = CONFIG.MINUTOS_H1 || 60, m4 = CONFIG.MINUTOS_H4 || 240;
     const vaACanal = VA_A_CANAL.has(r.accion);
     if (!(CONFIG.CANALES_IMPORTANTES_H1_H4 || []).includes(r.canal)) return out; // solo partidos importantes (nada de F3 ni T2)
+    if (CONFIG.CORNERS_SIN_H1_H4 && r.comp.deporte === 'futbol' && CORNERS_RE.test(textoPatas(a))) return out; // v3.9.0 · córners: nunca a H1 / H4
     let canal = null, nota = '';
     if (min >= -5 && min < m1) {
       // H1: lo que sale en su canal y también lo que pasa todos los filtros con ROI desde el mínimo de H1 (0.75 %) aunque su canal pida más
@@ -1844,7 +1852,7 @@
   function moverACir(a, r) {
     const c = canalCir();
     if (!c || !r || !r.comp || r.canal === c) return r;
-    const ok = r.comp.zona ? (VA_A_CANAL.has(r.accion) || r.accion === 'roi_bajo') : r.accion === 'descartada';
+    const ok = r.comp.zona ? (VA_A_CANAL.has(r.accion) || r.accion === 'roi_bajo' || (r.accion === 'descartada' && r.cir)) : r.accion === 'descartada';
     if (!ok || !['futbol', 'tenis', 'baloncesto'].includes(r.comp.deporte)) return r;
     if (!r.comp.zona && /femenin|juvenil|reservas|amistoso|sub-?\d|u\d\d/i.test(String(r.motivo || ''))) return r;
     if (a.patas.length < 2) return r;
