@@ -9779,7 +9779,9 @@ const TEAM_ES={'dinamarca':'denmark','alemania':'germany','inglaterra':'england'
   'amberes':'antwerp','antwerpen':'antwerp','praha':'prague','praga':'prague','wien':'vienna','viena':'vienna','beograd':'belgrade','belgrado':'belgrade',
   'crvena zvezda':'red star','kobenhavn':'copenhagen','copenhague':'copenhagen','bucuresti':'bucharest','bucarest':'bucharest','warszawa':'warsaw',
   'varsovia':'warsaw','kyiv':'kiev','kiew':'kiev','moskva':'moscow','moscu':'moscow','lisboa':'lisbon','sevilla fc':'sevilla','seville':'sevilla',
-  'atenas':'athens','estambul':'istanbul','salonica':'thessaloniki','gotemburgo':'goteborg','gothenburg':'goteborg','zurich':'zurich','ginebra':'geneve','geneva':'geneve'};
+  'atenas':'athens','estambul':'istanbul','salonica':'thessaloniki','gotemburgo':'goteborg','gothenburg':'goteborg','zurich':'zurich','ginebra':'geneve','geneva':'geneve',
+  // clubs in Spanish ("Marsella vs Le Mans")
+  'marsella':'marseille','burdeos':'bordeaux','estrasburgo':'strasbourg','tolosa':'toulouse','san etienne':'saint etienne','mompellier':'montpellier','hamburgo':'hamburg','basilea':'basel','berna':'bern','lucerna':'luzern','venecia':'venezia','genova':'genoa','florencia':'fiorentina','el pireo':'piraeus','pireo':'piraeus','esmirna':'izmir','lieja':'liege','gante':'gent','ghent':'gent','la haya':'den haag','salzburgo':'salzburg','fortuna dusseldorf':'dusseldorf'};
 const _teamRe=new RegExp('(^|[^a-z0-9])('+Object.keys(TEAM_ES).sort((a,b)=>b.length-a.length).join('|')+')(?![a-z0-9])','g');
 function teamEn(s){return String(s||'').replace(_teamRe,(m,pre,w)=>pre+TEAM_ES[w]);}
 // ── Same match written differently ("SSC Napoli vs Lazio Rome" / "Nápoles vs Lazio"): a new bet takes the name
@@ -10417,7 +10419,7 @@ document.getElementById('qPaste').addEventListener('input',e=>{
 const AR_BASE='https://site.api.espn.com/apis/site/v2/sports/';
 const AR_FEEDS=[['tennis','tennis/atp'],['tennis','tennis/wta'],['basket','basketball/nba']];
 // football one league at a time: ESPN's "all" scoreboard keeps every match as scheduled, without its result
-const AR_SOCCER=['esp.1','esp.2','esp.copa_del_rey','eng.1','eng.2','eng.fa','eng.league_cup','ita.1','ita.2','ger.1','ger.2','fra.1','fra.2','por.1','ned.1','bel.1','tur.1','sco.1','gre.1','aut.1','sui.1','den.1','ksa.1',
+const AR_SOCCER=['esp.1','esp.2','esp.copa_del_rey','eng.1','eng.2','eng.fa','eng.league_cup','ita.1','ita.2','ger.1','ger.2','fra.1','fra.2','fra.coupe_de_france','ita.coppa_italia','ger.dfb_pokal','por.1','ned.1','bel.1','tur.1','sco.1','gre.1','aut.1','sui.1','den.1','ksa.1',
   'uefa.champions','uefa.europa','uefa.europa.conf','uefa.nations','fifa.world','fifa.worldq.uefa','conmebol.libertadores','conmebol.sudamericana','usa.1','mex.1','arg.1','bra.1'].map(l=>['soccer','soccer/'+l]);
 const AR_MAX_DAYS=10;      // older pending bets aren't looked up
 const AR_EVERY_MIN=5;      // automatic check while the app is open
@@ -11093,7 +11095,7 @@ const MX_SUM=new Map();   // summary url → {t, j}
 let mxCur=null;           // {key, kind, item, m, sum, af, at, busy, err}
 let mxTimer=null;
 const MX_LEAGUE={'esp.1':'LaLiga','esp.2':'LaLiga 2','esp.copa_del_rey':'Copa del Rey','eng.1':'Premier League','eng.2':'Championship','eng.fa':'FA Cup','eng.league_cup':'Carabao Cup',
-  'ita.1':'Serie A','ita.2':'Serie B','ger.1':'Bundesliga','ger.2':'2. Bundesliga','fra.1':'Ligue 1','fra.2':'Ligue 2','por.1':'Liga Portugal','ned.1':'Eredivisie','bel.1':'Belgian Pro League',
+  'ita.1':'Serie A','ita.2':'Serie B','ger.1':'Bundesliga','ger.2':'2. Bundesliga','fra.1':'Ligue 1','fra.2':'Ligue 2','fra.coupe_de_france':'Coupe de France','ita.coppa_italia':'Coppa Italia','ger.dfb_pokal':'DFB-Pokal','por.1':'Liga Portugal','ned.1':'Eredivisie','bel.1':'Belgian Pro League',
   'tur.1':'Süper Lig','sco.1':'Scottish Premiership','gre.1':'Greek Super League','aut.1':'Austrian Bundesliga','sui.1':'Swiss Super League','den.1':'Danish Superliga','ksa.1':'Saudi Pro League',
   'uefa.champions':'Champions League','uefa.europa':'Europa League','uefa.europa.conf':'Conference League','uefa.nations':'Nations League','fifa.world':'World Cup','fifa.worldq.uefa':'World Cup qualifying',
   'conmebol.libertadores':'Libertadores','conmebol.sudamericana':'Sudamericana','usa.1':'MLS','mex.1':'Liga MX','arg.1':'Liga Argentina','bra.1':'Brasileirão'};
