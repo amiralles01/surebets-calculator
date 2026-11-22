@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Surebets → Telegram (canales: fútbol, tenis, basket y 🦫 Circustancial)
 // @namespace    adrian.surebets.telegram
-// @version      3.9.0
+// @version      3.9.1
 // @description  Lee las surebets de BetHero Sports y las reparte por Telegram en 12 canales: fútbol (F1/F2/F3, principales y secundarios), tenis (T1 principales/secundarios, T2 ATP 250), basket (NBA + Euroliga y ⭐️NBA: apuestas de jugador de las estrellas), 🦫 Circustancial (el filtro especial del día), ROI bajo, menos de 1 hora y CONTROL (todo).
 // @author       Adrian
 // @match        https://betherosports.com/es/arbitrage*
@@ -28,7 +28,7 @@
      y recarga la pestaña (cuando la cola está vacía): al arrancar se ejecuta la versión descargada en vez de esta.
      Además Tampermonkey instala la nueva versión por su cuenta (@updateURL) en su próxima comprobación.
      Los tokens de los bots NO están en este código: se guardan en Tampermonkey (ver SECRETOS_SEMILLA). */
-  const AUTO = { url: 'https://raw.githubusercontent.com/amiralles01/surebets-calculator/main/userscripts/surebets-telegram.user.js', version: '3.9.0', clave: 'auto_codigo_v1', fallo: 'auto_fallo_v1', vista: 'auto_version_vista_v1', cadaMin: 5, global: '__sbtgAuto_surebets-telegram' };
+  const AUTO = { url: 'https://raw.githubusercontent.com/amiralles01/surebets-calculator/main/userscripts/surebets-telegram.user.js', version: '3.9.1', clave: 'auto_codigo_v1', fallo: 'auto_fallo_v1', vista: 'auto_version_vista_v1', cadaMin: 5, global: '__sbtgAuto_surebets-telegram' };
   const autoVersionDe = (txt) => { const m = /\/\/ @version\s+([\d.]+)/.exec(String(txt || '').slice(0, 4000)); return m ? m[1] : ''; };
   const autoMasNueva = (a, b) => {
     const x = String(a || '').split('.').map(Number), y = String(b || '').split('.').map(Number);
@@ -83,12 +83,18 @@
   }
   setTimeout(autoComprobar, 20000);
   setInterval(autoComprobar, AUTO.cadaMin * 60000);
-  setTimeout(() => { // aviso por Telegram: «actualizado de X a Y»
+  // v3.9.1 · Aviso por Telegram en CADA actualización («actualizado de X a Y» + novedades). Se reintenta cada 30 s hasta que
+  // de verdad se manda (antes se perdía si la pestaña aún no era la principal o si ya había salido otro aviso en los últimos 30 min).
+  const AUTO_NOVEDADES = 'Córners (también los del equipo): nunca en «Menos de 1 hora» ni en «Menos de 4 horas» · este aviso llega en cada actualización';
+  function autoAvisar() {
     const antes = autoGet(AUTO.vista, '');
     if (antes === AUTO.version) return;
-    autoSet(AUTO.vista, AUTO.version);
-    if (antes && typeof aviso === 'function') aviso('🔄 Script actualizado solo: ' + antes + ' → ' + AUTO.version, 'actualizado');
-  }, 60000);
+    if (!antes) { autoSet(AUTO.vista, AUTO.version); return; }
+    const texto = '🔄 Script actualizado solo: ' + antes + ' → ' + AUTO.version + (AUTO_NOVEDADES ? '\nNovedades: ' + AUTO_NOVEDADES : '');
+    if (typeof avisoActualizacion === 'function' && avisoActualizacion(texto)) { autoSet(AUTO.vista, AUTO.version); return; }
+    setTimeout(autoAvisar, 30000);
+  }
+  setTimeout(autoAvisar, 30000);
 
   /* ╔══════════════════════════════════════════════════════════════════════╗
      ║ 1. CONFIGURACIÓN — lo único que tienes que rellenar                   ║
@@ -586,7 +592,7 @@
 
   /* ═══════════════════ A partir de aquí no hace falta tocar nada ═══════════════════ */
 
-  const VERSION = '3.9.0';
+  const VERSION = '3.9.1';
   const MODO_CODIGO = CONFIG.MODO;
   const ZONAS = {
     segura: { num: '1', emoji: '🟢', nombre: 'NIVEL 1' },
@@ -1811,7 +1817,7 @@
     const m1 = CONFIG.MINUTOS_H1 || 60, m4 = CONFIG.MINUTOS_H4 || 240;
     const vaACanal = VA_A_CANAL.has(r.accion);
     if (!(CONFIG.CANALES_IMPORTANTES_H1_H4 || []).includes(r.canal)) return out; // solo partidos importantes (nada de F3 ni T2)
-    if (CONFIG.CORNERS_SIN_H1_H4 && r.comp.deporte === 'futbol' && CORNERS_RE.test(textoPatas(a))) return out; // v3.9.0 · córners: nunca a H1 / H4
+    if (CONFIG.CORNERS_SIN_H1_H4 && CORNERS_RE.test(textoPatas(a))) return out; // v3.9.0 · córners: nunca a H1 / H4
     let canal = null, nota = '';
     if (min >= -5 && min < m1) {
       // H1: lo que sale en su canal y también lo que pasa todos los filtros con ROI desde el mínimo de H1 (0.75 %) aunque su canal pida más
@@ -3135,6 +3141,18 @@
     ultimaAlerta[tipo] = t;
     ss.setJson('sb_alertas', ultimaAlerta);
     cola.unshift({ tipo: 'alerta', canal: 'ALERTAS', token: tokenAlerta, chatId: chatAlerta, texto: `⚠️ <b>Bot de surebets</b> (${textoModo(estado.modo)})\n${esc(texto)}`, intentos: 0, html: true });
+  }
+
+  // v3.9.1 · Aviso de «script actualizado»: sin límite de tiempo entre avisos. true = ya está en la cola para mandarse.
+  function avisoActualizacion(texto) {
+    if (CONFIG.MODO === 'simulacion' || !estado.lider) return false;
+    const chat = chatDe('ALERTAS'), token = tokenDe('ALERTAS');
+    if (!chat || !tokenValido(token) || tokensMalos.has(token)) return false;
+    estado.ultimoAviso = texto;
+    estado.ultimoAvisoHora = ahora();
+    log('🔄', texto);
+    cola.unshift({ tipo: 'alerta', canal: 'ALERTAS', token, chatId: chat, texto: `🔄 <b>Bot de surebets</b> (${textoModo(estado.modo)})\n${esc(texto)}`, intentos: 0, html: true });
+    return true;
   }
 
   async function probarCanales() {
