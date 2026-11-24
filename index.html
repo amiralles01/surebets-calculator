@@ -3183,8 +3183,9 @@ body.np .ni[data-page="profit"],body.np .tab[data-tab="profit"],body.np .today-s
       <div style="display:flex;flex-direction:column;gap:13px">
         <div class="card tg-card" id="tgCard" style="display:none"></div>
         <div class="card" id="nfCard" style="display:none">
-          <div class="ch"><span class="ct" id="nfTitle">Bet details</span><span style="font-size:11.5px;color:var(--faint)" id="nfHelp"></span><button class="tool" id="reuseBtnNf" style="margin-left:auto" title="Reuse one of your pending bets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>From pending</span></button></div>
+          <div class="ch"><span class="ct" id="nfTitle">Bet details</span><span style="font-size:11.5px;color:var(--faint)" id="nfHelp"></span><button class="tool" id="reuseBtnNf" style="margin-left:auto" title="Reuse one of your pending bets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>From pending</span></button><button class="tool" id="nfPasteBtn" title="Paste a bet as text (single or combi, with its boost)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg><span>Paste</span></button></div>
           <div class="cb nf-grid">
+            <div class="q-paste" id="nfPasteWrap" style="display:none;margin-bottom:0"><textarea id="nfPaste" rows="4" placeholder="Paste the bet here: bookmaker, its selections (one per line: match · market · odds), total odds, boost %, stake and potential return. Combis included."></textarea></div>
             <div><label class="fl">Event</label><input type="text" id="nf-event" placeholder="Spain vs Portugal" autocomplete="off"><div class="mpick" id="nf-mpick"></div></div>
             <div id="nf-pick-w"><label class="fl">Market / line <span style="font-weight:400;color:var(--faint)">(optional)</span></label><input type="text" id="nf-pick" placeholder="E.g. Mbappé 1.5+ shots · Corners O9.5" autocomplete="off"></div>
             <div class="two-col">
@@ -10452,7 +10453,10 @@ document.getElementById('qPaste').addEventListener('input',e=>{
   const pe=parseEvFormat(e.target.value);
   if(pe){if(tgRequeue())save();loadEvNormal(pe,'Normal');document.getElementById('qPasteWrap').style.display='none';setTimeout(focusStake,30);return;}
   const p=parseSurebetText(e.target.value);const {legs,ev,market,date,time}=p;
-  if(legs.length<2){if(e.target.value.trim())toast('Could not find 2 of your bookmakers with odds in that text');return;}
+  if(legs.length<2){
+    const nb=parseNormalText(e.target.value);
+    if(nb&&(nb.combi||nb.stake||nb.payout)){document.getElementById('qPasteWrap').style.display='none';loadNormalPaste(nb);return;} // a normal bet or combi, not a surebet
+    if(e.target.value.trim())toast('Could not find 2 of your bookmakers with odds in that text');return;}
   if(tgRequeue())save();
   clearPresetStakes();
   outcomes=legs.map((l,i)=>({id:nextId++,house:l.house,result:l.result||'',odd:l.odd,manualStake:null,...(l.alts?{alts:l.alts.slice()}:{})}));
@@ -11676,7 +11680,7 @@ function loadEvCombi(p){
   nfTg=null;renderNfSels();renderNfResult();
 }
 function loadEvNormal(p,type){
-  const l=p.legs[0];
+  const l=p.legs[0];nfBoost=null;
   nfCombi=false;nfFun=false;nfSels=[];setBetType(type==='Freebet'?'Freebet':'Normal');
   document.getElementById('nf-event').value=p.ev;
   document.getElementById('nf-odd').value=l.odd;
@@ -12142,6 +12146,7 @@ function renderPerfil(){
 //  UNIFIED NEW BET  (Surebet · Normal · Freebet · Middle — Normal / Freebet / surebet legs can be combis)
 // ══════════════════════════════════════════
 let newBetType='Surebet', newBetCat=null, nfSels=[], nfCombi=false, nfFun=false;
+let nfBoost=null; // {pct}: a combi boost from a pasted bet (Winamax Combo Booster…), applied to the winnings
 function nfIsCombi(){return nfCombi&&!sbMode();}
 let toastTimer=null;
 // Cloud sync status: hidden while saves go through; shows up when they wait for a
@@ -12237,8 +12242,9 @@ function renderNfSels(){
 function syncComboOdd(){
   const co=nfComboOdd(),box=document.getElementById('nf-combo'),oddEl=document.getElementById('nf-odd');
   if(nfIsCombi()&&co){
-    box.style.display='flex';document.getElementById('nf-combo-odd').textContent=fmt(co);
-    oddEl.value=+co.toFixed(3);oddEl.readOnly=true;document.getElementById('nf-odd-label').textContent='Total odds (auto)';
+    const bo=nfBoost?boostOdd(co,nfBoost.pct):0; // a boost (Combo Booster…) raises what the winnings pay
+    box.style.display='flex';document.getElementById('nf-combo-odd').textContent=bo?`${fmt(co,3)} +${fmt(nfBoost.pct,nfBoost.pct%1?2:0)} % boost → ${fmt(bo,4)}`:fmt(co);
+    oddEl.value=bo?+bo.toFixed(4):+co.toFixed(3);oddEl.readOnly=true;document.getElementById('nf-odd-label').textContent=bo?'Total odds (auto, with boost)':'Total odds (auto)';
   }else{
     box.style.display='none';oddEl.readOnly=false;
     document.getElementById('nf-odd-label').textContent=nfIsCombi()?'Total odds':'Odds';
@@ -12302,6 +12308,7 @@ function renderNfResult(){
   document.getElementById('nfReset').addEventListener('click',resetNfForm);
 }
 function resetNfForm(){
+  nfBoost=null;
   if(tgCur&&tgCur.single&&tgRequeue())save(); // a Telegram value bet that wasn't saved goes back to the inbox
   nfTg=null;
   ['nf-event','nf-pick','nf-odd','nf-stake','nf-notes','nf-time'].forEach(id=>document.getElementById(id).value='');nfCredKey='';nfCredAuto=null;
@@ -12321,7 +12328,7 @@ function saveNewNormal(){
   const catVal=document.getElementById('nf-category').value;
   const combi=nfIsCombi();
   const sels=combi?selsSave(nfSels):[];
-  const bet={id:Date.now(),event:ev,type,odd:+odd.toFixed(3),stake,
+  const bet={id:Date.now(),event:ev,type,odd:+odd.toFixed(nfBoost&&combi?4:3),stake,
     house:document.getElementById('nf-house').value.trim(),
     potentialWin:cents(stake*((combi?comboPay(document.getElementById('nf-house').value,nfSels,odd):payOdd(document.getElementById('nf-house').value,odd))-1)),potentialLoss:type==='Freebet'?0:-stake,
     status:'pending',
@@ -12334,6 +12341,7 @@ function saveNewNormal(){
   if(combi)bet.combi=1; // a combi even with no selections written down (just its total odds)
   {const pk=combi?'':document.getElementById('nf-pick').value.trim();if(pk)bet.pick=pk;}
   if(nfFun)bet.fun=1;
+  if(nfBoost&&combi)bet.boostPct=nfBoost.pct;
   if(nfTg&&nfTg.ev===ev){if(nfTg.comp)bet.comp=nfTg.comp;if(nfTg.evPct!=null)bet.evPct=nfTg.evPct;if(nfTg.fair)bet.fair=nfTg.fair;}
   const fromTg=!!nfTg;nfTg=null;if(tgCur&&tgCur.single)tgCur=null;
   const cu=useCredit(bet);
@@ -12360,7 +12368,7 @@ document.getElementById('nbTypes').addEventListener('click',e=>{
 document.getElementById('nf-house').addEventListener('change',renderNfResult);
 document.getElementById('nf-fun').addEventListener('change',e=>{nfFun=e.target.checked;renderNfResult();});
 document.getElementById('nf-combi').addEventListener('change',e=>{
-  nfCombi=e.target.checked;
+  nfCombi=e.target.checked;nfBoost=null;
   if(nfCombi){const o=parseFloat(document.getElementById('nf-odd').value),pk=document.getElementById('nf-pick').value.trim();nfSels=[{ev:'',name:pk,odd:o>1?String(o):''},{ev:'',name:'',odd:''}];document.getElementById('nf-pick').value='';}
   else{nfSels=[];}
   setBetType(newBetType);renderTgCard();
@@ -12370,7 +12378,8 @@ document.getElementById('nf-combi').addEventListener('change',e=>{
 document.getElementById('nf-category').addEventListener('change',e=>{e.target.dataset.manual='1';document.getElementById('nf-cat-w').classList.remove('auto');});
 ['nf-event','nf-pick','nf-date'].forEach(id=>document.getElementById(id).addEventListener('change',nfGuessCat));
 ['nf-event','nf-notes'].forEach(id=>document.getElementById(id).addEventListener('paste',e=>{
-  const t=(e.clipboardData||window.clipboardData)?.getData('text')||'';const pe=parseEvFormat(t);if(!pe)return;
+  const t=(e.clipboardData||window.clipboardData)?.getData('text')||'';const pe=parseEvFormat(t);
+  if(!pe){if(/\n.*\n/.test(t.trim())){const r=parseNormalText(t);if(r){e.preventDefault();loadNormalPaste(r);}}return;}
   e.preventDefault();if(tgRequeue())save();loadEvInto(pe);setTimeout(focusStake,30);
 }));
 document.getElementById('nf-addsel').addEventListener('click',()=>{nfSels.push({ev:'',name:'',odd:''});renderNfSels();renderNfResult();
@@ -12384,6 +12393,121 @@ document.getElementById('nf-sels').addEventListener('input',e=>{
 document.getElementById('nf-sels').addEventListener('click',e=>{
   const d=e.target.closest('[data-seldel]');if(!d)return;
   nfSels.splice(+d.dataset.seldel,1);renderNfSels();renderNfResult();
+});
+// ── Paste a Normal / Freebet bet as text (single or combi), e.g.
+//   Winamax · Combinada
+//   1. Como vs AEK · Más de 4,5 goles · 2,75
+//   2. Real Madrid vs PSV · Gana Real Madrid · 1,11
+//   Cuota total: 4,39 · Combo Booster: +1 % · Importe: 25 € · Ganancia potencial: 110,67 €
+//   Fecha: 25/11 21:00 (kick-off of the last match) · Promo: …
+// A JSON bet ({"normals":[…]} or one bet object) works too.
+// the odds a boost pays: the boost is a % more on the winnings (stake × (odds − 1))
+function boostOdd(base,pct){return base>1&&pct?1+(base-1)*(1+pct/100):base;}
+function pNum(t){t=String(t||'').replace(/[\s€]/g,'');if(/\d\.\d{3},/.test(t))t=t.replace(/\./g,'');t=t.replace(',','.');const v=parseFloat(t);return isFinite(v)?v:null;}
+const NUM_RE='(\\d+(?:[.,]\\d+)?)';
+function parseNormalText(txt){
+  txt=String(txt||'').trim();if(!txt)return null;
+  // your bookmaker named in the text: "Winamax" finds "Winamax (ES)" too
+  const casas=(D.casas||[]).filter(c=>!isBank(c)&&c.name).map(c=>({name:c.name,k:c.name.toLowerCase().replace(/\s*\([^)]*\)\s*/g,' ').trim()})).filter(c=>c.k.length>=3).sort((a,b)=>b.k.length-a.k.length);
+  const inTxt=t=>{t=t.toLowerCase();return casas.find(c=>new RegExp('(^|[^a-z0-9])'+c.k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'($|[^a-z0-9])').test(t));};
+  if(/^[\[{]/.test(txt)){ // JSON
+    let j;try{j=JSON.parse(txt);}catch(e){return null;}
+    const n=Array.isArray(j)?j[0]:Array.isArray(j&&j.normals)?j.normals[0]:j;
+    if(!n||!(+n.odd>1))return null;
+    const sels=Array.isArray(n.selections)?n.selections.map(x=>({ev:x.ev||'',name:x.name||'',odd:x.odd>1?String(x.odd):''})):[];
+    const hj=n.house?inTxt(n.house):null,pr=selsAutoOdd(sels);
+    let bp=+n.boostPct||null;if(!bp&&pr>1&&+n.odd>pr+0.005){const pc=((+n.odd-1)/(pr-1)-1)*100;if(pc>0.05&&pc<100)bp=+pc.toFixed(4);} // total above its selections: a boost
+    return {house:hj?hj.name:(n.house||''),ev:n.event||'',pick:n.pick||'',sels,combi:!!(n.combi||sels.length),odd:+n.odd,boostPct:bp,stake:+n.stake||null,date:n.date||'',time:n.time||'',notes:n.notes||'',type:n.type==='Freebet'?'Freebet':''};
+  }
+  const lines=txt.split(/\r?\n/).map(l=>l.replace(/^[\s>*•·\-–]+/,'').trim()).filter(Boolean);
+  const hc=inTxt(txt);
+  const r={house:hc?hc.name:'',ev:'',pick:'',sels:[],combi:/\b(combi|combinada|combinadas|parlay|acca|accumulator|multiple|múltiple)\b/i.test(txt),
+    odd:null,total:null,eff:null,boostPct:null,stake:null,payout:null,profit:null,date:'',time:'',notes:[],type:/\bfreebet\b|apuesta gratis/i.test(txt)?'Freebet':''};
+  let kick=null,end=null;
+  const when=v=>{const d=v.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/),h=v.match(/\b(\d{1,2})[:.h](\d{2})\b/),now=new Date();
+    if(!d&&!h)return null;let y=d&&d[3]?(+d[3]<100?2000+ +d[3]:+d[3]):now.getFullYear();
+    if(d&&!d[3]&&+d[2]<now.getMonth()+1-6)y++;
+    const r=new Date(y,d?+d[2]-1:now.getMonth(),d?+d[1]:now.getDate(),h?+h[1]:0,h?+h[2]:0);r.noH=!h;return r;};
+  for(const l of lines){
+    const kv=l.match(/^([^:]{2,40}):\s*(.*)$/),k=kv?kv[1].toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''):'',v=kv?kv[2]:'';
+    const first=t=>{const m=String(t).match(new RegExp(NUM_RE));return m?pNum(m[1]):null;};
+    if(kv&&/^(evento|event|partido|match|nombre|name)$/.test(k)){r.ev=v.trim();continue;}
+    if(kv&&/^(mercado|market|pick|seleccion|selection|apuesta)$/.test(k)&&!/\d+[.,]?\d*\s*€/.test(v)){r.pick=v.trim();continue;}
+    if(kv&&/^(casa|bookmaker|bookie|operador)$/.test(k)){const c=inTxt(v);r.house=c?c.name:v.trim();continue;}
+    if(kv&&/(efectiva|final|con aumento|con boost|boosted|effective)/.test(k)&&/(cuota|odds)/.test(k)){r.eff=first(v);continue;}
+    if(kv&&/(boost|aumento|booster|bonus|potenciad|plus)/.test(k)||!kv&&/(boost|booster)/i.test(l)&&/%/.test(l)){const m=(v||l).match(/\+?\s*(\d+(?:[.,]\d+)?)\s*%/);if(m)r.boostPct=pNum(m[1]);continue;}
+    if(kv&&/^(cuota total|cuota|total odds|odds|cuotas?)$/.test(k)){r.total=first(v);continue;}
+    if(kv&&/^(importe|stake|apostado|cantidad|amount|apuesta \(€\))$/.test(k)){r.stake=first(v);continue;}
+    if(kv&&/(ganancias? potencial|cobro|retorno|return|payout|a cobrar|premio|potential)/.test(k)){r.payout=first(v);const b=v.match(new RegExp('(?:beneficio|profit)\\s*:?\\s*'+NUM_RE,'i'));if(b)r.profit=pNum(b[1]);continue;}
+    if(kv&&/^(beneficio|profit|ganancia neta)$/.test(k)){r.profit=first(v);continue;}
+    if(kv&&/^(termina|ends?|fin)$/.test(k)){end=when(v);continue;}
+    if(kv&&/^(fecha|date|hora|inicio|empieza|kick-?off|starts?)$/.test(k)){kick=when(v);continue;}
+    if(kv&&/^(notas?|notes?)$/.test(k)){if(v.trim())r.notes.push(v.trim());continue;}
+    if(kv&&/^(promo|promocion|promotion|oferta)$/.test(k)){if(v.trim())r.notes.push('Promo: '+v.trim());continue;}
+    // a selection: "1. Match · market · 2,75" (also "|" or " - " between the parts, "@2.75" at the end)
+    const num=l.match(/^\d{1,2}\s*[.)]\s*(.+)$/),body=num?num[1]:l;
+    const parts=body.split(/\s+[·|]\s+/).map(x=>x.trim()).filter(Boolean);
+    const om=body.match(/(?:@\s*|[·|]\s*|\s)(\d{1,3}[.,]\d{1,3})\s*$/);
+    if(num||(parts.length>=2&&om&&!kv)){
+      let odd=om?pNum(om[1]):null,ps=parts.slice();
+      if(odd&&ps.length&&/^(@\s*)?\d{1,3}[.,]\d{1,3}$/.test(ps[ps.length-1]))ps.pop();
+      else if(odd&&ps.length)ps[ps.length-1]=ps[ps.length-1].replace(/\s*@?\s*\d{1,3}[.,]\d{1,3}\s*$/,'').trim();
+      let ev='',name='';
+      if(ps.length>=2){ev=ps[0];name=ps.slice(1).join(' · ');}
+      else if(ps.length===1){if(/\s(vs\.?|v|–|-)\s/i.test(ps[0]))ev=ps[0];else name=ps[0];}
+      if(ev||name||odd)r.sels.push({ev,name,odd:odd>1?String(odd):''});
+      continue;
+    }
+  }
+  if(r.sels.length>=2)r.combi=true;
+  if(!r.combi&&r.sels.length===1){const x=r.sels[0];if(!r.ev)r.ev=x.ev||x.name;if(!r.pick&&x.ev)r.pick=x.name;if(!r.total&&+x.odd>1)r.total=+x.odd;r.sels=[];}
+  // the odds really paid: potential return ÷ stake is the bookmaker's own figure (boost included)
+  const prod=selsAutoOdd(r.sels)||null,base=prod&&(!r.total||Math.abs(prod-r.total)<=Math.max(0.01,r.total*0.003))?prod:(r.total||prod);
+  let real=(r.payout&&r.stake?r.payout/r.stake:null)||(r.profit&&r.stake?1+r.profit/r.stake:null)||r.eff;
+  if(base>1&&real>1&&!r.boostPct){const pc=((real-1)/(base-1)-1)*100;if(pc>0.05)r.boostPct=+pc.toFixed(4);} // a boost that only shows in the return
+  else if(base>1&&real>1&&r.boostPct){const pc=((real-1)/(base-1)-1)*100;if(Math.abs(pc-r.boostPct)<0.6)r.boostPct=+pc.toFixed(4);} // the shown % is rounded: the return is exact
+  r.odd=r.boostPct&&base>1?boostOdd(base,r.boostPct):(base||real);
+  if(!(r.odd>1))return null;
+  if(end||kick){const e=end||new Date(kick.getTime()+SPORT_HOURS*3600000);r.date=`${e.getFullYear()}-${String(e.getMonth()+1).padStart(2,'0')}-${String(e.getDate()).padStart(2,'0')}`;r.time=(end||kick).noH?'':String(Math.min(23,e.getHours()+(e.getMinutes()>=30?1:0))).padStart(2,'0')+':00';}
+  if(r.boostPct)r.notes.unshift(`Boost +${fmt(r.boostPct,r.boostPct%1?2:0)} % (odds ${fmt(base,3)} → ${fmt(r.odd,4)})`);
+  r.notes=r.notes.join(' · ');
+  return r;
+}
+// fill the Normal / Freebet form with a pasted bet
+function loadNormalPaste(r){
+  if(tgRequeue())save();
+  nfTg=null;nfFun=false;nfCombi=!!r.combi;
+  nfSels=r.combi?(r.sels.length?r.sels.map(x=>({ev:x.ev||'',name:x.name||'',odd:x.odd||''})):[{ev:'',name:'',odd:''},{ev:'',name:'',odd:''}]):[];
+  nfBoost=r.combi&&r.boostPct&&selsAutoOdd(nfSels)?{pct:r.boostPct}:null;
+  setBetType(r.type||(newBetType==='Freebet'?'Freebet':'Normal'));
+  const set=(id,v)=>{document.getElementById(id).value=v;};
+  set('nf-event',r.ev||'');set('nf-pick',r.combi?'':(r.pick||''));
+  if(!nfBoost||!r.combi||!selsAutoOdd(nfSels))set('nf-odd',+(+r.odd).toFixed(4));
+  set('nf-stake',r.stake>0?r.stake:'');nfCredKey='';nfCredAuto=null;
+  if(r.date)set('nf-date',r.date);
+  set('nf-time',r.time||'');
+  set('nf-notes',r.notes||'');
+  const nfH=document.getElementById('nf-house');nfH.innerHTML=houseOptionsHtml(r.house,'Choose bookmaker…');nfH.value=nfH.querySelector('option[selected]')?.value||r.house||'';
+  const nc=document.getElementById('nf-category');nc.dataset.manual='';if(newBetCat==null)nfGuessCat();
+  renderNfSels();syncComboOdd();renderNfResult();
+  document.getElementById('nfPasteWrap').style.display='none';
+  const odd=parseFloat(document.getElementById('nf-odd').value);
+  toast(`${r.combi?`Combi · ${nfSels.filter(selFilled).length} selections`:'Bet'} loaded · odds ${fmt(odd,nfBoost?4:2)}${nfBoost?` (boost +${fmt(nfBoost.pct,2)} %)`:''}${nfH.value?'':' · choose the bookmaker'}${r.stake>0?'':' · type your stake'}`);
+  const st=document.getElementById('nf-stake');setTimeout(()=>{(nfH.value&&!(r.stake>0)?st:!nfH.value?nfH:document.getElementById('nfSave')||st).focus?.();},30);
+}
+function nfPasteText(t){
+  const pe=parseEvFormat(t);
+  if(pe){if(tgRequeue())save();loadEvNormal(pe,newBetType==='Freebet'?'Freebet':'Normal');document.getElementById('nfPasteWrap').style.display='none';setTimeout(focusStake,30);return true;}
+  const r=parseNormalText(t);if(!r)return false;loadNormalPaste(r);return true;
+}
+document.getElementById('nfPasteBtn').addEventListener('click',()=>{
+  const w=document.getElementById('nfPasteWrap');const show=w.style.display==='none';w.style.display=show?'':'none';
+  if(show){const t=document.getElementById('nfPaste');t.value='';t.focus();
+    if(navigator.clipboard&&navigator.clipboard.readText){navigator.clipboard.readText().then(x=>{if(x&&!t.value){t.value=x;t.dispatchEvent(new Event('input'));}}).catch(()=>{});}}
+});
+document.getElementById('nfPaste').addEventListener('input',e=>{
+  const t=e.target.value;if(!t.trim())return;
+  if(!nfPasteText(t)&&/\n/.test(t))toast('Could not find the odds in that text');
 });
 document.getElementById('phNewBet').addEventListener('click',()=>goNewBet());
 document.getElementById('betsNewBtn').addEventListener('click',()=>{
