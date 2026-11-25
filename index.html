@@ -6383,7 +6383,8 @@ document.getElementById('outcomesList').addEventListener('click',e=>{
     if(focus!=null){const f=document.querySelector(`#outcomesList [data-csn="${focus}"][data-id="${o.id}"]`);if(f)f.focus();}
     return;
   }
-  const btn=e.target.closest('.bd');if(!btn||outcomes.length<=2)return;
+  const btn=e.target.closest('.bd');if(!btn)return;
+  if(outcomes.length<=2){sbLegToNormal(+btn.dataset.id);return;} // one leg left → it's a Normal bet with the same data
   outcomes=outcomes.filter(o=>o.id!==+btn.dataset.id);render();
 });
 document.getElementById('addBtn').addEventListener('click',()=>{
@@ -12204,6 +12205,7 @@ function setBetType(type){
   if(newBetType==='Combi'){newBetType='Normal';nfCombi=true;} // old links / saved state
   document.querySelectorAll('#nbTypes .nbt').forEach(b=>b.classList.toggle('active',b.dataset.bt===newBetType));
   const isSb=sbMode();
+  if(isSb&&nfFromSb){if(tgCur&&tgCur===nfFromSb.tg)delete tgCur.single;nfFromSb=null;} // went back to the surebet by hand
   document.getElementById('sbCalcTitle').textContent=newBetType==='Middle'?'Middle':'Surebet';
   document.getElementById('sbCalcCard').style.display=isSb?'':'none';
   document.getElementById('resultPanel').style.display=isSb?'':'none';
@@ -12316,6 +12318,65 @@ function resetNfForm(){
   renderNfSels();syncComboOdd();renderNfResult();
   document.getElementById('nf-category').dataset.manual='';nfGuessCat();
 }
+// Removing a leg of a 2-leg surebet/middle leaves a single bet: the Normal form opens with the leg that's left
+// (event, market + outcome, date, time, category, bookmaker, odds, stake). Saving it brings you back to the calculator.
+let nfFromSb=null; // {type, outcomes, tg} — the surebet calculator as it was, for Undo / going back after saving
+function sbLegToNormal(delId){
+  const keep=outcomes.find(o=>o.id!==delId);if(!keep)return;
+  const res=calculate();const hint=res?res.stakes[res.valid.findIndex(o=>o.id===keep.id)]:null;
+  const stake=keep.manualStake>0?keep.manualStake:hint>0?hint:null;
+  const ev=document.getElementById('q-event').value.trim(),mk=document.getElementById('q-market').value.trim();
+  const rs=String(keep.result||'').trim(),pk=/^outcome \d+$/i.test(rs)?'':rs;
+  const qc=document.getElementById('q-cat'),catId=qc.value?+qc.value:null,catAuto=document.getElementById('q-cat-w').classList.contains('auto');
+  const date=document.getElementById('q-date').value,time=document.getElementById('q-hour').value||'';
+  const comp=qComp&&qComp.ev===ev?qComp.comp:'';
+  const prev={type:newBetType,outcomes:JSON.parse(JSON.stringify(outcomes)),tg:tgCur};
+  const combi=!!(keep.sels&&keep.sels.length);
+  nfFun=false;nfBoost=null;nfCombi=combi;
+  nfSels=combi?keep.sels.map(x=>({ev:x.ev||'',name:x.name||'',odd:x.odd!=null&&x.odd!==''?String(x.odd):''})):[];
+  setBetType('Normal');
+  const set=(id,v)=>{document.getElementById(id).value=v;};
+  set('nf-event',ev);set('nf-pick',combi?'':[mk,pk].filter(Boolean).join(' · '));
+  set('nf-odd',keep.odd>1?+(+keep.odd).toFixed(4):'');
+  set('nf-stake',stake>0?+(+stake).toFixed(2):'');nfCredKey='';nfCredAuto=null;
+  if(date)set('nf-date',date);set('nf-time',time);
+  set('nf-notes',combi&&(mk||pk)?[mk,pk].filter(Boolean).join(' · '):'');
+  const nfH=document.getElementById('nf-house');nfH.innerHTML=houseOptionsHtml(keep.house,'Choose bookmaker…');nfH.value=nfH.querySelector('option[selected]')?.value||keep.house||'';
+  const nc=document.getElementById('nf-category');fillCategorySelect(nc,catId);nc.dataset.manual='1';
+  document.getElementById('nf-cat-w').classList.toggle('auto',catAuto&&catId!=null);
+  nfTg=null;
+  // a Telegram surebet loaded here now lives on the Normal form (back to the inbox if you leave it unsaved)
+  if(tgCur)tgCur.single=true;
+  nfFromSb=prev;
+  renderNfSels();syncComboOdd();renderNfResult();
+  const gone=prev.outcomes.find(o=>o.id===delId),gn=gone&&gone.house?gone.house+' removed':'Leg removed';
+  const back=msg=>{if(prev.tg)delete prev.tg.single;tgCur=prev.tg;nfTg=null;nfCombi=false;nfSels=[];nfFromSb=null;
+    ['nf-event','nf-pick','nf-odd','nf-stake','nf-notes','nf-time'].forEach(id=>document.getElementById(id).value='');
+    nc.dataset.manual='';outcomes=prev.outcomes;setBetType(prev.type);toast(msg);};
+  // everything known → saved straight away as a Normal bet (Undo puts the surebet back as it was)
+  if(ev&&keep.odd>1&&stake>0){
+    const before=D.normals[0];saveNewNormal();const n=D.normals[0];
+    if(n&&n!==before){
+      if(comp){n.comp=comp;save();}
+      toast(`${gn} · saved as a Normal bet · ${keep.house||'Bookmaker'} ${fmt(stake)} € @ ${fmt(keep.odd)}`,'Undo',()=>{
+        D.normals=D.normals.filter(x=>x!==n);save();updateBadges();renderPendientes();renderNormals(document.getElementById('nbSearch').value);renderProfit();
+        back('Normal bet removed · back to the surebet');});
+      return;}
+  }
+  if(comp)nfTg={ev,comp,pick:''};
+  toast(`${gn} · now a Normal bet at ${keep.house||'the bookmaker'}${stake>0?'':' · type your stake'}`,'Undo',()=>{if(nfFromSb)back('Back to the surebet');});
+  const st=document.getElementById(stake>0?'nfSave':'nf-stake');if(st)setTimeout(()=>{try{st.focus({preventScroll:true});}catch(e){}},30);
+}
+// after a bet from sbLegToNormal is saved: the calculator keeps bookmakers, event and market, odds cleared (like Register)
+function nfFromSbDone(){
+  const p=nfFromSb;nfFromSb=null;if(!p)return;
+  outcomes=JSON.parse(JSON.stringify(p.outcomes));const wasPreset=outcomes.some(o=>o.fromPreset);
+  outcomes.forEach(o=>{o.odd=0;if(o.sels)o.sels.forEach(x=>x.odd='');if(o.fromPreset||wasPreset){o.manualStake=null;o.fromPreset=false;}});
+  if(wasPreset&&psBaseTotal!=null){setTotal(psBaseTotal);psBaseTotal=null;}
+  if(fitBaseTotal!=null){setTotal(fitBaseTotal);fitBaseTotal=null;}
+  psSkipKey=null;sbPrefill=null;document.getElementById('q-cat').dataset.manual='';
+  nfCombi=false;nfFun=false;setBetType(p.type);
+}
 function saveNewNormal(){
   let ev=document.getElementById('nf-event').value.trim();
   if(!ev&&nfIsCombi())ev=selsEventName(selsSave(nfSels)); // a combi without a name takes its matches'
@@ -12350,7 +12411,7 @@ function saveNewNormal(){
   newBetCat=null;
   const wasFun=nfFun;
   if(combi||nfFun){nfCombi=false;nfFun=false;setBetType(type);} // the next bet starts as a single opportunity bet again
-  resetNfForm();renderRepeatSel();
+  resetNfForm();renderRepeatSel();nfFromSbDone();
   toast(`${wasFun?'Funbet':type}${sels.length?' combi':''} saved to pending · +${fmt(bet.potentialWin)} € if it wins${cu?` · ${fmt(cu.amt)} € of credits used at ${cu.c.name}${cu.left?` (${fmt(cu.left)} € left)`:''}`:''}${matchWhenMsg(mw)}${unifyMsg(uw,bet)}`,'View pending',()=>navTo('pendientes'));
   // registered from Telegram: back to the calculator with the next message waiting there
   if(fromTg&&(D.tgInbox||[]).length){if(tgNext(true))setTimeout(focusStake,0);}
