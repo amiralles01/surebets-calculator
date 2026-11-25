@@ -433,7 +433,7 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,
 .bk-stale>div{flex:1;min-width:0}.bk-stale b{display:block;font-size:13.5px}.bk-stale small{display:block;font-size:12px;color:var(--muted);margin-top:3px}
 @media(max-width:600px){.bk-stale{flex-direction:column;align-items:stretch}}
 .th-real{font-size:12px;color:rgba(255,255,255,.62);margin:6px 0 10px;font-variant-numeric:tabular-nums}
-[data-adjm]{cursor:pointer}.adj-see{font-size:11px;font-weight:600;color:var(--faint);margin-left:4px}
+[data-adjm],[data-ptcat]{cursor:pointer}.adj-see{font-size:11px;font-weight:600;color:var(--faint);margin-left:4px}
 .adj-list{overflow:auto;display:flex;flex-direction:column;gap:6px}
 .adj-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--raised);border-radius:8px;font-size:13px}
 .adj-item .adj-l{flex:1;min-width:0}.adj-item .adj-l b{display:block;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.adj-item .adj-l small{color:var(--faint);font-size:11.5px}
@@ -2795,6 +2795,19 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 .total-hero .th-sub-item.pt-off .th-sub-val{text-decoration:line-through}
 .pt-eye{position:absolute;top:50%;right:10px;transform:translateY(-50%);width:20px;height:20px;color:#fff;opacity:.8}
 .pt-eye svg{width:100%;height:100%}
+.total-hero .th-sub-item.pt-add{cursor:pointer;border-style:dashed;background:transparent;display:flex;align-items:center;justify-content:center;gap:6px;color:rgba(255,255,255,.75);font-size:13px;font-weight:600;min-height:58px}
+.total-hero .th-sub-item.pt-add::before{display:none}
+.total-hero .th-sub-item.pt-add:hover{color:#fff;border-color:rgba(255,255,255,.35)}
+.total-hero .th-sub-label .pc-nm{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;min-width:0;line-height:1.25}
+.pt-del{position:absolute;top:4px;right:6px;border:0;background:rgba(0,0,0,.25);color:#fff;width:20px;height:20px;border-radius:50%;font-size:13px;line-height:20px;padding:0;cursor:pointer;z-index:1}
+.total-hero .th-sub-item.pt-edit.pt-cc .pt-eye{top:auto;bottom:8px;transform:none}
+.pc-list{overflow:auto;display:flex;flex-direction:column;gap:2px;min-height:60px}
+.pc-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;cursor:pointer;font-size:14px}
+.pc-row:hover{background:var(--raised)}
+.pc-row input{width:18px;height:18px;margin:0;flex-shrink:0;accent-color:var(--accent,#2E9E5B)}
+.pc-row .pc-v{margin-left:auto;font-size:12px;font-weight:600;white-space:nowrap}
+.pc-row .pc-v.pos{color:var(--green,#2E9E5B)}.pc-row .pc-v.neg{color:var(--red,#D64545)}
+.pc-row.in{opacity:.5}
 .month-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;align-items:start}
 .month-grid .month-card{margin:0}
 .month-card.now{box-shadow:0 0 0 2px var(--ball,#F5C542),var(--lift,0 6px 20px rgba(0,0,0,.08))}
@@ -3744,6 +3757,16 @@ body.np .ni[data-page="profit"],body.np .tab[data-tab="profit"],body.np .today-s
   </div>
 </div>
 
+<!-- ══ TOTAL PROFIT: add a category card ══ -->
+<div id="pcModal" class="modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
+  <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;width:100%;max-width:440px;margin:16px;max-height:86vh;display:flex;flex-direction:column">
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px">Add a category card</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Pick one category, or tick several to add them up in one card. A category includes its subcategories. Totals don't change.</div>
+    <div class="pc-list" id="pc-list"></div>
+    <div style="display:flex;gap:9px;margin-top:12px"><button class="btn-s" id="pc-cancel" style="flex:1">Cancel</button><button class="btn-reg" id="pc-add" style="flex:2;margin:0" disabled>Add card</button></div>
+  </div>
+</div>
+
 <!-- ══ BALANCE CORRECTIONS LIST ══ -->
 <div id="adjModal" class="modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center">
   <div class="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;width:100%;max-width:520px;margin:16px;max-height:86vh;display:flex;flex-direction:column">
@@ -3867,7 +3890,7 @@ function save(){saveVer++;return window.__fsSave ? window.__fsSave() : Promise.r
 
 let D = {bets:[],normals:[],casas:[],notes:[],notesFolders:[],categories:[],hidden:{},bkProfiles:[],poker:[],presets:[]};
 function ensureShape(){
-  ['bets','normals','casas','notes','notesFolders','categories','bkProfiles','poker','presets','tgInbox'].forEach(k=>{if(!Array.isArray(D[k]))D[k]=[];});
+  ['bets','normals','casas','notes','notesFolders','categories','bkProfiles','poker','presets','tgInbox','ptCats'].forEach(k=>{if(!Array.isArray(D[k]))D[k]=[];});
   if(!D.hidden||typeof D.hidden!=='object')D.hidden={};
   if(!D.teamAlias||typeof D.teamAlias!=='object'||Array.isArray(D.teamAlias))D.teamAlias={};
 }
@@ -6269,16 +6292,58 @@ const PT_EYE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const PT_EYE_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.83 21.83 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.82 21.82 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
 document.addEventListener('click',e=>{
   if(e.target.closest('[data-ptedit]')){ptEdit=!ptEdit;renderProfit();return;}
+  if(e.target.closest('[data-ptadd]')){openPcModal();return;}
+  const dl=e.target.closest('[data-ptdel]');
+  if(dl){const id=+dl.dataset.ptdel,i=(D.ptCats||[]).findIndex(x=>x.id===id);if(i<0)return;const card=D.ptCats[i],hid=isHidden('ptile:c'+id);
+    D.ptCats.splice(i,1);if(D.hidden)delete D.hidden['ptile:c'+id];save();renderProfit();
+    toast(`${pcName(card)} card removed`,'Undo',()=>{if(!D.ptCats)D.ptCats=[];if(D.ptCats.some(x=>x.id===id))return;D.ptCats.splice(Math.min(i,D.ptCats.length),0,card);if(hid)D.hidden['ptile:c'+id]=true;save();renderProfit();});return;}
+  const go=e.target.closest('[data-ptcat]');
+  if(go&&!ptEdit){catSelId=+go.dataset.ptcat;navTo('categorias');return;}
   const t=e.target.closest('[data-pttog]');if(!t)return;
   const k='ptile:'+t.dataset.pttog;isHidden(k)?unhideItem(k):hideItem(k);renderProfit();
+});
+// ── Category cards on Total Profit (Edit cards → + Category) ──
+// D.ptCats [{id, ids:[categoryId…]}]: each card adds up the bets of those categories and all their subcategories,
+// a bet counted once even if two picked categories hold it. Only a view: Total Profit and the other cards don't change.
+const PC_COLORS=['#4FB3BF','#9C6ADE','#E07A5F','#7FB069','#F2A65A','#5C8DF6','#E56CA8','#B8B42D'];
+function pcIds(card){return (card.ids||[]).filter(id=>D.categories.some(c=>c.id===id));}
+function pcName(card){const n=pcIds(card).map(catName).filter(Boolean);return n.length?n.join(' + '):'Category';}
+function pcPath(id){const out=[],seen=new Set();let c=D.categories.find(x=>x.id===id);while(c&&!seen.has(c.id)){seen.add(c.id);out.unshift(c.name);c=c.parentId?D.categories.find(x=>x.id===c.parentId):null;}return out.join(' › ');}
+function pcSet(ids){const set=new Set();ids.forEach(id=>{set.add(id);catSubtree(id).forEach(c=>set.add(c.id));});return set;}
+function pcSum(ids,entries){const set=pcSet(ids);return entries.reduce((a,e)=>a+(e.cid!=null&&set.has(e.cid)?e.profit:0),0);}
+let pcPick=new Set(),pcEntries=[];
+function openPcModal(){pcPick=new Set();renderPcModal();document.getElementById('pcModal').style.display='flex';}
+function renderPcModal(){
+  const have=new Set((D.ptCats||[]).filter(x=>pcIds(x).length===1).map(x=>pcIds(x)[0]));
+  const rows=[];const walk=(pid,depth,seen)=>{if(depth>50)return;D.categories.filter(c=>(c.parentId||null)===pid&&!seen.has(c.id)).forEach(c=>{seen.add(c.id);
+    const v=pcSum([c.id],pcEntries);
+    rows.push(`<label class="pc-row${have.has(c.id)?' in':''}" style="padding-left:${10+Math.min(depth,8)*18}px" title="${esc(pcPath(c.id))}${have.has(c.id)?' · already has its own card':''}"><input type="checkbox" data-pcpick="${c.id}"${pcPick.has(c.id)?' checked':''}><span>${esc(c.name)}</span><span class="pc-v ${v>0.004?'pos':v<-0.004?'neg':''}">${v>0.004?'+':''}${fmt(v)} €</span></label>`);
+    walk(c.id,depth+1,seen);});};
+  walk(null,0,new Set());
+  document.getElementById('pc-list').innerHTML=rows.length?rows.join(''):`<div style="font-size:13px;color:var(--muted);padding:12px">You have no categories yet. Make them in Bets → Categories.</div>`;
+  const b=document.getElementById('pc-add');b.disabled=!pcPick.size;b.textContent=pcPick.size>1?`Add card (${pcPick.size} together)`:'Add card';
+}
+document.addEventListener('change',e=>{const c=e.target.closest('[data-pcpick]');if(!c)return;const id=+c.dataset.pcpick;c.checked?pcPick.add(id):pcPick.delete(id);renderPcModal();});
+document.addEventListener('click',e=>{
+  if(e.target.id==='pc-cancel'||e.target.id==='pcModal'){document.getElementById('pcModal').style.display='none';return;}
+  if(e.target.id!=='pc-add'||!pcPick.size)return;
+  // a category already inside another picked one adds nothing: keep only the outermost
+  const ids=[...pcPick].filter(id=>![...pcPick].some(o=>o!==id&&catSubtree(o).some(c=>c.id===id)));
+  const key=[...ids].sort((a,b)=>a-b).join(',');
+  if(!D.ptCats)D.ptCats=[];
+  const same=D.ptCats.find(x=>[...pcIds(x)].sort((a,b)=>a-b).join(',')===key);
+  document.getElementById('pcModal').style.display='none';
+  if(same){if(isHidden('ptile:c'+same.id))unhideItem('ptile:c'+same.id);renderProfit();toast('That card is already there');return;}
+  const id=Date.now();D.ptCats.push({id,ids});save();renderProfit();
+  toast(`${pcName({ids})} card added`,'Undo',()=>{D.ptCats=(D.ptCats||[]).filter(x=>x.id!==id);save();renderProfit();});
 });
 function renderProfit(){
   const pg=document.getElementById('page-profit');if(pg&&pg.style.display==='none')return; // rebuilt when you open it
   renderBkStats();
   // Combine all entries with dates
   const all=[];
-  visibleBets().forEach(b=>{const rd=b.date||b.resolveDate;if(rd&&b.profit!==undefined)all.push({date:rd,profit:betProfit(b),cat:statCat('sb',b)})});
-  visibleNormals().forEach(n=>{const rd=n.date||n.resolveDate;if(rd&&n.profit!==undefined&&n.profit!==0)all.push({date:rd,profit:n.profit,cat:statCat('nm',n)})});
+  visibleBets().forEach(b=>{const rd=b.date||b.resolveDate;if(rd&&b.profit!==undefined)all.push({date:rd,profit:betProfit(b),cat:statCat('sb',b),cid:b.categoryId||null})});
+  visibleNormals().forEach(n=>{const rd=n.date||n.resolveDate;if(rd&&n.profit!==undefined&&n.profit!==0)all.push({date:rd,profit:n.profit,cat:statCat('nm',n),cid:n.categoryId||null})});
   trackedCosts().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'cost'}));
   softwareCharges().forEach(a=>all.push({date:a.date,profit:a.profit,cat:'software'}));
   migrateBanks();ensureAdjLogs();
@@ -6320,10 +6385,14 @@ function renderProfit(){
   // hidden months only leave the tiles and month cards: the bookmakers' real money still holds them, so the headline is always the real figure
   if(real){tot.gap=real.gap;headline=real.real;}
   // each card can be hidden on its own (Edit cards); hiding only changes what you see, never the totals
-  const tileCats=[...cats,...(real&&Math.abs(real.gap)>=0.01?[{k:'gap',n:'Not in bets',c:'#7A8CA8',always:true}]:[])].filter(c=>c.always||tot[c.k]);
+  // your own category cards: same months as the other cards (hidden months left out)
+  const visE=all.filter(e=>e.cid!=null&&!isHidden('month:'+e.date.slice(0,7)));pcEntries=visE;
+  const ccs=(Array.isArray(D.ptCats)?D.ptCats:[]).filter(x=>pcIds(x).length).map((x,i)=>{const ids=pcIds(x),k='c'+x.id;tot[k]=pcSum(ids,visE);
+    return {k,n:pcName(x),c:PC_COLORS[i%PC_COLORS.length],always:true,cc:x.id,one:ids.length===1?ids[0]:null,path:ids.map(pcPath).join(' + ')};});
+  const tileCats=[...cats,...(real&&Math.abs(real.gap)>=0.01?[{k:'gap',n:'Not in bets',c:'#7A8CA8',always:true}]:[]),...ccs].filter(c=>c.always||tot[c.k]);
   const nHid=tileCats.filter(c=>isHidden('ptile:'+c.k)).length;
   const tiles=tileCats.filter(c=>ptEdit||!isHidden('ptile:'+c.k)).map(c=>{const hid=isHidden('ptile:'+c.k);
-    return `<div class="th-sub-item${ptEdit?' pt-edit'+(hid?' pt-off':''):''}" style="--c:${c.c}"${ptEdit?` data-pttog="${c.k}" role="button" title="${hid?'Show':'Hide'} this card"`:c.k==='adjust'?' data-adjm="all" title="See and undo each balance correction"':c.k==='gap'?' data-gapm="1" title="Tap to see where it comes from"':''}><div class="th-sub-label"><i class="pc-dot"></i>${c.n}${!ptEdit&&(c.k==='gap'||c.k==='adjust')?' <small class="adj-see">See ›</small>':''}</div><div class="th-sub-val ${tot[c.k]>0.004?'pos':tot[c.k]<-0.004?'neg':''}">${tot[c.k]>0.004?'+':''}${fmt(tot[c.k])} €</div>${ptEdit?`<span class="pt-eye">${hid?PT_EYE_OFF:PT_EYE}</span>`:''}</div>`;}).join('');
+    return `<div class="th-sub-item${ptEdit?' pt-edit'+(hid?' pt-off':''):''}${c.cc?' pt-cc':''}" style="--c:${c.c}"${ptEdit?` data-pttog="${c.k}" role="button" title="${hid?'Show':'Hide'} this card"`:c.k==='adjust'?' data-adjm="all" title="See and undo each balance correction"':c.k==='gap'?' data-gapm="1" title="Tap to see where it comes from"':c.cc?`${c.one?` data-ptcat="${c.one}"`:''} title="${esc(c.path)}${c.one?' · tap to open the category':''}"`:''}>${ptEdit&&c.cc?`<button type="button" class="pt-del" data-ptdel="${c.cc}" aria-label="Remove this card" title="Remove this card">×</button>`:''}<div class="th-sub-label"><i class="pc-dot"></i>${c.cc?`<span class="pc-nm">${esc(c.n)}</span>`:c.n}${!ptEdit&&(c.k==='gap'||c.k==='adjust')?' <small class="adj-see">See ›</small>':''}</div><div class="th-sub-val ${tot[c.k]>0.004?'pos':tot[c.k]<-0.004?'neg':''}">${tot[c.k]>0.004?'+':''}${fmt(tot[c.k])} €</div>${ptEdit?`<span class="pt-eye">${hid?PT_EYE_OFF:PT_EYE}</span>`:''}</div>`;}).join('')+(ptEdit?`<div class="th-sub-item pt-add" data-ptadd="1" role="button" title="Add a card with the profit of one or more of your categories">+ Category</div>`:'');
   const ptBar=tileCats.length?`<div class="pt-bar">${ptEdit?`<span class="pt-hint">Tap a card to hide or show it. Totals don't change.</span>`:''}<button type="button" class="pt-btn${ptEdit?' on':''}" data-ptedit="1">${ptEdit?'Done':`${PT_EYE}Edit cards${nHid?` · ${nHid} hidden`:''}`}</button></div>`:'';
   document.getElementById('totalHero').innerHTML=`
     <div class="total-hero">
