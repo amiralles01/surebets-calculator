@@ -10667,6 +10667,13 @@ const AR_STATS=[['sot',/\b(tiros?|remates?|disparos?|shots?)\s+(a puerta|al arco
   ['shots',/\btiros?\b|\bremates?\b|\bdisparos?\b|\bshots?\b/],['corners',/\bcorners?\b|\bcorneres\b|\besquinas?\b/],
   ['yellow',/\bamarillas?\b|yellow cards?/],['cards',/\btarjetas?\b|\bcards?\b|\bbookings?\b/],['offsides',/fuera de juego|fueras de juego|offsides?/],['fouls',/\bfaltas?\b|\bfouls?\b/]];
 const AR_STAT_NAME={yellow:'yellow cards',sot:'shots on target',shots:'shots',corners:'corners',cards:'cards',offsides:'offsides',fouls:'fouls'};
+// what's left of "tiros a puerta totales" / "corners del equipo arsenal" once the market's own words are taken out: a team (or nothing)
+function arStatWho(x){
+  let y=' '+x+' ';
+  AR_STATS.forEach(([k,re])=>{y=y.replace(new RegExp(re.source,'g'),' ');});
+  y=y.replace(/\b(a puerta|al arco|entre los tres palos|on target|on goal|totales|total|totals|del partido|en el partido|partido|match|del equipo|equipo|team|de|del|en|el|la|los|las|the|of|in)\b/g,' ');
+  return y.replace(/\s+/g,' ').trim();
+}
 function arStatSpec(parts){
   const all=arNorm(parts.join(' '));
   if(/doble falta|dobles faltas|double fault|\baces?\b|tiros? libres?|free throw|\btriples?\b|tiros? de (2|3|campo)/.test(all))return undefined;
@@ -10674,13 +10681,19 @@ function arStatSpec(parts){
   if(/\bparte\b|mitad|half|\b1h\b|\b2h\b|descanso|minuto|minute|intervalo|primer|first|ultim|\blast\b|carrera|race to|handicap|hcp|spread|exact|impar|odd even|\bpar\b|mas (corners?|tarjetas|tiros|remates)|most|1x2|ganador|winner|quien|who|rango|range|\bentre\b|amarilla.*roja|roja|red card|expuls|puntos de tarjeta|booking points/.test(all))return null;
   // the selection: "[name] Más de 2.5" — the name can also sit before it ("… del jugador - Kylian Mbappe")
   const sel=arNorm(parts[parts.length-1]);
-  const t=sel.match(/^(.*?)\s*\b(mas de|mas|over|menos de|menos|under|o|u)\s*(\d+(?:\.\d+)?)$/);if(!t)return null;
+  // "Más de 12.5" / "Menos de 12.5", or the short way typed by hand: "+12.5" / "-12.5" (match totals only)
+  let t=sel.match(/^(.*?)\s*\b(mas de|mas|over|menos de|menos|under|o|u)\s*(\d+(?:\.\d+)?)$/),sign=false;
+  if(!t){t=sel.match(/^(.*?)\s*([+\-])\s*(\d+(?:\.\d+)?)$/);sign=!!t;}
+  if(!t)return null;
   const line=+t[3];if(Math.abs(line*4%2)===1)return null; // quarter lines
-  const name=t[1]||(parts.length>2?arNorm(parts.slice(1,-1).join(' ')):'');
   const mk=arNorm(parts[0]);
   const player=/jugador|player|\bjugadora\b/.test(mk);
+  // a Normal bet has market and selection in one text ("Tiros a puerta totales -12.5"): the market's own words aren't a name
+  let name=t[1]||(parts.length>2?arNorm(parts.slice(1,-1).join(' ')):'');
+  if(name&&!player)name=arStatWho(name);
   if(player&&!name)return null;
-  return {kind:'stat',stat:hit[0],who:name||null,player,over:/^(mas|over|o)$/.test(t[2].replace(' de','')),line,mk,sel};
+  if(sign&&name)return null; // "Arsenal -4.5": a handicap, not a total
+  return {kind:'stat',stat:hit[0],who:name||null,player,over:sign?t[2]==='+':/^(mas|over|o)$/.test(t[2].replace(' de','')),line,mk,sel};
 }
 // which side (or the draw) a selection names: "Alcaraz", "1", "Empate", "Empate o Chelsea"…
 function arSide(txt,A,B){
