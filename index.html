@@ -1316,6 +1316,18 @@ input[type=checkbox]{accent-color:var(--accent)}
 
 /* ═════════ BETS (normal / freebet, either one can be a combi) ═════════ */
 .cb-sw{display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 11px;border:1px dashed var(--border2);border-radius:9px;user-select:none}
+.cb-sw.rf-sw input:checked+.cb-sw-k{background:rgba(34,140,200,.14);border-color:#228CC8}.cb-sw.rf-sw input:checked+.cb-sw-k::after{background:#228CC8}.cb-sw.rf-sw:has(input:checked){border-color:rgba(34,140,200,.5)}
+.rf-box{display:flex;flex-direction:column;gap:9px;padding:10px 11px;border-radius:9px;background:rgba(34,140,200,.06);border:1px solid rgba(34,140,200,.22)}
+.rf-chips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}.rf-chips>span{min-width:62px}
+.rf-c{font:inherit;font-size:13px;font-weight:600;padding:6px 11px;border-radius:99px;border:1px solid var(--border2);background:var(--surface);color:var(--text);cursor:pointer}
+.rf-c.on{background:#228CC8;border-color:#228CC8;color:#fff}
+.type-pill.tp-rf{background:rgba(34,140,200,.13);color:#1B6E9E;white-space:nowrap}.type-pill.tp-rf.ok{background:rgba(46,158,91,.16);color:var(--green)}.type-pill.tp-rf.off{background:var(--raised);color:var(--faint)}.type-pill.tp-rf.ask{background:rgba(244,197,61,.25);color:#7A5600;cursor:pointer;border:none;font:inherit;font-size:inherit;font-weight:inherit}
+.cr-items{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}.cr-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:var(--raised)}.cr-item.on{box-shadow:inset 0 0 0 2px var(--ball)}
+.cr-item .cr-a{font-family:var(--mono);font-weight:700;min-width:70px}.cr-item .cr-m{flex:1;min-width:0;font-size:12.5px;color:var(--muted)}.cr-item .cr-m em{font-style:normal}.cr-item .cr-m em.soon{color:var(--red);font-weight:600}.cr-item.exp .cr-a{color:var(--faint);text-decoration:line-through}
+.cr-sub{font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:4px 0 6px}.cr-tot{font-family:var(--mono)}
+.cr-used{display:flex;flex-direction:column;gap:3px;font-size:12.5px}.cr-used>div{display:flex;gap:10px;align-items:center}.cr-used span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}.cr-used b{font-family:var(--mono)}.cr-used em{font-style:normal;color:var(--faint);min-width:70px;text-align:right}.cr-used em.pos{color:var(--green)}
+.pend-cred{display:flex;align-items:center;gap:8px;font-size:13px;color:#7A5600;background:rgba(244,197,61,.16);border:1px solid rgba(217,162,27,.35);border-radius:10px;padding:8px 12px;margin-bottom:10px}.pend-cred svg{width:15px;height:15px;flex:none}.pend-cred>span{flex:1;min-width:0}
+@media(max-width:820px){.cr-item{flex-wrap:wrap}.cr-item .cr-m{flex-basis:calc(100% - 90px)}}
 .cb-sw input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
 .cb-sw-k{flex-shrink:0;width:34px;height:20px;border-radius:99px;background:var(--raised);border:1px solid var(--border2);position:relative;transition:.15s}
 .cb-sw-k::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--muted);transition:.15s}
@@ -3205,6 +3217,17 @@ body.np .ni[data-page="profit"],body.np .tab[data-tab="profit"],body.np .today-s
               <div><label class="fl" id="nf-stake-label">Amount staked (€)</label><input type="text" inputmode="decimal" autocomplete="off" id="nf-stake" placeholder="20" step="0.01" min="0"></div>
             </div>
             <div class="nf-cred" id="nf-cred" style="display:none"></div>
+            <label class="cb-sw rf-sw" id="nf-rf-sw"><input type="checkbox" id="nf-rf"><span class="cb-sw-k"></span><span class="cb-sw-t"><b>Refund if it loses</b><small>promo: lose and you get a freebet or cash back — added by itself when you mark the bet lost</small></span></label>
+            <div class="rf-box" id="nf-rf-box" style="display:none">
+              <div class="two-col">
+                <div><label class="fl">Refund (€)</label><input type="text" inputmode="decimal" autocomplete="off" id="nf-rf-amt" placeholder="= stake"></div>
+                <div id="nf-rf-days-w"><label class="fl">Freebet valid (days)</label><input type="text" inputmode="numeric" autocomplete="off" id="nf-rf-days" placeholder="no expiry"></div>
+              </div>
+              <div class="rf-chips"><span>Back as</span><button type="button" class="rf-c" data-rf="nf:kind:fb">Freebet</button><button type="button" class="rf-c" data-rf="nf:kind:cash">Cash</button></div>
+              <div class="rf-chips"><span>When</span><button type="button" class="rf-c" data-rf="nf:cond:lost">It loses</button><button type="button" class="rf-c" data-rf="nf:cond:one">Only 1 selection fails</button></div>
+              <div class="rf-chips" id="nf-rf-ans" style="display:none"><span>Only 1 failed?</span><button type="button" class="rf-c" data-rf="nf:ans:yes">Yes, refund due</button><button type="button" class="rf-c" data-rf="nf:ans:no">No</button></div>
+            </div>
+
             <div class="nf-lim" id="nf-lim" style="display:none"></div>
             <div class="two-col">
               <div><label class="fl">Date</label><input type="date" id="nf-date"></div>
@@ -3363,6 +3386,7 @@ body.np .ni[data-page="profit"],body.np .tab[data-tab="profit"],body.np .today-s
       <div class="pend-bar"><input type="search" id="pendSearch" placeholder="Team or bookmaker" autocomplete="off" enterkeyhint="search"><span id="pendHouseWrap"></span></div>
       <div class="pend-tools" id="pendTools"></div>
       <div id="pendPromo"></div>
+      <div id="pendCred"></div>
       <div class="pend-days" id="pendDays"></div>
       <div class="stats" id="pendStats"></div>
       <div id="pendList"></div>
@@ -3572,6 +3596,16 @@ body.np .ni[data-page="profit"],body.np .tab[data-tab="profit"],body.np .today-s
       <div id="m-sels-wrap" style="display:none"><label class="fl">Selections<span class="sel-hint">all optional</span></label><div class="nf-sels" id="m-sels"></div>
         <button class="ba" id="m-addsel" type="button" style="margin-top:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add selection</button></div>
       <div><label class="fl" id="m-stake-label">Amount staked (€)</label><input type="text" inputmode="decimal" autocomplete="off" id="m-stake" placeholder="20" step="0.01" min="0"></div>
+      <label class="cb-sw rf-sw" id="m-rf-sw"><input type="checkbox" id="m-rf"><span class="cb-sw-k"></span><span class="cb-sw-t"><b>Refund if it loses</b><small>promo: lose and you get a freebet or cash back — added by itself when you mark the bet lost</small></span></label>
+            <div class="rf-box" id="m-rf-box" style="display:none">
+              <div class="two-col">
+                <div><label class="fl">Refund (€)</label><input type="text" inputmode="decimal" autocomplete="off" id="m-rf-amt" placeholder="= stake"></div>
+                <div id="m-rf-days-w"><label class="fl">Freebet valid (days)</label><input type="text" inputmode="numeric" autocomplete="off" id="m-rf-days" placeholder="no expiry"></div>
+              </div>
+              <div class="rf-chips"><span>Back as</span><button type="button" class="rf-c" data-rf="m:kind:fb">Freebet</button><button type="button" class="rf-c" data-rf="m:kind:cash">Cash</button></div>
+              <div class="rf-chips"><span>When</span><button type="button" class="rf-c" data-rf="m:cond:lost">It loses</button><button type="button" class="rf-c" data-rf="m:cond:one">Only 1 selection fails</button></div>
+              <div class="rf-chips" id="m-rf-ans" style="display:none"><span>Only 1 failed?</span><button type="button" class="rf-c" data-rf="m:ans:yes">Yes, refund due</button><button type="button" class="rf-c" data-rf="m:ans:no">No</button></div>
+            </div>
       <div id="m-preview" style="display:none;background:var(--raised);border-radius:7px;padding:8px 11px;font-size:12px;justify-content:space-between;gap:8px">
         <span>If it wins: <span class="pend-preview-pos" id="m-preview-win"></span></span>
         <span>If it loses: <span class="pend-preview-neg" id="m-preview-loss"></span></span>
@@ -5969,7 +6003,7 @@ function typePill(t){
   return`<span class="type-pill tp-normal">Normal</span>`;
 }
 // a normal / freebet, plus a Combi pill when it's an accumulator (old 'Combi' bets show as Normal · Combi)
-function nmPill(n){return typePill(n.type==='Freebet'?'Freebet':'Normal')+(isCombi(n)?typePill('Combi'):'')+(isFun(n)?typePill('Fun'):'')+cntPill('nm',n);}
+function nmPill(n){return typePill(n.type==='Freebet'?'Freebet':'Normal')+(isCombi(n)?typePill('Combi'):'')+(isFun(n)?typePill('Fun'):'')+cntPill('nm',n)+rfPill(n);}
 // Funbets: bets placed just because. Every other bet (all the old ones too) counts as an 'Opportunity' bet.
 function isFun(x){return !!(x&&x.fun);}
 function nmCat(n){return isFun(n)?'fun':n.type==='Freebet'?'freebet':'normal';}
@@ -6446,12 +6480,12 @@ document.getElementById('sbList').addEventListener('click',e=>{
 // delete one bet from a list, with Undo (a pending freebet that used bet credits gives them back, Undo takes them again)
 function deleteBetUndo(kind,id,after){
   const arr=kind==='nm'?D.normals:D.bets,i=arr.findIndex(x=>x.id===id);if(i<0)return;const it=arr[i];
-  const cc=kind==='nm'&&it.credit?D.casas.find(c=>c.id===it.credit.cid):null,oldCred=cc&&cc.credit?{...cc.credit}:null;
+  const cc=kind==='nm'&&it.credit?D.casas.find(c=>c.id===it.credit.cid):null,oldCred=cc?JSON.stringify(credList(cc)):null;
   if(kind==='nm')refundCredit(it);
   if(kind==='nm')D.normals=D.normals.filter(x=>x.id!==id);else D.bets=D.bets.filter(x=>x.id!==id);
   save();updateBadges();after();
   toast(`${kind==='nm'?'Entry':'Surebet'} deleted`,'Undo',()=>{
-    if(kind==='nm'){if(!D.normals.some(x=>x.id===id))D.normals.splice(Math.min(i,D.normals.length),0,it);if(cc){if(oldCred)cc.credit=oldCred;else delete cc.credit;}}
+    if(kind==='nm'){if(!D.normals.some(x=>x.id===id))D.normals.splice(Math.min(i,D.normals.length),0,it);if(cc){cc.credits=JSON.parse(oldCred);credTidy(cc);}}
     else if(!D.bets.some(x=>x.id===id))D.bets.splice(Math.min(i,D.bets.length),0,it);
     save();updateBadges();after();});
 }
@@ -6708,6 +6742,7 @@ function openNormalModal(id){
   updateNormalPreview();
   ctPick=n&&n.cnt&&n.cnt!==nmCat(n)?n.cnt:null;
   renderMCt();
+  rfFill('m',n&&n.refund,n&&n.status==='lost');
   modal.style.display='flex';
 }
 // Edit bet: a combi's selections can be changed, added or removed; the odds follow their product
@@ -6778,6 +6813,9 @@ document.getElementById('m-save').addEventListener('click',()=>{
       n.house=document.getElementById('m-house').value.trim();
       n.notes=document.getElementById('m-notes').value.trim();
       n.categoryId=categoryId;
+      {const rf=rfRead('m'),old=n.refund;
+        if(rf){if(old&&old.done)rf.done=old.done;n.refund=rf;delete n.rfOff;}
+        else if(old){rfTakeBack(n,old);delete n.refund;n.rfOff=1;if(n.status==='lost')resolveNormal(n,'lost');}}
       if(n.status==='won'||n.status==='lost')resolveNormal(n,n.status);
       mwSrc=n;
     }
@@ -6806,12 +6844,118 @@ document.getElementById('m-save').addEventListener('click',()=>{
 function resolveNormal(n,status){
   n.status=status;
   if(!n.resolveDate)n.resolveDate=todayISO();
-  if(n.cashOut!=null&&(status==='won'||status==='lost'))return; // cashed out: keep manual profit
+  if(n.cashOut!=null&&(status==='won'||status==='lost')){refundSync(n,true);return;} // cashed out: keep manual profit
   if(status==='pending'||status==='anulada')delete n.cashOut;
   if(status==='won')n.profit=n.potentialWin!=null?n.potentialWin:+(((n.stake||0)*((n.odd||1)-1)).toFixed(2));
   else if(status==='lost')n.profit=n.potentialLoss!=null?n.potentialLoss:(n.type==='Freebet'?0:-(n.stake||0));
   else n.profit=0; // anulada o vuelta a pendiente
+  refundSync(n,true);
+  if(status==='lost'&&n.refund&&n.refund.done&&n.refund.done.kind==='cash')n.profit=cents(n.profit+n.refund.done.amt); // cash back: the loss is smaller
 }
+
+// ══════════════════════════════════════════
+//  REFUND PROMOS — "si pierdes, te devolvemos la apuesta" (in freebets or cash)
+// ══════════════════════════════════════════
+// n.refund {amt (€, empty = the stake), kind 'fb'|'cash', cond 'lost' (the bet loses) | 'one' (a combi loses by only one selection),
+//   days (the freebet is valid N days), yes/no (cond 'one': the answer to "did only one selection fail?"),
+//   done {kind, amt, cid, crid} once given}. Marking the bet Lost gives it by itself: a freebet becomes a bet credit at that bookmaker
+// (c.credits, src = the bet's id), cash makes the loss smaller (profit = −stake + refund, so the bookmaker's balance follows).
+// Taking the Lost back (Won, Pending, Void, Undo) takes the refund back too.
+function rfAmt(n){const r=n&&n.refund;return cents(r&&+r.amt>0?+r.amt:(n&&n.stake)||0);}
+function rfKindTxt(r){return r&&r.kind==='cash'?'cash':'freebet';}
+function rfDue(n){const r=n.refund;return !!(r&&n.status==='lost'&&n.cashOut==null&&(r.cond!=='one'||r.yes));}
+let rfMsg='';
+function rfGive(n){
+  const r=n.refund,amt=rfAmt(n);if(!(amt>0))return;
+  if(r.kind==='cash'){r.done={kind:'cash',amt};rfNote(`${fmt(amt)} € cash back from the refund promo`);return;}
+  const c=casaFor(n.house);
+  if(!c){r.done={kind:'fb',amt,cid:null};rfNote(`Refund promo: ${fmt(amt)} € freebet (no bookmaker on the bet to keep it in)`);return;}
+  const days=parseInt(r.days)||0,k=addCredit(c,amt,days>0?shiftedISO(days):'',('Refund · '+(n.event||'bet')).slice(0,60),n.id);
+  r.done={kind:'fb',amt,cid:c.id,crid:k.id};
+  rfNote(`${fmt(amt)} € freebet added to ${c.name} (refund promo)`);
+}
+function rfTakeBack(n,r){
+  r=r||n.refund;const d=r&&r.done;if(!d)return;
+  if(d.kind==='fb'&&d.cid!=null){const c=D.casas.find(x=>x.id===d.cid);if(c){const k=credList(c).find(x=>x.id===d.crid&&x.src===n.id);
+    if(k){k.amount=cents(Math.max(0,k.amount-d.amt));credTidy(c);}}}
+  delete r.done;
+}
+// keep the refund in line with the bet's result (ask: may pop the "only one selection failed?" question)
+function refundSync(n,ask){
+  const r=n&&n.refund;if(!r)return;
+  const lost=n.status==='lost'&&n.cashOut==null;
+  if(!lost){delete r.yes;delete r.no;}
+  if(lost&&r.cond==='one'&&!r.yes&&!r.no&&ask){
+    if(confirm(`${n.event||'Bet'} · ${n.house||''}\nRefund promo: did only ONE selection fail?\n\nOK = yes, add ${fmt(rfAmt(n))} € ${rfKindTxt(r)}\nCancel = no, more than one failed`))r.yes=1;else r.no=1;
+  }
+  const due=rfDue(n);
+  if(r.done&&(!due||r.done.amt!==rfAmt(n)||r.done.kind!==(r.kind==='cash'?'cash':'fb')))rfTakeBack(n);
+  if(due&&!r.done)rfGive(n);
+}
+// a restored bet (Undo) whose refund isn't given any more: the freebet it had added goes away
+function rfOrphans(n){
+  if(!n||n.refund&&n.refund.done)return;
+  (D.casas||[]).forEach(c=>{if(!c.credits)return;const L=c.credits.filter(k=>k.src===n.id);if(!L.length)return;c.credits=c.credits.filter(k=>k.src!==n.id);credTidy(c);});
+}
+// say what the refund did, after the action's own message (Undo etc.)
+function rfNote(m){rfMsg=m;setTimeout(()=>{if(!rfMsg)return;const t=document.getElementById('toast'),el=document.getElementById('toastMsg');
+  if(t&&t.classList.contains('show')&&el&&Date.now()-toastAt<800){el.textContent+=' · '+rfMsg;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),6000);}else toast(rfMsg);rfMsg='';},0);}
+function rfPill(n){
+  const r=n&&n.refund;if(!r)return '';const a=rfAmt(n),k=r.kind==='cash'?'cash':'FB',w=r.cond==='one'?'if 1 fails':'if lost';
+  const tip=`Refund promo: ${fmt(a)} € ${rfKindTxt(r)} back ${r.cond==='one'?'if only one selection fails':'if the bet loses'}${r.days?` · valid ${r.days} days`:''}`;
+  if(r.done)return `<span class="type-pill tp-rf ok" title="${tip} · given">Refunded ${fmt(a)} € ${k}</span>`;
+  if(n.status==='pending')return `<span class="type-pill tp-rf" title="${tip}">Refund ${fmt(a)} € ${k} ${w}</span>`;
+  if(n.status==='lost'&&r.cond==='one'&&!r.no)return `<button type="button" class="type-pill tp-rf ask" data-rf-ask="${n.id}" title="${tip}. Tap to answer">Refund? Only 1 failed</button>`;
+  return `<span class="type-pill tp-rf off" title="${tip} · not due">No refund</span>`;
+}
+// text of a promo ("si falla 1 selección te devolvemos la apuesta en freebets") → a refund promo, or null
+function rfFromText(t,stake){
+  t=String(t||'');const lo=t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  if(!/(si (falla|fallas|pierde|pierdes)|falla (1|una|un)\b|devol|devuelv|reembols|reintegr|seguro de apuesta|apuesta asegurada|money ?back|refund|insur)/.test(lo))return null;
+  const r={kind:/(efectivo|dinero real|en dinero|cash|saldo real)/.test(lo)?'cash':'fb',cond:/(falla(s|n)?|fallo|pierde(s)?( por)?) ?(solo )?(1|una|un) (sola )?(seleccion|pick|evento|partido)|(1|una|un) (sola )?(seleccion|pick) (falla|fallada|perdida)|solo (1|una|un) (fallo|falla)|(falla|fallas) (1|una|un)\b/.test(lo)?'one':'lost'};
+  const cap=lo.match(/(?:hasta|max(?:imo)?\.?|up to)\s*(\d+(?:[.,]\d+)?)\s*(?:€|eur)/);if(cap){const v=parseFloat(cap[1].replace(',','.'));if(v>0&&!(stake>0&&v>=stake))r.amt=v;}
+  const d=lo.match(/(\d+)\s*(?:dias|days)/);if(d)r.days=+d[1];
+  return r;
+}
+// pending bets written before this: a "Promo: …" note that reads as a refund promo becomes one (once; turning it off in Edit keeps it off)
+function rfScanNotes(){
+  let ch=0;(D.normals||[]).forEach(n=>{if(n.status!=='pending'||n.refund||n.rfOff||!n.notes)return;const m=n.notes.match(/promo:?\s*(.+)$/i);if(!m)return;
+    const r=rfFromText(m[1],n.stake);if(r){n.refund=r;ch++;}});
+  return ch;
+}
+// the form block ("Refund if it loses") on New bet (nf) and Edit bet (m)
+const rfForm={nf:{kind:'fb',cond:'lost',ans:null,lost:false},m:{kind:'fb',cond:'lost',ans:null,lost:false}};
+function rfRender(px){
+  const on=document.getElementById(px+'-rf').checked,f=rfForm[px];
+  document.getElementById(px+'-rf-box').style.display=on?'':'none';
+  document.querySelectorAll(`[data-rf^="${px}:"]`).forEach(b=>{const [,k,v]=b.dataset.rf.split(':');b.classList.toggle('on',f[k]===v);});
+  document.getElementById(px+'-rf-days-w').style.visibility=f.kind==='fb'?'':'hidden';
+  document.getElementById(px+'-rf-ans').style.display=f.lost&&f.cond==='one'?'':'none';
+}
+function rfFill(px,r,lost){
+  const f=rfForm[px];f.kind=r&&r.kind==='cash'?'cash':'fb';f.cond=r&&r.cond==='one'?'one':'lost';f.ans=r&&r.yes?'yes':r&&r.no?'no':null;f.lost=!!lost;
+  document.getElementById(px+'-rf').checked=!!r;
+  document.getElementById(px+'-rf-amt').value=r&&+r.amt>0?r.amt:'';
+  document.getElementById(px+'-rf-days').value=r&&r.days?r.days:'';
+  rfRender(px);
+}
+function rfRead(px){
+  if(!document.getElementById(px+'-rf').checked)return null;const f=rfForm[px];
+  const a=parseFloat((document.getElementById(px+'-rf-amt').value||'').replace(',','.')),d=parseInt(document.getElementById(px+'-rf-days').value);
+  const r={kind:f.kind,cond:f.cond};if(a>0)r.amt=cents(a);if(f.kind==='fb'&&d>0)r.days=d;
+  if(f.cond==='one'&&f.ans==='yes')r.yes=1;else if(f.cond==='one'&&f.ans==='no')r.no=1;
+  return r;
+}
+['nf','m'].forEach(px=>{
+  document.getElementById(px+'-rf').addEventListener('change',()=>rfRender(px));
+  document.getElementById(px+'-rf-box').addEventListener('click',e=>{const b=e.target.closest('[data-rf]');if(!b)return;const [,k,v]=b.dataset.rf.split(':');
+    rfForm[px][k]=k==='ans'&&rfForm[px].ans===v?null:v;rfRender(px);});
+});
+// My bets / Pending: "Refund? Only 1 failed" on a lost bet → answer it
+document.addEventListener('click',e=>{const b=e.target.closest('[data-rf-ask]');if(!b)return;e.stopPropagation();
+  const n=D.normals.find(x=>x.id===+b.dataset.rfAsk);if(!n||!n.refund)return;delete n.refund.no;delete n.refund.yes;
+  resolveNormal(n,'lost');
+  save();updateBadges();renderNormals(document.getElementById('nbSearch').value);renderProfit();renderPendientes();},true);
 
 // ══════════════════════════════════════════
 //  CHANGE A BET'S TYPE — "Counts as" in both Edit modals
@@ -7528,10 +7672,21 @@ let pendLastShown=[];
 function pendShownMarked(){return pendLastShown.filter(x=>pendHasMark(x.kind,x.item));}
 function renderPendientes(){
   try{pendFixNames();}catch(e){}
+  try{if(rfScanNotes())save();}catch(e){}
+  try{renderPendCred();}catch(e){}
   const ae=document.activeElement,typing=ae&&ae.matches&&ae.matches('#pendList [data-note]')?{k:ae.dataset.note,v:ae.value,c:ae.selectionStart}:null;
   renderPendientesInner();
   if(typing){const el=document.querySelector(`#pendList [data-note="${typing.k}"]`);if(el){el.value=typing.v;el.focus();try{el.setSelectionRange(typing.c,typing.c);}catch(e){}}}
 }
+// freebets (bet credits) about to expire: one slim line on Pending, only when one ends today, tomorrow or the day after
+function renderPendCred(){
+  const el=document.getElementById('pendCred');if(!el)return;
+  const L=(D.casas||[]).filter(c=>!isBank(c)&&credSoon(c,2)).map(c=>{const k=credLive(c)[0];return {c,k,a:cents(credLive(c).filter(x=>x.exp===k.exp).reduce((t,x)=>t+(+x.amount||0),0))};}).sort((x,y)=>x.k.exp<y.k.exp?-1:1);
+  el.innerHTML=L.map(({c,k,a})=>`<div class="pend-cred">${GIFT_SVG}<span><b>${esc(c.name)}</b>: ${fmt(a)} € of freebets ${crExpLabel(k.exp)}${k.note?' · '+esc(k.note):''}</span><button type="button" class="nf-cred-use" data-pcred-use="${c.id}">Use</button></div>`).join('');
+}
+document.getElementById('pendCred').addEventListener('click',e=>{const b=e.target.closest('[data-pcred-use]');if(!b)return;const c=D.casas.find(x=>x.id===+b.dataset.pcredUse);if(!c)return;
+  goNewBet('Freebet');const h=document.getElementById('nf-house');h.innerHTML=houseOptionsHtml(c.name,'Choose bookmaker…');h.value=h.querySelector('option[selected]')?.value||c.name;
+  document.getElementById('nf-stake').value=casaCredit(c)||'';nfCredKey='';nfCredAuto=null;renderNfResult();});
 const pendWdOpen=new Set(); // groups of withdrawals opened to see each one
 // a withdrawal still not received after WD_LATE_DAYS gets a red 'n days' so it doesn't go unnoticed
 const WD_LATE_DAYS=5;
@@ -7878,7 +8033,7 @@ document.getElementById('co-save').addEventListener('click',()=>{
 // Undo for one or many settles: restores each bet exactly as it was
 function pendUndoToast(entries,msg){
   const snaps=entries.map(([arr,item])=>[arr,item.id,JSON.stringify(item)]);
-  toast(msg,'Undo',()=>{snaps.forEach(([arr,id,snap])=>{const i=arr.findIndex(x=>x.id===id);if(i>=0)arr[i]=JSON.parse(snap);});save();updateBadges();refreshAfterPend();});
+  toast(msg,'Undo',()=>{snaps.forEach(([arr,id,snap])=>{const i=arr.findIndex(x=>x.id===id);if(i>=0){arr[i]=JSON.parse(snap);if(arr===D.normals)rfOrphans(arr[i]);}});save();updateBadges();refreshAfterPend();});
 }
 function refreshAfterPend(){renderPendientes();renderSurebets(document.getElementById('sbSearch').value);renderNormals(document.getElementById('nbSearch').value);renderProfit();}
 // Two separate, saved steps: the result (pendMark — which leg won, or won/lost) is marked
@@ -8068,7 +8223,7 @@ function bkInitials(name){
   if(!parts[0])return '?';
   return (parts[0][0]+(parts[1]?parts[1][0]:'')).toUpperCase();
 }
-let openBkPanel=null; // {cid, mode:'dep'|'wd'|'pending'}
+let openBkPanel=null,bkCredEdit=null; // {cid, mode:'dep'|'wd'|'pending'}
 const QUICK_AMOUNTS=[10,20,50,100];
 // ── Bookmaker balances: net deposits + settled results − money in pending bets ──
 function bookmakerLedger(keep){ // keep(item) → only count those items (e.g. one month)
@@ -8227,30 +8382,52 @@ function casaCashFlow(c){
 }
 // money still on its way to you: old one-off pendingTransfer + withdrawals not yet confirmed received
 function casaPendIn(c){return +((c.pendingTransfer||0)+casaCashFlow(c).pendOut).toFixed(2);}
-// Bet credits (créditos de apuesta / bonus to bet with) waiting at a bookmaker: c.credit {amount, exp 'YYYY-MM-DD'|'', note}.
-// Not money: they never touch the balance, deposits or Profit. A Freebet saved at that bookmaker uses them up (n.credit {cid,amt}).
+// Bet credits (créditos de apuesta / freebets to bet with) waiting at a bookmaker: c.credits [{id, amount, exp 'YYYY-MM-DD'|'', note, src (bet id of the
+// refund promo it came from), at (day added)}] — several per bookmaker, each with its own expiry. Old data had one c.credit {amount,exp,note}: it becomes the first item.
+// Not money: they never touch the balance, deposits or Profit. A Freebet saved at that bookmaker uses them up, soonest to expire first (n.credit {cid,amt,parts}).
 const GIFT_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>';
-function credExpired(c){const k=c&&c.credit;return !!(k&&k.exp&&k.exp<todayLocalISO());}
-function casaCredit(c){const k=c&&c.credit;return k&&k.amount>0&&!credExpired(c)?+k.amount:0;}
-function credExpLabel(c){const k=c.credit;if(!k||!k.exp)return '';const n=-daysAgo(k.exp);return n<0?'expired':n===0?'expires today':n===1?'expires tomorrow':n<=14?`expires in ${n} days`:'until '+fmtDate(k.exp);}
-function setCredit(c,amount,exp,note){
-  amount=+(+amount||0).toFixed(2);
-  if(amount>0)c.credit={amount,...(exp?{exp}:{}),...(note?{note}:{})};else delete c.credit;
+function credList(c){
+  if(!c)return [];
+  if(c.credit){const k=c.credit;delete c.credit;if(k.amount>0)(c.credits=c.credits||[]).unshift({id:1,amount:+k.amount,...(k.exp?{exp:k.exp}:{}),...(k.note?{note:k.note}:{})});}
+  return c.credits||[];
 }
-// a freebet saved at a bookmaker with credits takes its stake out of them
+function credArr(c){credList(c);return c.credits||(c.credits=[]);}
+function credNewId(c){return credList(c).reduce((m,k)=>Math.max(m,+k.id||0),0)+1;}
+function crExp(k){return !!(k&&k.exp&&k.exp<todayLocalISO());}
+function crExpLabel(exp){if(!exp)return '';const n=-daysAgo(exp);return n<0?'expired':n===0?'expires today':n===1?'expires tomorrow':n<=14?`expires in ${n} days`:'until '+fmtDate(exp);}
+function credLive(c){return credList(c).filter(k=>k.amount>0&&!crExp(k)).sort((a,b)=>(a.exp||'9999')<(b.exp||'9999')?-1:(a.exp||'9999')>(b.exp||'9999')?1:0);}
+function credAny(c){return credList(c).some(k=>k.amount>0);}
+function casaCredit(c){return cents(credLive(c).reduce((a,k)=>a+(+k.amount||0),0));}
+function credExpired(c){return credAny(c)&&!credLive(c).length;}
+function credNext(c){return credLive(c)[0]||credList(c).filter(k=>k.amount>0)[0]||null;} // soonest to expire (or an expired one when all are)
+function credShown(c){return casaCredit(c)||cents(credList(c).reduce((a,k)=>a+(k.amount>0?+k.amount:0),0));}
+function credExpLabel(c){const k=credNext(c);return k?crExpLabel(k.exp):'';}
+function credSoon(c,days){const k=credLive(c)[0];return !!(k&&k.exp&&-daysAgo(k.exp)<=days);}
+function addCredit(c,amount,exp,note,src){
+  amount=cents(+amount||0);if(!(amount>0))return null;
+  const k={id:credNewId(c),amount,...(exp?{exp}:{}),...(note?{note}:{}),...(src?{src}:{}),at:todayLocalISO()};credArr(c).push(k);return k;
+}
+function credTidy(c){if(c.credits){c.credits=c.credits.filter(k=>k.amount>0.004);if(!c.credits.length)delete c.credits;}}
+// a freebet saved at a bookmaker with credits takes its stake out of them (soonest to expire first)
 function useCredit(n){
   if(n.type!=='Freebet')return null;const c=casaFor(n.house);const have=casaCredit(c);if(!(have>0))return null;
-  const amt=+Math.min(have,n.stake||0).toFixed(2);if(!(amt>0))return null;
-  const {exp,note}=c.credit;setCredit(c,have-amt,exp,note);n.credit={cid:c.id,amt,...(exp?{exp}:{}),...(note?{note}:{})};
+  const amt=cents(Math.min(have,n.stake||0));if(!(amt>0))return null;
+  let need=amt;const parts=[];
+  for(const k of credLive(c)){if(need<0.005)break;const t=cents(Math.min(+k.amount,need));k.amount=cents(k.amount-t);need=cents(need-t);
+    parts.push({id:k.id,amt:t,...(k.exp?{exp:k.exp}:{}),...(k.note?{note:k.note}:{}),...(k.src?{src:k.src}:{})});}
+  credTidy(c);const f=parts[0]||{};
+  n.credit={cid:c.id,amt,parts,...(f.exp?{exp:f.exp}:{}),...(f.note?{note:f.note}:{})};
   return {c,amt,left:casaCredit(c)};
 }
-// a pending freebet that used credits gets deleted → they go back to the bookmaker
+// a pending freebet that used credits gets deleted → they go back to the bookmaker, each to the credit it came from
 function refundCredit(n){
   if(!n||!n.credit||n.status!=='pending')return;const c=D.casas.find(x=>x.id===n.credit.cid);if(!c)return;
-  const k=c.credit&&!credExpired(c)?c.credit:{};setCredit(c,(k.amount||0)+n.credit.amt,k.exp||n.credit.exp,k.note||n.credit.note);
+  const parts=n.credit.parts||[{amt:n.credit.amt,exp:n.credit.exp,note:n.credit.note}];
+  parts.forEach(p=>{const L=credArr(c),k=p.id!=null&&L.find(x=>x.id===p.id);
+    if(k)k.amount=cents(+k.amount+p.amt);else L.push({id:credNewId(c),amount:p.amt,...(p.exp?{exp:p.exp}:{}),...(p.note?{note:p.note}:{}),...(p.src?{src:p.src}:{}),at:todayLocalISO()});});
 }
-function credTagHtml(c,cls){const k=c.credit;if(!k||!(k.amount>0))return '';const ex=credExpired(c),el=credExpLabel(c);
-  return `<button type="button" class="${cls}${ex?' exp':''}" data-bk-toggle="cred" data-cid="${c.id}" title="Bet credits ${fmt(k.amount)} €${el?' · '+el:''}${k.note?' · '+esc(k.note):''}">${GIFT_SVG}${cls==='bkt-cred'?fmt(k.amount,k.amount%1?2:0):`Credits ${fmt(k.amount)} €${el?' · '+el:''}`}</button>`;}
+function credTagHtml(c,cls){if(!credAny(c))return '';const a=credShown(c),ex=credExpired(c),el=credExpLabel(c),k=credNext(c),nL=credLive(c).length;
+  return `<button type="button" class="${cls}${ex?' exp':''}" data-bk-toggle="cred" data-cid="${c.id}" title="Bet credits ${fmt(a)} €${nL>1?` (${nL})`:''}${el?' · next '+el:''}${k&&k.note?' · '+esc(k.note):''}">${GIFT_SVG}${cls==='bkt-cred'?fmt(a,a%1?2:0):`Credits ${fmt(a)} €${el?' · '+el:''}`}</button>`;}
 // Limited ("limitada"): the bookmaker cut how much you can bet. c.lim {since 'YYYY-MM-DD', max € (0 = unknown), note}.
 // Just information: it never changes balances or Profit. New bet warns when a stake is over the max.
 const LIM_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="5.6" y1="5.6" x2="18.4" y2="18.4"/></svg>';
@@ -8274,7 +8451,7 @@ function renderCasas(filter=''){
   const ledger0=bookmakerLedger();
   const byProfile=c=>{
     const un=isUnusedCasa(c,ledger0);
-    if(bkProfileSel==='credits')return !!(c.credit&&c.credit.amount>0); // every bookmaker with credits, Unused too
+    if(bkProfileSel==='credits')return credAny(c); // every bookmaker with credits, Unused too
     if(bkProfileSel==='limited')return !!casaLim(c); // every limited bookmaker, Unused too
     if(bkProfileSel==='unused')return un;
     if(un)return false;
@@ -8329,7 +8506,7 @@ function renderCasas(filter=''){
       actHtml=a&&a.last?`<div class="bk-act${daysAgo(a.last)>IDLE_DAYS?' idle':''}" title="Date of the last bet placed here">${daysAgo(a.last)>IDLE_DAYS?'Idle · ':''}last bet ${agoLabel(a.last)}${a.month?` · ${a.month} this month`:''}</div>`:`<div class="bk-act">no bets yet</div>`;}
     const swPaid=softwareCharges().filter(x=>x.casaId===c.id).reduce((a,x)=>a-x.profit,0);
     if(swPaid>0)metaBits.push(`<span style="color:var(--red)">Software: −${fmt(swPaid)} €</span>`);
-    if(c.credit&&c.credit.amount>0)metaBits.push(credTagHtml(c,'bk-cred-tag'));
+    if(credAny(c))metaBits.push(credTagHtml(c,'bk-cred-tag'));
     if(pend>0)metaBits.push(`<span style="color:var(--yellow)">Pending: ${fmt(pend)} €</span>`);
     if(pendWdCount>0)metaBits.push(`<span style="color:var(--yellow)">${pendWdCount} withdrawal${pendWdCount>1?'s':''} awaiting confirmation</span>`);
     const isOpen=!!(openBkPanel&&openBkPanel.cid===c.id);
@@ -8401,17 +8578,25 @@ function renderCasas(filter=''){
         </div>
       </div>`;
     }else if(mode==='cred'){
-      const k=c.credit||{};
+      const L=credList(c).filter(k=>k.amount>0).sort((x,y)=>crExp(x)-crExp(y)||((x.exp||'9999')<(y.exp||'9999')?-1:(x.exp||'9999')>(y.exp||'9999')?1:0));
+      const ed=bkCredEdit&&bkCredEdit.cid===c.id?L.find(k=>k.id===bkCredEdit.id):null,k=ed||{};
+      const used=D.normals.filter(n=>n.credit&&n.credit.cid===c.id).sort((x,y)=>(y.date||'').localeCompare(x.date||'')).slice(0,5);
+      const srcTxt=x=>{const b=x.src&&D.normals.find(n=>n.id===x.src);return b?`refund · ${esc(b.event||'bet')}`:x.src?'refund promo':'';};
       panelHtml=`<div class="bk-panel">
-        <div class="bk-panel-title">Bet credits available in ${esc(c.name)}</div>
+        <div class="bk-panel-title">Bet credits in ${esc(c.name)}${L.length?` · <span class="cr-tot">${fmt(casaCredit(c))} €</span>`:''}</div>
+        ${L.length?`<div class="cr-items">${L.map(x=>{const ex=crExp(x),el=crExpLabel(x.exp),soon=!ex&&x.exp&&-daysAgo(x.exp)<=3;
+          return `<div class="cr-item${ex?' exp':''}${ed===x?' on':''}"><span class="cr-a">${fmt(x.amount)} €</span><span class="cr-m">${[el?`<em class="${soon||ex?'soon':''}">${el}</em>`:'no expiry',x.note?esc(x.note):'',srcTxt(x)].filter(Boolean).join(' · ')}</span><button type="button" class="unhidebtn" data-cr-edit="${c.id}:${x.id}">Edit</button><button type="button" class="unhidebtn" data-cr-del="${c.id}:${x.id}" title="Remove: used up, expired or not real">${ex?'Remove':'Used'}</button></div>`;}).join('')}</div>`:''}
+        <div class="cr-sub">${ed?'Change this credit':L.length?'Add another credit':'Add credits'}</div>
         <div class="bk-cred-form">
           <label><span>Amount</span><div class="iw"><input type="text" inputmode="decimal" autocomplete="off" class="ii" id="bk-cred-amt" value="${k.amount>0?k.amount:''}" placeholder="0"><span class="isuf">€</span></div></label>
           <label><span>Expires (optional)</span><input type="date" id="bk-cred-exp" value="${k.exp||''}"></label>
           <label><span>Note (optional)</span><input type="text" id="bk-cred-note" value="${esc(k.note||'')}" placeholder="E.g. min odds 1.50, football" autocomplete="off"></label>
-          <button class="btn-reg" data-bk-cred-save="${c.id}" style="width:auto;padding:9px 16px;margin:0">Save</button>
-          ${k.amount>0?`<button class="btn-s" data-bk-cred-clear="${c.id}" style="width:auto;padding:9px 16px;margin:0">Used up</button>`:''}
+          <button class="btn-reg" data-bk-cred-save="${c.id}" style="width:auto;padding:9px 16px;margin:0">${ed?'Save':'Add'}</button>
+          ${ed?`<button class="btn-s" data-cr-edit="${c.id}:0" style="width:auto;padding:9px 16px;margin:0">Cancel</button>`:L.length>1?`<button class="btn-s" data-bk-cred-clear="${c.id}" style="width:auto;padding:9px 16px;margin:0">All used up</button>`:''}
         </div>
-        <div class="bk-hist-empty" style="margin-top:8px">Just a reminder of what you have to bet with here: it doesn't change the balance or Profit. When you save a Freebet at ${esc(c.name)} its stake comes off these credits by itself.</div>
+        ${used.length?`<div class="cr-sub">Last freebets with these credits</div><div class="cr-used">${used.map(n=>{const st=n.status==='pending'?'pending':n.status==='won'?`won +${fmt(n.profit||0)} €`:n.status==='lost'?'lost':n.status==='anulada'?'void':'';
+          return `<div><span>${fmtDate(n.date||'')} · ${esc(n.event||'')}</span><b>${fmt(n.credit.amt)} €</b><em class="${n.status==='won'?'pos':''}">${st}</em></div>`;}).join('')}</div>`:''}
+        <div class="bk-hist-empty" style="margin-top:8px">A reminder of the freebets you have to bet with here: it doesn't change the balance or Profit. Each credit keeps its own expiry. When you save a Freebet at ${esc(c.name)} its stake comes off these credits by itself (soonest to expire first). Refund promos ("if it loses, we give it back") add theirs here when the bet loses.</div>
       </div>`;
     }else if(mode==='lim'){
       const l=c.lim||{};
@@ -8494,11 +8679,11 @@ function renderCasas(filter=''){
   const staleHtml=stale.length?`<div class="bk-stale"><div><b>${stale.length} Unused bookmaker${stale.length>1?'s':''} still show${stale.length>1?'':'s'} money in the app</b><small>${stale.map(x=>`${esc(x.c.name)} ${fmt(x.bal)} €`).join(' · ')}. If ${stale.length>1?'they really have':'it really has'} 0 € (withdrawn, closed or banned), set ${stale.length>1?'them':'it'} to 0: it's saved as a Set balance and Profit counts it.</small></div><button class="btn-reg" data-bk-zero-unused="1" style="width:auto;margin:0;padding:9px 16px">Set to 0</button></div>`:'';
   const credHtml=bkProfileSel==='credits'?(()=>{
     const live=sorted.filter(c=>casaCredit(c)>0),tot=live.reduce((a,c)=>a+casaCredit(c),0);
-    const ord=[...sorted].sort((a,b)=>(credExpired(a)-credExpired(b))||((a.credit.exp||'9999')<(b.credit.exp||'9999')?-1:(a.credit.exp||'9999')>(b.credit.exp||'9999')?1:0)||b.credit.amount-a.credit.amount);
+    const nx=c=>(credNext(c)||{}).exp||'9999',ord=[...sorted].filter(credAny).sort((a,b)=>(credExpired(a)-credExpired(b))||(nx(a)<nx(b)?-1:nx(a)>nx(b)?1:0)||credShown(b)-credShown(a));
     return `<div class="card cred-list"><div class="ch"><span class="ct">${GIFT_SVG}Bet credits</span><span class="cred-tot">${fmt(tot)} € · ${live.length} bookmaker${live.length===1?'':'s'}</span></div>
-      ${ord.map(c=>{const k=c.credit,ex=credExpired(c),el=credExpLabel(c),soon=!ex&&k.exp&&-daysAgo(k.exp)<=3;
-        return `<div class="cred-row${ex?' exp':''}" data-cred-go="${c.id}" role="button" tabindex="0"><span class="cred-n"><b>${esc(c.name)}</b><small>${[el?`<em class="${soon||ex?'soon':''}">${el}</em>`:'no expiry',k.note?esc(k.note):''].filter(Boolean).join(' · ')}</small></span><span class="cred-a">${fmt(k.amount)} €</span>${ex?'':`<button class="unhidebtn" data-cred-new="${c.id}" title="New bet: Freebet at ${esc(c.name)}">Use</button>`}</div>`;}).join('')}
-      <div class="bk-hist-empty" style="padding:8px 14px 10px">Soonest to expire first. Tap a bookmaker to change or clear its credits · Use opens a Freebet there.</div></div>`;})():'';
+      ${ord.map(c=>{const k=credNext(c)||{},ex=credExpired(c),el=credExpLabel(c),soon=!ex&&k.exp&&-daysAgo(k.exp)<=3,nL=credLive(c).length;
+        return `<div class="cred-row${ex?' exp':''}" data-cred-go="${c.id}" role="button" tabindex="0"><span class="cred-n"><b>${esc(c.name)}</b><small>${[nL>1?`${nL} credits`:'',el?`<em class="${soon||ex?'soon':''}">${nL>1?'next ':''}${el}</em>`:'no expiry',k.note?esc(k.note):''].filter(Boolean).join(' · ')}</small></span><span class="cred-a">${fmt(credShown(c))} €</span>${ex?'':`<button class="unhidebtn" data-cred-new="${c.id}" title="New bet: Freebet at ${esc(c.name)}">Use</button>`}</div>`;}).join('')}
+      <div class="bk-hist-empty" style="padding:8px 14px 10px">Soonest to expire first. Tap a bookmaker to see, add or change its credits · Use opens a Freebet there.</div></div>`;})():'';
   // Limited tab: how much money is still inside the limited bookmakers (balance + pending bets)
   const limHtml=bkProfileSel==='limited'?(()=>{const L=sorted.filter(c=>!isBank(c)).map(c=>{const m=casaMoney(c,ledger);return {c,b:m.balance,p:m.inPlay};}).filter(x=>x.b+x.p>=0.01).sort((x,y)=>(y.b+y.p)-(x.b+x.p));
     if(!L.length)return '';const tb=L.reduce((a,x)=>a+x.b,0),tp=L.reduce((a,x)=>a+x.p,0);
@@ -8664,20 +8849,31 @@ document.getElementById('casasList').addEventListener('click',e=>{
     delete c.lim;openBkPanel=null;save();renderCasas(document.getElementById('casasSearch').value);
     toast(`${c.name}: not limited`,'Undo',()=>{c.lim=old;save();renderCasas(document.getElementById('casasSearch').value);});return;
   }
+  const ce=e.target.closest('[data-cr-edit]');
+  if(ce){const [cid,id]=ce.dataset.crEdit.split(':').map(Number);bkCredEdit=id?{cid,id}:null;renderCasas(document.getElementById('casasSearch').value);
+    const f=document.getElementById('bk-cred-amt');if(f&&id){f.focus();f.select&&f.select();}return;}
+  const cdl=e.target.closest('[data-cr-del]');
+  if(cdl){const [cid,id]=cdl.dataset.crDel.split(':').map(Number);const c=D.casas.find(x=>x.id===cid);if(!c)return;
+    const old=JSON.stringify(credList(c)),k=credList(c).find(x=>x.id===id);if(!k)return;
+    c.credits=credList(c).filter(x=>x!==k);credTidy(c);if(bkCredEdit&&bkCredEdit.id===id)bkCredEdit=null;save();renderCasas(document.getElementById('casasSearch').value);
+    toast(`${c.name}: ${fmt(k.amount)} € credit removed`,'Undo',()=>{c.credits=JSON.parse(old);save();renderCasas(document.getElementById('casasSearch').value);});return;}
   const cs=e.target.closest('[data-bk-cred-save]');
   if(cs){
     const c=D.casas.find(x=>x.id===+cs.dataset.bkCredSave);if(!c)return;
     const v=(document.getElementById('bk-cred-amt').value||'').trim().replace(/\s/g,''),a=parseFloat(v.includes(',')&&!v.includes('.')?v.replace(',','.'):v.replace(/,/g,''))||0;
-    if(a<0){toast('Write the amount');return;}
-    setCredit(c,a,document.getElementById('bk-cred-exp').value,document.getElementById('bk-cred-note').value.trim());
-    openBkPanel=null;save();renderCasas(document.getElementById('casasSearch').value);
-    toast(a>0?`${c.name}: ${fmt(a)} € of bet credits`:`${c.name}: no bet credits`);return;
+    const exp=document.getElementById('bk-cred-exp').value,note=document.getElementById('bk-cred-note').value.trim();
+    const ed=bkCredEdit&&bkCredEdit.cid===c.id?credList(c).find(k=>k.id===bkCredEdit.id):null;
+    if(!(a>0)&&!ed){toast('Write the amount');return;}
+    if(ed){ed.amount=cents(a);if(exp)ed.exp=exp;else delete ed.exp;if(note)ed.note=note;else delete ed.note;credTidy(c);}
+    else addCredit(c,a,exp,note);
+    bkCredEdit=null;save();renderCasas(document.getElementById('casasSearch').value);
+    toast(`${c.name}: ${fmt(casaCredit(c))} € of bet credits`);return;
   }
   const cc=e.target.closest('[data-bk-cred-clear]');
   if(cc){
-    const c=D.casas.find(x=>x.id===+cc.dataset.bkCredClear);if(!c)return;const old=c.credit;
-    delete c.credit;openBkPanel=null;save();renderCasas(document.getElementById('casasSearch').value);
-    toast(`${c.name}: bet credits used up`,'Undo',()=>{c.credit=old;save();renderCasas(document.getElementById('casasSearch').value);});return;
+    const c=D.casas.find(x=>x.id===+cc.dataset.bkCredClear);if(!c)return;const old=JSON.stringify(credList(c));
+    delete c.credits;bkCredEdit=null;openBkPanel=null;save();renderCasas(document.getElementById('casasSearch').value);
+    toast(`${c.name}: bet credits used up`,'Undo',()=>{c.credits=JSON.parse(old);save();renderCasas(document.getElementById('casasSearch').value);});return;
   }
   const cn=e.target.closest('[data-cred-new]');
   if(cn){const c=D.casas.find(x=>x.id===+cn.dataset.credNew);if(!c)return;goNewBet('Freebet');const h=document.getElementById('nf-house');h.innerHTML=houseOptionsHtml(c.name,'Choose bookmaker…');h.value=h.querySelector('option[selected]')?.value||c.name;
@@ -12149,7 +12345,7 @@ function renderPerfil(){
 let newBetType='Surebet', newBetCat=null, nfSels=[], nfCombi=false, nfFun=false;
 let nfBoost=null; // {pct}: a combi boost from a pasted bet (Winamax Combo Booster…), applied to the winnings
 function nfIsCombi(){return nfCombi&&!sbMode();}
-let toastTimer=null;
+let toastTimer=null,toastAt=0;
 // Cloud sync status: hidden while saves go through; shows up when they wait for a
 // connection, fail, or are paused because part of the data couldn't be loaded.
 // Saving state for the bar at the top. state: 'saving' (an upload started), 'progress' (one got in,
@@ -12193,7 +12389,7 @@ function toast(msg,actLabel,actFn){
   const b=document.getElementById('toastAct');
   if(actLabel){b.style.display='';b.textContent=actLabel;b.onclick=()=>{t.classList.remove('show');actFn&&actFn();};}
   else b.style.display='none';
-  t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),4200);
+  t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),4200);toastAt=Date.now();
 }
 const NF_META={
   Normal:{title:'Normal bet',help:'Your own money on a single outcome',stake:'Amount staked (€)',cls:''},
@@ -12264,7 +12460,7 @@ function renderNfCred(){
   if(!(a>0)||sbMode()){el.style.display='none';return;}
   const fb=newBetType==='Freebet',el2=credExpLabel(c);
   el.style.display='';
-  el.innerHTML=`${GIFT_SVG.replace('<svg','<svg style="width:14px;height:14px;flex:none"')}<span>${esc(c.name)} has <b>${fmt(a)} €</b> of bet credits${el2?' · '+el2:''}${c.credit.note?' · '+esc(c.credit.note):''}${fb?'':'. Switch to Freebet to use them'}</span>${fb&&parseFloat(document.getElementById('nf-stake').value)!==a?`<button class="nf-cred-use" id="nfCredUse" type="button">Use ${fmt(a)} €</button>`:''}`;
+  el.innerHTML=`${GIFT_SVG.replace('<svg','<svg style="width:14px;height:14px;flex:none"')}<span>${esc(c.name)} has <b>${fmt(a)} €</b> of bet credits${credLive(c).length>1?` (${credLive(c).length})`:''}${el2?' · '+(credLive(c).length>1?'next ':'')+el2:''}${credNext(c)&&credNext(c).note?' · '+esc(credNext(c).note):''}${fb?'':'. Switch to Freebet to use them'}</span>${fb&&parseFloat(document.getElementById('nf-stake').value)!==a?`<button class="nf-cred-use" id="nfCredUse" type="button">Use ${fmt(a)} €</button>`:''}`;
   const b=document.getElementById('nfCredUse');if(b)b.onclick=()=>{document.getElementById('nf-stake').value=a;nfCredAuto=a;renderNfResult();};
 }
 function renderNfLim(){
@@ -12313,7 +12509,7 @@ function resetNfForm(){
   nfBoost=null;
   if(tgCur&&tgCur.single&&tgRequeue())save(); // a Telegram value bet that wasn't saved goes back to the inbox
   nfTg=null;
-  ['nf-event','nf-pick','nf-odd','nf-stake','nf-notes','nf-time'].forEach(id=>document.getElementById(id).value='');nfCredKey='';nfCredAuto=null;
+  ['nf-event','nf-pick','nf-odd','nf-stake','nf-notes','nf-time'].forEach(id=>document.getElementById(id).value='');nfCredKey='';nfCredAuto=null;rfFill('nf',null);
   nfSels=nfIsCombi()?[{ev:'',name:'',odd:''},{ev:'',name:'',odd:''}]:[];
   renderNfSels();syncComboOdd();renderNfResult();
   document.getElementById('nf-category').dataset.manual='';nfGuessCat();
@@ -12405,6 +12601,7 @@ function saveNewNormal(){
   if(nfBoost&&combi)bet.boostPct=nfBoost.pct;
   if(nfTg&&nfTg.ev===ev){if(nfTg.comp)bet.comp=nfTg.comp;if(nfTg.evPct!=null)bet.evPct=nfTg.evPct;if(nfTg.fair)bet.fair=nfTg.fair;}
   const fromTg=!!nfTg;nfTg=null;if(tgCur&&tgCur.single)tgCur=null;
+  {const rf=rfRead('nf');if(rf){delete rf.yes;delete rf.no;bet.refund=rf;}}
   const cu=useCredit(bet);
   D.normals.unshift(bet);const uw=unifyMatchName(bet);const mw=bet.time?syncMatchWhen(bet):[];
   save();updateBadges();renderPendientes();renderNormals(document.getElementById('nbSearch').value);renderProfit();
@@ -12412,7 +12609,7 @@ function saveNewNormal(){
   const wasFun=nfFun;
   if(combi||nfFun){nfCombi=false;nfFun=false;setBetType(type);} // the next bet starts as a single opportunity bet again
   resetNfForm();renderRepeatSel();nfFromSbDone();
-  toast(`${wasFun?'Funbet':type}${sels.length?' combi':''} saved to pending · +${fmt(bet.potentialWin)} € if it wins${cu?` · ${fmt(cu.amt)} € of credits used at ${cu.c.name}${cu.left?` (${fmt(cu.left)} € left)`:''}`:''}${matchWhenMsg(mw)}${unifyMsg(uw,bet)}`,'View pending',()=>navTo('pendientes'));
+  toast(`${wasFun?'Funbet':type}${sels.length?' combi':''} saved to pending · +${fmt(bet.potentialWin)} € if it wins${bet.refund?` · refund ${fmt(rfAmt(bet))} € ${rfKindTxt(bet.refund)} ${bet.refund.cond==='one'?'if 1 fails':'if it loses'}`:''}${cu?` · ${fmt(cu.amt)} € of credits used at ${cu.c.name}${cu.left?` (${fmt(cu.left)} € left)`:''}`:''}${matchWhenMsg(mw)}${unifyMsg(uw,bet)}`,'View pending',()=>navTo('pendientes'));
   // registered from Telegram: back to the calculator with the next message waiting there
   if(fromTg&&(D.tgInbox||[]).length){if(tgNext(true))setTimeout(focusStake,0);}
 }
@@ -12548,6 +12745,7 @@ function loadNormalPaste(r){
   if(r.date)set('nf-date',r.date);
   set('nf-time',r.time||'');
   set('nf-notes',r.notes||'');
+  {const m=(r.notes||'').match(/promo:?\s*(.+)$/i);rfFill('nf',m?rfFromText(m[1].split(' · ')[0],r.stake):null);}
   const nfH=document.getElementById('nf-house');nfH.innerHTML=houseOptionsHtml(r.house,'Choose bookmaker…');nfH.value=nfH.querySelector('option[selected]')?.value||r.house||'';
   const nc=document.getElementById('nf-category');nc.dataset.manual='';if(newBetCat==null)nfGuessCat();
   renderNfSels();syncComboOdd();renderNfResult();
