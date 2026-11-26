@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Surebets → Telegram (canales: fútbol, tenis, basket y 🦫 Circustancial)
 // @namespace    adrian.surebets.telegram
-// @version      3.10.0
+// @version      3.11.0
 // @description  Lee las surebets de BetHero Sports y las reparte por Telegram en 12 canales: fútbol (F1/F2/F3, principales y secundarios), tenis (T1 principales/secundarios, T2 ATP 250), basket (NBA + Euroliga y ⭐️NBA: apuestas de jugador de las estrellas), 🦫 Circustancial (el filtro especial del día), ROI bajo, menos de 1 hora y CONTROL (todo).
 // @author       Adrian
 // @match        https://betherosports.com/es/arbitrage*
@@ -28,7 +28,7 @@
      y recarga la pestaña (cuando la cola está vacía): al arrancar se ejecuta la versión descargada en vez de esta.
      Además Tampermonkey instala la nueva versión por su cuenta (@updateURL) en su próxima comprobación.
      Los tokens de los bots NO están en este código: se guardan en Tampermonkey (ver SECRETOS_SEMILLA). */
-  const AUTO = { url: 'https://raw.githubusercontent.com/amiralles01/surebets-calculator/main/userscripts/surebets-telegram.user.js', version: '3.10.0', clave: 'auto_codigo_v1', fallo: 'auto_fallo_v1', vista: 'auto_version_vista_v1', cadaMin: 5, global: '__sbtgAuto_surebets-telegram' };
+  const AUTO = { url: 'https://raw.githubusercontent.com/amiralles01/surebets-calculator/main/userscripts/surebets-telegram.user.js', version: '3.11.0', clave: 'auto_codigo_v1', fallo: 'auto_fallo_v1', vista: 'auto_version_vista_v1', cadaMin: 2, global: '__sbtgAuto_surebets-telegram' };
   const autoVersionDe = (txt) => { const m = /\/\/ @version\s+([\d.]+)/.exec(String(txt || '').slice(0, 4000)); return m ? m[1] : ''; };
   const autoMasNueva = (a, b) => {
     const x = String(a || '').split('.').map(Number), y = String(b || '').split('.').map(Number);
@@ -67,7 +67,7 @@
       const cab = await autoPedir({ Range: 'bytes=0-3999' });
       const vr = autoVersionDe(cab);
       if (!vr || !autoMasNueva(vr, AUTO.version) || autoGet(AUTO.fallo, '') === vr) return;
-      const recarga = () => { if (typeof recargar === 'function') recargar('versión nueva ' + vr, false); else location.reload(); };
+      const recarga = () => { if (typeof recargar === 'function') recargar('versión nueva ' + vr, false, true); else location.reload(); };
       if (autoVersionDe(autoGet(AUTO.clave, '')) === vr) { recarga(); return; } // ya descargada: la recarga esperaba a que se vaciara la cola
       const codigo = await autoPedir();
       if (autoVersionDe(codigo) !== vr || codigo.indexOf('// ==/UserScript==') < 0 || !/\}\)\(\);\s*$/.test(codigo)) return; // incompleta
@@ -85,7 +85,7 @@
   setInterval(autoComprobar, AUTO.cadaMin * 60000);
   // v3.9.1 · Aviso por Telegram en CADA actualización («actualizado de X a Y» + novedades). Se reintenta cada 30 s hasta que
   // de verdad se manda (antes se perdía si la pestaña aún no era la principal o si ya había salido otro aviso en los últimos 30 min).
-  const AUTO_NOVEDADES = 'Córners de la Conference League: ya no salen en ningún canal (solo en el CONTROL)';
+  const AUTO_NOVEDADES = 'Las actualizaciones se instalan al momento (aunque haya mensajes por enviar) · Copa Davis: todo sale en 🎾 T1 Principales (también dobles y cualquier mercado) · córners de la Conference League solo en el CONTROL';
   function autoAvisar() {
     const antes = autoGet(AUTO.vista, '');
     if (antes === AUTO.version) return;
@@ -185,6 +185,9 @@
     // v3.10.0 · Córners de estas competiciones (palabras en el nombre de la liga): NUNCA salen en ningún canal, solo en el CONTROL.
     // Para volver a como antes: CORNERS_LIGAS_SOLO_CONTROL: []
     CORNERS_LIGAS_SOLO_CONTROL: ['conference league'],
+    // v3.11.0 · Copa Davis: TODO sale en 🎾 T1 Principales (cualquier tenista, también dobles, y cualquier mercado: aces, sets…).
+    // false = como antes (solo con tenista top, sin dobles, y los secundarios a T1S).
+    DAVIS_TODO_T1P: true,
     // v3.6.0 · ROI alto: toda surebet de MÁS del «desde» % (de cualquier deporte) que iba a salir en un canal sale SOLO en el canal «a» (F3).
     // A «Menos de 1 hora» se sigue copiando como siempre (solo partidos importantes); a «Menos de 4 horas» NO (sinH4).
     // Para volver a como antes: ROI_ALTO_A: null
@@ -595,7 +598,7 @@
 
   /* ═══════════════════ A partir de aquí no hace falta tocar nada ═══════════════════ */
 
-  const VERSION = '3.10.0';
+  const VERSION = '3.11.0';
   const MODO_CODIGO = CONFIG.MODO;
   const ZONAS = {
     segura: { num: '1', emoji: '🟢', nombre: 'NIVEL 1' },
@@ -917,6 +920,8 @@
     const f = partesMadrid(inicio);
     const top = contieneNombre(ev, TENISTAS_TOP);
     if (TENIS.FUERA.test(t)) return no('Tenis: junior / silla / leyendas / por equipos', d);
+    // v3.11.0 · Copa Davis: todo (también dobles y sin tenista top) → T1 Principales
+    if (CONFIG.DAVIS_TODO_T1P && TENIS.DAVIS.test(t)) { const r = si(2, 'Copa Davis' + (top ? ' · tenista top' : ''), d); r.todoPrincipal = true; return r; }
     if (TENIS.ITF.test(t)) return no('Tenis ITF', d);
     if (TENIS.MENOR.test(t) && !/\batp\b/.test(t)) return no('Tenis: circuito menor (UTR / Futures / universitario…), ahí no juega ningún top 20', d);
     // Exhibiciones con top 20 (Laver Cup, Six Kings Slam) → nivel 2; el resto de exhibiciones no
@@ -1006,6 +1011,7 @@
     const parcialB = merc.parcial && String((CONFIG.PERIODO_PARCIAL || {})[comp.zona] || 'B').toUpperCase() === 'B';
     const sec = !!(merc.prop || parcialB);
     if (comp.deporte === 'futbol') return comp.nivel === 1 ? (sec ? 'F1S' : 'F1P') : comp.nivel === 2 ? (sec ? 'F2S' : 'F2P') : 'F3';
+    if (comp.deporte === 'tenis' && comp.todoPrincipal) return 'T1P'; // v3.11.0 · Copa Davis
     if (comp.deporte === 'tenis') return comp.t2 || comp.nivel >= 3 ? 'T2' : (sec ? 'T1S' : 'T1P');
     if (comp.deporte === 'baloncesto') return (CONFIG.NBA && CONFIG.NBA.canal) || 'BK';
     return null;
@@ -3304,9 +3310,10 @@
     return /^(conectado|connected)\W*$/i.test(el.textContent.trim()) ? 'ok' : 'mal';
   }
 
-  function recargar(motivo, porFallo) {
+  // v3.11.0 · inmediato (versión nueva): se recarga YA aunque haya mensajes por enviar en la cola (se pierden; el usuario lo prefiere)
+  function recargar(motivo, porFallo, inmediato) {
     const t = ahora();
-    if (cola.length && (!estado.recargaPedida || t - estado.recargaPedida < 120000)) { estado.recargaPedida = estado.recargaPedida || t; return; }
+    if (!inmediato && cola.length && (!estado.recargaPedida || t - estado.recargaPedida < 120000)) { estado.recargaPedida = estado.recargaPedida || t; return; }
     if (porFallo) {
       const hist = (ss.json('sb_recargas', []) || []).filter((x) => t - x < 30 * 60000);
       if (hist.length >= 4) {
@@ -3321,7 +3328,7 @@
     guardar(true);
     soltarLiderazgo();
     const hacer = () => location.reload();
-    if (cola.length && estado.lider) setTimeout(hacer, 3000); else hacer();
+    if (!inmediato && cola.length && estado.lider) setTimeout(hacer, 3000); else hacer();
   }
 
   function vigilar() {
