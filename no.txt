@@ -1,0 +1,41 @@
+#include <iostream>
+using namespace std;
+
+int main () {
+    int FILAS = 0;
+    int COLUMNAS = 0;
+    cout << "Cuantas filas quieres usar" << endl;
+    cin >> FILAS;
+    cout << "Cuantas columnas quieres usar" << endl;
+    cin >> COLUMNAS;
+
+    int m[FILAS][COLUMNAS];
+    int det = 0;
+    int j, k;
+
+    for (int f=0; f<FILAS; f++){
+        for(int c=0;c<COLUMNAS; c++){
+            cout<<"m["<<f<<"]["<<c<<"] = ";
+            cin>>m[f][c];
+        }
+    }
+
+    for (int i=0; i<3; i++){
+        j = i + 1;
+        if (j == 3)
+            j = 0;
+        k = j + 1;
+        if (k == 3)
+            k = 0;
+
+        det += m[0][i] * m[1][j] * m[2][k];
+        det -= m[0][i] * m[1][k] * m[2][j];
+    }
+
+    cout<<endl<<"det(m) = "<< det <<endl;
+    //Cosas que pide: 
+    cout << "La suma de cada fila es: " << x << endl;
+    cout << "La suma de cada columna es: " << x << endl;
+    cout << "La suma de las diagonales, en caso de ser cuadrada: " << x << endl;
+    cout << "El mayor de cada fila" << x << endl;
+    
