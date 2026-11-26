@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Surebets → Telegram (canales: fútbol, tenis, basket y 🦫 Circustancial)
 // @namespace    adrian.surebets.telegram
-// @version      3.9.1
+// @version      3.10.0
 // @description  Lee las surebets de BetHero Sports y las reparte por Telegram en 12 canales: fútbol (F1/F2/F3, principales y secundarios), tenis (T1 principales/secundarios, T2 ATP 250), basket (NBA + Euroliga y ⭐️NBA: apuestas de jugador de las estrellas), 🦫 Circustancial (el filtro especial del día), ROI bajo, menos de 1 hora y CONTROL (todo).
 // @author       Adrian
 // @match        https://betherosports.com/es/arbitrage*
@@ -28,7 +28,7 @@
      y recarga la pestaña (cuando la cola está vacía): al arrancar se ejecuta la versión descargada en vez de esta.
      Además Tampermonkey instala la nueva versión por su cuenta (@updateURL) en su próxima comprobación.
      Los tokens de los bots NO están en este código: se guardan en Tampermonkey (ver SECRETOS_SEMILLA). */
-  const AUTO = { url: 'https://raw.githubusercontent.com/amiralles01/surebets-calculator/main/userscripts/surebets-telegram.user.js', version: '3.9.1', clave: 'auto_codigo_v1', fallo: 'auto_fallo_v1', vista: 'auto_version_vista_v1', cadaMin: 5, global: '__sbtgAuto_surebets-telegram' };
+  const AUTO = { url: 'https://raw.githubusercontent.com/amiralles01/surebets-calculator/main/userscripts/surebets-telegram.user.js', version: '3.10.0', clave: 'auto_codigo_v1', fallo: 'auto_fallo_v1', vista: 'auto_version_vista_v1', cadaMin: 5, global: '__sbtgAuto_surebets-telegram' };
   const autoVersionDe = (txt) => { const m = /\/\/ @version\s+([\d.]+)/.exec(String(txt || '').slice(0, 4000)); return m ? m[1] : ''; };
   const autoMasNueva = (a, b) => {
     const x = String(a || '').split('.').map(Number), y = String(b || '').split('.').map(Number);
@@ -85,7 +85,7 @@
   setInterval(autoComprobar, AUTO.cadaMin * 60000);
   // v3.9.1 · Aviso por Telegram en CADA actualización («actualizado de X a Y» + novedades). Se reintenta cada 30 s hasta que
   // de verdad se manda (antes se perdía si la pestaña aún no era la principal o si ya había salido otro aviso en los últimos 30 min).
-  const AUTO_NOVEDADES = 'Córners (también los del equipo): nunca en «Menos de 1 hora» ni en «Menos de 4 horas» · este aviso llega en cada actualización';
+  const AUTO_NOVEDADES = 'Córners de la Conference League: ya no salen en ningún canal (solo en el CONTROL)';
   function autoAvisar() {
     const antes = autoGet(AUTO.vista, '');
     if (antes === AUTO.version) return;
@@ -182,6 +182,9 @@
     CORNERS_F2_SOLO_CONTROL: true,
     // v3.9.0 · Córners (de cualquier partido): NUNCA en «Menos de 1 hora» ni en «Menos de 4 horas». false = como antes.
     CORNERS_SIN_H1_H4: true,
+    // v3.10.0 · Córners de estas competiciones (palabras en el nombre de la liga): NUNCA salen en ningún canal, solo en el CONTROL.
+    // Para volver a como antes: CORNERS_LIGAS_SOLO_CONTROL: []
+    CORNERS_LIGAS_SOLO_CONTROL: ['conference league'],
     // v3.6.0 · ROI alto: toda surebet de MÁS del «desde» % (de cualquier deporte) que iba a salir en un canal sale SOLO en el canal «a» (F3).
     // A «Menos de 1 hora» se sigue copiando como siempre (solo partidos importantes); a «Menos de 4 horas» NO (sinH4).
     // Para volver a como antes: ROI_ALTO_A: null
@@ -592,7 +595,7 @@
 
   /* ═══════════════════ A partir de aquí no hace falta tocar nada ═══════════════════ */
 
-  const VERSION = '3.9.1';
+  const VERSION = '3.10.0';
   const MODO_CODIGO = CONFIG.MODO;
   const ZONAS = {
     segura: { num: '1', emoji: '🟢', nombre: 'NIVEL 1' },
@@ -1755,6 +1758,11 @@
     // 1) Canal según deporte, nivel del partido y tipo de mercado
     let canal = canalDe(comp, merc);
     if (!canal || !CONFIG.CANALES[canal]) return descartar('Sin canal para ' + (comp.deporte || 'este deporte'));
+    // v3.10.0 · Córners de las ligas de CORNERS_LIGAS_SOLO_CONTROL (Conference League) → solo CONTROL (ni F1/F2/F3, ni ROI, ni H1/H4)
+    if (comp.deporte === 'futbol' && CORNERS_RE.test(textoPatas(a))) {
+      const liga = (CONFIG.CORNERS_LIGAS_SOLO_CONTROL || []).find((x) => x && (' ' + norm(a.torneo + ' ' + (comp.comp || '')) + ' ').includes(' ' + norm(x) + ' '));
+      if (liga) return Object.assign(descartar(`Córners de ${comp.comp || liga} → solo CONTROL`, canal), { cir: true });
+    }
     // v3.9.0 · Córners de un partido de F2 → solo CONTROL (ni F3 ni ROI bajo). cir: el filtro del día 🦫 sí puede llevárselos.
     if (CONFIG.CORNERS_F2_SOLO_CONTROL && comp.deporte === 'futbol' && /^F2/.test(canal) && CORNERS_RE.test(textoPatas(a))) return Object.assign(descartar(`Córners de un partido de F2 (${comp.comp}) → solo CONTROL (ni F3 ni ROI bajo)`, canal), { cir: true });
     // Fútbol: las tarjetas y los córners solo salen en partidos de nivel 1 (F1S); en nivel 2 y 3 → solo CONTROL
