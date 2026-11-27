@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Middles → Telegram (los mismos canales que las surebets)
 // @namespace    adrian.middles.telegram
-// @version      1.0.1
+// @version      1.0.2
 // @description  Lee los middles de BetHero Sports (página «Middles») y los reparte en los mismos canales de Telegram que el script de surebets, con las mismas reglas. Salen desde −1 % de Arb (roiMin en CONFIG). Script aparte: no toca el de surebets.
 // @author       Adrian
 // @match        https://betherosports.com/es/middles*
@@ -28,7 +28,7 @@
      y recarga la pestaña (cuando la cola está vacía): al arrancar se ejecuta la versión descargada en vez de esta.
      Además Tampermonkey instala la nueva versión por su cuenta (@updateURL) en su próxima comprobación.
      Los tokens de los bots NO están en este código: se guardan en Tampermonkey (ver SECRETOS_SEMILLA). */
-  const AUTO = { url: 'https://raw.githubusercontent.com/amiralles01/surebets-calculator/main/userscripts/middles-telegram.user.js', version: '1.0.1', clave: 'auto_codigo_v1', fallo: 'auto_fallo_v1', vista: 'auto_version_vista_v1', cadaMin: 2, global: '__sbtgAuto_middles-telegram' };
+  const AUTO = { url: 'https://raw.githubusercontent.com/amiralles01/surebets-calculator/main/userscripts/middles-telegram.user.js', version: '1.0.2', clave: 'auto_codigo_v1', fallo: 'auto_fallo_v1', vista: 'auto_version_vista_v1', cadaMin: 2, global: '__sbtgAuto_middles-telegram' };
   const autoVersionDe = (txt) => { const m = /\/\/ @version\s+([\d.]+)/.exec(String(txt || '').slice(0, 4000)); return m ? m[1] : ''; };
   const autoMasNueva = (a, b) => {
     const x = String(a || '').split('.').map(Number), y = String(b || '').split('.').map(Number);
@@ -85,7 +85,7 @@
   setInterval(autoComprobar, AUTO.cadaMin * 60000);
   // v3.9.1 · Aviso por Telegram en CADA actualización («actualizado de X a Y» + novedades). Se reintenta cada 30 s hasta que
   // de verdad se manda (antes se perdía si la pestaña aún no era la principal o si ya había salido otro aviso en los últimos 30 min).
-  const AUTO_NOVEDADES = 'En Vivo: solo se envía lo que dura en la web (tenis 10 s, resto 5 s). Cámbialo con /midespera';
+  const AUTO_NOVEDADES = 'En Vivo: espera más larga antes de enviar (tenis 20 s, resto 10 s). Cámbialo con /midespera';
   function autoAvisar() {
     const antes = autoGet(AUTO.vista, '');
     if (antes === AUTO.version) return;
@@ -164,7 +164,7 @@
     // 🔥 v3.13.0 · EN VIVO: muchas saltan y desaparecen al momento (sobre todo en tenis). Solo se envían (también al CONTROL)
     // si llevan estos segundos seguidos en la web. 0 = sin espera. Prepartido no cambia.
     // Se cambia también desde Telegram: /midespera tenis 15 · /midespera resto 5 · /midespera 0 (todo sin espera) · /midespera (ver)
-    ESPERA_EN_VIVO: { tenis: 10, resto: 5 },
+    ESPERA_EN_VIVO: { tenis: 20, resto: 10 }, // v3.13.1: subido (antes 10 / 5)
     // ⚠️ v3.4.1 · De dónde saca cada casa los datos para pagar las ESTADÍSTICAS (tiros, córners, tarjetas, faltas…).
     // Si las patas de un middle de estadísticas son de casas con fuente distinta, el mensaje lleva un aviso arriba:
     // el dato puede no coincidir y perder las dos (Nápoles–Lazio: oficial 29 tiros, Opta 30 → Más de 29.5 y Menos de 29.5 perdidas).
@@ -606,7 +606,7 @@
 
   /* ═══════════════════ A partir de aquí no hace falta tocar nada ═══════════════════ */
 
-  const VERSION = '1.0.1';
+  const VERSION = '1.0.2';
   const MODO_CODIGO = CONFIG.MODO;
   const ZONAS = {
     segura: { num: '1', emoji: '🟢', nombre: 'NIVEL 1' },
@@ -1259,7 +1259,7 @@
   // 🔥 v3.13.0 · segundos que tiene que durar en la web una de En Vivo antes de enviarse (lo de /midespera manda sobre CONFIG)
   const ESPERA_KEY = 'espera_vivo_v1';
   function esperaVivo() {
-    const base = Object.assign({ tenis: 10, resto: 5 }, CONFIG.ESPERA_EN_VIVO || {});
+    const base = Object.assign({ tenis: 20, resto: 10 }, CONFIG.ESPERA_EN_VIVO || {});
     const tg = store.get(ESPERA_KEY, null);
     return tg && typeof tg === 'object' ? Object.assign(base, tg) : base;
   }
