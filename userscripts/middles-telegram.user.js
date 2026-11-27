@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Middles → Telegram (los mismos canales que las surebets)
 // @namespace    adrian.middles.telegram
-// @version      1.0.0
+// @version      1.0.1
 // @description  Lee los middles de BetHero Sports (página «Middles») y los reparte en los mismos canales de Telegram que el script de surebets, con las mismas reglas. Salen desde −1 % de Arb (roiMin en CONFIG). Script aparte: no toca el de surebets.
 // @author       Adrian
 // @match        https://betherosports.com/es/middles*
@@ -28,7 +28,7 @@
      y recarga la pestaña (cuando la cola está vacía): al arrancar se ejecuta la versión descargada en vez de esta.
      Además Tampermonkey instala la nueva versión por su cuenta (@updateURL) en su próxima comprobación.
      Los tokens de los bots NO están en este código: se guardan en Tampermonkey (ver SECRETOS_SEMILLA). */
-  const AUTO = { url: 'https://raw.githubusercontent.com/amiralles01/surebets-calculator/main/userscripts/middles-telegram.user.js', version: '1.0.0', clave: 'auto_codigo_v1', fallo: 'auto_fallo_v1', vista: 'auto_version_vista_v1', cadaMin: 2, global: '__sbtgAuto_middles-telegram' };
+  const AUTO = { url: 'https://raw.githubusercontent.com/amiralles01/surebets-calculator/main/userscripts/middles-telegram.user.js', version: '1.0.1', clave: 'auto_codigo_v1', fallo: 'auto_fallo_v1', vista: 'auto_version_vista_v1', cadaMin: 2, global: '__sbtgAuto_middles-telegram' };
   const autoVersionDe = (txt) => { const m = /\/\/ @version\s+([\d.]+)/.exec(String(txt || '').slice(0, 4000)); return m ? m[1] : ''; };
   const autoMasNueva = (a, b) => {
     const x = String(a || '').split('.').map(Number), y = String(b || '').split('.').map(Number);
@@ -85,7 +85,7 @@
   setInterval(autoComprobar, AUTO.cadaMin * 60000);
   // v3.9.1 · Aviso por Telegram en CADA actualización («actualizado de X a Y» + novedades). Se reintenta cada 30 s hasta que
   // de verdad se manda (antes se perdía si la pestaña aún no era la principal o si ya había salido otro aviso en los últimos 30 min).
-  const AUTO_NOVEDADES = 'Script de middles: mismas reglas que el de surebets 3.11.0';
+  const AUTO_NOVEDADES = 'En Vivo: solo se envía lo que dura en la web (tenis 10 s, resto 5 s). Cámbialo con /midespera';
   function autoAvisar() {
     const antes = autoGet(AUTO.vista, '');
     if (antes === AUTO.version) return;
@@ -160,6 +160,11 @@
     // 🔕 v3.4.0 · Canales en SILENCIO: el mensaje llega con su aviso y la vista previa en el iPhone, pero sin sonido ni vibración.
     // Se cambia también desde Telegram con /midsilencio F3 (y /midsilencio para ver cómo está cada uno); lo de Telegram manda sobre esta línea.
     SILENCIO: ['BK', 'BKE', 'F3'],
+
+    // 🔥 v3.13.0 · EN VIVO: muchas saltan y desaparecen al momento (sobre todo en tenis). Solo se envían (también al CONTROL)
+    // si llevan estos segundos seguidos en la web. 0 = sin espera. Prepartido no cambia.
+    // Se cambia también desde Telegram: /midespera tenis 15 · /midespera resto 5 · /midespera 0 (todo sin espera) · /midespera (ver)
+    ESPERA_EN_VIVO: { tenis: 10, resto: 5 },
     // ⚠️ v3.4.1 · De dónde saca cada casa los datos para pagar las ESTADÍSTICAS (tiros, córners, tarjetas, faltas…).
     // Si las patas de un middle de estadísticas son de casas con fuente distinta, el mensaje lleva un aviso arriba:
     // el dato puede no coincidir y perder las dos (Nápoles–Lazio: oficial 29 tiros, Opta 30 → Más de 29.5 y Menos de 29.5 perdidas).
@@ -601,7 +606,7 @@
 
   /* ═══════════════════ A partir de aquí no hace falta tocar nada ═══════════════════ */
 
-  const VERSION = '1.0.0';
+  const VERSION = '1.0.1';
   const MODO_CODIGO = CONFIG.MODO;
   const ZONAS = {
     segura: { num: '1', emoji: '🟢', nombre: 'NIVEL 1' },
@@ -665,6 +670,8 @@
   // v3.1.6 · Puente con el script de apuestas +EV (mismos bots y canales). Ese script NO lee los mensajes de los bots
   // (si los dos leyeran, se robarían los comandos): este le deja en la web (localStorage) los canales detectados y los comandos /ev…
   const PUENTE_CHATS = 'sbtg_puente_chats_v1', PUENTE_CMDS = 'sbtg_puente_mid_cmds_v1', PUENTE_VIVO = 'sbtg_puente_mid_vivo_v1'; // ↔️ middles
+  // v3.12.0 · Igual con el script de middles (/mid…): mismos canales, sus comandos van por aquí
+  const PUENTE_MID_CMDS = 'sbtg_puente_mid_cmds_v1', PUENTE_MID_VIVO = 'sbtg_puente_mid_vivo_v1';
   const ls = {
     json(k, def) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch (e) { return def; } },
     setJson(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* nada */ } },
@@ -1248,6 +1255,37 @@
   // ── Qué se ha decidido con cada middle (para el diagnóstico y el comando «porque») ──
   const decisiones = new Map(); // clave → { evento, torneo, roi, texto, t }
   const vistasHasta = new Map(); // clave → última vez que se vio en la tabla
+  const vistaDesde = new Map(); // v3.13.0 · clave → desde cuándo está en la web sin haber desaparecido
+  // 🔥 v3.13.0 · segundos que tiene que durar en la web una de En Vivo antes de enviarse (lo de /midespera manda sobre CONFIG)
+  const ESPERA_KEY = 'espera_vivo_v1';
+  function esperaVivo() {
+    const base = Object.assign({ tenis: 10, resto: 5 }, CONFIG.ESPERA_EN_VIVO || {});
+    const tg = store.get(ESPERA_KEY, null);
+    return tg && typeof tg === 'object' ? Object.assign(base, tg) : base;
+  }
+  function segundosEspera(a) {
+    if (a.modo !== 'envivo') return 0;
+    const e = esperaVivo();
+    const tenis = /🎾/.test(a.torneo || '') || /\b(atp|wta|itf|challenger|tenis|tennis|davis)\b/.test(norm(a.torneo || ''));
+    return Math.max(0, Number(tenis ? e.tenis : e.resto) || 0);
+  }
+  function textoEspera() {
+    const e = esperaVivo();
+    return `🔥 <b>Espera en vivo</b>: un middle de En Vivo solo se envía si lleva en la web, sin desaparecer:\n🎾 Tenis: <b>${e.tenis} s</b>\n⚽🏀 Resto: <b>${e.resto} s</b>` +
+      '\n\nCambiar: <code>/midespera tenis 15</code> · <code>/midespera resto 5</code> · los dos: <code>/midespera 8</code> · sin espera: <code>/midespera 0</code>';
+  }
+  function cambiarEspera(arg, chat) {
+    const t = norm(arg || '');
+    const e = esperaVivo();
+    const m = t.match(/^(tenis|tennis|resto|otros|futbol|basket)?\s*(\d+(?:[.,]\d+)?)\s*s?$/);
+    if (t && !m) { responder(chat, 'No te entiendo. Ejemplos: <code>/midespera tenis 15</code> · <code>/midespera resto 5</code> · <code>/midespera 0</code>'); return; }
+    if (m) {
+      const v = Math.min(300, parseFloat(m[2].replace(',', '.')));
+      if (!m[1]) { e.tenis = v; e.resto = v; } else if (/^ten/.test(m[1])) e.tenis = v; else e.resto = v;
+      store.set(ESPERA_KEY, { tenis: e.tenis, resto: e.resto });
+    }
+    responder(chat, (m ? '✅ Hecho.\n\n' : '') + textoEspera());
+  }
   const TEXTO_ACCION = {
     encolada: (r) => `⏳ en cola para ${rotulo(r.canal)}`,
     en_cola: (r) => `⏳ en cola para ${rotulo(r.canal)}`,
@@ -2434,9 +2472,19 @@
   function publicarPuente() { /* los canales los publica el script de surebets, no este */ }
   // Comando para el bot +EV (/evestado, /ev web…): se le pasa por la web; él contesta por este mismo chat
   function pasarAlBotEV() { /* solo en el script de surebets */ }
+  // v3.12.0 · Comando para el bot de middles (/midmidestado, /mid web…): igual que los /ev…
+  function pasarAlBotMid(m, original) {
+    const lista = ls.json(PUENTE_MID_CMDS, []).filter((x) => x && ahora() - (x.t || 0) < 120000);
+    lista.push({ id: TAB_ID + '_' + (m.message_id || ahora()) + '_' + m.chat.id, texto: original, chat: String(m.chat.id), t: ahora() });
+    ls.setJson(PUENTE_MID_CMDS, lista.slice(-20));
+    const vivo = ls.json(PUENTE_MID_VIVO, null);
+    if (!vivo || ahora() - (vivo.t || 0) > 30000) {
+      responder(m.chat.id, '↔️ El bot de middles no está funcionando ahora mismo: abre en este navegador la página <b>Middles</b> de BetHero con el script «Middles → Telegram» activado. Si se abre en los próximos 2 minutos, contestará a este comando.');
+    }
+  }
   // ── Comandos por Telegram: escribe /midestado (o "estado") al bot principal y contesta si está activo ──
   let ultimaConsultaComandos = 0, consultandoComandos = false;
-  // Comandos: se escriben al bot principal con «mid» delante (/midestado, /mid web…). El script de surebets los lee y los
+  // Comandos: se escriben al bot principal con «mid» delante (/midmidestado, /mid web…). El script de surebets los lee y los
   // deja aquí (localStorage); la primera pestaña de middles que manda los coge y los reparte a las demás como siempre.
   async function revisarComandos() {
     if (consultandoComandos) return;
@@ -2475,6 +2523,7 @@
     ['enviadas', 'Las últimas middles enviadas'],
     ['cola', 'Lo que está esperando para salir, por canal'],
     ['silencio', '🔕 Canales que llegan sin sonido ni vibración: /midsilencio F3'],
+    ['espera', '🔥 En vivo: segundos que tiene que durar antes de enviarse: /midespera tenis 15'],
     ['cir', '🦫 Filtro del día del canal Circustancial: /midcir copa del rey'],
     ['app', '✅ Enlace con la app: los middles ya registradas van solo al CONTROL'],
     ['canales', 'Qué canal está conectado a cada bot'],
@@ -2483,6 +2532,12 @@
     ['olvidar', 'Borra lo enviado y lo vuelve a mandar limpio a su canal'],
     ['web', 'Los middles que hay ahora en la web y a qué canal va cada una (o por qué no sale)'],
     ['reiniciar', 'Recarga la página de middles'],
+    ['midhelp', '↔️ Comandos del bot de middles (los mismos, con «mid» delante)'],
+    ['midestado', '↔️ Si el bot de middles está activo y qué ha enviado hoy'],
+    ['midweb', '↔️ Los middles de la web y a qué canal va cada uno'],
+    ['midolvidar', '↔️ Borra los middles enviados y los vuelve a mandar limpios'],
+    ['midpausa', '↔️ Deja de enviar middles'],
+    ['midreanudar', '↔️ Vuelve a enviar middles'],
   ];
   function textoAyuda() {
     return '↔️ <b>Comandos del bot de middles</b> (los mismos que los de surebets, con «mid» delante)\n\n' + COMANDOS.map(([c, d]) => `/mid${c} → ${esc(d)}`).join('\n') +
@@ -2567,6 +2622,7 @@
     const resto = (re) => original.replace(re, '').trim();
     const chat = m.chat.id;
     const es = (re) => re.test(txt);
+    if (es(/^\/mid(\s|$|[a-z])/)) { pasarAlBotMid(m, original); return; }
     if (es(/^\/?(ayuda|help|start|comandos)\b/)) responder(chat, textoAyuda());
     else if (es(/^\/?(estado|status|activo)\b/)) difundir('estado', '', chat);
     else if (es(/^\/?(pruebas?|probar|test)\b/)) pruebasPorTelegram(chat);
@@ -2583,6 +2639,7 @@
     else if (es(/^\/?(cir|circustancial|circunstancial)\b/)) cambiarCir(resto(/^\/?(cir|circustancial|circunstancial)\s*/i), chat);
     else if (es(/^\/?(app|registradas)$/)) responder(chat, esc(textoApp()));
     else if (es(/^\/?(silencio|silenciar|mute)\b/)) cambiarSilencio(resto(/^\/?(silencio|silenciar|mute)\s*/i), chat);
+    else if (es(/^\/?(espera|esperar)\b/)) cambiarEspera(resto(/^\/?(espera|esperar)\s*/i), chat);
     else if (es(/^\/?(canales|bots)\b/)) {
       detectarChats().then(() => responder(chat, '<pre>' + esc(textoCanales().slice(0, 3800)) + '</pre>'));
     }
@@ -2591,7 +2648,7 @@
     else if (es(/^\/?(olvidar|olvidarenviadas)\b/)) difundir('olvidar', '', chat);
     else if (es(/^\/?(web|tabla|ahora)\b/)) difundir('web', '', chat);
     else if (es(/^\/?(reiniciar|recargar|reset)\b/)) difundir('reiniciar', '', chat);
-    else if (txt.startsWith('/')) responder(chat, `No conozco «/mid${esc(original.split(/\s/)[0].replace(/^\//, ''))}». Escribe /midhelp para ver los comandos de middles.`);
+    else if (txt.startsWith('/')) responder(chat, `No conozco «/mid${esc(original.split(/\s/)[0].replace(/^\//, ''))}». Escribe /midmidhelp para ver los comandos de middles.`);
   }
 
   // /midpruebas: lanza la prueba de canales y, cuando acaba, te dice cómo ha ido cada uno
@@ -3182,6 +3239,11 @@
       if (r.errores > 0 && r.apuestas.length === 0) avisoConfig('estructura', 'Hay filas pero no se ha podido leer ninguna: puede que la web haya cambiado su diseño.');
       const ahoraMismo = ahora();
       for (const a of r.apuestas) { vistasHasta.set(a.clave, ahoraMismo); vistasHasta.set(a.clave + '|H1', ahoraMismo); vistasHasta.set(a.clave + '|H4', ahoraMismo); }
+      { // v3.13.0 · desde cuándo está cada una sin desaparecer (si desaparece una sola lectura, vuelve a contar desde cero)
+        const ahoraEn = new Set(r.apuestas.map((a) => a.clave));
+        for (const k of [...vistaDesde.keys()]) if (!ahoraEn.has(k)) vistaDesde.delete(k);
+        for (const k of ahoraEn) if (!vistaDesde.has(k)) vistaDesde.set(k, ahoraMismo);
+      }
       if (vistasHasta.size > 9000) for (const [k, v] of vistasHasta) if (ahoraMismo - v > 3600000) vistasHasta.delete(k);
       if (!estado.lider || estado.pausado || !estado.iniciado) {
         for (const a of r.apuestas) anotarDecision(a, null, estado.pausado ? '⏸ el bot está en pausa' : '⏸ esta pestaña no es la que envía');
@@ -3193,8 +3255,19 @@
         mandarInformeWeb(r);
         return;
       }
+      let proximaRevision = 0;
       for (const a of r.apuestas) {
         a.modo = estado.modo;
+        const esp = segundosEspera(a) * 1000; // 🔥 v3.13.0 · en vivo: tiene que durar un poco antes de enviarse
+        if (esp > 0) {
+          const lleva = ahoraMismo - (vistaDesde.get(a.clave) || ahoraMismo);
+          if (lleva < esp) {
+            if (!enviados[a.clave]) anotarDecision(a, null, `⏳ en vivo: espero a que dure ${Math.round(esp / 1000)} s en la web (lleva ${Math.round(lleva / 1000)} s)`);
+            const falta = esp - lleva + 300;
+            if (!proximaRevision || falta < proximaRevision) proximaRevision = falta;
+            continue;
+          }
+        }
         let res;
         try { res = procesarApuesta(a); } catch (e) { res = { accion: 'error' }; log('Error procesando', a.evento, e); }
         const prevD = decisiones.get(a.clave);
@@ -3206,6 +3279,7 @@
         else if (!NO_VA_A_CONTROL.has(res.accion)) controlApuesta(a, (decisiones.get(a.clave) || {}).texto || res.accion);
         dbg(res.accion, res.canal || '', res.motivo || '', a.torneo, '|', a.evento, a.roiTexto);
       }
+      if (proximaRevision) setTimeout(() => { if (!estado.escaneoPendiente) estado.escaneoPendiente = ahora(); }, proximaRevision);
       for (const f of r.fallidas || []) controlFilaIlegible(f);
       mandarInformeWeb(r);
       autoMostrarMas(r);
