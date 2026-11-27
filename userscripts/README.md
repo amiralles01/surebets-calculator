@@ -2,6 +2,7 @@
 
 - `surebets-telegram.user.js` — surebets → canales de Telegram
 - `ev-telegram.user.js` — apuestas +EV → los mismos canales
+- `middles-telegram.user.js` — middles (página Middles, desde −1 %) → los mismos canales; sus comandos van con «mid» delante (/midestado)
 
 Se actualizan solos: cada pestaña mira aquí cada 5 minutos y, si hay una `@version` mayor, la descarga y recarga.
 Los tokens de los bots **no** están aquí: se guardan en Tampermonkey con la versión «INSTALAR», que no se publica.
