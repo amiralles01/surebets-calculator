@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Surebets → Telegram (canales: fútbol, tenis, basket y 🦫 Circustancial)
 // @namespace    adrian.surebets.telegram
-// @version      3.11.0
+// @version      3.12.0
 // @description  Lee las surebets de BetHero Sports y las reparte por Telegram en 12 canales: fútbol (F1/F2/F3, principales y secundarios), tenis (T1 principales/secundarios, T2 ATP 250), basket (NBA + Euroliga y ⭐️NBA: apuestas de jugador de las estrellas), 🦫 Circustancial (el filtro especial del día), ROI bajo, menos de 1 hora y CONTROL (todo).
 // @author       Adrian
 // @match        https://betherosports.com/es/arbitrage*
@@ -28,7 +28,7 @@
      y recarga la pestaña (cuando la cola está vacía): al arrancar se ejecuta la versión descargada en vez de esta.
      Además Tampermonkey instala la nueva versión por su cuenta (@updateURL) en su próxima comprobación.
      Los tokens de los bots NO están en este código: se guardan en Tampermonkey (ver SECRETOS_SEMILLA). */
-  const AUTO = { url: 'https://raw.githubusercontent.com/amiralles01/surebets-calculator/main/userscripts/surebets-telegram.user.js', version: '3.11.0', clave: 'auto_codigo_v1', fallo: 'auto_fallo_v1', vista: 'auto_version_vista_v1', cadaMin: 2, global: '__sbtgAuto_surebets-telegram' };
+  const AUTO = { url: 'https://raw.githubusercontent.com/amiralles01/surebets-calculator/main/userscripts/surebets-telegram.user.js', version: '3.12.0', clave: 'auto_codigo_v1', fallo: 'auto_fallo_v1', vista: 'auto_version_vista_v1', cadaMin: 2, global: '__sbtgAuto_surebets-telegram' };
   const autoVersionDe = (txt) => { const m = /\/\/ @version\s+([\d.]+)/.exec(String(txt || '').slice(0, 4000)); return m ? m[1] : ''; };
   const autoMasNueva = (a, b) => {
     const x = String(a || '').split('.').map(Number), y = String(b || '').split('.').map(Number);
@@ -85,7 +85,7 @@
   setInterval(autoComprobar, AUTO.cadaMin * 60000);
   // v3.9.1 · Aviso por Telegram en CADA actualización («actualizado de X a Y» + novedades). Se reintenta cada 30 s hasta que
   // de verdad se manda (antes se perdía si la pestaña aún no era la principal o si ya había salido otro aviso en los últimos 30 min).
-  const AUTO_NOVEDADES = 'Las actualizaciones se instalan al momento (aunque haya mensajes por enviar) · Copa Davis: todo sale en 🎾 T1 Principales (también dobles y cualquier mercado) · córners de la Conference League solo en el CONTROL';
+  const AUTO_NOVEDADES = 'Nuevo script de middles: sus comandos se escriben aquí con «mid» delante (/midestado, /midweb…)';
   function autoAvisar() {
     const antes = autoGet(AUTO.vista, '');
     if (antes === AUTO.version) return;
@@ -598,7 +598,7 @@
 
   /* ═══════════════════ A partir de aquí no hace falta tocar nada ═══════════════════ */
 
-  const VERSION = '3.11.0';
+  const VERSION = '3.12.0';
   const MODO_CODIGO = CONFIG.MODO;
   const ZONAS = {
     segura: { num: '1', emoji: '🟢', nombre: 'NIVEL 1' },
@@ -662,6 +662,8 @@
   // v3.1.6 · Puente con el script de apuestas +EV (mismos bots y canales). Ese script NO lee los mensajes de los bots
   // (si los dos leyeran, se robarían los comandos): este le deja en la web (localStorage) los canales detectados y los comandos /ev…
   const PUENTE_CHATS = 'sbtg_puente_chats_v1', PUENTE_CMDS = 'sbtg_puente_ev_cmds_v1', PUENTE_VIVO = 'sbtg_puente_ev_vivo_v1';
+  // v3.12.0 · Igual con el script de middles (/mid…): mismos canales, sus comandos van por aquí
+  const PUENTE_MID_CMDS = 'sbtg_puente_mid_cmds_v1', PUENTE_MID_VIVO = 'sbtg_puente_mid_vivo_v1';
   const ls = {
     json(k, def) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch (e) { return def; } },
     setJson(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* nada */ } },
@@ -2473,6 +2475,16 @@
       responder(m.chat.id, '💎 El bot +EV no está funcionando ahora mismo: abre en este navegador la página <b>Valor Positivo</b> de BetHero con el script «Apuestas +EV → Telegram» activado. Si se abre en los próximos 2 minutos, contestará a este comando.');
     }
   }
+  // v3.12.0 · Comando para el bot de middles (/midestado, /mid web…): igual que los /ev…
+  function pasarAlBotMid(m, original) {
+    const lista = ls.json(PUENTE_MID_CMDS, []).filter((x) => x && ahora() - (x.t || 0) < 120000);
+    lista.push({ id: TAB_ID + '_' + (m.message_id || ahora()) + '_' + m.chat.id, texto: original, chat: String(m.chat.id), t: ahora() });
+    ls.setJson(PUENTE_MID_CMDS, lista.slice(-20));
+    const vivo = ls.json(PUENTE_MID_VIVO, null);
+    if (!vivo || ahora() - (vivo.t || 0) > 30000) {
+      responder(m.chat.id, '↔️ El bot de middles no está funcionando ahora mismo: abre en este navegador la página <b>Middles</b> de BetHero con el script «Middles → Telegram» activado. Si se abre en los próximos 2 minutos, contestará a este comando.');
+    }
+  }
   // ── Comandos por Telegram: escribe /estado (o "estado") al bot principal y contesta si está activo ──
   let ultimaConsultaComandos = 0, consultandoComandos = false;
   async function revisarComandos() {
@@ -2515,6 +2527,12 @@
     ['evolvidar', '💎 Borra las +EV enviadas y las vuelve a mandar limpias'],
     ['evpausa', '💎 Deja de enviar apuestas +EV'],
     ['evreanudar', '💎 Vuelve a enviar apuestas +EV'],
+    ['midhelp', '↔️ Comandos del bot de middles (los mismos, con «mid» delante)'],
+    ['midestado', '↔️ Si el bot de middles está activo y qué ha enviado hoy'],
+    ['midweb', '↔️ Los middles de la web y a qué canal va cada uno'],
+    ['midolvidar', '↔️ Borra los middles enviados y los vuelve a mandar limpios'],
+    ['midpausa', '↔️ Deja de enviar middles'],
+    ['midreanudar', '↔️ Vuelve a enviar middles'],
   ];
   function textoAyuda() {
     return '🤖 <b>Comandos del bot de surebets</b>\n\n' + COMANDOS.map(([c, d]) => `/${c} → ${esc(d)}`).join('\n') +
@@ -2606,6 +2624,7 @@
     const chat = m.chat.id;
     const es = (re) => re.test(txt);
     if (es(/^\/ev(\s|$|[a-z])/)) { pasarAlBotEV(m, original); return; }
+    if (es(/^\/mid(\s|$|[a-z])/)) { pasarAlBotMid(m, original); return; }
     if (es(/^\/?(ayuda|help|start|comandos)\b/)) responder(chat, textoAyuda());
     else if (es(/^\/?(estado|status|activo)\b/)) difundir('estado', '', chat);
     else if (es(/^\/?(pruebas?|probar|test)\b/)) pruebasPorTelegram(chat);
